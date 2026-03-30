@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexeSocial - Panel de Gestió</title>
+    <link rel="stylesheet" href="style-dashboard.css"> <script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/NexeSocial-logo.png" alt="Logo" class="sidebar-logo">
+            </div>
+            <nav>
+                <ul>
+                    <li class="active">📂 Expedients</li>
+                    <li>📊 Estadístiques</li>
+                    <li>⚙️ Configuració</li>
+                    <li class="logout">🚪 Sortir</li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header>
+                <h1>Gestió d'Expedients</h1>
+                <button class="btn-primary">+ Nou Expedient</button>
+            </header>
+
+            <section class="filters">
+                <input type="text" placeholder="Cerca per DNI o Llinatges..." id="searchBar">
+                <select id="filterSituacio">
+                    <option value="">Situació Administrativa</option>
+                    <option value="nac">Nac. Espanyola</option>
+                    <option value="nie">NIE</option>
+                    <option value="sense">Sense documentació</option>
+                </select>
+            </section>
+
+            <section class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nom i Llinatges</th>
+                            <th>DNI / NIE</th>
+                            <th>Situació Admin</th>
+                            <th>Gènere</th>
+                            <th>Estat</th>
+                            <th>Accions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expedientsTable">
+                        <tr>
+                            <td>Joan Garcia Pons</td>
+                            <td>43215678X</td>
+                            <td>Nac. Espanyola</td>
+                            <td>Home</td>
+                            <td><span class="status active">Actiu</span></td>
+                            <td><button class="btn-edit">Veure</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

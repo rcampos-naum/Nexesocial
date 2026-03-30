@@ -1,0 +1,146 @@
+/* Configuración General */
+:root {
+    --primary-blue: #0056b3;
+    --accent-green: #00a896;
+    --light-bg: #f4f7f6;
+    --white: #ffffff;
+    --text-dark: #333;
+    --border-color: #ddd;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--light-bg);
+}
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Barra Lateral (Sidebar) */
+.sidebar {
+    width: 250px;
+    background-color: var(--white);
+    border-right: 1px solid var(--border-color);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-logo {
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar li {
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #666;
+    transition: 0.3s;
+}
+
+.sidebar li:hover, .sidebar li.active {
+    background-color: var(--primary-blue);
+    color: white;
+}
+
+.sidebar li.logout {
+    margin-top: auto;
+    color: #d9534f;
+}
+
+/* Contenido Principal */
+.main-content {
+    flex: 1;
+    padding: 30px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.btn-primary {
+    background-color: var(--accent-green);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Filtros */
+.filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.filters input, .filters select {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+}
+
+#searchBar { flex: 2; }
+#filterSituacio { flex: 1; }
+
+/* Tabla de Datos */
+.table-container {
+    background-color: var(--white);
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid var(--border-color);
+}
+
+th, td {
+    padding: 15px;
+    text-align: left;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+.status.active {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 4px 8px;
+    border-radius: 15px;
+    font-size: 0.85em;
+}
+
+.btn-edit {
+    background-color: var(--primary-blue);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
