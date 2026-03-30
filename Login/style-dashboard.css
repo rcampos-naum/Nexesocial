@@ -1,111 +1,240 @@
-/* Configuración General */
+/* =========================================
+   CONFIGURACIÓ GENERAL I COLORS
+   ========================================= */
 :root {
     --primary-blue: #0056b3;
-    --accent-green: #00a896;
-    --light-bg: #f4f7f6;
+    --success-green: #10b981;
+    --bg-light: #f8fafc;
     --white: #ffffff;
-    --text-dark: #333;
-    --border-color: #ddd;
+    --border-color: #e2e8f0;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
 * {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-    background-color: var(--light-bg);
-}
-
-.dashboard-container {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-main);
     display: flex;
     min-height: 100vh;
 }
 
-/* Barra Lateral (Sidebar) */
+/* =========================================
+   SIDEBAR (BARRA LATERAL FIXA)
+   ========================================= */
 .sidebar {
-    width: 250px;
-    background-color: var(--white);
+    width: 280px;
+    background: var(--white);
     border-right: 1px solid var(--border-color);
-    padding: 20px;
+    padding: 30px 20px;
+    position: fixed; /* Fixa per evitar que es mogui al fer scroll */
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.sidebar img {
+    width: 100%;
+    max-width: 200px;
+    margin-bottom: 40px;
+    align-self: center;
+}
+
+.nav-item {
+    padding: 12px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+}
+
+.nav-item:hover {
+    background: #f1f5f9;
+    color: var(--primary-blue);
+}
+
+.nav-item.active {
+    background: var(--primary-blue);
+    color: var(--white);
+}
+
+/* Botó especial d'alta dins la sidebar */
+.btn-sidebar-add {
+    background: var(--white);
+    color: var(--primary-blue);
+    border: 1.5px solid var(--primary-blue);
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    margin: 15px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    transition: 0.3s;
+}
+
+.btn-sidebar-add:hover {
+    background: #eef2ff;
+}
+
+/* =========================================
+   CONTINGUT PRINCIPAL
+   ========================================= */
+.main-content {
+    margin-left: 280px; /* Mateix ample que la sidebar */
+    padding: 40px;
+    width: calc(100% - 280px);
+    transition: 0.3s ease;
+}
+
+/* Cabecera del perfil (Header) */
+.profile-header {
+    background: var(--white);
+    padding: 25px 35px;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 6px solid var(--primary-blue);
+    margin-bottom: 30px;
+}
+
+.profile-header h1 {
+    font-size: 1.8rem;
+    margin-bottom: 5px;
+}
+
+/* Botó Guardar (Verd destacat) */
+.btn-save {
+    background: var(--success-green);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.btn-save:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* =========================================
+   PESTANYES (TABS)
+   ========================================= */
+.tab-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    padding: 10px 22px;
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: 0.3s;
+}
+
+.tab-btn:hover {
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+.tab-btn.active {
+    background: var(--primary-blue);
+    color: var(--white);
+    border-color: var(--primary-blue);
+}
+
+/* =========================================
+   FORMULARIS I TARGETES
+   ========================================= */
+.content-card {
+    background: var(--white);
+    padding: 35px;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+}
+
+.tab-content {
+    display: none; /* Amagat per defecte */
+}
+
+.tab-content.active {
+    display: block; /* Visible quan s'activa */
+}
+
+.grid-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 columnes en escriptori */
+    gap: 25px;
+}
+
+.form-group {
     display: flex;
     flex-direction: column;
 }
 
-.sidebar-logo {
-    width: 100%;
-    margin-bottom: 30px;
-}
-
-.sidebar ul {
-    list-style: none;
-}
-
-.sidebar li {
-    padding: 12px 15px;
+.form-group label {
     margin-bottom: 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    color: #666;
-    transition: 0.3s;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.sidebar li:hover, .sidebar li.active {
-    background-color: var(--primary-blue);
-    color: white;
-}
-
-.sidebar li.logout {
-    margin-top: auto;
-    color: #d9534f;
-}
-
-/* Contenido Principal */
-.main-content {
-    flex: 1;
-    padding: 30px;
-}
-
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-}
-
-.btn-primary {
-    background-color: var(--accent-green);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-/* Filtros */
-.filters {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.filters input, .filters select {
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-}
-
-#searchBar { flex: 2; }
-#filterSituacio { flex: 1; }
-
-/* Tabla de Datos */
-.table-container {
-    background-color: var(--white);
+.form-group input, 
+.form-group select, 
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1.5px solid var(--border-color);
     border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    font-size: 0.95rem;
+    color: var(--text-main);
+    background-color: #fafafa;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus, 
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    background-color: var(--white);
+}
+
+/* =========================================
+   TAULES (DASHBOARD)
+   ========================================= */
+.table-container {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
     overflow: hidden;
 }
 
@@ -114,33 +243,75 @@ table {
     border-collapse: collapse;
 }
 
-thead {
-    background-color: #f8f9fa;
+th {
+    background: #f8fafc;
+    text-align: left;
+    padding: 18px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
     border-bottom: 2px solid var(--border-color);
 }
 
-th, td {
-    padding: 15px;
-    text-align: left;
+td {
+    padding: 18px;
+    border-bottom: 1px solid var(--border-color);
 }
 
 tr:hover {
-    background-color: #f1f1f1;
+    background-color: #fcfcfc;
 }
 
-.status.active {
-    background-color: #d4edda;
-    color: #155724;
-    padding: 4px 8px;
-    border-radius: 15px;
-    font-size: 0.85em;
+/* =========================================
+   MODAL / DRAWER LATERAL (REGISTRAR)
+   ========================================= */
+.drawer {
+    position: fixed;
+    top: 0;
+    right: -450px;
+    width: 400px;
+    height: 100%;
+    background: var(--white);
+    box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+    padding: 40px;
+    transition: 0.4s ease;
+    z-index: 1000;
 }
 
-.btn-edit {
-    background-color: var(--primary-blue);
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
+.drawer.open {
+    right: 0;
+}
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    z-index: 999;
+}
+
+/* =========================================
+   RESPONSIVITAT
+   ========================================= */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 80px;
+        padding: 20px 10px;
+    }
+    .sidebar span, .sidebar img, .btn-sidebar-add span:last-child {
+        display: none;
+    }
+    .main-content {
+        margin-left: 80px;
+        width: calc(100% - 80px);
+        padding: 25px;
+    }
+    .grid-form {
+        grid-template-columns: 1fr; /* 1 columna en mòbils i tablets */
+    }
+    .profile-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
 }

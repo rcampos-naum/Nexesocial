@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Detall d'Expedient</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <img src="img/NexeSocial-logo.png" alt="Logo">
+        <nav>
+            <div class="nav-item" onclick="window.location.href='dashboard.html'" style="cursor:pointer;">📁 <span>Llistat General</span></div>
+            <div class="nav-item active">👤 <span>Detall Usuari</span></div>
+            <div class="nav-item" style="margin-top:auto; color:#ef4444;" onclick="window.location.href='dashboard.html'">⬅ <span>Tornar</span></div>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="profile-header">
+            <div>
+                <span id="label-exp" style="color:var(--primary-blue); font-weight:bold; background:#eef2ff; padding:4px 10px; border-radius:5px;">EXP-2026-0042</span>
+                <h1 id="header-nom">Joan Garcia Pons</h1>
+                <p style="color:var(--text-muted); margin-top:5px;">
+                    DNI: <span id="header-dni">43215678X</span> | 
+                    Edat: <span id="header-edat" style="font-weight:bold; color:var(--text-main);">42 anys</span> | 
+                    Tel: <span id="header-tel" style="font-weight:bold; color:var(--text-main);">600123456</span>
+                </p>
+                <p style="color:var(--success-green); font-weight:bold; margin-top:5px;">● Actiu</p>
+            </div>
+            <button class="btn-save" onclick="guardarDatos()">Guardar Canvis</button>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab(event, 'ident')">🆔 Identificació</button>
+            <button class="tab-btn" onclick="switchTab(event, 'contacte')">📞 Contacte</button>
+            <button class="tab-btn" onclick="switchTab(event, 'social')">🏠 Social i Habitatge</button>
+            <button class="tab-btn" onclick="switchTab(event, 'salut')">🏥 Salut</button>
+        </div>
+
+        <div class="content-card">
+            <div id="ident" class="tab-content active">
+                <div class="grid-form">
+                    <div class="form-group"><label>DNI / NIE</label><input type="text" id="f-dni"></div>
+                    <div class="form-group"><label>DATA NAIXEMENT</label><input type="date" id="f-data-naix" onchange="actualizarEdat(this.value)"></div>
+                    <div class="form-group"><label>NOM</label><input type="text" id="f-nom"></div>
+                    <div class="form-group"><label>PRIMER LLINATGE</label><input type="text" id="f-llin1"></div>
+                    <div class="form-group"><label>SEGON LLINATGE</label><input type="text" id="f-llin2"></div>
+                    <div class="form-group"><label>GÈNERE</label><select id="f-gen"><option>Home</option><option>Dona</option><option>Altres</option></select></div>
+                </div>
+            </div>
+
+            <div id="contacte" class="tab-content" style="display:none;">
+                <div class="grid-form">
+                    <div class="form-group"><label>TELÈFON</label><input type="tel" id="f-tel"></div>
+                    <div class="form-group"><label>EMAIL</label><input type="email" id="f-email"></div>
+                    <div class="form-group" style="grid-column: span 2;"><label>ADREÇA</label><input type="text" id="f-adreca"></div>
+                </div>
+            </div>
+
+            <div id="social" class="tab-content" style="display:none;">
+                <div class="grid-form">
+                    <div class="form-group"><label>SITUACIÓ ADMIN</label><select id="f-sit"><option>Nac. Espanyola</option><option>NIE</option><option>Sense papers</option></select></div>
+                    <div class="form-group"><label>DOMICILI</label><select id="f-dom"><option>Lloguer</option><option>Propietat</option><option>Altres</option></select></div>
+                    <div class="form-group"><label>ESTAT CIVIL</label><select id="f-estat"><option>Solter/a</option><option>Casat/da</option><option>Divorciat/da</option></select></div>
+                </div>
+            </div>
+
+            <div id="salut" class="tab-content" style="display:none;">
+                <div class="grid-form">
+                    <div class="form-group"><label>DISCAPACITAT (%)</label><input type="number" id="f-disc"></div>
+                    <div class="form-group"><label>DEPENDENCIA</label><select id="f-dep"><option>No</option><option>Grau I</option><option>Grau II</option></select></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function switchTab(evt, name) {
+            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(name).style.display = 'block';
+            evt.currentTarget.classList.add('active');
+        }
+
+        function actualizarEdat(fecha) {
+            if (!fecha) return;
+            const hoy = new Date();
+            const cumple = new Date(fecha);
+            let edad = hoy.getFullYear() - cumple.getFullYear();
+            if (hoy.getMonth() < cumple.getMonth() || (hoy.getMonth() === cumple.getMonth() && hoy.getDate() < cumple.getDate())) edad--;
+            document.getElementById('header-edat').innerText = edad + " anys";
+        }
+
+        window.onload = function() {
+            const params = new URLSearchParams(window.location.search);
+            const dniURL = params.get('dni') || "43215678X";
+            
+            // Intentar cargar de memoria
+            const saved = localStorage.getItem('exp_' + dniURL);
+            let d;
+
+            if(saved) {
+                d = JSON.parse(saved);
+            } else {
+                // Datos iniciales si es la primera vez
+                d = {
+                    nom: params.get('nom') || "Joan",
+                    llin1: "Garcia",
+                    llin2: "Pons",
+                    dni: dniURL,
+                    tel: params.get('tel') || "600123456",
+                    data: params.get('data') || "1984-05-15",
+                    email: "joan@email.com",
+                    sit: "Nac. Espanyola"
+                };
+            }
+
+            // Rellenar cabecera
+            document.getElementById('header-nom').innerText = d.nom + " " + (d.llin1 || "") + " " + (d.llin2 || "");
+            document.getElementById('header-dni').innerText = d.dni;
+            document.getElementById('header-tel').innerText = d.tel;
+            actualizarEdat(d.data);
+
+            // Rellenar formulario
+            document.getElementById('f-nom').value = d.nom;
+            document.getElementById('f-llin1').value = d.llin1 || "";
+            document.getElementById('f-llin2').value = d.llin2 || "";
+            document.getElementById('f-dni').value = d.dni;
+            document.getElementById('f-tel').value = d.tel;
+            document.getElementById('f-data-naix').value = d.data;
+            document.getElementById('f-email').value = d.email || "";
+        }
+
+        function guardarDatos() {
+            const d = {
+                nom: document.getElementById('f-nom').value,
+                llin1: document.getElementById('f-llin1').value,
+                llin2: document.getElementById('f-llin2').value,
+                dni: document.getElementById('f-dni').value,
+                tel: document.getElementById('f-tel').value,
+                data: document.getElementById('f-data-naix').value,
+                email: document.getElementById('f-email').value
+            };
+
+            localStorage.setItem('exp_' + d.dni, JSON.stringify(d));
+            
+            // Actualizar cabecera al momento
+            document.getElementById('header-nom').innerText = d.nom + " " + d.llin1 + " " + d.llin2;
+            document.getElementById('header-tel').innerText = d.tel;
+            actualizarEdat(d.data);
+            
+            alert("¡Dades guardades i actualitzades!");
+        }
+    </script>
+</body>
+</html>
