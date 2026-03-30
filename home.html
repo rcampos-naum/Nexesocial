@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Inici</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <img src="img/NexeSocial-logo.png" alt="Logo">
+        <nav>
+            <div class="nav-item active" id="nav-welcome" onclick="showSection('welcome')">🏠 <span>Inici</span></div>
+            <div class="nav-item" id="nav-exp" onclick="showSection('expedients')">👤 <span>Expedients</span></div>
+            <div class="nav-item" onclick="window.location.href='programes-gestio.html'">📋 <span>Programes</span></div>
+            <div class="nav-item" onclick="window.location.href='configuracio.html'">⚙️ <span>Configuració</span></div>
+            <div class="nav-item" onclick="window.location.href='index.html'" style="margin-top:auto; color:#ef4444; cursor:pointer;">🚪 <span>Sortir</span></div>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <section id="sec-welcome" class="welcome-section" style="text-align: center; padding: 40px;">
+            <h1 style="font-size: 2.5rem; color: #1e293b;">Bon dia, Equip Nexe!</h1>
+            <p style="color: #64748b; margin-bottom: 40px;">Quina àrea vols gestionar avui?</p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 800px; margin: 0 auto;">
+                <div class="content-card" onclick="showSection('expedients')" style="cursor:pointer; padding: 40px; border-radius: 20px;">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">👤</div>
+                    <h2>Expedients Individuals</h2>
+                    <p>Cerca usuaris i fitxes personals</p>
+                </div>
+                <div class="content-card" onclick="window.location.href='programes-gestio.html'" style="cursor:pointer; padding: 40px; border-radius: 20px;">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">📋</div>
+                    <h2>Gestió de Programes</h2>
+                    <p>Accedeix a tots els programes i projectes</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-expedients" style="display: none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h1>Expedients Individuals</h1>
+                <button class="btn-save" style="background:#64748b;" onclick="showSection('welcome')">⬅ Tornar</button>
+            </div>
+            
+            <div class="action-bar">
+                <input type="text" placeholder="Cerca per nom o DNI..." class="search-input" id="buscador">
+                <button class="btn-save">+ Nou Usuari</button>
+            </div>
+
+            <div class="content-card" style="padding:0; overflow:hidden;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Codi</th>
+                            <th>Nom Usuari</th>
+                            <th>DNI / NIE</th>
+                            <th>Accions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>EXP-2026-0042</strong></td>
+                            <td>Joan Garcia Pons</td>
+                            <td>43215678X</td>
+                            <td><button class="tab-btn" onclick="window.location.href='expedient-detall.html?nom=Joan%20Garcia%20Pons&dni=43215678X'">Fitxa Detall</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function showSection(id) {
+            document.getElementById('sec-welcome').style.display = (id === 'welcome') ? 'block' : 'none';
+            document.getElementById('sec-expedients').style.display = (id === 'expedients') ? 'block' : 'none';
+            
+            document.getElementById('nav-welcome').classList.toggle('active', id === 'welcome');
+            document.getElementById('nav-exp').classList.toggle('active', id === 'expedients');
+        }
+
+        window.onload = function() {
+            const params = new URLSearchParams(window.location.search);
+            if(params.get('section') === 'expedients') showSection('expedients');
+        }
+    </script>
+    <footer class="main-footer">
+    <div class="footer-content">
+        <span>© 2026 NexeSocial - Sistema de Gestió</span>
+        <span class="author-tag">Desenvolupat amb ❤️ per <strong>Rafa Campos</strong></span>
+    </div>
+</footer>
+</body>
+</html>

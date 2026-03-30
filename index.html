@@ -2,183 +2,149 @@
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
-    <title>NexeSocial - Inici</title>
+    <title>NexeSocial - Accés Protegit</title>
     <link rel="stylesheet" href="style-dashboard.css">
     <style>
-        /* Estils Pantalla de Benvinguda */
-        .welcome-section {
-            text-align: center;
-            padding: 40px 20px;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        .welcome-header { margin-bottom: 50px; }
-        .welcome-header h1 { font-size: 2.8rem; color: var(--primary-blue); margin-bottom: 10px; }
-        .welcome-header p { color: var(--text-muted); font-size: 1.2rem; }
-
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 30px;
-        }
-
-        .access-card {
-            background: white;
-            padding: 40px;
-            border-radius: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: 2px solid transparent;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .access-card:hover {
-            transform: translateY(-10px);
-            border-color: var(--primary-blue);
-            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.1);
-        }
-
-        .icon-circle {
-            width: 90px;
-            height: 90px;
-            background: #f1f5f9;
-            border-radius: 50%;
+        .login-body {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3rem;
-            margin-bottom: 25px;
-            transition: 0.3s;
+            height: 100vh; /* Altura fixa de la pantalla */
+            background: url('img/fondo-login.png') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden; /* Evita qualsevol intent de fer scroll */
         }
-        .access-card:hover .icon-circle { background: #e0e7ff; }
-
-        .access-card h2 { color: var(--text-main); margin-bottom: 15px; }
-        .access-card p { color: var(--text-muted); line-height: 1.6; margin-bottom: 30px; text-align: center; }
-
-        .btn-access {
+        
+        .login-card {
+            background: rgba(255, 255, 255, 0.8); 
+            backdrop-filter: blur(12px);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
             width: 100%;
-            padding: 12px;
-            background: var(--primary-blue);
+            max-width: 380px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            /* Eliminat el margin-bottom gran per evitar el scroll */
+            position: relative;
+            z-index: 1;
+            transform: translateY(-20px); /* Pugem una mica la caixa per estètica */
+        }
+
+        .login-card img { width: 140px; margin-bottom: 25px; }
+        .login-card h2 { color: #1e293b; margin-bottom: 8px; font-size: 1.5rem; }
+        .login-card p { color: #64748b; font-size: 0.9rem; margin-bottom: 30px; }
+        
+        .input-group { text-align: left; margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 5px; margin-left: 5px; }
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: 0.3s;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.5);
+        }
+        .input-group input:focus { border-color: #2563eb; outline: none; background: white; }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: #2563eb;
             color: white;
+            border: none;
             border-radius: 10px;
             font-weight: 700;
-            text-align: center;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
         }
+        .btn-login:hover { background: #1d4ed8; transform: translateY(-1px); }
+        
+        #error-msg { color: #ef4444; font-size: 0.85rem; margin-top: 15px; font-weight: 500; display: none; }
+        
+        .main-footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.6); 
+            backdrop-filter: blur(8px);
+            padding: 15px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            z-index: 10;
+        }
+        .footer-content {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #475569;
+        }
+        .author-tag strong { color: #2563eb; }
 
-        .hidden { display: none; }
+        @keyframes shake {
+            0%, 100% {transform: translateX(0);}
+            25% {transform: translateX(-8px);}
+            75% {transform: translateX(8px);}
+        }
     </style>
 </head>
-<body>
-    <aside class="sidebar">
-        <img src="img/NexeSocial-logo.png" alt="Logo">
-        <nav>
-            <div class="nav-item active" id="nav-welcome" onclick="showSection('welcome')">🏠 <span>Inici</span></div>
-            <div class="nav-item" id="nav-exp" onclick="showSection('expedients')">👤 <span>Expedients Individuals</span></div>
-            <div class="nav-item" onclick="window.location.href='programes-gestio.html'">📋 <span>Gestió Programes</span></div>
-            <div class="nav-item" onclick="window.location.href='configuracio.html'">⚙️ <span>Configuració</span></div>
-            <div class="nav-item" style="margin-top:auto; color:#ef4444;">🚪 <span>Sortir</span></div>
-        </nav>
-    </aside>
-
-    <main class="main-content">
+<body class="login-body">
+    <div class="login-card">
+        <img src="img/NexeSocial-logo.png" alt="Logo NexeSocial">
+        <h2>Benvingut de nou</h2>
+        <p>Introdueix les teves credencials de demostració</p>
         
-        <section id="sec-welcome" class="welcome-section">
-            <div class="welcome-header">
-                <h1>Bon dia, Equip Nexe!</h1>
-                <p>Selecciona l'àrea de treball per començar la gestió d'avui.</p>
-            </div>
+        <div class="input-group">
+            <label>Usuari</label>
+            <input type="text" id="userInput" placeholder="Ex: admin">
+        </div>
+        
+        <div class="input-group">
+            <label>Contrasenya</label>
+            <input type="password" id="passInput" placeholder="••••••••">
+        </div>
 
-            <div class="cards-grid">
-                <div class="access-card" onclick="showSection('expedients')">
-                    <div class="icon-circle">📂</div>
-                    <h2>Expedients Individuals</h2>
-                    <p>Cerca usuaris, crea noves fitxes i gestiona les dades personals de la base de dades general.</p>
-                    <div class="btn-access">Obrir Expedients</div>
-                </div>
+        <button class="btn-login" onclick="intentarLogin()">Accedir al Sistema</button>
+        
+        <p id="error-msg">⚠️ Usuari o contrasenya incorrectes</p>
 
-                <div class="access-card" onclick="window.location.href='programes-gestio.html'">
-                    <div class="icon-circle">📋</div>
-                    <h2>Gestió de Programes</h2>
-                    <p>Administra el Centre de Dia, Formació, SAIS, Programa Dona i Projectes Comunitaris.</p>
-                    <div class="btn-access">Anar a Programes</div>
-                </div>
-            </div>
-        </section>
+        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.05);">
+            <p style="font-size: 0.7rem; color: #64748b;">USUARI DEMO: <b>admin</b> | PASS: <b>nexe2026</b></p>
+        </div>
+    </div>
 
-        <section id="sec-expedients" class="hidden">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-                <h1>Expedients Individuals</h1>
-                <button class="btn-save" style="background:#64748b;" onclick="showSection('welcome')">⬅ Tornar</button>
-            </div>
-
-            <div class="action-bar">
-                <input type="text" id="buscador" placeholder="Cerca per nom o DNI..." class="search-input">
-                <button class="btn-save">+ Nou Usuari</button>
-            </div>
-
-            <div class="content-card" style="padding:0; overflow:hidden;">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Codi</th>
-                            <th>Nom Usuari</th>
-                            <th>DNI / NIE</th>
-                            <th>Estat</th>
-                            <th>Accions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-body">
-                        <tr>
-                            <td><strong>EXP-2026-0042</strong></td>
-                            <td>Joan Garcia Pons</td>
-                            <td>43215678X</td>
-                            <td><span style="color:var(--success-green); font-weight:bold;">● Actiu</span></td>
-                            <td>
-                                <button class="tab-btn" onclick="window.location.href='expedient-detall.html?dni=43215678X'">Fitxa Detall</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-    </main>
+    <footer class="main-footer">
+        <div class="footer-content">
+            <span>© 2026 NexeSocial - Sistema de Gestió</span>
+            <span class="author-tag">Desenvolupat amb ❤️ per <strong>Rafa Campos</strong></span>
+        </div>
+    </footer>
 
     <script>
-        // Funció per canviar de secció
-        function showSection(id) {
-            document.getElementById('sec-welcome').classList.add('hidden');
-            document.getElementById('sec-expedients').classList.add('hidden');
-            
-            document.getElementById('nav-welcome').classList.remove('active');
-            document.getElementById('nav-exp').classList.remove('active');
+        function intentarLogin() {
+            const user = document.getElementById('userInput').value;
+            const pass = document.getElementById('passInput').value;
+            const error = document.getElementById('error-msg');
 
-            if(id === 'welcome') {
-                document.getElementById('sec-welcome').classList.remove('hidden');
-                document.getElementById('nav-welcome').classList.add('active');
+            if(user === "admin" && pass === "nexe2026") {
+                window.location.href = 'home.html';
             } else {
-                document.getElementById('sec-expedients').classList.remove('hidden');
-                document.getElementById('nav-exp').classList.add('active');
+                error.style.display = 'block';
+                const card = document.querySelector('.login-card');
+                card.style.animation = "shake 0.4s";
+                setTimeout(() => { card.style.animation = ""; }, 400);
             }
         }
 
-        // Buscador
-        document.getElementById('buscador').addEventListener('input', function(e) {
-            const filter = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('#tabla-body tr');
-            rows.forEach(row => {
-                row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
-            });
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') intentarLogin();
         });
-
-        // Detectar si venim de "Programes" i volem anar directes a expedients
-        window.onload = function() {
-            const params = new URLSearchParams(window.location.search);
-            if(params.get('section') === 'expedients') showSection('expedients');
-        }
     </script>
 </body>
 </html>

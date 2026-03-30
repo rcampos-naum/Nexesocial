@@ -1,0 +1,58 @@
+/* 1. Asegurar que la página ocupe todo el alto */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column; /* Apila el contenido verticalmente */
+    min-height: 100vh;
+}
+
+/* 2. El contenido principal ocupa el espacio disponible */
+.main-content {
+    flex: 1; /* Esto empuja el footer hacia abajo */
+    padding-bottom: 40px; /* Espacio para que el contenido no toque el footer */
+    /* ... otros estilos que ya tengas ... */
+}
+
+/* 3. Estilos del Footer */
+.main-footer {
+    background-color: white; /* O un gris muy claro #f8fafc */
+    padding: 15px 40px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 0.85rem;
+    color: #64748b;
+    /* Esto asegura que el sidebar no lo tape si es fijo */
+    width: calc(100% - 250px); /* Suponiendo que tu sidebar mide 250px */
+    margin-left: 250px;
+    box-sizing: border-box;
+}
+
+/* Ajuste si el sidebar no es fijo o mide distinto */
+@media (max-width: 768px) {
+    .main-footer {
+        width: 100%;
+        margin-left: 0;
+    }
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.author-tag {
+    background: #f1f5f9;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.author-tag strong {
+    color: #2563eb; /* Un color azul para tu nombre */
+}

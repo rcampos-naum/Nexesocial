@@ -11,7 +11,7 @@
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
             margin-bottom: 30px;
             overflow: hidden;
-            border: 1px solid var(--border-color);
+            border: 1px solid #e2e8f0;
         }
         .main-program-header {
             padding: 20px 30px;
@@ -31,7 +31,7 @@
         }
         .sub-card {
             background: white;
-            border: 1px solid var(--border-color);
+            border: 1px solid #e2e8f0;
             border-radius: 12px;
             padding: 18px;
             display: flex;
@@ -39,7 +39,7 @@
             gap: 10px;
             transition: 0.2s;
         }
-        .sub-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+        .sub-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         
         .id-pill {
             background: #e2e8f0;
@@ -60,37 +60,32 @@
             cursor: pointer;
             font-weight: 600;
         }
-        .nested-list {
-            margin-top: 5px;
-            padding-left: 15px;
-            border-left: 2px solid #cbd5e1;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-        .nested-item { margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
-
         /* Colors per Àrea */
         .area-blue { background: #2563eb; }
         .area-amber { background: #d97706; }
         .area-green { background: #059669; }
         .area-pink { background: #db2777; }
+
+        .nested-list { margin-top: 5px; padding-left: 15px; border-left: 2px solid #cbd5e1; font-size: 0.85rem; color: #64748b; }
+        .nested-item { margin-bottom: 4px; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
     <aside class="sidebar">
         <img src="img/NexeSocial-logo.png" alt="Logo">
         <nav>
-            <div class="nav-item" onclick="window.location.href='dashboard.html'">🏠 <span>Inici</span></div>
-            <div class="nav-item" onclick="window.location.href='dashboard.html?section=expedients'">👤 <span>Expedients Individuals</span></div>
-            <div class="nav-item active" onclick="window.location.href='programes-gestio.html'">📋 <span>Gestió Programes</span></div>
-            <div class="nav-item" style="margin-top:auto; color:#ef4444;">🚪 <span>Sortir</span></div>
+            <div class="nav-item" onclick="window.location.href='home.html'">🏠 <span>Inici</span></div>
+            <div class="nav-item" onclick="window.location.href='home.html?section=expedients'">👤 <span>Expedients</span></div>
+            <div class="nav-item active" onclick="window.location.href='programes-gestio.html'">📋 <span>Programes</span></div>
+            <div class="nav-item" onclick="window.location.href='configuracio.html'">⚙️ <span>Configuració</span></div>
+            <div class="nav-item" onclick="window.location.href='index.html'" style="margin-top:auto; color:#ef4444; cursor:pointer;">🚪 <span>Sortir</span></div>
         </nav>
     </aside>
 
     <main class="main-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
             <h1>Estructura de Programes i Projectes</h1>
-            <button class="btn-save" onclick="window.location.href='dashboard.html'">⬅ Tornar a l'Inici</button>
+            <button class="btn-save" style="background:#64748b;" onclick="window.location.href='home.html'">⬅ Tornar</button>
         </div>
 
         <div class="main-program-card">
@@ -99,50 +94,22 @@
                 <span class="id-pill" style="color:white; background:rgba(0,0,0,0.2)">PROG-CD</span>
             </div>
             <div class="subprograms-container">
-                <div class="sub-card">
-                    <span class="id-pill">EXP-CD-LUD</span>
-                    <h3>Lúdiques</h3>
-                    <button class="btn-manage area-blue" onclick="gestionar('CD-LUD')">Gestionar</button>
-                </div>
-                <div class="sub-card">
-                    <span class="id-pill">EXP-CD-RAC</span>
-                    <h3>Racó</h3>
-                    <button class="btn-manage area-blue" onclick="gestionar('CD-RAC')">Gestionar</button>
-                </div>
-                <div class="sub-card">
-                    <span class="id-pill">EXP-CD-VOL</span>
-                    <h3>Voluntariat</h3>
-                    <button class="btn-manage area-blue" onclick="gestionar('CD-VOL')">Gestionar</button>
-                </div>
-                <div class="sub-card">
-                    <span class="id-pill">EXP-CD-EST</span>
-                    <h3>Escola d'estiu</h3>
-                    <button class="btn-manage area-blue" onclick="gestionar('CD-EST')">Gestionar</button>
-                </div>
+                <div class="sub-card"><span class="id-pill">EXP-CD-LUD</span><h3>Lúdiques</h3><button class="btn-manage area-blue">Gestionar</button></div>
+                <div class="sub-card"><span class="id-pill">EXP-CD-RAC</span><h3>Racó</h3><button class="btn-manage area-blue">Gestionar</button></div>
+                <div class="sub-card"><span class="id-pill">EXP-CD-VOL</span><h3>Voluntariat</h3><button class="btn-manage area-blue">Gestionar</button></div>
+                <div class="sub-card"><span class="id-pill">EXP-CD-EST</span><h3>Escola d'estiu</h3><button class="btn-manage area-blue">Gestionar</button></div>
             </div>
         </div>
 
         <div class="main-program-card">
             <div class="main-program-header area-amber">
-                <div><h2>FORMACIÓ I LABORAL</h2><p>Ocupabilitat i Intervenció Social</p></div>
+                <div><h2>FORMACIÓ I LABORAL</h2><p>Ocupabilitat</p></div>
                 <span class="id-pill" style="color:white; background:rgba(0,0,0,0.2)">PROG-FL</span>
             </div>
             <div class="subprograms-container">
-                <div class="sub-card">
-                    <span class="id-pill">EXP-PQI</span>
-                    <h3>PQI</h3>
-                    <button class="btn-manage area-amber" onclick="gestionar('PQI')">Gestionar</button>
-                </div>
-                <div class="sub-card">
-                    <span class="id-pill">EXP-ORI-LAB</span>
-                    <h3>Orientació Laboral</h3>
-                    <button class="btn-manage area-amber" onclick="gestionar('ORI-LAB')">Gestionar</button>
-                </div>
-                <div class="sub-card">
-                    <span class="id-pill">EXP-SAIS</span>
-                    <h3>SAIS</h3>
-                    <button class="btn-manage area-amber" onclick="gestionar('SAIS')">Gestionar</button>
-                </div>
+                <div class="sub-card"><span class="id-pill">EXP-SAIS</span><h3>SAIS</h3><button class="btn-manage area-amber">Gestionar</button></div>
+                <div class="sub-card"><span class="id-pill">EXP-PQI</span><h3>PQI</h3><button class="btn-manage area-amber">Gestionar</button></div>
+                <div class="sub-card"><span class="id-pill">EXP-ORI-LAB</span><h3>Orientació Laboral</h3><button class="btn-manage area-amber">Gestionar</button></div>
             </div>
         </div>
 
@@ -152,20 +119,15 @@
                 <span class="id-pill" style="color:white; background:rgba(0,0,0,0.2)">PROG-COM</span>
             </div>
             <div class="subprograms-container">
-                <div class="sub-card">
-                    <span class="id-pill">EXP-SON-ROCA</span>
-                    <h3>Son Roca Activa</h3>
-                    <button class="btn-manage area-green" onclick="gestionar('SON-ROCA')">Gestionar</button>
-                </div>
+                <div class="sub-card"><span class="id-pill">EXP-SON-ROCA</span><h3>Son Roca Activa</h3><button class="btn-manage area-green">Gestionar</button></div>
                 <div class="sub-card">
                     <span class="id-pill">EXP-INT-COM</span>
                     <h3>Intervenció Comunitària</h3>
                     <div class="nested-list">
                         <div class="nested-item"><span>• Son Roca</span> <span class="id-pill">COM-SR</span></div>
                         <div class="nested-item"><span>• Son Rapinya / La Vileta</span> <span class="id-pill">COM-SR-LV</span></div>
-                        <div class="nested-item"><span>• Camp d'en Serralta</span> <span class="id-pill">COM-CS</span></div>
                     </div>
-                    <button class="btn-manage area-green" onclick="gestionar('INTERVENCIO')">Gestionar Tot</button>
+                    <button class="btn-manage area-green">Gestionar Tot</button>
                 </div>
             </div>
         </div>
@@ -176,19 +138,19 @@
                 <span class="id-pill" style="color:white; background:rgba(0,0,0,0.2)">PROG-DONA</span>
             </div>
             <div class="subprograms-container">
-                <div class="sub-card">
-                    <span class="id-pill">EXP-DONA-GEN</span>
-                    <h3>Atenció Integral</h3>
-                    <button class="btn-manage area-pink" onclick="gestionar('DONA')">Gestionar</button>
-                </div>
+                <div class="sub-card"><span class="id-pill">EXP-DONA-GEN</span><h3>Atenció Integral</h3><button class="btn-manage area-pink">Gestionar</button></div>
             </div>
         </div>
-    </main>
 
-    <script>
-        function gestionar(id) {
-            alert("Accedint al llistat d'usuaris de: " + id);
-        }
-    </script>
+        <footer style="text-align: center; color: #94a3b8; font-size: 0.8rem; padding: 20px;">
+            App creada per <b>Rafa Campos</b> para NexeSocial
+        </footer>
+    </main>
+    <footer class="main-footer">
+    <div class="footer-content">
+        <span>© 2026 NexeSocial - Sistema de Gestió</span>
+        <span class="author-tag">Desenvolupat amb ❤️ per <strong>Rafa Campos</strong></span>
+    </div>
+</footer>
 </body>
 </html>

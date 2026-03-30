@@ -24,6 +24,7 @@ body {
     color: var(--text-main);
     display: flex;
     min-height: 100vh;
+    flex-direction: column; /* Afegit per gestionar el footer a peu de pàgina */
 }
 
 /* =========================================
@@ -101,6 +102,7 @@ body {
     padding: 40px;
     width: calc(100% - 280px);
     transition: 0.3s ease;
+    flex: 1; /* Afegit per empènyer el footer cap avall */
 }
 
 /* Cabecera del perfil (Header) */
@@ -291,6 +293,67 @@ tr:hover {
 }
 
 /* =========================================
+   FOOTER (AFEGIT)
+   ========================================= */
+.main-footer {
+    margin-left: 280px;
+    padding: 20px 40px;
+    border-top: 1px solid var(--border-color);
+    background: var(--white);
+    width: calc(100% - 280px);
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.author-tag {
+    background: #f1f5f9;
+    padding: 5px 12px;
+    border-radius: 20px;
+}
+
+.author-tag strong {
+    color: var(--primary-blue);
+}
+
+/* =========================================
+   LOGIN PERSONALITZAT (MODIFICAT AMB TRANSPARÈNCIA)
+   ========================================= */
+.login-body {
+    background-image: url('img/fondo-login.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-body .login-card {
+    /* Canviat a rgba per permetre transparència i afegit backdrop-filter */
+    background: rgba(255, 255, 255, 0.75); 
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Ajuste específico para el footer en la pantalla de Login (donde no hay sidebar) */
+.login-body .main-footer {
+    margin-left: 0;
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    /* També més transparent per coherència */
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+}
+
+/* =========================================
    RESPONSIVITAT
    ========================================= */
 @media (max-width: 1024px) {
@@ -301,7 +364,7 @@ tr:hover {
     .sidebar span, .sidebar img, .btn-sidebar-add span:last-child {
         display: none;
     }
-    .main-content {
+    .main-content, .main-footer {
         margin-left: 80px;
         width: calc(100% - 80px);
         padding: 25px;
@@ -313,5 +376,10 @@ tr:hover {
         flex-direction: column;
         align-items: flex-start;
         gap: 20px;
+    }
+    .footer-content {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
     }
 }
