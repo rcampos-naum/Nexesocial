@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Inici</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        /* Estils Pantalla de Benvinguda */
+        .welcome-section {
+            text-align: center;
+            padding: 40px 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .welcome-header { margin-bottom: 50px; }
+        .welcome-header h1 { font-size: 2.8rem; color: var(--primary-blue); margin-bottom: 10px; }
+        .welcome-header p { color: var(--text-muted); font-size: 1.2rem; }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+        }
+
+        .access-card {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .access-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary-blue);
+            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.1);
+        }
+
+        .icon-circle {
+            width: 90px;
+            height: 90px;
+            background: #f1f5f9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin-bottom: 25px;
+            transition: 0.3s;
+        }
+        .access-card:hover .icon-circle { background: #e0e7ff; }
+
+        .access-card h2 { color: var(--text-main); margin-bottom: 15px; }
+        .access-card p { color: var(--text-muted); line-height: 1.6; margin-bottom: 30px; text-align: center; }
+
+        .btn-access {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 10px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <img src="img/NexeSocial-logo.png" alt="Logo">
+        <nav>
+            <div class="nav-item active" id="nav-welcome" onclick="showSection('welcome')">🏠 <span>Inici</span></div>
+            <div class="nav-item" id="nav-exp" onclick="showSection('expedients')">👤 <span>Expedients Individuals</span></div>
+            <div class="nav-item" onclick="window.location.href='programes-gestio.html'">📋 <span>Gestió Programes</span></div>
+            <div class="nav-item" onclick="window.location.href='configuracio.html'">⚙️ <span>Configuració</span></div>
+            <div class="nav-item" style="margin-top:auto; color:#ef4444;">🚪 <span>Sortir</span></div>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        
+        <section id="sec-welcome" class="welcome-section">
+            <div class="welcome-header">
+                <h1>Bon dia, Equip Nexe!</h1>
+                <p>Selecciona l'àrea de treball per començar la gestió d'avui.</p>
+            </div>
+
+            <div class="cards-grid">
+                <div class="access-card" onclick="showSection('expedients')">
+                    <div class="icon-circle">📂</div>
+                    <h2>Expedients Individuals</h2>
+                    <p>Cerca usuaris, crea noves fitxes i gestiona les dades personals de la base de dades general.</p>
+                    <div class="btn-access">Obrir Expedients</div>
+                </div>
+
+                <div class="access-card" onclick="window.location.href='programes-gestio.html'">
+                    <div class="icon-circle">📋</div>
+                    <h2>Gestió de Programes</h2>
+                    <p>Administra el Centre de Dia, Formació, SAIS, Programa Dona i Projectes Comunitaris.</p>
+                    <div class="btn-access">Anar a Programes</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-expedients" class="hidden">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+                <h1>Expedients Individuals</h1>
+                <button class="btn-save" style="background:#64748b;" onclick="showSection('welcome')">⬅ Tornar</button>
+            </div>
+
+            <div class="action-bar">
+                <input type="text" id="buscador" placeholder="Cerca per nom o DNI..." class="search-input">
+                <button class="btn-save">+ Nou Usuari</button>
+            </div>
+
+            <div class="content-card" style="padding:0; overflow:hidden;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Codi</th>
+                            <th>Nom Usuari</th>
+                            <th>DNI / NIE</th>
+                            <th>Estat</th>
+                            <th>Accions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-body">
+                        <tr>
+                            <td><strong>EXP-2026-0042</strong></td>
+                            <td>Joan Garcia Pons</td>
+                            <td>43215678X</td>
+                            <td><span style="color:var(--success-green); font-weight:bold;">● Actiu</span></td>
+                            <td>
+                                <button class="tab-btn" onclick="window.location.href='expedient-detall.html?dni=43215678X'">Fitxa Detall</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Funció per canviar de secció
+        function showSection(id) {
+            document.getElementById('sec-welcome').classList.add('hidden');
+            document.getElementById('sec-expedients').classList.add('hidden');
+            
+            document.getElementById('nav-welcome').classList.remove('active');
+            document.getElementById('nav-exp').classList.remove('active');
+
+            if(id === 'welcome') {
+                document.getElementById('sec-welcome').classList.remove('hidden');
+                document.getElementById('nav-welcome').classList.add('active');
+            } else {
+                document.getElementById('sec-expedients').classList.remove('hidden');
+                document.getElementById('nav-exp').classList.add('active');
+            }
+        }
+
+        // Buscador
+        document.getElementById('buscador').addEventListener('input', function(e) {
+            const filter = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#tabla-body tr');
+            rows.forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
+            });
+        });
+
+        // Detectar si venim de "Programes" i volem anar directes a expedients
+        window.onload = function() {
+            const params = new URLSearchParams(window.location.search);
+            if(params.get('section') === 'expedients') showSection('expedients');
+        }
+    </script>
+</body>
+</html>
