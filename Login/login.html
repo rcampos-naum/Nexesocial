@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexeSocial - Accés Intern</title>
+    <style>
+        :root {
+            --blau-nexe: #0056b3;
+            --turquesa-social: #00a896;
+            --gris-fons: #f4f7f6;
+            --blanc: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--gris-fons);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-card {
+            background: var(--blanc);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .logo-area h1 {
+            color: var(--blau-nexe);
+            margin-bottom: 5px;
+            font-size: 28px;
+        }.logo-area p {
+  .logo-area {
+    margin-bottom: 60px;
+    text-align: center;
+
+        
+}
+
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box; /* Evita que el input se salga del cuadro */
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--turquesa-social);
+        }
+
+        .btn-login {
+            width: 100%;
+            background-color: var(--blau-nexe);
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-login:hover {
+            background-color: #004494;
+        }
+
+        .footer-text {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #999;
+        }
+        .main-logo {
+    width: 100%;       /* Ocupa el ancho del contenedor */
+    max-width: 220px;  /* Pero no más de 220px para que no sea excesivo */
+    height: auto;      /* Mantiene la proporción */
+    margin-bottom: 10px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="logo-area">
+            <img src="img/NexeSocial-logo.png" alt="NexeSocial Logo" class="main-logo">
+            <p>Aplicació de Gestió Interna</p>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="usuario">Usuari de Tècnic</label>
+                <input type="text" id="usuario" placeholder="Ej: jmgarcia" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Contrasenya</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn-login">Entrar al Sistema</button>
+        </form>
+
+        <p class="footer-text">Protecció de dades nivell alt segons RGPD</p>
+    </div>
+
+    <script>
+        // Lógica básica para probar el botón
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('usuario').value;
+            alert('Intentant accedir com a: ' + user + '. Ara hem de connectar això amb Node.js!');
+        });
+    </script>
+
+</body>
+</html>
