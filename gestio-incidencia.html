@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Detall Incidència</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        .gestio-container { max-width: 800px; margin: 20px auto; padding: 20px; background: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; background: #f8fafc; padding: 20px; border-radius: 12px; }
+        .status-select { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; font-weight: bold; }
+        #signature-pad { border: 2px dashed #cbd5e1; background: #fff; border-radius: 12px; cursor: crosshair; width: 100%; height: 200px; touch-action: none; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .label-pro { font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 5px; display: block; }
+    </style>
+</head>
+<body>
+    <main class="gestio-container">
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+            <div>
+                <h1 id="view-id">INC-XXXX</h1>
+                <p>Fitxa tècnica de reparació</p>
+            </div>
+            <button class="btn-sidebar-add" onclick="window.history.back()">⬅️ Tornar</button>
+        </header>
+
+        <div class="info-grid">
+            <div>
+                <span class="label-pro">Ubicació</span>
+                <p id="view-sala">Carregant...</p>
+            </div>
+            <div>
+                <span class="label-pro">Data de registre</span>
+                <p id="view-data">02/03/2026</p>
+            </div>
+            <div style="grid-column: span 2;">
+                <span class="label-pro">Descripció de l'avaria</span>
+                <p id="view-desc" style="font-style: italic; color: #1e293b;">...</p>
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+
+        <div class="form-group">
+            <label class="label-pro">Estat de la incidència</label>
+            <select id="inc-estat" class="status-select" onchange="actualitzarEstilEstat(this)">
+                <option value="pendent">⚠️ Pendent</option>
+                <option value="curs">🔧 En curs</option>
+                <option value="tancada">✅ Tancada (Requereix firma)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="label-pro">Actuacions realitzades</label>
+            <textarea id="inc-actuacio" rows="5" placeholder="Explica detalladament la reparació..."></textarea>
+        </div>
+
+        <div id="seccio-firma" style="display:none;">
+            <label class="label-pro">Firma obligatòria del tècnic</label>
+            <canvas id="signature-pad"></canvas>
+            <button class="btn-sidebar-add" style="font-size:0.7rem;" onclick="clearSignature()">Esborrar firma</button>
+        </div>
+
+        <div class="btn-group">
+            <button id="btn-finalitzar" class="btn-save" style="flex:2; height:50px;" onclick="validarTancament()">Guardar i Finalitzar</button>
+        </div>
+        
+        <footer style="text-align:center; margin-top:40px; font-size:0.8rem; color:#94a3b8;">
+            Desenvolupat amb ❤️ per <strong>Rafa Campos</strong>
+        </footer>
+    </main>
+
+    <script>
+        // Obtenir dades de la URL
+        const params = new URLSearchParams(window.location.search);
+        document.getElementById('view-id').innerText = params.get('id') || "INC-9183";
+        
+        // Simulem dades que vindrien de la "base de dades"
+        document.getElementById('view-sala').innerText = "Aula 4 (PQI) - 2ª Planta";
+        document.getElementById('view-desc').innerText = "El projector no encén, fa un soroll constant i el llum vermell parpelleja.";
+
+        const estatSelect = document.getElementById('inc-estat');
+        const seccioFirma = document.getElementById('seccio-firma');
+        
+        function actualitzarEstilEstat(select) {
+            if(select.value === 'tancada') {
+                seccioFirma.style.display = 'block';
+                select.style.background = '#dcfce7';
+            } else if(select.value === 'curs') {
+                seccioFirma.style.display = 'none';
+                select.style.background = '#fef9c3';
+            } else {
+                seccioFirma.style.display = 'none';
+                select.style.background = '#fee2e2';
+            }
+        }
+
+        // Lògica de firma
+        const canvas = document.getElementById('signature-pad');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+        let firmaRealitzada = false;
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return { x: (e.clientX || e.touches[0].clientX) - rect.left, y: (e.clientY || e.touches[0].clientY) - rect.top };
+        }
+
+        function start(e) { drawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); }
+        function draw(e) { 
+            if(!drawing) return; 
+            const p = getPos(e); 
+            ctx.lineTo(p.x, p.y); ctx.stroke(); 
+            firmaRealitzada = true;
+            e.preventDefault();
+        }
+        function stop() { drawing = false; }
+
+        canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', draw); window.addEventListener('mouseup', stop);
+        canvas.addEventListener('touchstart', start); canvas.addEventListener('touchmove', draw); canvas.addEventListener('touchend', stop);
+
+        function clearSignature() { ctx.clearRect(0, 0, canvas.width, canvas.height); firmaRealitzada = false; }
+
+        function validarTancament() {
+            const actuacio = document.getElementById('inc-actuacio').value;
+            
+            if(!actuacio) {
+                alert("Si us plau, descriu l'actuació realitzada.");
+                return;
+            }
+
+            if(estatSelect.value === 'tancada' && !firmaRealitzada) {
+                alert("La firma és obligatòria per poder tancar la incidència.");
+                return;
+            }
+
+            alert("Canvis guardats correctament. Estat actualitzat.");
+            window.location.href = 'manteniment.html';
+        }
+
+        // Estil inicial del traç
+        ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = '#1e293b';
+    </script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Perfil d'Usuari</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        .profile-container { max-width: 1100px; margin: 0 auto; }
+        
+        /* CABECERA */
+        .user-header-main {
+            background: white; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        /* TABS */
+        .tab-menu { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
+        .tab-btn { 
+            padding: 12px 20px; border: none; background: none; cursor: pointer; 
+            font-weight: 600; color: #64748b; border-radius: 8px 8px 0 0; transition: 0.3s; 
+        }
+        .tab-btn.active { background: #2563eb; color: white !important; }
+        
+        .tab-content { display: none; background: white; padding: 30px; border-radius: 15px; border: 1px solid #e2e8f0; min-height: 400px; }
+        .tab-content.active { display: block; }
+
+        /* GRID DE DADES */
+        .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
+        .data-group { border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
+        .label { display: block; font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 6px; }
+        .value { font-size: 1rem; color: #1e293b; font-weight: 500; display: block; min-height: 1.2rem; }
+
+        /* MODO EDICIÓ */
+        .edit-input { display: none; width: 100%; padding: 6px; border: 1px solid #2563eb; border-radius: 4px; font-size: 0.95rem; }
+        body.is-editing .edit-input { display: block; }
+        body.is-editing .value { display: none; }
+        
+        .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; margin-left: 10px; }
+
+        /* SEGUIMENT */
+        .seguiment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .nota-form { background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 25px; display: none; }
+        .nota-form textarea { width: 100%; height: 120px; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-top: 10px; font-family: inherit; resize: none; }
+        .seguiment-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .seguiment-table th { text-align: left; padding: 12px; background: #f1f5f9; color: #475569; font-size: 0.8rem; text-transform: uppercase; }
+        .seguiment-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; vertical-align: top; }
+    </style>
+</head>
+<body>
+    <script src="sidebar.js"></script>
+
+    <main class="main-content">
+        <div class="profile-container">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <a href="expedient-detall.html" style="text-decoration: none; color: #64748b; font-weight: 600;">← Tornar al llistat</a>
+                <div style="display: flex; gap: 10px;">
+                    <button id="btnEdit" onclick="toggleEdit()" style="background:#2563eb; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">✏️ Editar Fitxa</button>
+                    <button id="btnSaveMain" onclick="saveData()" style="display:none; background:#10b981; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">💾 Guardar Canvis</button>
+                    <button id="btnBaixa" style="background:#fff1f2; color:#e11d48; border:1px solid #fda4af; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">🚫 Baixa</button>
+                </div>
+            </div>
+
+            <div class="user-header-main">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div style="width: 70px; height: 70px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem;">👤</div>
+                    <div>
+                        <h1 style="margin: 0; font-size: 1.8rem; color: #1e293b;">
+                            <span id="header-nom-complet">Carregant...</span> 
+                            <span id="header-estat-pill" class="status-pill">Estat</span>
+                        </h1>
+                        <div style="display: flex; gap: 20px; margin-top: 8px; font-size: 0.9rem; color: #64748b; flex-wrap: wrap;">
+                            <span>DNI: <strong id="header-dni">-</strong></span>
+                            <span>Edat: <strong id="header-edat">-</strong></span>
+                            <span>Mòbil: <strong id="header-mobil">-</strong></span>
+                            <span>Email: <strong id="header-email">-</strong></span>
+                        </div>
+                    </div>
+                </div>
+                <div id="box-expedient" style="text-align: right;">
+                    <span class="label">Codi Expedient</span>
+                    <div id="header-expedient" style="color: #2563eb; font-size: 1.3rem; font-weight: 700;">EXP-0000</div>
+                </div>
+            </div>
+
+            <div class="tab-menu">
+                <button class="tab-btn active" onclick="openTab(event, 'personals')">Dades Personals</button>
+                <button class="tab-btn" onclick="openTab(event, 'social')">Socio-Laboral</button>
+                <button class="tab-btn" onclick="openTab(event, 'salut')">Salut / Discap.</button>
+                <button class="tab-btn" onclick="openTab(event, 'habitatge')">Habitatge</button>
+                <button class="tab-btn" onclick="openTab(event, 'seguiment')">Seguiment</button>
+            </div>
+
+            <div id="personals" class="tab-content active">
+                <div class="info-grid">
+                    <div class="data-group"><span class="label">Nom</span><span class="value" id="val-nom">-</span><input type="text" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Cognoms</span><span class="value" id="val-cognoms">-</span><input type="text" class="edit-input"></div>
+                    <div class="data-group"><span class="label">DNI / NIE</span><span class="value" id="val-dni">-</span><input type="text" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Nacionalitat</span><span class="value" id="val-nacionalitat">-</span><input type="text" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Data Naixement</span><span class="value" id="val-naixement">-</span><input type="text" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Sexe</span><span class="value" id="val-sexe">-</span><input type="text" class="edit-input"></div>
+                </div>
+            </div>
+
+            <div id="social" class="tab-content">
+                <div class="info-grid">
+                    <div class="data-group"><span class="label">Situació Laboral</span><span class="value">Aturat llarga durada</span><input type="text" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Estudis</span><span class="value">Graduat Escolar</span><input type="text" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Ingressos</span><span class="value">600€ (RMI)</span><input type="text" class="edit-input"></div>
+                </div>
+            </div>
+
+            <div id="salut" class="tab-content">
+                <div class="info-grid">
+                    <div class="data-group"><span class="label">Grau Discapacitat</span><span class="value" id="val-discap">Cap</span><input type="text" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Diagnòstic Principal</span><span class="value" id="val-diag">N/A</span><input type="text" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Targeta Sanitària</span><span class="value" id="val-tsi">Pendent de registre</span><input type="text" class="edit-input"></div>
+                </div>
+            </div>
+
+            <div id="habitatge" class="tab-content">
+                <div class="info-grid">
+                    <div class="data-group"><span class="label">Tipus d'Habitatge</span><span class="value" id="val-hab-tipus">Lloguer</span><input type="text" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Adreça</span><span class="value" id="val-hab-adreca">Carrer Major, 15</span><input type="text" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Municipi</span><span class="value" id="val-hab-muni">Palma</span><input type="text" class="edit-input"></div>
+                </div>
+            </div>
+
+            <div id="seguiment" class="tab-content">
+                <div class="seguiment-header">
+                    <h2 style="margin:0; font-size: 1.1rem;">Notes de Seguiment</h2>
+                    <button onclick="document.getElementById('notaForm').style.display='block'" style="background:#2563eb; color:white; border:none; padding:10px 18px; border-radius:8px; cursor:pointer;">+ Nova Nota</button>
+                </div>
+                <div id="notaForm" class="nota-form">
+                    <textarea id="notaText" placeholder="Descriu la intervenció..."></textarea>
+                    <button onclick="addNote()" style="background:#10b981; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; margin-top:10px;">💾 Guardar</button>
+                </div>
+                <table class="seguiment-table">
+                    <thead><tr><th>Data</th><th>Tècnic/a</th><th>Anotacions</th></tr></thead>
+                    <tbody id="seguimentBody">
+                        <tr><td>31/03/2026 - 09:30</td><td><strong>Rafa Campos</strong></td><td>Entrevista inicial realitzada.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const usuarisDB = [
+            { id: "0042", nom: "Joan", cognoms: "Garcia Pons", dni: "43215678X", edat: "40 anys", mobil: "600 123 456", email: "joan.garcia@nexe.org", estat: "Actiu", any: "2026", nacionalitat: "Espanyola", naixement: "12/05/1985", sexe: "Home", discap: "Cap", diag: "N/A", hab: "Lloguer", adreca: "Carrer Major, 15", muni: "Palma" },
+            { id: "0045", nom: "Maria", cognoms: "Rodríguez Beltran", dni: "45889211S", edat: "32 anys", mobil: "677 888 999", email: "maria.rodriguez@nexe.org", estat: "Actiu", any: "2026", nacionalitat: "Espanyola", naixement: "03/11/1993", sexe: "Dona", discap: "33%", diag: "Mobilitat reduïda", hab: "Propietat", adreca: "Av. Gabriel Alomar, 2", muni: "Palma" }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const userId = params.get('id');
+
+            if (userId === 'nou') {
+                document.getElementById('header-nom-complet').innerText = "Nou Registre";
+                document.getElementById('box-expedient').style.visibility = "hidden";
+                document.getElementById('btnBaixa').style.display = "none";
+                document.getElementById('btnSaveMain').innerText = "💾 Crear Usuari";
+                toggleEdit(); 
+            } else {
+                const u = usuarisDB.find(user => user.id === userId);
+                if (u) {
+                    document.getElementById('header-nom-complet').innerText = `${u.nom} ${u.cognoms}`;
+                    document.getElementById('header-dni').innerText = u.dni;
+                    document.getElementById('header-edat').innerText = u.edat;
+                    document.getElementById('header-mobil').innerText = u.mobil;
+                    document.getElementById('header-email').innerText = u.email;
+                    document.getElementById('header-expedient').innerText = `EXP-${u.any}-${u.id}`;
+                    
+                    const pill = document.getElementById('header-estat-pill');
+                    pill.innerText = u.estat;
+                    pill.style.background = u.estat === "Actiu" ? "#dcfce7" : "#fee2e2";
+                    pill.style.color = u.estat === "Actiu" ? "#15803d" : "#b91c1c";
+
+                    // Omplir valors visibles
+                    document.getElementById('val-nom').innerText = u.nom;
+                    document.getElementById('val-cognoms').innerText = u.cognoms;
+                    document.getElementById('val-dni').innerText = u.dni;
+                    document.getElementById('val-nacionalitat').innerText = u.nacionalitat;
+                    document.getElementById('val-naixement').innerText = u.naixement;
+                    document.getElementById('val-sexe').innerText = u.sexe;
+                    document.getElementById('val-discap').innerText = u.discap || "Cap";
+                    document.getElementById('val-diag').innerText = u.diag || "N/A";
+                    document.getElementById('val-hab-tipus').innerText = u.hab || "No registrat";
+                    document.getElementById('val-hab-adreca').innerText = u.adreca || "-";
+                    document.getElementById('val-hab-muni').innerText = u.muni || "-";
+                }
+            }
+            
+            // Sincronitzar inputs amb els valors visibles
+            syncInputs();
+        });
+
+        function syncInputs() {
+            document.querySelectorAll('.data-group').forEach(group => {
+                const val = group.querySelector('.value');
+                const input = group.querySelector('.edit-input');
+                if(val && input) input.value = val.innerText;
+            });
+        }
+
+        function toggleEdit() {
+            document.body.classList.toggle('is-editing');
+            const isEditing = document.body.classList.contains('is-editing');
+            document.getElementById('btnEdit').style.display = isEditing ? 'none' : 'block';
+            document.getElementById('btnSaveMain').style.display = isEditing ? 'block' : 'none';
+        }
+
+        function saveData() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('id') === 'nou') {
+                alert("Usuari creat correctament!");
+                window.location.href = "expedient-detall.html";
+            } else {
+                document.querySelectorAll('.edit-input').forEach(input => {
+                    const span = input.previousElementSibling;
+                    if(span && span.classList.contains('value')) span.innerText = input.value;
+                });
+                alert("Canvis guardats!");
+                toggleEdit();
+            }
+        }
+
+        function openTab(evt, tabName) {
+            let i, content, links;
+            content = document.getElementsByClassName("tab-content");
+            for (i = 0; i < content.length; i++) content[i].classList.remove("active");
+            links = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < links.length; i++) links[i].classList.remove("active");
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        function addNote() {
+            const text = document.getElementById('notaText').value;
+            if(!text) return;
+            const now = new Date();
+            const dateStr = now.toLocaleDateString() + " - " + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const newRow = `<tr><td>${dateStr}</td><td><strong>Rafa Campos</strong></td><td>${text}</td></tr>`;
+            document.getElementById('seguimentBody').insertAdjacentHTML('afterbegin', newRow);
+            document.getElementById('notaText').value = "";
+            document.getElementById('notaForm').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

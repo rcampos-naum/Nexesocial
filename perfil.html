@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - El Meu Perfil</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        .profile-card { max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; }
+        .profile-avatar { width: 100px; height: 100px; background: #2563eb; color: white; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; }
+        .settings-list { text-align: left; margin-top: 30px; border-top: 1px solid #f1f5f9; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
+        .status-select { padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: 600; }
+    </style>
+</head>
+<body>
+   <script src="sidebar.js"></script>
+
+    <main class="main-content">
+        <div class="profile-card">
+            <div class="profile-avatar" id="avatar-letra">R</div>
+            <h2 id="display-name">Demo</h2>
+            <p id="display-email" style="color: #64748b; margin-bottom: 20px;">administrador@nexesocial.cat</p>
+            
+            <div class="settings-list">
+                <div class="setting-item">
+                    <span><strong>Nom d'usuari</strong></span>
+                    <input type="text" id="edit-name" value="Demo" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+                </div>
+                <div class="setting-item">
+                    <span><strong>Rol de l'usuari</strong></span>
+                    <select id="role-selector" class="status-select">
+                        <option value="admin">⭐ Administrador</option>
+                        <option value="manteniment">🛠️ Manteniment</option>
+                        <option value="empleat">👤 Empleat</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <span><strong>Centre assignat</strong></span>
+                    <span style="color: #2563eb; font-weight: bold;">NexeSocial Central</span>
+                </div>
+            </div>
+            
+            <button class="btn-save" style="width: 100%; margin-top:30px; height: 45px;" onclick="guardarPerfil()">Actualitzar Perfil</button>
+        </div>
+
+        <footer style="text-align:center; margin-top:40px; font-size:0.8rem; color:#94a3b8;">
+            Desenvolupat amb ❤️ per <strong id="firma-footer">Rafa Campos</strong>
+        </footer>
+    </main>
+
+    <script>
+        function guardarPerfil() {
+            const nom = document.getElementById('edit-name').value;
+            const rol = document.getElementById('role-selector').value;
+            
+            localStorage.setItem('userName', nom);
+            localStorage.setItem('userRole', rol);
+            
+            document.getElementById('display-name').innerText = nom;
+            document.getElementById('avatar-letra').innerText = nom.charAt(0);
+            
+            alert("Perfil de " + rol.toUpperCase() + " guardat correctament.");
+            window.location.reload();
+        }
+
+        window.onload = () => {
+            const nom = localStorage.getItem('userName') || "Rafa Campos";
+            const rol = localStorage.getItem('userRole') || "admin";
+            
+            document.getElementById('edit-name').value = nom;
+            document.getElementById('display-name').innerText = nom;
+            document.getElementById('role-selector').value = rol;
+            document.getElementById('avatar-letra').innerText = nom.charAt(0);
+        };
+    </script>
+</body>
+</html>

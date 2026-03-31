@@ -383,3 +383,29 @@ tr:hover {
         text-align: center;
     }
 }
+/* Botó principal d'acció (Blau) */
+.btn-action-primary {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.btn-action-primary:hover {
+    background-color: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-action-primary:active {
+    transform: translateY(0);
+}
