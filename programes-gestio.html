@@ -5,6 +5,7 @@
     <title>NexeSocial - Gestió de Programes</title>
     <link rel="stylesheet" href="style-dashboard.css">
     <style>
+        /* ESTRUCTURA PRINCIPAL */
         .main-program-card {
             background: white;
             border-radius: 16px;
@@ -20,7 +21,7 @@
             align-items: center;
             color: white;
         }
-        .main-program-header h2 { margin: 0; font-size: 1.3rem; }
+        .main-program-header h2 { margin: 0; font-size: 1.3rem; text-transform: uppercase; }
         
         .subprograms-container {
             padding: 20px;
@@ -51,6 +52,9 @@
             font-size: 0.75rem;
             width: fit-content;
         }
+
+        .count-txt { font-size: 0.85rem; color: #64748b; font-weight: 600; margin: 5px 0; }
+
         .btn-manage {
             margin-top: 10px;
             color: white;
@@ -59,86 +63,205 @@
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
+            transition: opacity 0.2s;
         }
-        /* Colors per Àrea */
+        .btn-manage:hover { opacity: 0.9; }
+
+        /* COLORS ÀREES */
         .area-blue { background: #2563eb; }
         .area-amber { background: #d97706; }
         .area-green { background: #059669; }
         .area-pink { background: #db2777; }
 
         .nested-list { margin-top: 5px; padding-left: 15px; border-left: 2px solid #cbd5e1; font-size: 0.85rem; color: #64748b; }
-        .nested-item { margin-bottom: 4px; display: flex; justify-content: space-between; }
+        .nested-item { margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* MODAL */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.7); z-index: 1000; align-items: center; justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 20px; width: 400px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+        .modal-content label { display: block; font-size: 0.8rem; font-weight: bold; color: #64748b; margin-bottom: 5px; }
+        .modal-content input, .modal-content select {
+            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box;
+        }
+        /* Estil per al camp bloquejat */
+        #new-id { background: #f1f5f9; cursor: not-allowed; font-family: monospace; font-weight: bold; color: #475569; }
     </style>
 </head>
 <body>
-   <script src="sidebar.js"></script>
+    <script src="sidebar.js"></script>
 
     <main class="main-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-            <h1>Estructura de Programes i Projectes</h1>
-            <button class="btn-save" style="background:#64748b;" onclick="window.location.href='home.html'">⬅ Tornar</button>
-        </div>
-
-        <div class="main-program-card">
-            <div class="main-program-header area-blue">
-                <div><h2>CENTRE DE DIA</h2><p>Atenció Diürna</p></div>
-                <span class="id-pill" style="color:white; background:rgba(0,0,0,0.2)">PROG-CD</span>
+            <div>
+                <h1 style="margin:0;">Estructura de Programes i Projectes</h1>
+                <p style="color: #64748b; margin-top:5px;">Configuració d'intervencions i seguiment</p>
             </div>
-            <div class="subprograms-container">
-                <div class="sub-card"><span class="id-pill">EXP-CD-LUD</span><h3>Lúdiques</h3><button class="btn-manage area-blue">Gestionar</button></div>
-                <div class="sub-card"><span class="id-pill">EXP-CD-RAC</span><h3>Racó</h3><button class="btn-manage area-blue">Gestionar</button></div>
-                <div class="sub-card"><span class="id-pill">EXP-CD-VOL</span><h3>Voluntariat</h3><button class="btn-manage area-blue">Gestionar</button></div>
-                <div class="sub-card"><span class="id-pill">EXP-CD-EST</span><h3>Escola d'estiu</h3><button class="btn-manage area-blue">Gestionar</button></div>
+            <div style="display:flex; gap:12px;">
+                <button onclick="document.getElementById('modalNew').style.display='flex'" style="background:#1e293b; color:white; border:none; padding:12px 20px; border-radius:10px; cursor:pointer; font-weight:600; display:flex; align-items:center; gap:8px;">
+                    <span>➕ Nou Programa</span>
+                </button>
+                <button class="btn-save" style="background:#64748b;" onclick="window.location.href='home.html'">⬅ Tornar</button>
             </div>
         </div>
 
-        <div class="main-program-card">
-            <div class="main-program-header area-amber">
-                <div><h2>FORMACIÓ I LABORAL</h2><p>Ocupabilitat</p></div>
-                <span class="id-pill" style="color:white; background:rgba(0,0,0,0.2)">PROG-FL</span>
+        <div id="tauler-programes">
+            <div class="main-program-card">
+                <div class="main-program-header area-blue">
+                    <div><h2>CENTRE DE DIA</h2><p>Atenció Diürna</p></div>
+                    <span class="id-pill" style="color:white; background:rgba(0,0,0,0.2)">CD</span>
+                </div>
+                <div class="subprograms-container">
+                    <div class="sub-card"><span class="id-pill">CD-LUD</span><h3>Lúdiques</h3><div class="count-txt"></div><button class="btn-manage area-blue" onclick="anarDetall('CD-LUD')">Gestionar</button></div>
+                    <div class="sub-card"><span class="id-pill">CD-RAC</span><h3>Racó</h3><div class="count-txt"></div><button class="btn-manage area-blue" onclick="anarDetall('CD-RAC')">Gestionar</button></div>
+                    <div class="sub-card"><span class="id-pill">CD-VOL</span><h3>Voluntariat</h3><div class="count-txt"></div><button class="btn-manage area-blue" onclick="anarDetall('CD-VOL')">Gestionar</button></div>
+                    <div class="sub-card"><span class="id-pill">CD-EST</span><h3>Escola d'estiu</h3><div class="count-txt"></div><button class="btn-manage area-blue" onclick="anarDetall('CD-EST')">Gestionar</button></div>
+                </div>
             </div>
-            <div class="subprograms-container">
-                <div class="sub-card"><span class="id-pill">EXP-SAIS</span><h3>SAIS</h3><button class="btn-manage area-amber">Gestionar</button></div>
-                <div class="sub-card"><span class="id-pill">EXP-PQI</span><h3>PQI</h3><button class="btn-manage area-amber">Gestionar</button></div>
-                <div class="sub-card"><span class="id-pill">EXP-ORI-LAB</span><h3>Orientació Laboral</h3><button class="btn-manage area-amber">Gestionar</button></div>
-            </div>
-        </div>
 
-        <div class="main-program-card">
-            <div class="main-program-header area-green">
-                <div><h2>ÀREA COMUNITÀRIA</h2><p>Intervenció en el territori</p></div>
-                <span class="id-pill" style="color:white; background:rgba(0,0,0,0.2)">PROG-COM</span>
+            <div class="main-program-card">
+                <div class="main-program-header area-amber">
+                    <div><h2>FORMACIÓ I LABORAL</h2><p>Ocupabilitat</p></div>
+                    <span class="id-pill" style="color:white; background:rgba(0,0,0,0.2)">FL</span>
+                </div>
+                <div class="subprograms-container">
+                    <div class="sub-card"><span class="id-pill">SAIS</span><h3>SAIS</h3><div class="count-txt"></div><button class="btn-manage area-amber" onclick="anarDetall('SAIS')">Gestionar</button></div>
+                    <div class="sub-card"><span class="id-pill">PQI</span><h3>PQI</h3><div class="count-txt"></div><button class="btn-manage area-amber" onclick="anarDetall('PQI')">Gestionar</button></div>
+                    <div class="sub-card"><span class="id-pill">ORI-LAB</span><h3>Orientació Laboral</h3><div class="count-txt"></div><button class="btn-manage area-amber" onclick="anarDetall('ORI-LAB')">Gestionar</button></div>
+                </div>
             </div>
-            <div class="subprograms-container">
-                <div class="sub-card"><span class="id-pill">EXP-SON-ROCA</span><h3>Son Roca Activa</h3><button class="btn-manage area-green">Gestionar</button></div>
-                <div class="sub-card">
-                    <span class="id-pill">EXP-INT-COM</span>
-                    <h3>Intervenció Comunitària</h3>
-                    <div class="nested-list">
-                        <div class="nested-item"><span>• Son Roca</span> <span class="id-pill">COM-SR</span></div>
-                        <div class="nested-item"><span>• Son Rapinya / La Vileta</span> <span class="id-pill">COM-SR-LV</span></div>
+
+            <div class="main-program-card">
+                <div class="main-program-header area-green">
+                    <div><h2>ÀREA COMUNITÀRIA</h2><p>Intervenció en el territori</p></div>
+                    <span class="id-pill" style="color:white; background:rgba(0,0,0,0.2)">AC</span>
+                </div>
+                <div class="subprograms-container">
+                    <div class="sub-card"><span class="id-pill">AC-SNROAC</span><h3>Son Roca Activa</h3><div class="count-txt"></div><button class="btn-manage area-green" onclick="anarDetall('AC-SNROAC')">Gestionar</button></div>
+                    <div class="sub-card">
+                        <span class="id-pill">INT-COM</span>
+                        <h3>Intervenció Comunitària</h3>
+                        <div class="nested-list">
+                            <div class="nested-item"><span>• Son Roca</span> <span class="id-pill">AC-COM-SNRO</span></div>
+                            <div class="nested-item"><span>• Son Rapinya / La Vileta</span> <span class="id-pill">AC-COM-SRALV</span></div>
+                            <div class="nested-item"><span>• Camp d'en Serralta</span> <span class="id-pill">AC-COM-SERR</span></div>
+                        </div>
+                        <div class="count-txt" style="margin-top:10px"></div>
+                        <button class="btn-manage area-green" onclick="anarDetall('INT-COM')">Gestionar Tot</button>
                     </div>
-                    <button class="btn-manage area-green">Gestionar Tot</button>
+                </div>
+            </div>
+
+            <div class="main-program-card">
+                <div class="main-program-header area-pink">
+                    <div><h2>Atenció Integral</h2><p>Atenció específica</p></div>
+                    <span class="id-pill" style="color:white; background:rgba(0,0,0,0.2)">AI</span>
+                </div>
+                <div class="subprograms-container">
+                    <div class="sub-card"><span class="id-pill">AI-DONA</span><h3>Progrma Dona</h3><div class="count-txt"></div><button class="btn-manage area-pink" onclick="anarDetall('AI-DONA')">Gestionar</button></div>
                 </div>
             </div>
         </div>
+    </main>
 
-        <div class="main-program-card">
-            <div class="main-program-header area-pink">
-                <div><h2>PROGRAMA DONA</h2><p>Atenció específica</p></div>
-                <span class="id-pill" style="color:white; background:rgba(0,0,0,0.2)">PROG-DONA</span>
-            </div>
-            <div class="subprograms-container">
-                <div class="sub-card"><span class="id-pill">EXP-DONA-GEN</span><h3>Atenció Integral</h3><button class="btn-manage area-pink">Gestionar</button></div>
+    <div id="modalNew" class="modal">
+        <div class="modal-content">
+            <h3 style="margin:0 0 20px 0; color:#1e293b;">Crear Nou Programa</h3>
+            
+            <label>Nom del programa / projecte</label>
+            <input type="text" id="new-nom" placeholder="Ex: Taller de fusteria" oninput="autoGenerarID(this.value)">
+            
+            <label>Codi del Programa (Auto-generat)</label>
+            <input type="text" id="new-id" readonly tabindex="-1">
+            
+            <label>Àrea de referència</label>
+            <select id="new-area">
+                <option value="area-blue">Centre de Dia</option>
+                <option value="area-amber">Laboral</option>
+                <option value="area-green">Comunitari</option>
+                <option value="area-pink">Dona</option>
+            </select>
+            
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button onclick="guardarProg()" style="flex:1; background:#2563eb; color:white; border:none; padding:12px; border-radius:10px; cursor:pointer; font-weight:bold;">Crear Programa</button>
+                <button onclick="tancarModal()" style="flex:1; background:#f1f5f9; color:#475569; border:none; padding:12px; border-radius:10px; cursor:pointer;">Cancel·lar</button>
             </div>
         </div>
-    </main>
-    <footer class="main-footer">
-    <div class="footer-content">
-        <span>© 2026 NexeSocial - Sistema de Gestió</span>
-        <span class="author-tag">Desenvolupat amb ❤️ per <strong>Rafa Campos</strong></span>
     </div>
-</footer>
-<script src="database.js"></script>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <span>© 2026 NexeSocial - Sistema de Gestió</span>
+            <span class="author-tag">Desenvolupat amb ❤️ per <strong>Rafa Campos</strong></span>
+        </div>
+    </footer>
+
+    <script src="database.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof carregarDades === "function") carregarDades();
+            actualitzarComptadors();
+        });
+
+        // FUNCIO PER REDIRIGIR AL DETALL
+        function anarDetall(id) {
+            window.location.href = `gestio-detall.html?id=${id}`;
+        }
+
+        // GENERACIÓ AUTOMÀTICA DE CODI (READ-ONLY)
+        function autoGenerarID(nom) {
+            const inputId = document.getElementById('new-id');
+            if (!nom || nom.trim().length < 2) {
+                inputId.value = '';
+                return;
+            }
+
+            let clean = nom.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const stopWords = ["DE", "LA", "EL", "ELS", "LES", "I", "PER", "A", "D'", "AMB", "DEL"];
+            let parts = clean.split(/[\s-]+/).filter(p => !stopWords.includes(p) && p.length > 0);
+
+            let finalId = "";
+            if (parts.length === 1) {
+                finalId = parts[0].substring(0, 5);
+            } else {
+                finalId = parts[0].substring(0, 3) + "-" + parts[1].substring(0, 3);
+            }
+            inputId.value = finalId.replace(/[^A-Z0-9-]/g, "");
+        }
+
+        // COMPTE DE PARTICIPANTS DES DE DATABASE.JS
+        function actualitzarComptadors() {
+            const cards = document.querySelectorAll('.sub-card');
+            cards.forEach(card => {
+                const idPill = card.querySelector('.id-pill').innerText;
+                if (typeof BBDD !== 'undefined' && BBDD.expedients) {
+                    const num = BBDD.expedients.filter(u => u.programes && u.programes.includes(idPill)).length;
+                    const txt = card.querySelector('.count-txt');
+                    if(txt) txt.innerHTML = `👥 ${num} participants`;
+                }
+            });
+        }
+
+        function tancarModal() {
+            document.getElementById('modalNew').style.display = 'none';
+            document.getElementById('new-nom').value = '';
+            document.getElementById('new-id').value = '';
+        }
+
+        function guardarProg() {
+            const id = document.getElementById('new-id').value;
+            const nom = document.getElementById('new-nom').value;
+            if(!id || !nom) return alert("Escriu un nom per generar el codi.");
+            
+            alert(`✅ Programa creat amb èxit!\nNom: ${nom}\nCodi: ${id}`);
+            tancarModal();
+        }
+    </script>
 </body>
 </html>

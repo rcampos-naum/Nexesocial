@@ -45,3 +45,9 @@ function carregarDades() {
         Object.assign(BBDD, JSON.parse(dadesGuardades));
     }
 }
+BBDD.programes = [
+    { id: 'PROG-001', nom: 'Entrega d\'Aliments', responsable: 'Anna Martínez', color: '#3b82f6' },
+    { id: 'PROG-002', nom: 'Inserció Laboral', responsable: 'Joan Pere', color: '#10b981' },
+    { id: 'PROG-003', nom: 'Acompanyament Jurídic', responsable: 'Marta Soler', color: '#f59e0b' },
+    { id: 'PROG-004', nom: 'Suport Psicològic', responsable: 'Carme Riera', color: '#ef4444' }
+];
