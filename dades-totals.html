@@ -9,63 +9,34 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         .main-content { padding: 30px; }
-        
         .btn-export {
-            background: #10b981;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: 0.3s;
-            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+            background: #10b981; color: white; border: none;
+            padding: 12px 24px; border-radius: 8px; cursor: pointer;
+            font-weight: 600; display: flex; align-items: center; gap: 10px;
+            transition: 0.3s; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
         }
         .btn-export:hover { background: #059669; transform: translateY(-1px); }
-
         .gender-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-            gap: 20px; 
-            margin-bottom: 20px; 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; margin-bottom: 20px; 
         }
         .stat-card { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 12px; 
-            border: 1px solid #e2e8f0; 
-            text-align: center; 
+            background: white; padding: 20px; border-radius: 12px; 
+            border: 1px solid #e2e8f0; text-align: center; 
         }
         .stat-label { color: #64748b; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; }
         .stat-number { font-size: 2.2rem; font-weight: 800; margin: 5px 0; }
-
         .charts-container { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); 
-            gap: 25px; 
-            margin-top: 30px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
+            gap: 25px; margin-top: 30px;
         }
         .chart-box { 
-            background: white; 
-            border-radius: 15px; 
-            border: 1px solid #e2e8f0; 
-            padding: 25px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center;
+            background: white; border-radius: 15px; border: 1px solid #e2e8f0; 
+            padding: 25px; display: flex; flex-direction: column; align-items: center;
         }
         .section-title { font-size: 1.1rem; color: #1e293b; font-weight: 700; margin-bottom: 20px; width: 100%; }
-        canvas { max-width: 280px !important; max-height: 280px !important; }
-
-        .header-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 30px;
-        }
+        canvas { max-width: 250px !important; max-height: 250px !important; }
+        .header-flex { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
     </style>
 </head>
 <body>
@@ -90,7 +61,7 @@
             <div class="stat-card" style="border-top: 4px solid #2563eb;"><span class="stat-label">Homes</span><div id="count-homes" class="stat-number" style="color: #2563eb;">0</div></div>
             <div class="stat-card" style="border-top: 4px solid #db2777;"><span class="stat-label">Dones</span><div id="count-dones" class="stat-number" style="color: #db2777;">0</div></div>
             <div class="stat-card" style="border-top: 4px solid #8b5cf6;"><span class="stat-label">No Binari</span><div id="count-nobinari" class="stat-number" style="color: #8b5cf6;">0</div></div>
-            <div class="stat-card" style="border-top: 4px solid #64748b;"><span class="stat-label">Altres Gèneres</span><div id="count-altres-gen" class="stat-number" style="color: #64748b;">0</div></div>
+            <div class="stat-card" style="border-top: 4px solid #64748b;"><span class="stat-label">Altres / NC</span><div id="count-altres-gen" class="stat-number" style="color: #64748b;">0</div></div>
         </div>
 
         <div class="gender-grid">
@@ -101,29 +72,17 @@
         </div>
 
         <div class="gender-grid" style="margin-bottom: 30px;">
-            <div class="stat-card" style="border-top: 4px solid #4f46e5;"><span class="stat-label">Aturats/des</span><div id="count-atur" class="stat-number" style="color: #4f46e5;">0</div></div>
+            <div class="stat-card" style="border-top: 4px solid #4f46e5;"><span class="stat-label">En Atur</span><div id="count-atur" class="stat-number" style="color: #4f46e5;">0</div></div>
             <div class="stat-card" style="border-top: 4px solid #059669;"><span class="stat-label">Treball Actiu</span><div id="count-treball" class="stat-number" style="color: #059669;">0</div></div>
             <div class="stat-card" style="border-top: 4px solid #ea580c;"><span class="stat-label">Sense Ingressos</span><div id="count-sense-ingressos" class="stat-number" style="color: #ea580c;">0</div></div>
-            <div class="stat-card" style="border-top: 4px solid #9333ea;"><span class="stat-label">RGC / IMV</span><div id="count-ajudes" class="stat-number" style="color: #9333ea;">0</div></div>
+            <div class="stat-card" style="border-top: 4px solid #9333ea;"><span class="stat-label">RGC / IMV / Ajudes</span><div id="count-ajudes" class="stat-number" style="color: #9333ea;">0</div></div>
         </div>
 
         <div class="charts-container">
-            <div class="chart-box">
-                <div class="section-title">🌍 Nacionalitat</div>
-                <canvas id="chartNac"></canvas>
-            </div>
-            <div class="chart-box">
-                <div class="section-title">🎂 Rangs d'Edat</div>
-                <canvas id="chartEdat"></canvas>
-            </div>
-            <div class="chart-box">
-                <div class="section-title">🏠 Tipus d'Habitatge</div>
-                <canvas id="chartHab"></canvas>
-            </div>
-            <div class="chart-box">
-                <div class="section-title">👨‍👩‍👧 Unitat Convivencial</div>
-                <canvas id="chartFam"></canvas>
-            </div>
+            <div class="chart-box"><div class="section-title">🌍 Nacionalitat</div><canvas id="chartNac"></canvas></div>
+            <div class="chart-box"><div class="section-title">🎂 Rangs d'Edat</div><canvas id="chartEdat"></canvas></div>
+            <div class="chart-box"><div class="section-title">🏠 Tipus d'Habitatge</div><canvas id="chartHab"></canvas></div>
+            <div class="chart-box"><div class="section-title">👨‍👩‍👧 Unitat Convivencial</div><canvas id="chartFam"></canvas></div>
         </div>
     </main>
 
@@ -133,54 +92,52 @@
         function exportSummaryToExcel() {
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.json_to_sheet([{ A: "RESUM ESTADÍSTIC NEXE SOCIAL " + new Date().getFullYear() }], { skipHeader: true });
-
             const appendSection = (title, dataObj) => {
                 const data = Object.keys(dataObj).map(k => ({ "Concepte": k, "Total": dataObj[k] }));
                 XLSX.utils.sheet_add_json(ws, [{ A: "" }], { skipHeader: true, origin: -1 });
                 XLSX.utils.sheet_add_json(ws, [{ A: title }], { skipHeader: true, origin: -1 });
                 XLSX.utils.sheet_add_json(ws, data, { origin: -1 });
             };
-
-            appendSection("DISTRIBUCIÓ PER GÈNERE", statsGenere);
-            appendSection("SITUACIÓ ADMINISTRATIVA", statsSitu);
-            appendSection("SITUACIÓ LABORAL", statsLab);
-            appendSection("FONT D'INGRESSOS", statsIngressos);
-            appendSection("DISTRIBUCIÓ PER NACIONALITAT", statsNac);
-            appendSection("DISTRIBUCIÓ PER EDAT", statsRangs);
-            appendSection("TIPUS D'HABITATGE", statsHab);
-            appendSection("ESTRUCTURA FAMILIAR", statsFam);
-
-            XLSX.utils.book_append_sheet(wb, ws, "Resum Memòria");
-            XLSX.writeFile(wb, `Resum_Totals_${new Date().getFullYear()}.xlsx`);
+            appendSection("GÈNERE", statsGenere);
+            appendSection("SITUACIÓ ADM", statsSitu);
+            appendSection("LABORAL", statsLab);
+            appendSection("INGRESSOS", statsIngressos);
+            appendSection("NACIONALITAT", statsNac);
+            appendSection("EDATS", statsRangs);
+            XLSX.utils.book_append_sheet(wb, ws, "Resum");
+            XLSX.writeFile(wb, `Resum_Nexe_${new Date().getFullYear()}.xlsx`);
         }
 
         function calcularEdat(dataStr) {
             if (!dataStr || dataStr === "-") return null;
-            let naix = dataStr.includes('/') ? new Date(dataStr.split('/')[2], dataStr.split('/')[1]-1, dataStr.split('/')[0]) : new Date(dataStr);
-            const avui = new Date();
-            let edat = avui.getFullYear() - naix.getFullYear();
-            if (avui.getMonth() < naix.getMonth() || (avui.getMonth() === naix.getMonth() && avui.getDate() < naix.getDate())) edat--;
-            return isNaN(edat) ? null : edat;
+            try {
+                let parts = dataStr.split(/[-/]/);
+                let naix = parts[0].length === 4 ? new Date(parts[0], parts[1]-1, parts[2]) : new Date(parts[2], parts[1]-1, parts[0]);
+                const avui = new Date();
+                let edat = avui.getFullYear() - naix.getFullYear();
+                if (avui.getMonth() < naix.getMonth() || (avui.getMonth() === naix.getMonth() && avui.getDate() < naix.getDate())) edat--;
+                return isNaN(edat) ? null : edat;
+            } catch(e) { return null; }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            carregarDades();
+            if (typeof carregarDades === "function") carregarDades();
             const actius = BBDD.expedients.filter(u => u.estat !== "Baixa");
 
-            // Reset objectes
-            statsNac = {}; statsHab = {}; statsFam = {}; statsSitu = {}; statsIngressos = {}; statsGenere = {}; statsLab = {};
             statsRangs = { "Menors (<18)": 0, "Joves (18-30)": 0, "Adults (31-64)": 0, "Sèniors (+65)": 0 };
-            
             let sumaEdat = 0, countEdat = 0;
 
             actius.forEach(u => {
-                statsGenere[u.sexe || "No consta"] = (statsGenere[u.sexe || "No consta"] || 0) + 1;
-                statsSitu[u.situ_adm || "No consta"] = (statsSitu[u.situ_adm || "No consta"] || 0) + 1;
-                statsLab[u.laboral || "No consta"] = (statsLab[u.laboral || "No consta"] || 0) + 1;
-                statsIngressos[u.ingressos || "No consta"] = (statsIngressos[u.ingressos || "No consta"] || 0) + 1;
-                statsNac[u.nacionalitat || "No consta"] = (statsNac[u.nacionalitat || "No consta"] || 0) + 1;
-                statsHab[u.tipus_hab || "No consta"] = (statsHab[u.tipus_hab || "No consta"] || 0) + 1;
-                statsFam[u.familia || "No consta"] = (statsFam[u.familia || "No consta"] || 0) + 1;
+                // Normalitzem a majúscules per evitar errors de "Dona" vs "DONA"
+                const g = (u.sexe || "NC").toUpperCase();
+                statsGenere[g] = (statsGenere[g] || 0) + 1;
+                
+                statsSitu[u.situ_adm || "NC"] = (statsSitu[u.situ_adm || "NC"] || 0) + 1;
+                statsLab[u.laboral || "NC"] = (statsLab[u.laboral || "NC"] || 0) + 1;
+                statsIngressos[u.ingressos || "NC"] = (statsIngressos[u.ingressos || "NC"] || 0) + 1;
+                statsNac[u.nacionalitat || "NC"] = (statsNac[u.nacionalitat || "NC"] || 0) + 1;
+                statsHab[u.tipus_hab || "NC"] = (statsHab[u.tipus_hab || "NC"] || 0) + 1;
+                statsFam[u.familia || "NC"] = (statsFam[u.familia || "NC"] || 0) + 1;
 
                 const e = calcularEdat(u.naixement);
                 if (e !== null) {
@@ -192,34 +149,32 @@
                 }
             });
 
-            // TARGETES GÈNERE
+            // Assignació de dades a les targetes (amb fallback a 0)
             document.getElementById('count-homes').innerText = statsGenere["HOME"] || 0;
             document.getElementById('count-dones').innerText = statsGenere["DONA"] || 0;
             document.getElementById('count-nobinari').innerText = statsGenere["NO BINARI"] || 0;
-            document.getElementById('count-altres-gen').innerText = statsGenere["ALTRES"] || 0;
+            document.getElementById('count-altres-gen').innerText = (statsGenere["ALTRES"] || 0) + (statsGenere["NC"] || 0);
 
-            // TARGETES ADM
             document.getElementById('count-regular').innerText = statsSitu["Regularitzada"] || 0;
             document.getElementById('count-irregular').innerText = statsSitu["Irregular"] || 0;
             document.getElementById('count-asil').innerText = statsSitu["Sol·licitant Asil"] || 0;
             document.getElementById('count-altres-situ').innerText = (statsSitu["Comunitària"] || 0) + (statsSitu["Altres"] || 0);
 
-            // TARGETES SOCIO-LABORAL
             document.getElementById('count-atur').innerText = statsLab["Aturat/da"] || 0;
             document.getElementById('count-treball').innerText = statsLab["Treball actiu"] || 0;
             document.getElementById('count-sense-ingressos').innerText = statsIngressos["Sense Ingressos"] || 0;
-            document.getElementById('count-ajudes').innerText = statsIngressos["RGC / IMV"] || 0;
+            document.getElementById('count-ajudes').innerText = (statsIngressos["RGC / IMV"] || 0) + (statsIngressos["Ajudes puntuals"] || 0);
 
             document.getElementById('avg-total').innerText = countEdat > 0 ? (sumaEdat/countEdat).toFixed(1) + " anys" : "-";
 
-            // GRÀFICS
+            // Creació de Gràfics
             const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#94a3b8'];
-            const options = { plugins: { legend: { position: 'bottom' } }, cutout: '65%' };
+            const config = (data) => ({ type: 'doughnut', data: { labels: Object.keys(data), datasets: [{ data: Object.values(data), backgroundColor: colors }] }, options: { plugins: { legend: { position: 'bottom' } }, cutout: '65%' } });
 
-            new Chart(document.getElementById('chartNac'), { type: 'doughnut', data: { labels: Object.keys(statsNac), datasets: [{ data: Object.values(statsNac), backgroundColor: colors }] }, options });
-            new Chart(document.getElementById('chartEdat'), { type: 'doughnut', data: { labels: Object.keys(statsRangs), datasets: [{ data: Object.values(statsRangs), backgroundColor: ['#f87171', '#60a5fa', '#34d399', '#fbbf24'] }] }, options });
-            new Chart(document.getElementById('chartHab'), { type: 'doughnut', data: { labels: Object.keys(statsHab), datasets: [{ data: Object.values(statsHab), backgroundColor: colors }] }, options });
-            new Chart(document.getElementById('chartFam'), { type: 'doughnut', data: { labels: Object.keys(statsFam), datasets: [{ data: Object.values(statsFam), backgroundColor: colors }] }, options });
+            new Chart(document.getElementById('chartNac'), config(statsNac));
+            new Chart(document.getElementById('chartEdat'), config(statsRangs));
+            new Chart(document.getElementById('chartHab'), config(statsHab));
+            new Chart(document.getElementById('chartFam'), config(statsFam));
         });
     </script>
 </body>

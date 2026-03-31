@@ -7,63 +7,42 @@
     <style>
         /* ESTRUCTURA PRINCIPAL */
         .main-program-card {
-            background: white;
-            border-radius: 16px;
+            background: white; border-radius: 16px;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-            overflow: hidden;
+            margin-bottom: 30px; overflow: hidden;
             border: 1px solid #e2e8f0;
         }
         .main-program-header {
-            padding: 20px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
+            padding: 20px 30px; display: flex;
+            justify-content: space-between; align-items: center; color: white;
         }
         .main-program-header h2 { margin: 0; font-size: 1.3rem; text-transform: uppercase; }
         
         .subprograms-container {
-            padding: 20px;
-            display: grid;
+            padding: 20px; display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            background: #f8fafc;
+            gap: 20px; background: #f8fafc;
         }
         .sub-card {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            transition: 0.2s;
+            background: white; border: 1px solid #e2e8f0;
+            border-radius: 12px; padding: 18px;
+            display: flex; flex-direction: column; gap: 10px; transition: 0.2s;
         }
         .sub-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         
         .id-pill {
-            background: #e2e8f0;
-            color: #475569;
-            padding: 3px 8px;
-            border-radius: 5px;
-            font-family: monospace;
-            font-weight: bold;
-            font-size: 0.75rem;
-            width: fit-content;
+            background: #e2e8f0; color: #475569;
+            padding: 3px 8px; border-radius: 5px;
+            font-family: monospace; font-weight: bold;
+            font-size: 0.75rem; width: fit-content;
         }
 
-        .count-txt { font-size: 0.85rem; color: #64748b; font-weight: 600; margin: 5px 0; }
+        .count-txt { font-size: 0.85rem; color: #2563eb; font-weight: 700; margin: 5px 0; }
 
         .btn-manage {
-            margin-top: 10px;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: opacity 0.2s;
+            margin-top: 10px; color: white; border: none;
+            padding: 10px; border-radius: 8px; cursor: pointer;
+            font-weight: 600; transition: opacity 0.2s;
         }
         .btn-manage:hover { opacity: 0.9; }
 
@@ -90,7 +69,6 @@
         .modal-content input, .modal-content select {
             width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box;
         }
-        /* Estil per al camp bloquejat */
         #new-id { background: #f1f5f9; cursor: not-allowed; font-family: monospace; font-weight: bold; color: #475569; }
     </style>
 </head>
@@ -107,7 +85,7 @@
                 <button onclick="document.getElementById('modalNew').style.display='flex'" style="background:#1e293b; color:white; border:none; padding:12px 20px; border-radius:10px; cursor:pointer; font-weight:600; display:flex; align-items:center; gap:8px;">
                     <span>➕ Nou Programa</span>
                 </button>
-                <button class="btn-save" style="background:#64748b;" onclick="window.location.href='home.html'">⬅ Tornar</button>
+                <button style="background:#64748b; color:white; border:none; padding:12px 20px; border-radius:10px; cursor:pointer;" onclick="window.location.href='home.html'">⬅ Tornar</button>
             </div>
         </div>
 
@@ -118,10 +96,10 @@
                     <span class="id-pill" style="color:white; background:rgba(0,0,0,0.2)">CD</span>
                 </div>
                 <div class="subprograms-container">
-                    <div class="sub-card"><span class="id-pill">CD-LUD</span><h3>Lúdiques</h3><div class="count-txt"></div><button class="btn-manage area-blue" onclick="anarDetall('CD-LUD')">Gestionar</button></div>
-                    <div class="sub-card"><span class="id-pill">CD-RAC</span><h3>Racó</h3><div class="count-txt"></div><button class="btn-manage area-blue" onclick="anarDetall('CD-RAC')">Gestionar</button></div>
-                    <div class="sub-card"><span class="id-pill">CD-VOL</span><h3>Voluntariat</h3><div class="count-txt"></div><button class="btn-manage area-blue" onclick="anarDetall('CD-VOL')">Gestionar</button></div>
-                    <div class="sub-card"><span class="id-pill">CD-EST</span><h3>Escola d'estiu</h3><div class="count-txt"></div><button class="btn-manage area-blue" onclick="anarDetall('CD-EST')">Gestionar</button></div>
+                    <div class="sub-card"><span class="id-pill">CD-LUD</span><h3>Lúdiques</h3><div class="count-txt" data-id="CD-LUD">Carregant...</div><button class="btn-manage area-blue" onclick="anarDetall('CD-LUD')">Gestionar</button></div>
+                    <div class="sub-card"><span class="id-pill">CD-RAC</span><h3>Racó</h3><div class="count-txt" data-id="CD-RAC">Carregant...</div><button class="btn-manage area-blue" onclick="anarDetall('CD-RAC')">Gestionar</button></div>
+                    <div class="sub-card"><span class="id-pill">CD-VOL</span><h3>Voluntariat</h3><div class="count-txt" data-id="CD-VOL">Carregant...</div><button class="btn-manage area-blue" onclick="anarDetall('CD-VOL')">Gestionar</button></div>
+                    <div class="sub-card"><span class="id-pill">CD-EST</span><h3>Escola d'estiu</h3><div class="count-txt" data-id="CD-EST">Carregant...</div><button class="btn-manage area-blue" onclick="anarDetall('CD-EST')">Gestionar</button></div>
                 </div>
             </div>
 
@@ -131,9 +109,9 @@
                     <span class="id-pill" style="color:white; background:rgba(0,0,0,0.2)">FL</span>
                 </div>
                 <div class="subprograms-container">
-                    <div class="sub-card"><span class="id-pill">SAIS</span><h3>SAIS</h3><div class="count-txt"></div><button class="btn-manage area-amber" onclick="anarDetall('SAIS')">Gestionar</button></div>
-                    <div class="sub-card"><span class="id-pill">PQI</span><h3>PQI</h3><div class="count-txt"></div><button class="btn-manage area-amber" onclick="anarDetall('PQI')">Gestionar</button></div>
-                    <div class="sub-card"><span class="id-pill">ORI-LAB</span><h3>Orientació Laboral</h3><div class="count-txt"></div><button class="btn-manage area-amber" onclick="anarDetall('ORI-LAB')">Gestionar</button></div>
+                    <div class="sub-card"><span class="id-pill">SAIS</span><h3>SAIS</h3><div class="count-txt" data-id="SAIS">Carregant...</div><button class="btn-manage area-amber" onclick="anarDetall('SAIS')">Gestionar</button></div>
+                    <div class="sub-card"><span class="id-pill">PQI</span><h3>PQI</h3><div class="count-txt" data-id="PQI">Carregant...</div><button class="btn-manage area-amber" onclick="anarDetall('PQI')">Gestionar</button></div>
+                    <div class="sub-card"><span class="id-pill">ORI-LAB</span><h3>Orientació Laboral</h3><div class="count-txt" data-id="ORI-LAB">Carregant...</div><button class="btn-manage area-amber" onclick="anarDetall('PQI')">Gestionar</button></div>
                 </div>
             </div>
 
@@ -143,28 +121,17 @@
                     <span class="id-pill" style="color:white; background:rgba(0,0,0,0.2)">AC</span>
                 </div>
                 <div class="subprograms-container">
-                    <div class="sub-card"><span class="id-pill">AC-SNROAC</span><h3>Son Roca Activa</h3><div class="count-txt"></div><button class="btn-manage area-green" onclick="anarDetall('AC-SNROAC')">Gestionar</button></div>
+                    <div class="sub-card"><span class="id-pill">AC-SNROAC</span><h3>Son Roca Activa</h3><div class="count-txt" data-id="AC-SNROAC">Carregant...</div><button class="btn-manage area-green" onclick="anarDetall('AC-SNROAC')">Gestionar</button></div>
                     <div class="sub-card">
                         <span class="id-pill">INT-COM</span>
                         <h3>Intervenció Comunitària</h3>
                         <div class="nested-list">
                             <div class="nested-item"><span>• Son Roca</span> <span class="id-pill">AC-COM-SNRO</span></div>
-                            <div class="nested-item"><span>• Son Rapinya / La Vileta</span> <span class="id-pill">AC-COM-SRALV</span></div>
-                            <div class="nested-item"><span>• Camp d'en Serralta</span> <span class="id-pill">AC-COM-SERR</span></div>
+                            <div class="nested-item"><span>• Son Rapinya</span> <span class="id-pill">AC-COM-SRALV</span></div>
                         </div>
-                        <div class="count-txt" style="margin-top:10px"></div>
+                        <div class="count-txt" data-id="INT-COM" style="margin-top:10px">Carregant...</div>
                         <button class="btn-manage area-green" onclick="anarDetall('INT-COM')">Gestionar Tot</button>
                     </div>
-                </div>
-            </div>
-
-            <div class="main-program-card">
-                <div class="main-program-header area-pink">
-                    <div><h2>Atenció Integral</h2><p>Atenció específica</p></div>
-                    <span class="id-pill" style="color:white; background:rgba(0,0,0,0.2)">AI</span>
-                </div>
-                <div class="subprograms-container">
-                    <div class="sub-card"><span class="id-pill">AI-DONA</span><h3>Progrma Dona</h3><div class="count-txt"></div><button class="btn-manage area-pink" onclick="anarDetall('AI-DONA')">Gestionar</button></div>
                 </div>
             </div>
         </div>
@@ -173,34 +140,23 @@
     <div id="modalNew" class="modal">
         <div class="modal-content">
             <h3 style="margin:0 0 20px 0; color:#1e293b;">Crear Nou Programa</h3>
-            
-            <label>Nom del programa / projecte</label>
+            <label>Nom del programa</label>
             <input type="text" id="new-nom" placeholder="Ex: Taller de fusteria" oninput="autoGenerarID(this.value)">
-            
-            <label>Codi del Programa (Auto-generat)</label>
+            <label>Codi (Auto-generat)</label>
             <input type="text" id="new-id" readonly tabindex="-1">
-            
-            <label>Àrea de referència</label>
+            <label>Àrea</label>
             <select id="new-area">
                 <option value="area-blue">Centre de Dia</option>
                 <option value="area-amber">Laboral</option>
                 <option value="area-green">Comunitari</option>
                 <option value="area-pink">Dona</option>
             </select>
-            
             <div style="display:flex; gap:10px; margin-top:15px;">
-                <button onclick="guardarProg()" style="flex:1; background:#2563eb; color:white; border:none; padding:12px; border-radius:10px; cursor:pointer; font-weight:bold;">Crear Programa</button>
+                <button onclick="guardarProg()" style="flex:1; background:#2563eb; color:white; border:none; padding:12px; border-radius:10px; cursor:pointer; font-weight:bold;">Crear</button>
                 <button onclick="tancarModal()" style="flex:1; background:#f1f5f9; color:#475569; border:none; padding:12px; border-radius:10px; cursor:pointer;">Cancel·lar</button>
             </div>
         </div>
     </div>
-
-    <footer class="main-footer">
-        <div class="footer-content">
-            <span>© 2026 NexeSocial - Sistema de Gestió</span>
-            <span class="author-tag">Desenvolupat amb ❤️ per <strong>Rafa Campos</strong></span>
-        </div>
-    </footer>
 
     <script src="database.js"></script>
     <script>
@@ -209,43 +165,29 @@
             actualitzarComptadors();
         });
 
-        // FUNCIO PER REDIRIGIR AL DETALL
         function anarDetall(id) {
             window.location.href = `gestio-detall.html?id=${id}`;
         }
 
-        // GENERACIÓ AUTOMÀTICA DE CODI (READ-ONLY)
-        function autoGenerarID(nom) {
-            const inputId = document.getElementById('new-id');
-            if (!nom || nom.trim().length < 2) {
-                inputId.value = '';
-                return;
-            }
-
-            let clean = nom.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            const stopWords = ["DE", "LA", "EL", "ELS", "LES", "I", "PER", "A", "D'", "AMB", "DEL"];
-            let parts = clean.split(/[\s-]+/).filter(p => !stopWords.includes(p) && p.length > 0);
-
-            let finalId = "";
-            if (parts.length === 1) {
-                finalId = parts[0].substring(0, 5);
-            } else {
-                finalId = parts[0].substring(0, 3) + "-" + parts[1].substring(0, 3);
-            }
-            inputId.value = finalId.replace(/[^A-Z0-9-]/g, "");
-        }
-
-        // COMPTE DE PARTICIPANTS DES DE DATABASE.JS
         function actualitzarComptadors() {
-            const cards = document.querySelectorAll('.sub-card');
-            cards.forEach(card => {
-                const idPill = card.querySelector('.id-pill').innerText;
+            const counts = document.querySelectorAll('.count-txt');
+            counts.forEach(txt => {
+                const programId = txt.getAttribute('data-id');
                 if (typeof BBDD !== 'undefined' && BBDD.expedients) {
-                    const num = BBDD.expedients.filter(u => u.programes && u.programes.includes(idPill)).length;
-                    const txt = card.querySelector('.count-txt');
-                    if(txt) txt.innerHTML = `👥 ${num} participants`;
+                    const num = BBDD.expedients.filter(u => 
+                        u.programes && Array.isArray(u.programes) && u.programes.includes(programId)
+                    ).length;
+                    txt.innerHTML = `👥 ${num} participants`;
                 }
             });
+        }
+
+        function autoGenerarID(nom) {
+            const inputId = document.getElementById('new-id');
+            if (!nom || nom.trim().length < 2) { inputId.value = ''; return; }
+            let clean = nom.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            let parts = clean.split(/[\s-]+/).filter(p => p.length > 2);
+            inputId.value = parts.length > 1 ? `${parts[0].slice(0,3)}-${parts[1].slice(0,3)}` : parts[0].slice(0,5);
         }
 
         function tancarModal() {
@@ -257,9 +199,8 @@
         function guardarProg() {
             const id = document.getElementById('new-id').value;
             const nom = document.getElementById('new-nom').value;
-            if(!id || !nom) return alert("Escriu un nom per generar el codi.");
-            
-            alert(`✅ Programa creat amb èxit!\nNom: ${nom}\nCodi: ${id}`);
+            if(!id || !nom) return alert("Escriu un nom.");
+            alert(`✅ Programa ${nom} (${id}) creat correctament (Simulació).`);
             tancarModal();
         }
     </script>

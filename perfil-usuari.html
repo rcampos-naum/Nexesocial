@@ -30,10 +30,35 @@
         .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; margin-left: 10px; }
         .seguiment-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .seguiment-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+
+        /* --- ESTILS DEL MODAL PERSONALITZAT --- */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;
+        }
+        .modal-box {
+            background: white; padding: 30px; border-radius: 12px; max-width: 400px; width: 90%;
+            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); animation: fadeIn 0.2s ease-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-box h3 { margin-top: 0; color: #1e293b; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 25px; }
+        .btn-modal { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; flex: 1; }
+        .btn-confirm { background: #2563eb; color: white; }
+        .btn-cancel { background: #e2e8f0; color: #64748b; }
+        .btn-ok { background: #10b981; color: white; }
     </style>
 </head>
 <body>
     <script src="sidebar.js"></script>
+
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="modalTitle">Confirmació</h3>
+            <p id="modalMsg">Estàs segur de realitzar aquesta acció?</p>
+            <div id="modalButtons" class="modal-buttons"></div>
+        </div>
+    </div>
 
     <main class="main-content">
         <div class="profile-container">
@@ -41,7 +66,7 @@
                 <a href="expedient-detall.html" style="text-decoration: none; color: #64748b; font-weight: 600;">← Tornar al llistat</a>
                 <div style="display: flex; gap: 10px;">
                     <button id="btnEdit" onclick="toggleEdit()" style="background:#2563eb; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">✏️ Editar Fitxa</button>
-                    <button id="btnSaveMain" onclick="saveData()" style="display:none; background:#10b981; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">💾 Guardar Canvis</button>
+                    <button id="btnSaveMain" onclick="confirmSave()" style="display:none; background:#10b981; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">💾 Guardar Canvis</button>
                 </div>
             </div>
 
@@ -79,7 +104,7 @@
                     <div class="data-group"><span class="label">Nom</span><span class="value" id="val-nom">-</span><input type="text" id="in-nom" class="edit-input"></div>
                     <div class="data-group"><span class="label">Cognoms</span><span class="value" id="val-cognoms">-</span><input type="text" id="in-cognoms" class="edit-input"></div>
                     <div class="data-group"><span class="label">DNI / NIE</span><span class="value" id="val-dni">-</span><input type="text" id="in-dni" class="edit-input"></div>
-                    <div class="data-group"><span class="label">Data Naixement (DD/MM/AAAA)</span><span class="value" id="val-naixement">-</span><input type="text" id="in-naixement" class="edit-input" placeholder="DD/MM/AAAA"></div>
+                    <div class="data-group"><span class="label">Data Naixement (AAAA-MM-DD)</span><span class="value" id="val-naixement">-</span><input type="date" id="in-naixement" class="edit-input"></div>
                     <div class="data-group"><span class="label">Mòbil</span><span class="value" id="val-mobil">-</span><input type="text" id="in-mobil" class="edit-input"></div>
                     <div class="data-group"><span class="label">Email</span><span class="value" id="val-email">-</span><input type="email" id="in-email" class="edit-input"></div>
                     
@@ -129,87 +154,49 @@
                     </div>
                 </div>
             </div>
-
-            <div id="social" class="tab-content">
-                <div class="info-grid">
-                    <div class="data-group">
-                        <span class="label">Situació Laboral</span>
-                        <span class="value" id="val-laboral">-</span>
-                        <select id="in-laboral" class="edit-input">
-                            <option value="">Selecciona...</option>
-                            <option value="Aturat/da">Aturat/da</option>
-                            <option value="Treball actiu">Treball actiu</option>
-                            <option value="Economia submergida">Economia submergida</option>
-                            <option value="Pensionista">Pensionista / Jubilat</option>
-                            <option value="Estudiant">Estudiant</option>
-                        </select>
-                    </div>
-                    <div class="data-group">
-                        <span class="label">Font Ingressos</span>
-                        <span class="value" id="val-ingressos">-</span>
-                        <select id="in-ingressos" class="edit-input">
-                            <option value="">Selecciona...</option>
-                            <option value="Nòmina">Nòmina</option>
-                            <option value="RGC / IMV">RGC / IMV</option>
-                            <option value="Prestació Atur">Prestació Atur / Subsidi</option>
-                            <option value="Sense Ingressos">Sense Ingressos</option>
-                            <option value="Ajuda Familiar">Ajuda de familiars</option>
-                        </select>
-                    </div>
-                    <div class="data-group"><span class="label">Estudis</span><span class="value" id="val-estudis">-</span><input type="text" id="in-estudis" class="edit-input"></div>
-                    <div class="data-group"><span class="label">Treballador Social</span><span class="value" id="val-treballador">-</span><input type="text" id="in-treballador" class="edit-input"></div>
-                </div>
             </div>
-
-            <div id="habitatge" class="tab-content">
-                <div class="info-grid">
-                    <div class="data-group"><span class="label">Adreça</span><span class="value" id="val-adreca">-</span><input type="text" id="in-adreca" class="edit-input"></div>
-                    <div class="data-group"><span class="label">Municipi</span><span class="value" id="val-muni">-</span><input type="text" id="in-muni" class="edit-input"></div>
-                    <div class="data-group">
-                        <span class="label">Tipus Habitatge</span>
-                        <span class="value" id="val-tipus_hab">-</span>
-                        <select id="in-tipus_hab" class="edit-input">
-                            <option value="">Selecciona...</option>
-                            <option value="Lloguer">Lloguer</option>
-                            <option value="Propietat">Propietat</option>
-                            <option value="Habitació">Lloguer habitació</option>
-                            <option value="Sense Sostre">Sense sostre / Carrer</option>
-                            <option value="Acollida">Recurs d'acollida</option>
-                        </select>
-                    </div>
-                    <div class="data-group">
-                        <span class="label">Unitat Convivencial</span>
-                        <span class="value" id="val-familia">-</span>
-                        <select id="in-familia" class="edit-input">
-                            <option value="">Selecciona...</option>
-                            <option value="Sola">Persona Sola</option>
-                            <option value="Monoparental">Monoparental</option>
-                            <option value="Parella amb fills">Parella amb fills</option>
-                            <option value="Parella sense fills">Parella sense fills</option>
-                            <option value="Nucli extens">Família extensa</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div id="seguiment" class="tab-content">
-                <table class="seguiment-table">
-                    <thead><tr><th>Data</th><th>Tècnic/a</th><th>Anotacions</th></tr></thead>
-                    <tbody id="seguimentBody">
-                        <tr><td colspan="3" style="text-align:center;">No hi ha notes de seguiment.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </main>
 
     <script>
         const params = new URLSearchParams(window.location.search);
-        const userId = params.get('id');
+        let userId = params.get('id');
         let usuariActual = null;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            carregarDades();
+        document.addEventListener('DOMContentLoaded', () => { carregarPerfil(); });
+
+        // --- FUNCIONS DEL MODAL ---
+        function showModal(title, msg, type, onConfirm) {
+            const modal = document.getElementById('customModal');
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMsg').innerText = msg;
+            const btnContainer = document.getElementById('modalButtons');
+            btnContainer.innerHTML = '';
+
+            if (type === 'confirm') {
+                const btnCancel = document.createElement('button');
+                btnCancel.className = 'btn-modal btn-cancel';
+                btnCancel.innerText = 'Cancel·lar';
+                btnCancel.onclick = () => modal.style.display = 'none';
+
+                const btnConfirm = document.createElement('button');
+                btnConfirm.className = 'btn-modal btn-confirm';
+                btnConfirm.innerText = 'Sí, guardar';
+                btnConfirm.onclick = () => { modal.style.display = 'none'; onConfirm(); };
+
+                btnContainer.appendChild(btnCancel);
+                btnContainer.appendChild(btnConfirm);
+            } else {
+                const btnOk = document.createElement('button');
+                btnOk.className = 'btn-modal btn-ok';
+                btnOk.innerText = 'D\'acord';
+                btnOk.onclick = () => modal.style.display = 'none';
+                btnContainer.appendChild(btnOk);
+            }
+            modal.style.display = 'flex';
+        }
+
+        // Lògica de dades
+        function carregarPerfil() {
             if (userId === 'nou') {
                 document.getElementById('header-nom-complet').innerText = "Nou Registre";
                 document.getElementById('box-expedient').style.visibility = "hidden";
@@ -219,15 +206,15 @@
                 usuariActual = BBDD.expedients.find(u => u.id === userId);
                 if (usuariActual) omplirDades(usuariActual);
             }
-        });
+        }
 
-        function calcularEdat(dataNaixement) {
-            if (!dataNaixement || dataNaixement === "-") return "-";
-            let naix = dataNaixement.includes('/') ? new Date(dataNaixement.split('/')[2], dataNaixement.split('/')[1]-1, dataNaixement.split('/')[0]) : new Date(dataNaixement);
+        function getEdatNumerica(data) {
+            if (!data) return 0;
+            const naix = new Date(data);
             const avui = new Date();
             let edat = avui.getFullYear() - naix.getFullYear();
             if (avui.getMonth() < naix.getMonth() || (avui.getMonth() === naix.getMonth() && avui.getDate() < naix.getDate())) edat--;
-            return isNaN(edat) ? "-" : edat + " anys";
+            return isNaN(edat) ? 0 : edat;
         }
 
         function omplirDades(u) {
@@ -236,19 +223,17 @@
             document.getElementById('header-expedient').innerText = u.id;
             document.getElementById('header-mobil').innerText = u.mobil || "-";
             document.getElementById('header-email').innerText = u.email || "-";
-            document.getElementById('header-edat').innerText = calcularEdat(u.naixement);
+            document.getElementById('header-edat').innerText = (u.edat || getEdatNumerica(u.naixement)) + " anys";
             
             const pill = document.getElementById('header-estat-pill');
             pill.innerText = u.estat || "Actiu";
             pill.style.background = u.estat === "Baixa" ? "#fee2e2" : "#dcfce7";
             pill.style.color = u.estat === "Baixa" ? "#b91c1c" : "#15803d";
 
-            const camps = ['nom', 'cognoms', 'dni', 'naixement', 'sexe', 'nacionalitat', 'mobil', 'email', 'laboral', 'estudis', 'treballador', 'adreca', 'muni', 'situ_adm', 'ingressos', 'tipus_hab', 'familia'];
+            const camps = ['nom', 'cognoms', 'dni', 'naixement', 'sexe', 'nacionalitat', 'mobil', 'email'];
             camps.forEach(c => {
-                const valEl = document.getElementById('val-'+c);
-                const inEl = document.getElementById('in-'+c);
-                if(valEl) valEl.innerText = u[c] || "-";
-                if(inEl) inEl.value = u[c] || "";
+                if(document.getElementById('val-'+c)) document.getElementById('val-'+c).innerText = u[c] || "-";
+                if(document.getElementById('in-'+c)) document.getElementById('in-'+c).value = u[c] || "";
             });
         }
 
@@ -259,39 +244,46 @@
             document.getElementById('btnSaveMain').style.display = isEdit ? 'block' : 'none';
         }
 
+        // --- NOVES FUNCIONS DE GUARDAT AMB MODAL ---
+        function confirmSave() {
+            showModal("Confirmació", "Estàs segur que vols guardar els canvis en aquest expedient?", "confirm", saveData);
+        }
+
         function saveData() {
-            const novaData = {
-                nom: document.getElementById('in-nom').value,
-                cognoms: document.getElementById('in-cognoms').value,
-                dni: document.getElementById('in-dni').value,
-                naixement: document.getElementById('in-naixement').value,
-                mobil: document.getElementById('in-mobil').value,
-                email: document.getElementById('in-email').value,
-                sexe: document.getElementById('in-sexe').value,
-                nacionalitat: document.getElementById('in-nacionalitat').value,
-                situ_adm: document.getElementById('in-situ_adm').value,
-                laboral: document.getElementById('in-laboral').value,
-                ingressos: document.getElementById('in-ingressos').value,
-                estudis: document.getElementById('in-estudis').value,
-                treballador: document.getElementById('in-treballador').value,
-                adreca: document.getElementById('in-adreca').value,
-                muni: document.getElementById('in-muni').value,
-                tipus_hab: document.getElementById('in-tipus_hab').value,
-                familia: document.getElementById('in-familia').value,
-                estat: "Actiu"
-            };
+            try {
+                const naixValue = document.getElementById('in-naixement').value;
+                const novaData = {
+                    nom: document.getElementById('in-nom').value,
+                    cognoms: document.getElementById('in-cognoms').value,
+                    dni: document.getElementById('in-dni').value,
+                    naixement: naixValue,
+                    edat: getEdatNumerica(naixValue),
+                    mobil: document.getElementById('in-mobil').value,
+                    email: document.getElementById('in-email').value,
+                    estat: "Actiu"
+                };
 
-            if (userId === 'nou') {
-                const id = "EXP-2026-" + (BBDD.expedients.length + 1).toString().padStart(3, '0');
-                BBDD.expedients.push({ id, ...novaData });
-            } else {
-                const idx = BBDD.expedients.findIndex(u => u.id === userId);
-                BBDD.expedients[idx] = { ...BBDD.expedients[idx], ...novaData };
+                if (userId === 'nou') {
+                    const id = "EXP-2026-" + (BBDD.expedients.length + 1).toString().padStart(3, '0');
+                    userId = id;
+                    BBDD.expedients.push({ id, ...novaData });
+                    document.getElementById('box-expedient').style.visibility = "visible";
+                } else {
+                    const idx = BBDD.expedients.findIndex(u => u.id === userId);
+                    BBDD.expedients[idx] = { ...BBDD.expedients[idx], ...novaData };
+                }
+
+                if(typeof desatElectronic === 'function') desatElectronic(); 
+                
+                usuariActual = BBDD.expedients.find(u => u.id === userId);
+                omplirDades(usuariActual);
+                toggleEdit();
+                
+                showModal("Èxit", "✅ Les dades s'han guardat correctament.", "success");
+
+            } catch (error) {
+                showModal("Error", "❌ No s'han pogut guardar les dades.", "error");
             }
-
-            desarDades();
-            alert("Dades guardades amb èxit");
-            window.location.href = "expedient-detall.html";
         }
 
         function openTab(evt, name) {
