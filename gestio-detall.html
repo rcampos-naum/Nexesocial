@@ -14,18 +14,21 @@
         input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; }
         
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        #modalInscripcio { z-index: 1000; }
+        #modalInscripcio, #modalSubAct { z-index: 1000; }
         #customModal { z-index: 1100; }
-
         .modal-content { background: white; padding: 30px; border-radius: 20px; width: 450px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
+        .modal-full { width: 90%; max-width: 800px; text-align: left; }
         .btn-main { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
         .btn-ghost { background: #f1f5f9; color: #475569; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
         .btn-sec { background: #64748b; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; }
         .candidat-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f1f5f9; text-align: left; }
         .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
         .modal-buttons button { flex: 1; }
-        
         .sub-act-row { padding: 15px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr auto; align-items: center; }
+        
+        .check-group { display: flex; align-items: center; gap: 10px; margin-top: 15px; background: #f8fafc; padding: 10px; border-radius: 8px; }
+        .check-group input { width: auto; }
+        .extra-fields { display: none; padding: 15px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px; background: #fff; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -36,6 +39,52 @@
             <h3 id="modalTitle">Confirmació</h3>
             <p id="modalMsg"></p>
             <div id="modalButtons" class="modal-buttons"></div>
+        </div>
+    </div>
+
+    <div id="modalSubAct" class="modal">
+        <div class="modal-content modal-full">
+            <h2 style="margin-top:0;">Nova Sub-activitat</h2>
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+            
+            <label>Nom de l'activitat</label>
+            <input type="text" id="sub-nom" placeholder="Ex: Excursió al riu">
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label>Data Inici</label>
+                    <input type="date" id="sub-data-inici">
+                </div>
+                <div>
+                    <label>Data Fi</label>
+                    <input type="date" id="sub-data-fi">
+                </div>
+            </div>
+
+            <div class="check-group">
+                <input type="checkbox" id="sub-check-hora" onchange="toggleExtra('fields-hora', this.checked)">
+                <label style="margin:0;">Habilitar horari de l'activitat</label>
+            </div>
+            <div id="fields-hora" class="extra-fields">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div><label>Hora Inici</label><input type="time" id="sub-hora-inici"></div>
+                    <div><label>Hora Fi</label><input type="time" id="sub-hora-fi"></div>
+                </div>
+            </div>
+
+            <div class="check-group">
+                <input type="checkbox" id="sub-check-lloc" onchange="toggleExtra('fields-lloc', this.checked)">
+                <label style="margin:0;">Habilitar Lloc de Sortida (Excursions/Campaments)</label>
+            </div>
+            <div id="fields-lloc" class="extra-fields">
+                <label>Ubicació / Punt de trobada</label>
+                <input type="text" id="sub-ubicacio" placeholder="Carrer, Plaça o Estació...">
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn-ghost" onclick="document.getElementById('modalSubAct').style.display='none'">Cancel·lar</button>
+                <button class="btn-main" onclick="guardarNovaSubAct()">Crear Activitat</button>
+            </div>
         </div>
     </div>
 
@@ -55,19 +104,16 @@
         <div class="grid-detall">
             <aside class="card-config">
                 <h3>📅 Configuració General</h3>
-                
                 <label>Rang de Dates del Projecte</label>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <input type="date" id="main-data-inici">
                     <input type="date" id="main-data-fi">
                 </div>
-
                 <label>Rang d'Edat Permès</label>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <input type="number" id="main-min" value="12">
                     <input type="number" id="main-max" value="18">
                 </div>
-
                 <div style="margin-top:25px; padding:20px; background:#eff6ff; border-radius:12px; border: 1px solid #dbeafe;">
                     <h4 style="margin:0 0 10px 0;">👥 Participants</h4>
                     <p style="font-size:0.8rem; color:#1e40af;">Total vinculats: <strong id="num-p">0</strong></p>
@@ -75,7 +121,10 @@
                 </div>
             </aside>
             <section class="card-config">
-                <h3>📝 Sub-activitats i Calendari</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin:0;">📝 Sub-activitats i Calendari</h3>
+                    <button class="btn-main" onclick="afegirSubactivitat()" style="padding: 8px 15px; font-size: 0.8rem;">+ Afegir</button>
+                </div>
                 <div id="llista-activitats"></div>
             </section>
         </div>
@@ -93,17 +142,38 @@
     <script>
         let programaActual = "";
 
+        // Diccionari per als noms de l'Àrea Comunitària i PIC
+        const NOMS_ESPECIFICS = {
+            'AC-ROCA-ACTIVA': 'Son Roca Activa (AC)',
+            'PIC-SON-ROCA': 'PIC Son Roca',
+            'PIC-SON-RAPINYA': 'PIC Son Rapinya / La Vileta',
+            'PIC-SERRALTA': 'PIC Camps d\'en Serralta'
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             programaActual = params.get('id') || 'PROG-GENERAL';
+            
             document.getElementById('display-id').innerText = programaActual;
-            document.getElementById('display-nom').innerText = programaActual.replace(/-/g, ' ');
+            
+            // Lògica de noms per a Àrea Comunitària
+            if (NOMS_ESPECIFICS[programaActual]) {
+                document.getElementById('display-nom').innerText = NOMS_ESPECIFICS[programaActual];
+            } else {
+                document.getElementById('display-nom').innerText = programaActual.replace(/-/g, ' ');
+            }
             
             if(!BBDD.programes_config) BBDD.programes_config = {};
+            
+            // Si és un programa nou o de l'Àrea Comunitària, posem valors per defecte si no existeixen
             if(!BBDD.programes_config[programaActual]) {
+                const isComunitari = programaActual.startsWith('PIC-') || programaActual.startsWith('AC-');
                 BBDD.programes_config[programaActual] = { 
-                    min: 12, max: 18, pendents: [], 
-                    data_inici: "", data_fi: "" 
+                    min: isComunitari ? 0 : 12, 
+                    max: isComunitari ? 99 : 18, 
+                    pendents: [], 
+                    data_inici: "", 
+                    data_fi: "" 
                 };
             }
             
@@ -117,24 +187,66 @@
             actualitzarRecompte();
         });
 
+        function toggleExtra(id, show) {
+            document.getElementById(id).style.display = show ? 'block' : 'none';
+        }
+
         function carregarSubactivitats() {
             const container = document.getElementById('llista-activitats');
             const subs = BBDD.sub_activitats?.filter(s => s.programa_id === programaActual) || [];
-            
             if(subs.length === 0) {
                 container.innerHTML = `<div style="text-align: center; padding: 30px; color: #94a3b8; border: 1px dashed #e2e8f0; border-radius: 12px;">No hi ha sub-activitats configurades.</div>`;
                 return;
             }
-
-            container.innerHTML = subs.map(s => `
+            container.innerHTML = subs.map((s) => `
                 <div class="sub-act-row">
                     <div>
                         <strong>${s.nom}</strong>
-                        <div style="font-size:0.8rem; color:#64748b;">Periode: ${s.data_inici} al ${s.data_fi}</div>
+                        <div style="font-size:0.8rem; color:#64748b;">
+                            ${s.data_inici} al ${s.data_fi} 
+                            ${s.te_hora ? ` | ⏱️ ${s.hora_inici}-${s.hora_fi}` : ''} 
+                            ${s.te_lloc ? ` | 📍 ${s.ubicacio}` : ''}
+                        </div>
                     </div>
-                    <button class="btn-ghost" style="padding:5px 10px; font-size:0.7rem;">Editar Dates</button>
+                    <button class="btn-ghost" style="padding:5px 10px; font-size:0.7rem;" onclick="eliminarSub('${s.nom}')">Eliminar</button>
                 </div>
             `).join('');
+        }
+
+        function afegirSubactivitat() {
+            document.getElementById('sub-nom').value = "";
+            document.getElementById('sub-data-inici').value = document.getElementById('main-data-inici').value;
+            document.getElementById('sub-data-fi').value = document.getElementById('main-data-fi').value;
+            document.getElementById('sub-check-hora').checked = false;
+            document.getElementById('sub-check-lloc').checked = false;
+            document.getElementById('sub-ubicacio').value = "";
+            toggleExtra('fields-hora', false);
+            toggleExtra('fields-lloc', false);
+            document.getElementById('modalSubAct').style.display = 'flex';
+        }
+
+        function guardarNovaSubAct() {
+            const nom = document.getElementById('sub-nom').value;
+            if(!nom) { alert("Posa un nom"); return; }
+            if(!BBDD.sub_activitats) BBDD.sub_activitats = [];
+            BBDD.sub_activitats.push({
+                programa_id: programaActual,
+                nom: nom,
+                data_inici: document.getElementById('sub-data-inici').value,
+                data_fi: document.getElementById('sub-data-fi').value,
+                te_hora: document.getElementById('sub-check-hora').checked,
+                hora_inici: document.getElementById('sub-hora-inici').value,
+                hora_fi: document.getElementById('sub-hora-fi').value,
+                te_lloc: document.getElementById('sub-check-lloc').checked,
+                ubicacio: document.getElementById('sub-ubicacio').value
+            });
+            document.getElementById('modalSubAct').style.display = 'none';
+            carregarSubactivitats();
+        }
+
+        function eliminarSub(nom) {
+            BBDD.sub_activitats = BBDD.sub_activitats.filter(s => !(s.programa_id === programaActual && s.nom === nom));
+            carregarSubactivitats();
         }
 
         function solicitarAutoritzacio(id) {
@@ -196,7 +308,8 @@
         }
 
         function actualitzarRecompte() {
-            document.getElementById('num-p').innerText = BBDD.expedients.filter(u => u.programes?.includes(programaActual)).length;
+            const count = BBDD.expedients.filter(u => u.programes?.includes(programaActual)).length;
+            document.getElementById('num-p').innerText = count;
         }
 
         function desarCanvis(sortir) {
@@ -205,16 +318,12 @@
             config.max = parseInt(document.getElementById('main-max').value);
             config.data_inici = document.getElementById('main-data-inici').value;
             config.data_fi = document.getElementById('main-data-fi').value;
-            if(typeof desatElectronic === 'function') desatElectronic();
-            if(sortir) {
-                window.location.href='programes-gestio.html';
-            } else {
-                showModal("Guardat", "✅ Rang d'edat i dates guardades a la BBDD.", "success");
-            }
+            if(sortir) { window.location.href='programes-gestio.html'; } 
+            else { showModal("Guardat", "✅ Canvis guardats correctament.", "success"); }
         }
 
         function confirmarDesar() {
-            showModal("Desar i Sortir", "Es guardaran les dates, el rang d'edat i les sol·licituds.", "confirm", () => desarCanvis(true));
+            showModal("Desar i Sortir", "Es guardaran totes les dades i sub-activitats.", "confirm", () => desarCanvis(true));
         }
     </script>
 </body>

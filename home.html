@@ -4,34 +4,101 @@
     <meta charset="UTF-8">
     <title>NexeSocial - Inici</title>
     <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        /* Ocupar tot l'espai disponible */
+        .main-content { max-width: 100% !important; width: 100%; padding: 20px; box-sizing: border-box; }
+        
+        /* Estils per al Tauler d'Avisos en GROC destacat */
+        .aviso-banner { 
+            padding: 15px; 
+            border-radius: 8px; 
+            border: 1px solid #facc15; 
+            background: #fef08a; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 5px; 
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.1); 
+            position: relative; 
+        }
+        
+        .prio-alta { border-left: 8px solid #ef4444; }
+        .prio-mitja { border-left: 8px solid #f59e0b; }
+        .prio-baixa { border-left: 8px solid #2563eb; }
+        
+        .aviso-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: #854d0e; font-weight: 700; }
+        .aviso-titol { font-weight: 800; color: #1e293b; font-size: 1rem; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 3px; }
+        
+        /* Estil suau per a la benvinguda sense botons */
+        .welcome-section {
+            margin-top: 50px;
+            padding: 40px;
+            background: white;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+        }
+    </style>
 </head>
 <body>
     <script src="sidebar.js"></script>
 
     <main class="main-content">
-        <section class="welcome-section" style="text-align: center; padding: 40px;">
-            <h1 style="font-size: 2.5rem; color: #1e293b;">Bon dia, Equip Nexe!</h1>
-            <p style="color: #64748b; margin-bottom: 40px;">Quina àrea vols gestionar avui?</p>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 800px; margin: 0 auto;">
-                <div class="content-card" onclick="window.location.href='expedient-detall.html'" style="cursor:pointer; padding: 40px; border-radius: 20px; background: white; border: 1px solid #e2e8f0; transition: 0.3s;">
-                    <div style="font-size: 3rem; margin-bottom: 15px;">👤</div>
-                    <h2>Expedients Individuals</h2>
-                    <p>Cerca usuaris i fitxes personals</p>
-                </div>
-                
-                <div class="content-card" onclick="window.location.href='programes-gestio.html'" style="cursor:pointer; padding: 40px; border-radius: 20px; background: white; border: 1px solid #e2e8f0; transition: 0.3s;">
-                    <div style="font-size: 3rem; margin-bottom: 15px;">📋</div>
-                    <h2>Gestió de Programes</h2>
-                    <p>Accedeix a tots els programes i projectes</p>
-                </div>
+        <section id="seccio-avisos" style="width: 100%; margin-bottom: 20px; padding: 0 10px; box-sizing: border-box;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                <h3 style="margin:0; color: #1e293b; display: flex; align-items: center; gap: 10px;">📢 Tauler d'Anuncis de l'Equip</h3>
+                <span id="contador-avisos" style="background: #1e293b; color: white; padding: 2px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">0 avisos</span>
             </div>
+            
+            <div id="contenedor-avisos-home" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+                </div>
+        </section>
+
+        <section class="welcome-section" style="text-align: center;">
+            <div style="font-size: 4rem; margin-bottom: 10px;">🏢</div>
+            <h1 style="font-size: 2.5rem; color: #1e293b; margin-top: 0;">Benvinguts a NexeSocial</h1>
+            <p style="color: #64748b; font-size: 1.2rem; max-width: 600px; margin: 0 auto;">
+                Utilitza el menú lateral per gestionar els expedients, programes i la configuració del sistema.
+            </p>
         </section>
     </main>
 
     <footer class="footer-firma">
         <span>© 2026 NexeSocial - Sistema de Gestió</span>
     </footer>
+
     <script src="database.js"></script>
+    <script>
+        function carregarAvisosPrioritaris() {
+            const cont = document.getElementById('contenedor-avisos-home');
+            const countLabel = document.getElementById('contador-avisos');
+            
+            // CANVI CLAU: Llegim de localStorage en lloc de BBDD.avisos
+            const avisos = JSON.parse(localStorage.getItem('nexe_avisos')) || [];
+
+            countLabel.innerText = `${avisos.length} avisos actius`;
+
+            if (avisos.length === 0) {
+                cont.style.display = "block";
+                cont.innerHTML = "<div style='text-align:center; padding:20px; color:#94a3b8; border: 1px dashed #e2e8f0; border-radius:12px; background: white;'>No hi ha avisos pendents.</div>";
+                return;
+            }
+
+            cont.style.display = "grid";
+            // .reverse() per veure primer els més nous
+            cont.innerHTML = avisos.slice().reverse().map(a => `
+                <div class="aviso-banner prio-${a.prioritat}">
+                    <div class="aviso-meta">
+                        <span>PRIORITAT ${a.prioritat.toUpperCase()}</span>
+                        <span>${a.data}</span>
+                    </div>
+                    <div class="aviso-titol">${a.titol}</div>
+                    <div style="font-size: 0.9rem; color: #1e293b; line-height: 1.4;">${a.missatge}</div>
+                </div>
+            `).join('');
+        }
+
+        // Tornar a carregar si l'usuari canvia de pestanya i torna
+        window.addEventListener('focus', carregarAvisosPrioritaris);
+        document.addEventListener('DOMContentLoaded', carregarAvisosPrioritaris);
+    </script>
 </body>
 </html>

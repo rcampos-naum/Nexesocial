@@ -2,7 +2,7 @@
 function cargarInterfazBase() {
     const userName = localStorage.getItem('userName') || "Demo";
     
-    // 1. ESTILOS INYECTADOS (Para que se vea igual en todas las páginas)
+    // 1. ESTILOS INYECTADOS
     const styles = `
     <style>
         :root {
@@ -54,7 +54,6 @@ function cargarInterfazBase() {
             background: #f8fafc;
         }
 
-        /* Menú Desplegable (Dropdown) */
         .user-dropdown {
             display: none;
             position: absolute;
@@ -93,7 +92,7 @@ function cargarInterfazBase() {
             text-decoration: none;
         }
         .nav-item:hover { background: #f1f5f9; color: var(--text-main); }
-        .nav-item.active { background: var(--primary-blue); color: white; }
+        .nav-item.active { background: var(--primary-blue) !important; color: white !important; }
         
         .user-badge {
             background: rgba(255,255,255,0.1);
@@ -105,9 +104,20 @@ function cargarInterfazBase() {
             cursor: pointer;
             border: 1px solid rgba(255,255,255,0.2);
         }
+
+        /* Footer */
+        .main-footer {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .footer-content { display: flex; justify-content: space-between; }
     </style>`;
 
-    // 2. ESTRUCTURA HTML (Sincronizada con tus archivos reales)
+    // 2. ESTRUCTURA HTML
     const topBarHTML = `
     <header class="top-bar">
         <div style="font-weight:800; color:#3b82f6; letter-spacing:1px; cursor:default;">NEXE SOCIAL | GESTIÓ INTEGRAL</div>
@@ -138,15 +148,26 @@ function cargarInterfazBase() {
             
             <a href="programes-gestio.html" class="nav-item ${window.location.pathname.includes('programes') ? 'active' : ''}">📊 <span>Programes</span></a>
 
+            <a href="gestio-avisos.html" class="nav-item ${window.location.pathname.includes('gestio-avisos') ? 'active' : ''}">📢 <span>Gestió Avisos</span></a>
+
             <a href="manteniment.html" class="nav-item ${window.location.pathname.includes('manteniment') ? 'active' : ''}">🛠️ <span>Manteniment</span></a>
 
             <a href="dades-totals.html" class="nav-item ${window.location.pathname.includes('dades-totals') ? 'active' : ''}">📈 <span>Dades Totals</span></a>
         </nav>
     </aside>`;
 
+    const footerHTML = `
+    <footer class="main-footer">
+        <div class="footer-content">
+            <span>© 2026 NexeSocial - Sistema de Gestió</span>
+            <span class="author-tag">Desenvolupat amb ❤️ per <strong>Rafa Campos</strong></span>
+        </div>
+    </footer>`;
+
     // 3. INYECCIÓN EN EL DOM
     document.head.insertAdjacentHTML('beforeend', styles);
     document.body.insertAdjacentHTML('afterbegin', topBarHTML + sidebarHTML);
+    document.body.insertAdjacentHTML('beforeend', footerHTML);
 
     // 4. LÓGICA DE INTERACCIÓN
     const trigger = document.getElementById('userMenuTrigger');
@@ -166,14 +187,3 @@ function cargarInterfazBase() {
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', cargarInterfazBase);
-// Afegeix o substitueix això al final del teu sidebar.js
-const footerHTML = `
-    <footer class="main-footer">
-        <div class="footer-content">
-            <span>© 2026 NexeSocial - Sistema de Gestió</span>
-            <span class="author-tag">Desenvolupat amb ❤️ per <strong>Rafa Campos</strong></span>
-        </div>
-    </footer>
-`;
-
-document.body.insertAdjacentHTML('beforeend', footerHTML);

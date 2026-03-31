@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Gestió d'Avisos</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        .main-content { max-width: 100% !important; padding: 20px; box-sizing: border-box; }
+        .admin-container { display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; margin-top: 20px; }
+
+        /* Estils Formularis */
+        .panel-creacio { background: white; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0; height: fit-content; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 700; color: #1e293b; }
+        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; }
+
+        .btn-publicar { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        .btn-publicar:hover { background: #1d4ed8; }
+
+        /* Llista Gestió */
+        .panel-llista { background: #f8fafc; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0; }
+        .item-gestio { background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-eliminar { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+
+        /* --- ESTILS DEL MODAL --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 16px; max-width: 400px; width: 90%;
+            text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); transform: translateY(-20px); transition: 0.3s;
+        }
+        .modal-icon { font-size: 3rem; margin-bottom: 15px; display: block; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+        .btn-modal { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
+        .btn-confirm { background: #2563eb; color: white; }
+        .btn-cancel { background: #f1f5f9; color: #64748b; }
+    </style>
+</head>
+<body>
+    <script src="sidebar.js"></script>
+
+    <main class="main-content">
+        <header style="margin-bottom: 30px;">
+            <h1>⚙️ Administració del Tauler</h1>
+            <p style="color: #64748b;">Gestiona els missatges grocs de la pàgina principal.</p>
+        </header>
+
+        <div class="admin-container">
+            <section class="panel-creacio">
+                <h3>Crear Nou Avís</h3>
+                <div class="form-group">
+                    <label>Títol</label>
+                    <input type="text" id="admin-titol">
+                </div>
+                <div class="form-group">
+                    <label>Missatge</label>
+                    <textarea id="admin-missatge" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Prioritat</label>
+                    <select id="admin-prioritat">
+                        <option value="baixa">Baixa (Blau)</option>
+                        <option value="mitja">Mitja (Taronja)</option>
+                        <option value="alta">Alta (Vermell)</option>
+                    </select>
+                </div>
+                <button class="btn-publicar" onclick="prepararGuardar()">Publicar Avís</button>
+            </section>
+
+            <section class="panel-llista">
+                <h3>Avisos Publicats</h3>
+                <div id="llista-avisos-admin"></div>
+            </section>
+        </div>
+    </main>
+
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-content">
+            <span id="modalIcon" class="modal-icon"></span>
+            <h2 id="modalTitle" style="margin:0 0 10px 0;"></h2>
+            <p id="modalMessage" style="color: #64748b; margin:0;"></p>
+            <div id="modalFooter" class="modal-buttons"></div>
+        </div>
+    </div>
+
+    <script src="database.js"></script>
+    <script>
+        // FUNCIONALITAT MODAL REUTILITZABLE
+        function showModal(title, msg, type, onConfirm = null) {
+            const modal = document.getElementById('customModal');
+            const icon = document.getElementById('modalIcon');
+            const footer = document.getElementById('modalFooter');
+            
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = msg;
+            
+            icon.innerText = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+            
+            footer.innerHTML = '';
+            if (onConfirm) {
+                const btnCancel = document.createElement('button');
+                btnCancel.className = 'btn-modal btn-cancel';
+                btnCancel.innerText = 'Cancel·lar';
+                btnCancel.onclick = closeModal;
+                
+                const btnOk = document.createElement('button');
+                btnOk.className = 'btn-modal btn-confirm';
+                btnOk.innerText = 'Confirmar';
+                btnOk.onclick = () => { onConfirm(); closeModal(); };
+                
+                footer.appendChild(btnCancel);
+                footer.appendChild(btnOk);
+            } else {
+                const btnOk = document.createElement('button');
+                btnOk.className = 'btn-modal btn-confirm';
+                btnOk.innerText = 'D\'acord';
+                btnOk.onclick = closeModal;
+                footer.appendChild(btnOk);
+            }
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('customModal').style.display = 'none'; }
+
+        // GESTIÓ D'AVISOS AMB PERSISTÈNCIA (localStorage)
+        function prepararGuardar() {
+            const t = document.getElementById('admin-titol').value;
+            const m = document.getElementById('admin-missatge').value;
+            const p = document.getElementById('admin-prioritat').value;
+
+            if (!t || !m) {
+                showModal("Error", "Has d'omplir el títol i el missatge.", "error");
+                return;
+            }
+
+            // Recuperem avisos existents del navegador
+            const avisosGuardats = JSON.parse(localStorage.getItem('nexe_avisos')) || [];
+            
+            const nouAvis = {
+                titol: t,
+                missatge: m,
+                prioritat: p,
+                data: new Date().toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+            };
+
+            avisosGuardats.push(nouAvis);
+            
+            // Guardem al navegador
+            localStorage.setItem('nexe_avisos', JSON.stringify(avisosGuardats));
+
+            document.getElementById('admin-titol').value = "";
+            document.getElementById('admin-missatge').value = "";
+            
+            actualitzarLlistaAdmin();
+            showModal("Publicat", "L'avís ja és visible a la Home.", "success");
+        }
+
+        function actualitzarLlistaAdmin() {
+            const cont = document.getElementById('llista-avisos-admin');
+            // Llegim de localStorage per a la llista
+            const avisos = JSON.parse(localStorage.getItem('nexe_avisos')) || [];
+            
+            if (avisos.length === 0) {
+                cont.innerHTML = "<p style='color:#94a3b8; font-style:italic;'>No hi ha avisos.</p>";
+                return;
+            }
+
+            cont.innerHTML = avisos.map((a, i) => `
+                <div class="item-gestio">
+                    <div><strong>${a.titol}</strong><br><small>${a.data}</small></div>
+                    <button class="btn-eliminar" onclick="confirmarEliminar(${i})">Eliminar</button>
+                </div>
+            `).join('');
+        }
+
+        function confirmarEliminar(index) {
+            showModal("Estàs segur?", "Aquesta acció eliminarà l'avís permanentment.", "warning", () => {
+                const avisos = JSON.parse(localStorage.getItem('nexe_avisos')) || [];
+                avisos.splice(index, 1);
+                localStorage.setItem('nexe_avisos', JSON.stringify(avisos));
+                actualitzarLlistaAdmin();
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', actualitzarLlistaAdmin);
+    </script>
+</body>
+</html>
