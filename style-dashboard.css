@@ -172,3 +172,81 @@ td { padding: 12px 20px; border-bottom: 1px solid var(--border-color); vertical-
     display: flex; justify-content: space-between; align-items: center;
     color: var(--text-muted); font-size: 0.85rem;
 }
+/* =========================================
+   7. AJUSTS RESPONSIVE (MÒBIL I TABLET)
+   ========================================= */
+
+@media (max-width: 1024px) {
+    :root {
+        --sidebar-width: 0px; /* Eliminem l'espai lateral en tauletes/mòbils */
+    }
+
+    .sidebar {
+        left: -100%; /* Amaguem la sidebar fora de la pantalla */
+        transition: 0.3s;
+        width: 250px;
+        display: none; /* Es pot activar amb JS si cal un botó menú */
+    }
+
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 20px; /* Reduïm aire per a pantalles petites */
+    }
+
+    .profile-header {
+        flex-direction: column; /* Apilem títol i botons */
+        align-items: flex-start;
+        gap: 15px;
+        padding: 20px;
+    }
+
+    .profile-header div[style*="display: flex"] {
+        width: 100%;
+        flex-direction: column; /* Botons un sota l'altre */
+        gap: 10px;
+    }
+
+    .btn-save {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 600px) {
+    .top-bar {
+        padding: 0 15px;
+        font-size: 0.8rem;
+    }
+
+    .tab-bar {
+        overflow-x: auto; /* Permet lliscar les pestanyes si no caben */
+        padding-bottom: 10px;
+        white-space: nowrap;
+    }
+
+    .table-container {
+        overflow-x: auto; /* IMPORTANT: Permet scroll lateral a les taules */
+    }
+
+    table {
+        min-width: 600px; /* Força que la taula mantingui forma i es pugui moure */
+    }
+
+    th, td {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+        font-size: 0.7rem;
+    }
+}
+
+/* Ajust per al contingut que no quedi sota el footer */
+body {
+    padding-bottom: 80px;
+}
