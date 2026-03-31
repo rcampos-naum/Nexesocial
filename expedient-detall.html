@@ -2,14 +2,18 @@
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NexeSocial - Llistat d'Expedients</title>
     <link rel="stylesheet" href="style-dashboard.css">
+    <script src="database.js"></script>
+    
     <style>
         .header-actions { 
             display: flex; 
             justify-content: space-between; 
             align-items: flex-start; 
-            margin-bottom: 25px; 
+            margin-bottom: 25px;
+            flex-wrap: wrap; gap: 15px;
         }
         
         .title-section h1 { margin: 0; font-size: 1.8rem; color: #1e293b; }
@@ -17,74 +21,55 @@
 
         .btn-nou { 
             background: #10b981; 
-            color: white; 
-            border: none; 
-            padding: 10px 20px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: 600; 
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            color: white; border: none; 
+            padding: 12px 24px; border-radius: 10px; 
+            cursor: pointer; font-weight: 700; 
+            display: flex; align-items: center; gap: 8px;
+            transition: 0.3s;
         }
+        .btn-nou:hover { background: #059669; transform: translateY(-2px); }
 
         .search-container {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            margin-bottom: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: white; padding: 20px;
+            border-radius: 12px; border: 1px solid #e2e8f0;
+            margin-bottom: 25px; display: flex;
+            justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 15px;
         }
 
         .search-bar { 
-            padding: 12px 15px; 
-            border-radius: 8px; 
-            border: 1px solid #e2e8f0; 
-            width: 400px; 
-            font-size: 0.95rem;
+            padding: 12px 15px; border-radius: 8px; 
+            border: 1px solid #e2e8f0; width: 100%; max-width: 400px; 
+            font-size: 0.95rem; outline-color: var(--primary-blue);
         }
 
         .table-container { 
-            background: white; 
-            border-radius: 12px; 
-            border: 1px solid #e2e8f0; 
-            overflow: hidden;
+            background: white; border-radius: 12px; 
+            border: 1px solid #e2e8f0; overflow-x: auto;
         }
 
-        table { width: 100%; border-collapse: collapse; }
+        table { width: 100%; border-collapse: collapse; min-width: 700px; }
         th { 
-            text-align: left; 
-            padding: 15px; 
-            background: #ffffff; 
-            color: #64748b; 
-            font-size: 0.75rem; 
-            text-transform: uppercase; 
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid #e2e8f0; 
+            text-align: left; padding: 15px; 
+            background: #f8fafc; color: #64748b; 
+            font-size: 0.75rem; text-transform: uppercase; 
+            letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; 
         }
         td { padding: 15px; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-size: 0.95rem; }
-        tr:last-child td { border-bottom: none; }
         
         .status-pill { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
         .status-actiu { background: #dcfce7; color: #15803d; }
         .status-baixa { background: #fee2e2; color: #b91c1c; }
+        .status-espera { background: #fef3c7; color: #92400e; }
 
         .btn-veure {
-            background: #2563eb;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            background: #2563eb; color: white;
+            border: none; padding: 8px 16px;
+            border-radius: 8px; cursor: pointer;
+            font-weight: 600; font-size: 0.85rem;
+            transition: 0.2s;
         }
+        .btn-veure:hover { background: #1d4ed8; }
     </style>
 </head>
 <body>
@@ -93,18 +78,18 @@
     <main class="main-content">
         <div class="header-actions">
             <div class="title-section">
-                <h1>Expedients</h1>
-                <p>Gestió d'usuaris i seguiment social</p>
+                <h1>Expedients Socials</h1>
+                <p>Gestió centralitzada d'usuaris de NexeSocial</p>
             </div>
             <button class="btn-nou" onclick="window.location.href='perfil-usuari.html?id=nou'">
-                <span>+</span> Nou Usuari
+                <span>+</span> Nou Expedient
             </button>
         </div>
 
         <div class="search-container">
-            <input type="text" class="search-bar" placeholder="Cerca per nom o DNI...">
+            <input type="text" id="buscador" class="search-bar" placeholder="Cerca per nom o DNI..." onkeyup="filtrarTaula()">
             <div style="color: #64748b; font-size: 0.9rem;">
-                Mostrant <strong id="count">3</strong> expedients
+                Total: <strong id="count">0</strong> expedients actius
             </div>
         </div>
 
@@ -112,11 +97,12 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Codi Expedient</th>
+                        <th>Codi</th>
                         <th>Nom i Cognoms</th>
                         <th>DNI / NIE</th>
                         <th>Estat</th>
-                        <th>Accions</th>
+                        <th>Responsable</th>
+                        <th style="text-align:right;">Gestió</th>
                     </tr>
                 </thead>
                 <tbody id="taula-cos">
@@ -126,42 +112,63 @@
     </main>
 
     <script>
-        // Dades de mostra basades en la teva captura
-        const usuarisDB = [
-            { id: "0042", nom: "Joan Garcia Pons", dni: "43215678X", estat: "Actiu", any: "2026" },
-            { id: "0045", nom: "Maria Rodríguez Beltran", dni: "45889211S", estat: "Actiu", any: "2026" },
-            { id: "0891", nom: "Pere Mascaró Esteva", dni: "41552300M", estat: "Baixa", any: "2025" }
-        ];
-
-        function carregarTaula() {
+        // Funció per carregar i dibuixar la taula des de database.js
+        function carregarTaula(dades = BBDD.expedients) {
             const tbody = document.getElementById('taula-cos');
             tbody.innerHTML = "";
 
-            usuarisDB.forEach(u => {
+            if (dades.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">No s'han trobat expedients.</td></tr>`;
+                document.getElementById('count').innerText = "0";
+                return;
+            }
+
+            dades.forEach(u => {
                 const fila = document.createElement('tr');
                 
+                // Determinar classe de l'estat
+                let estatClase = 'status-actiu';
+                if(u.estat === 'Baixa') estatClase = 'status-baixa';
+                if(u.estat === "Llista d'Espera") estatClase = 'status-espera';
+
                 fila.innerHTML = `
-                    <td style="font-weight:700;">EXP-${u.any}-${u.id}</td>
-                    <td>${u.nom}</td>
-                    <td>${u.dni}</td>
+                    <td style="font-weight:700; color:var(--primary-blue);">${u.id}</td>
+                    <td><b>${u.nom}</b></td>
+                    <td style="font-family: monospace;">${u.dni}</td>
                     <td>
-                        <span class="status-pill ${u.estat === 'Actiu' ? 'status-actiu' : 'status-baixa'}">
+                        <span class="status-pill ${estatClase}">
                             ${u.estat}
                         </span>
                     </td>
-                    <td>
+                    <td><small>${u.treballador || 'Sense assignar'}</small></td>
+                    <td style="text-align:right;">
                         <button class="btn-veure" onclick="window.location.href='perfil-usuari.html?id=${u.id}'">
-                            👁️ Veure Fitxa
+                            👁️ Fitxa
                         </button>
                     </td>
                 `;
                 tbody.appendChild(fila);
             });
             
-            document.getElementById('count').innerText = usuarisDB.length;
+            document.getElementById('count').innerText = dades.length;
         }
 
-        document.addEventListener('DOMContentLoaded', carregarTaula);
+        // Funció de cerca en temps real
+        function filtrarTaula() {
+            const text = document.getElementById('buscador').value.toLowerCase();
+            const filtrats = BBDD.expedients.filter(u => 
+                u.nom.toLowerCase().includes(text) || 
+                u.dni.toLowerCase().includes(text) ||
+                u.id.toLowerCase().includes(text)
+            );
+            carregarTaula(filtrats);
+        }
+
+        // Al carregar la pàgina
+        window.onload = () => {
+            carregarDades(); // Llegeix el LocalStorage des de database.js
+            carregarTaula(); // Dibuixa la taula
+        };
     </script>
 </body>
 </html>
