@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Dades Totals</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { 
+            background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; flex-direction: column;
+        }
+        .stat-label { color: #64748b; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; }
+        .stat-number { font-size: 2.5rem; font-weight: 800; margin: 10px 0; color: #1e293b; }
+        
+        .table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 25px; }
+        .demo-table { width: 100%; border-collapse: collapse; }
+        .demo-table th { text-align: left; padding: 12px; color: #64748b; font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
+        .demo-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+
+        .bar-container { display: flex; align-items: center; gap: 10px; }
+        .bar-bg { background: #f1f5f9; width: 100px; height: 8px; border-radius: 10px; overflow: hidden; }
+        .bar-fill { background: #2563eb; height: 100%; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <script src="sidebar.js"></script>
+
+    <main class="main-content">
+        <div style="margin-bottom: 30px;">
+            <h1 style="margin:0; color: #1e293b;">Dades Totals</h1>
+            <p style="color: #64748b;">Indicadors demogràfics i estadístiques del centre</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">Homes Actius</span>
+                <div id="count-homes" class="stat-number" style="color: #2563eb;">0</div>
+                <span style="color: #64748b; font-size: 0.85rem;">Basat en expedients actuals</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Dones Actives</span>
+                <div id="count-dones" class="stat-number" style="color: #db2777;">0</div>
+                <span style="color: #64748b; font-size: 0.85rem;">Actualitzat en temps real</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Total Expedients</span>
+                <div id="count-total" class="stat-number">0</div>
+                <div id="perc-actius" style="font-weight: 600; color: #10b981;">0% Actius</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <h2 style="margin-top: 0; font-size: 1.1rem; color: #1e293b; margin-bottom: 20px;">Anàlisi per Nacionalitat i Edat</h2>
+            <table class="demo-table">
+                <thead>
+                    <tr>
+                        <th>Origen</th>
+                        <th>Total</th>
+                        <th>Percentatge</th>
+                        <th>Edat Mitjana</th>
+                    </tr>
+                </thead>
+                <tbody id="demo-body">
+                    </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        // Dades de mostra consistents amb la teva BD
+        const usuarisDB = [
+            { id: "0042", nom: "Joan", estat: "Actiu", edat: "40 anys", sexe: "Home", nacionalitat: "Espanyola" },
+            { id: "0045", nom: "Maria", estat: "Actiu", edat: "32 anys", sexe: "Dona", nacionalitat: "Espanyola" },
+            { id: "0891", nom: "Pere", estat: "Baixa", edat: "55 anys", sexe: "Home", nacionalitat: "Espanyola" },
+            { id: "0900", nom: "Fatima", estat: "Actiu", edat: "29 anys", sexe: "Dona", nacionalitat: "Marroquina" },
+            { id: "0901", nom: "John", estat: "Actiu", edat: "45 anys", sexe: "Home", nacionalitat: "Britànica" }
+        ];
+
+        function generarEstadistiques() {
+            const actius = usuarisDB.filter(u => u.estat === "Actiu");
+            
+            // 1. Totals Gènere
+            const nHomes = actius.filter(u => u.sexe === "Home").length;
+            const nDones = actius.filter(u => u.sexe === "Dona").length;
+            
+            document.getElementById('count-homes').innerText = nHomes;
+            document.getElementById('count-dones').innerText = nDones;
+            document.getElementById('count-total').innerText = usuarisDB.length;
+            document.getElementById('perc-actius').innerText = Math.round((actius.length / usuarisDB.length) * 100) + "% Actius";
+
+            // 2. Demografia per Origen
+            const origenData = {};
+            actius.forEach(u => {
+                const pais = u.nacionalitat || "No consta";
+                if (!origenData[pais]) origenData[pais] = { total: 0, sumaEdats: 0 };
+                origenData[pais].total++;
+                origenData[pais].sumaEdats += parseInt(u.edat);
+            });
+
+            const tbody = document.getElementById('demo-body');
+            tbody.innerHTML = "";
+
+            Object.keys(origenData).forEach(pais => {
+                const dades = origenData[pais];
+                const percent = ((dades.total / actius.length) * 100).toFixed(1);
+                const mitjana = (dades.sumaEdats / dades.total).toFixed(0);
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight: 600;">${pais}</td>
+                        <td>${dades.total}</td>
+                        <td>
+                            <div class="bar-container">
+                                <div class="bar-bg"><div class="bar-fill" style="width: ${percent}%"></div></div>
+                                <span>${percent}%</span>
+                            </div>
+                        </td>
+                        <td>${mitjana} anys</td>
+                    </tr>
+                `;
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', generarEstadistiques);
+    </script>
+</body>
+</html>

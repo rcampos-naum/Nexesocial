@@ -139,6 +139,8 @@ function cargarInterfazBase() {
             <a href="programes-gestio.html" class="nav-item ${window.location.pathname.includes('programes') ? 'active' : ''}">📊 <span>Programes</span></a>
 
             <a href="manteniment.html" class="nav-item ${window.location.pathname.includes('manteniment') ? 'active' : ''}">🛠️ <span>Manteniment</span></a>
+
+            <a href="dades-totals.html" class="nav-item ${window.location.pathname.includes('dades-totals') ? 'active' : ''}">📈 <span>Dades Totals</span></a>
         </nav>
     </aside>`;
 
@@ -164,3 +166,14 @@ function cargarInterfazBase() {
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', cargarInterfazBase);
+// Afegeix o substitueix això al final del teu sidebar.js
+const footerHTML = `
+    <footer class="main-footer">
+        <div class="footer-content">
+            <span>© 2026 NexeSocial - Sistema de Gestió</span>
+            <span class="author-tag">Desenvolupat amb ❤️ per <strong>Rafa Campos</strong></span>
+        </div>
+    </footer>
+`;
+
+document.body.insertAdjacentHTML('beforeend', footerHTML);

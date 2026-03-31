@@ -2,186 +2,290 @@
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
-    <title>NexeSocial - Manteniment Professional</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexeSocial - Manteniment RMT</title>
+    
     <link rel="stylesheet" href="style-dashboard.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    
     <style>
-        /* TOP BAR GLOBAL */
-        .top-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 50px;
-            background: #1e293b;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 25px;
-            z-index: 3000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            box-sizing: border-box;
+        :root {
+            --primary-blue: #3b82f6;
+            --nexe-green: #10b981;
+            --nexe-red: #ef4444;
+            --bg-body: #f8fafc;
+            --text-dark: #1e293b;
         }
-        .top-bar .entity-name { font-weight: 800; letter-spacing: 1px; color: #3b82f6; }
-        
-        /* MENÚ DESPLEGABLE PERFIL */
-        .user-menu-container { position: relative; cursor: pointer; }
-        .user-badge {
-            background: rgba(255,255,255,0.1);
-            padding: 5px 15px;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.2);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-        }
-        .user-dropdown {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 40px;
-            background: white;
-            min-width: 180px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid #e2e8f0;
-        }
-        .user-dropdown a {
-            display: block;
-            padding: 12px 16px;
-            color: #1e293b;
-            text-decoration: none;
-            font-size: 0.85rem;
-        }
-        .user-dropdown a:hover { background: #f1f5f9; color: #2563eb; }
-        .show-menu { display: block !important; }
 
-        /* AJUSTOS GENERALS */
-        body { margin: 0; padding-top: 60px; font-family: 'Inter', sans-serif; }
-        .sidebar { top: 50px; height: calc(100vh - 50px); }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-dark); }
+        .main-content { margin-left: 260px; margin-top: 60px; padding: 40px; }
+
+        .header-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-left: 5px solid var(--primary-blue); }
         
-        /* BOTONS I TAULES */
-        .btn-action { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
-        .btn-outline { background: #ffffff; border: 1.5px solid #2563eb; color: #2563eb; }
-        .floor-header { background: #f8fafc; font-weight: 800; color: #1e293b; border-left: 5px solid #2563eb; text-transform: uppercase; }
-        .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
-        .status-ok { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-        .footer-firma { text-align: center; padding: 25px; font-size: 0.85rem; color: #64748b; border-top: 1px solid #e2e8f0; margin-top: 30px; }
+        .btn-nexe { padding: 10px 22px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; color: white; transition: 0.2s; font-size: 0.9rem; }
+        .btn-green { background: var(--nexe-green); }
+        .btn-blue { background: var(--primary-blue); }
+        .btn-outline { background: transparent; border: 1px solid #e2e8f0; color: #64748b; }
+
+        .tabs { display: flex; gap: 12px; margin-bottom: 25px; }
+        .tab-item { background: white; padding: 10px 20px; border-radius: 15px; border: 1px solid #e2e8f0; cursor: pointer; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .tab-item.active { background: var(--primary-blue); color: white; border-color: var(--primary-blue); }
+
+        .table-container { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #fcfdfe; padding: 18px; text-align: left; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; border-bottom: 1px solid #f1f5f9; }
+        td { padding: 18px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+
+        .modal-overlay { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
+        .modal-card { background: white; padding: 35px; border-radius: 24px; width: 90%; max-width: 500px; position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
+        
+        #qr-reader { width: 100%; border-radius: 15px; overflow: hidden; display: none; background: #000; margin-bottom: 20px; min-height: 250px; border: 2px solid var(--primary-blue); }
+        #sig-canvas { border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 12px; width: 100%; height: 150px; cursor: crosshair; }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 8px; color: #475569; }
+        input, select, textarea { width: 100%; padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 0.95rem; box-sizing: border-box; }
+        input[readonly] { background: #f1f5f9; color: #64748b; cursor: not-allowed; }
+
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; }
+        .st-pendent { background: #fee2e2; color: #ef4444; }
+        .st-proces { background: #fef3c7; color: #f59e0b; }
+        .st-resolt { background: #dcfce7; color: #10b981; }
+
+        .info-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        .info-box p { margin: 5px 0; font-size: 0.9rem; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: fixed; left: 0; top: 0; width: 100%; display: flex !important; flex-direction: column; align-items: center; justify-content: center; background: white; }
+            #canvas-qr { width: 160px !important; height: 160px !important; }
+        }
     </style>
 </head>
 <body>
 
-    <header class="top-bar">
-        <div class="entity-name">NEXE SOCIAL | GESTIÓ INTEGRAL</div>
-        
-        <div class="user-menu-container" id="userMenuTrigger">
-            <div class="user-badge">
-                👤 <span id="top-username">Demo</span>
-                <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></div>
-            </div>
-            <div class="user-dropdown" id="userDropdown">
-                <a href="perfil.html">⚙️ El meu Perfil</a>
-                <a href="configuracio.html">🔧 Configuració Centre</a>
-                <div style="height:1px; background:#eee;"></div>
-                <a href="index.html" style="color:#ef4444;" onclick="logout()">🚪 Tancar sessió</a>
-            </div>
-        </div>
-    </header>
-
     <script src="sidebar.js"></script>
 
     <main class="main-content">
-        <header class="profile-header">
+        <div class="header-card">
             <div>
-                <h1>Manteniment Tècnic</h1>
-                <p>Gestió d'actius i incidències per a 1ª i 2ª planta</p>
+                <h1 style="margin:0; font-size: 1.6rem;">Manteniment Tècnic</h1>
+                <p style="color:#64748b; margin:5px 0 0;">Gestió d'actius RMT</p>
             </div>
             <div style="display:flex; gap:12px;">
-                <button id="btn-admin-actiu" class="btn-save" style="background:#10b981;" onclick="obrirDrawer('drawer-actiu')">+ Nou Actiu</button>
-                <button class="btn-save" onclick="obrirDrawer('drawer-incidencia')">+ Nova Incidència</button>
+                <button onclick="obrirModalElement()" class="btn-nexe btn-green">+ Nou Actiu</button>
+                <button onclick="obrirModalIncidencia()" class="btn-nexe btn-green">+ Nova Incidència</button>
             </div>
-        </header>
-
-        <div class="tab-bar">
-            <button class="tab-btn active" id="tab-espais" onclick="switchMaint('espais')">📍 Sales</button>
-            <button class="tab-btn" id="tab-actius" onclick="switchMaint('actius')">📦 Actius</button>
-            <button class="tab-btn" id="tab-tiquets" onclick="switchMaint('tiquets')">⚠️ Històric</button>
         </div>
 
-        <div id="m-espais" class="tab-content active">
-            <div class="table-container"><table><thead><tr><th>Sala</th><th>Planta</th><th>Estat</th><th>Acció</th></tr></thead><tbody id="body-sales"></tbody></table></div>
+        <div class="tabs">
+            <div id="t-sales" class="tab-item active" onclick="canviarPestanya('sales')">📍 Sales</div>
+            <div id="t-actius" class="tab-item" onclick="canviarPestanya('actius')">📦 Actius</div>
+            <div id="t-manteniment" class="tab-item" onclick="canviarPestanya('manteniment')">⚠️ Manteniment</div>
         </div>
 
-        <div id="m-actius" class="tab-content" style="display:none;">
-            <div class="table-container"><table><thead><tr><th>Codi</th><th>Equip</th><th>Ubicació</th><th>Acció</th></tr></thead><tbody id="body-actius"></tbody></table></div>
+        <div class="table-container">
+            <table>
+                <thead id="h-taula"></thead>
+                <tbody id="b-taula"></tbody>
+            </table>
         </div>
-
-        <div id="m-tiquets" class="tab-content" style="display:none;">
-            <div class="table-container"><table><thead><tr><th>ID</th><th>Data</th><th>Ubicació</th><th>Estat</th><th>Acció</th></tr></thead><tbody id="body-incidencies"></tbody></table></div>
-        </div>
-
-        <footer class="footer-firma">
-            Desenvolupat amb ❤️ per <strong id="firma-footer">Demo</strong>
-        </footer>
     </main>
 
+    <div id="modalNexe" class="modal-overlay">
+        <div class="modal-card">
+            <span class="modal-close" onclick="tancarTot()">&times;</span>
+            <div class="modal-header">
+                <span id="modal-icon" style="font-size: 24px;"></span>
+                <h2 id="modal-titol">Títol</h2>
+            </div>
+            <div id="qr-reader"></div>
+            <div id="modal-body"></div>
+            <div id="modal-footer" style="margin-top:25px; display:flex; gap:10px;">
+                <button id="btn-cancelar" onclick="tancarTot()" class="btn-nexe btn-outline" style="flex:1; justify-content:center;">CANCEL·LAR</button>
+                <button id="btn-confirmar" class="btn-nexe btn-blue" style="flex:2; justify-content:center;">CONFIRMAR</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // SALES CONFIGURADES (1ª i 2ª Planta)
-        const dadesSales = [
-            { nom: "Baño 1ª", planta: "1ª" }, { nom: "Office", planta: "1ª" }, { nom: "Aula Psicosocial", planta: "1ª" },
-            { nom: "Administración", planta: "1ª" }, { nom: "Taller", planta: "2ª" }, { nom: "Aula 4 (PQI)", planta: "2ª" }
-        ];
-
-        window.onload = function() {
-            // 1. Identitat (Demo per defecte)
-            const nom = localStorage.getItem('userName') || "Demo";
-            const rol = localStorage.getItem('userRole') || "admin";
-            document.getElementById('top-username').innerText = nom;
-            document.getElementById('firma-footer').innerText = nom;
-
-            // 2. Renderitzar Sales
-            const bodyS = document.getElementById('body-sales');
-            let htmlT = ""; let lastP = "";
-            dadesSales.forEach(s => {
-                if (s.planta !== lastP) { htmlT += `<tr class="floor-header"><td colspan="4">🏢 ${s.planta} PLANTA</td></tr>`; lastP = s.planta; }
-                htmlT += `<tr><td>${s.nom}</td><td>${s.planta}</td><td><span class="status-pill status-ok">Correcte</span></td><td><button class="btn-action btn-outline">Veure</button></td></tr>`;
-            });
-            bodyS.innerHTML = htmlT;
-
-            // 3. Aplicar Rols
-            if (rol === 'empleat') {
-                document.getElementById('tab-actius').style.display = 'none';
-                document.getElementById('tab-tiquets').style.display = 'none';
-                document.getElementById('btn-admin-actiu').style.display = 'none';
-            }
+        const USUARI_SISTEMA = "Admin_Nexe";
+        const TECNIC_SISTEMA = "Tècnic_RMT";
+        
+        let dades = {
+            sales: [{ codi: "RMT-S-001", nom: "Sala Naüm", planta: "1ª Planta" }],
+            actius: [{ codi: "RMT-A-001", nom: "Projector Epson", planta: "Sala Naüm" }],
+            manteniment: [{ rmt: "RMT-A-001", desc: "El projector s'apaga sol cada 5 minuts", qui: "Marta R.", estat: "Pendent", tecnic: "" }]
         };
+        
+        let pestanyaActual = 'sales';
+        let sigPad = null;
+        let html5QrCode = null;
 
-        // Lògica Menú Desplegable
-        document.getElementById('userMenuTrigger').addEventListener('click', function(e) {
-            e.stopPropagation();
-            document.getElementById('userDropdown').classList.toggle('show-menu');
-        });
+        window.onload = () => renderTaula();
 
-        window.addEventListener('click', function() {
-            document.getElementById('userDropdown').classList.remove('show-menu');
-        });
-
-        function logout() {
-            localStorage.clear(); // Opcional: esborra sessió al sortir
+        function canviarPestanya(t) {
+            pestanyaActual = t;
+            document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('t-'+t).classList.add('active');
+            renderTaula();
         }
 
-        function switchMaint(t) {
-            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('m-' + t).style.display = 'block';
-            document.getElementById('tab-' + t).classList.add('active');
+        function renderTaula() {
+            const h = document.getElementById('h-taula');
+            const b = document.getElementById('b-taula');
+            b.innerHTML = "";
+            if(pestanyaActual === 'manteniment') {
+                h.innerHTML = `<tr><th>Codi</th><th>Descripció</th><th>Informat per</th><th>Estat</th><th style="text-align:right;">Acció</th></tr>`;
+                dades.manteniment.forEach((inc, i) => {
+                    let stClass = inc.estat === 'Pendent' ? 'st-pendent' : (inc.estat === 'En Procés' ? 'st-proces' : 'st-resolt');
+                    let boto = inc.estat === 'Pendent' ? `<button onclick="confirmarInici(${i})" class="btn-nexe btn-blue" style="font-size:0.7rem;">🔧 Començar</button>` : 
+                               (inc.estat === 'En Procés' ? `<button onclick="tancarIncidencia(${i})" class="btn-nexe btn-green" style="font-size:0.7rem;">✅ Tancar</button>` : `<small>Resolt: ${inc.tecnic}</small>`);
+                    b.innerHTML += `<tr><td><strong>${inc.rmt}</strong></td><td>${inc.desc}</td><td>${inc.qui}</td><td><span class="status-badge ${stClass}">${inc.estat}</span></td><td style="text-align:right;">${boto}</td></tr>`;
+                });
+            } else {
+                h.innerHTML = `<tr><th>Codi RMT</th><th>Nom</th><th>Ubicació</th><th style="text-align:right;">Gestió</th></tr>`;
+                dades[pestanyaActual].forEach(item => {
+                    b.innerHTML += `<tr><td><strong>${item.codi}</strong></td><td>${item.nom}</td><td>${item.planta}</td><td style="text-align:right;"><button onclick="imprimirEtiquetaQR('${item.codi}')" class="btn-nexe btn-blue" style="font-size:0.7rem; float:right;">🖨️ Etiqueta</button></td></tr>`;
+                });
+            }
         }
 
-        function obrirDrawer(id) { document.getElementById(id).classList.add('open'); }
-        function tancarDrawer(id) { document.getElementById(id).classList.remove('open'); }
+        // --- FUNCIÓ CORREGIDA: OCULTA EL CONTENIDOR DE CÀMERA ---
+        function imprimirEtiquetaQR(codi) {
+            const body = document.getElementById('modal-body');
+            const qrReader = document.getElementById('qr-reader');
+            
+            // Apaguem la càmera si estava activa i l'ocultem totalment
+            if (html5QrCode) {
+                html5QrCode.stop().catch(() => {});
+            }
+            qrReader.style.display = 'none';
+
+            document.getElementById('modalNexe').style.display = 'flex';
+            document.getElementById('modal-titol').innerText = "Vista d'Etiqueta";
+            document.getElementById('modal-icon').innerText = "🏷️";
+            
+            body.innerHTML = `
+                <div id="print-area" style="text-align:center; padding:10px; border:1px dashed #ccc; width: fit-content; margin: 0 auto; background: white;">
+                    <div id="canvas-qr" style="margin: 0 auto;"></div>
+                    <div style="font-family: monospace; font-size: 1.8rem; font-weight: bold; margin-top: 5px; border-top: 2px solid black; padding-top: 5px;">
+                        ${codi}
+                    </div>
+                    <div style="font-size: 0.7rem; text-transform: uppercase;">
+                        Manteniment NexeSocial
+                    </div>
+                </div>
+            `;
+            
+            setTimeout(() => { 
+                new QRCode(document.getElementById("canvas-qr"), { 
+                    text: codi, 
+                    width: 140, 
+                    height: 140,
+                    correctLevel: QRCode.CorrectLevel.H
+                }); 
+            }, 100);
+
+            document.getElementById('btn-confirmar').innerText = "IMPRIMIR";
+            document.getElementById('btn-confirmar').onclick = () => { window.print(); };
+        }
+
+        function obrirModalIncidencia() {
+            document.getElementById('modalNexe').style.display = 'flex';
+            document.getElementById('modal-titol').innerText = "Nova Incidència";
+            document.getElementById('modal-body').innerHTML = `
+                <div class="form-group"><label>Codi RMT</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="i-rmt" placeholder="Ex: RMT-A-001">
+                        <button onclick="activarCamara()" style="padding:12px; border-radius:10px; border:1px solid #ddd; background:#f8fafc; cursor:pointer;">📷</button>
+                    </div>
+                </div>
+                <div class="form-group"><label>Descripció de l'averia</label><textarea id="i-desc" rows="3" placeholder="Explica què passa..."></textarea></div>
+                <div class="form-group"><label>Reportat per (Sistema)</label><input type="text" id="i-qui" value="${USUARI_SISTEMA}" readonly></div>
+            `;
+            document.getElementById('btn-confirmar').innerText = "CREAR INCIDÈNCIA";
+            document.getElementById('btn-confirmar').onclick = () => {
+                const rmt = document.getElementById('i-rmt').value.toUpperCase();
+                if(!rmt) return alert("Has d'indicar un codi RMT");
+                dades.manteniment.push({ rmt: rmt, desc: document.getElementById('i-desc').value, qui: USUARI_SISTEMA, estat: "Pendent", tecnic: "" });
+                tancarTot(); canviarPestanya('manteniment');
+            };
+        }
+
+        function confirmarInici(idx) {
+            const inc = dades.manteniment[idx];
+            document.getElementById('modalNexe').style.display = 'flex';
+            document.getElementById('modal-titol').innerText = "Assignar Tarea";
+            document.getElementById('modal-body').innerHTML = `
+                <div class="info-box">
+                    <p><strong>Element:</strong> ${inc.rmt}</p>
+                    <p><strong>Problema:</strong> ${inc.desc}</p>
+                    <p><strong>Informat per:</strong> ${inc.qui}</p>
+                </div>
+                <p style="text-align:center; color:#64748b;">Vols marcar aquesta incidència com <b>"En Procés"</b>?</p>
+            `;
+            document.getElementById('btn-confirmar').innerText = "COMENÇAR ARA";
+            document.getElementById('btn-confirmar').onclick = () => { dades.manteniment[idx].estat = "En Procés"; tancarTot(); renderTaula(); };
+        }
+
+        function tancarIncidencia(idx) {
+            document.getElementById('modalNexe').style.display = 'flex';
+            document.getElementById('modal-titol').innerText = "Finalitzar Reparació";
+            document.getElementById('modal-body').innerHTML = `
+                <div class="form-group"><label>Tècnic Responsable</label><input type="text" value="${TECNIC_SISTEMA}" readonly></div>
+                <div class="form-group"><label>Resolució del problema</label><textarea id="f-res" placeholder="Què s'ha fet?"></textarea></div>
+                <div class="form-group"><label>Firma de conformitat</label><canvas id="sig-canvas"></canvas></div>
+            `;
+            setTimeout(() => { sigPad = new SignaturePad(document.getElementById('sig-canvas')); }, 200);
+            document.getElementById('btn-confirmar').innerText = "DESAR I TANCAR";
+            document.getElementById('btn-confirmar').onclick = () => {
+                dades.manteniment[idx].estat = "Resolt";
+                dades.manteniment[idx].tecnic = TECNIC_SISTEMA;
+                tancarTot(); renderTaula();
+            };
+        }
+
+        function obrirModalElement() {
+            document.getElementById('modalNexe').style.display = 'flex';
+            document.getElementById('modal-titol').innerText = "Nou Actiu";
+            document.getElementById('modal-body').innerHTML = `
+                <div class="form-group"><label>Tipus</label><select id="n-tipus" onchange="autoGenerarCodi()"><option value="sales">📍 Sala</option><option value="actius">📦 Actiu</option></select></div>
+                <div class="form-group"><label>Codi Automàtic</label><input type="text" id="n-codi" readonly></div>
+                <div class="form-group"><label>Nom de l'element</label><input type="text" id="n-nom"></div>
+                <div class="form-group"><label>Ubicació / Planta</label><input type="text" id="n-planta"></div>
+            `;
+            autoGenerarCodi();
+            document.getElementById('btn-confirmar').onclick = () => {
+                const cat = document.getElementById('n-tipus').value;
+                dades[cat].push({ codi: document.getElementById('n-codi').value, nom: document.getElementById('n-nom').value, planta: document.getElementById('n-planta').value });
+                tancarTot(); renderTaula();
+            };
+        }
+
+        function autoGenerarCodi() {
+            const cat = document.getElementById('n-tipus').value;
+            const prefix = cat === 'sales' ? 'RMT-S-' : 'RMT-A-';
+            document.getElementById('n-codi').value = prefix + (dades[cat].length + 1).toString().padStart(3, '0');
+        }
+
+        function activarCamara() {
+            document.getElementById('qr-reader').style.display = 'block';
+            if(!html5QrCode) html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+                document.getElementById('i-rmt').value = text;
+                desactivarCamara();
+            }).catch(() => alert("Càmera no detectada."));
+        }
+
+        function desactivarCamara() {
+            if(html5QrCode) html5QrCode.stop().then(() => { document.getElementById('qr-reader').style.display = 'none'; });
+        }
+
+        function tancarTot() { document.getElementById('modalNexe').style.display = 'none'; desactivarCamara(); }
     </script>
 </body>
 </html>
