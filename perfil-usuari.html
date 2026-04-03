@@ -24,29 +24,45 @@
         .data-group { border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
         .label { display: block; font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 6px; }
         .value { font-size: 1rem; color: #1e293b; font-weight: 500; display: block; min-height: 1.2rem; }
-        .edit-input { display: none; width: 100%; padding: 6px; border: 1px solid #2563eb; border-radius: 4px; font-size: 0.95rem; background: #f8faff; }
+        .edit-input { display: none; width: 100%; padding: 6px; border: 1px solid #2563eb; border-radius: 4px; font-size: 0.95rem; background: #f8faff; margin-bottom: 5px; }
         body.is-editing .edit-input { display: block; }
         body.is-editing .value { display: none; }
         .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; margin-left: 10px; }
-        .seguiment-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .seguiment-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+        
+        /* ALERTES CABECERA */
+        .medical-alert-header { 
+            display: none; background: #fee2e2; border: 1px solid #ef4444; 
+            color: #b91c1c; padding: 8px 15px; border-radius: 8px; 
+            margin-top: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+        }
 
-        /* --- ESTILS DEL MODAL PERSONALITZAT --- */
+        /* Estils Activitats i Família */
+        .item-card { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px;
+        }
+        .btn-action { background: #10b981; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn-link { color: #2563eb; text-decoration: none; font-weight: 600; cursor: pointer; }
+
+        /* MODAL */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;
         }
         .modal-box {
-            background: white; padding: 30px; border-radius: 12px; max-width: 400px; width: 90%;
-            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); animation: fadeIn 0.2s ease-out;
+            background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%;
+            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        .modal-box h3 { margin-top: 0; color: #1e293b; }
         .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 25px; }
         .btn-modal { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; flex: 1; }
         .btn-confirm { background: #2563eb; color: white; }
         .btn-cancel { background: #e2e8f0; color: #64748b; }
-        .btn-ok { background: #10b981; color: white; }
+
+        /* FITXES ALERGIES */
+        .allergy-tag-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; }
+        .allergy-card { background: #fef2f2; border: 1px solid #fee2e2; padding: 10px; border-radius: 8px; text-align: left; margin-bottom: 10px; }
+        .allergy-card h4 { margin: 0 0 5px 0; font-size: 0.8rem; color: #ef4444; text-transform: uppercase; }
+        .allergy-card p { margin: 0; font-weight: 600; color: #1e293b; }
     </style>
 </head>
 <body>
@@ -55,7 +71,8 @@
     <div id="customModal" class="modal-overlay">
         <div class="modal-box">
             <h3 id="modalTitle">Confirmació</h3>
-            <p id="modalMsg">Estàs segur de realitzar aquesta acció?</p>
+            <div id="modalContent"></div>
+            <p id="modalMsg"></p>
             <div id="modalButtons" class="modal-buttons"></div>
         </div>
     </div>
@@ -80,9 +97,10 @@
                         </h1>
                         <div style="display: flex; gap: 20px; margin-top: 8px; font-size: 0.9rem; color: #64748b; flex-wrap: wrap;">
                             <span>DNI: <strong id="header-dni">-</strong></span>
-                            <span>Edat: <strong id="header-edat">-</strong></span>
                             <span>Mòbil: <strong id="header-mobil">-</strong></span>
-                            <span>Email: <strong id="header-email">-</strong></span>
+                        </div>
+                        <div id="header-medical-alert" class="medical-alert-header" onclick="showMedicalModal()">
+                            ⚠️ ALERTA MÈDICA
                         </div>
                     </div>
                 </div>
@@ -96,6 +114,8 @@
                 <button class="tab-btn active" onclick="openTab(event, 'personals')">Dades Personals</button>
                 <button class="tab-btn" onclick="openTab(event, 'social')">Socio-Laboral</button>
                 <button class="tab-btn" onclick="openTab(event, 'habitatge')">Habitatge i Família</button>
+                <button class="tab-btn" onclick="openTab(event, 'medical')">Salut i Al·lèrgies</button>
+                <button class="tab-btn" onclick="openTab(event, 'activitats')">Activitats</button>
                 <button class="tab-btn" onclick="openTab(event, 'seguiment')">Seguiment</button>
             </div>
 
@@ -104,57 +124,109 @@
                     <div class="data-group"><span class="label">Nom</span><span class="value" id="val-nom">-</span><input type="text" id="in-nom" class="edit-input"></div>
                     <div class="data-group"><span class="label">Cognoms</span><span class="value" id="val-cognoms">-</span><input type="text" id="in-cognoms" class="edit-input"></div>
                     <div class="data-group"><span class="label">DNI / NIE</span><span class="value" id="val-dni">-</span><input type="text" id="in-dni" class="edit-input"></div>
-                    <div class="data-group"><span class="label">Data Naixement (AAAA-MM-DD)</span><span class="value" id="val-naixement">-</span><input type="date" id="in-naixement" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Data Naixement</span><span class="value" id="val-naixement">-</span><input type="date" id="in-naixement" class="edit-input"></div>
                     <div class="data-group"><span class="label">Mòbil</span><span class="value" id="val-mobil">-</span><input type="text" id="in-mobil" class="edit-input"></div>
                     <div class="data-group"><span class="label">Email</span><span class="value" id="val-email">-</span><input type="email" id="in-email" class="edit-input"></div>
-                    
-                    <div class="data-group">
-                        <span class="label">Situació Administrativa</span>
-                        <span class="value" id="val-situ_adm">-</span>
-                        <select id="in-situ_adm" class="edit-input">
-                            <option value="">Selecciona...</option>
-                            <option value="Regularitzada">Regularitzada (DNI/NIE)</option>
-                            <option value="Irregular">Situació Irregular</option>
-                            <option value="Sol·licitant Asil">Sol·licitant Protecció Int.</option>
-                            <option value="Comunitària">Ciutadà/na UE</option>
-                            <option value="Altres">Altres / En tràmit</option>
+                </div>
+            </div>
+
+            <div id="medical" class="tab-content">
+                <div class="info-grid">
+                    <div class="data-group" style="grid-column: span 3;">
+                        <span class="label">Té al·lèrgies?</span>
+                        <span class="value" id="val-te-alergies">-</span>
+                        <select id="in-te-alergies" class="edit-input" onchange="checkAlergies()">
+                            <option value="No">No</option>
+                            <option value="Sí">Sí</option>
                         </select>
                     </div>
 
+                    <div id="group-detall-alergies" class="data-group" style="grid-column: span 3; display:none;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                            <div>
+                                <span class="label">Ambientals</span>
+                                <div id="val-al-amb" class="allergy-tag-container"></div>
+                                <div id="inputs-amb" class="edit-input-container">
+                                    <input type="text" class="edit-input allergy-input" data-type="amb" oninput="manageLines(this)" placeholder="Nova al·lèrgia...">
+                                </div>
+                            </div>
+                            <div>
+                                <span class="label">Medicaments</span>
+                                <div id="val-al-med" class="allergy-tag-container"></div>
+                                <div id="inputs-med" class="edit-input-container">
+                                    <input type="text" class="edit-input allergy-input" data-type="med" oninput="manageLines(this)" placeholder="Nova al·lèrgia...">
+                                </div>
+                            </div>
+                            <div>
+                                <span class="label">Alimentícies</span>
+                                <div id="val-al-ali" class="allergy-tag-container"></div>
+                                <div id="inputs-ali" class="edit-input-container">
+                                    <input type="text" class="edit-input allergy-input" data-type="ali" oninput="manageLines(this)" placeholder="Nova al·lèrgia...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="data-group">
-                        <span class="label">Sexe</span>
-                        <span class="value" id="val-sexe">-</span>
-                        <select id="in-sexe" class="edit-input">
-                            <option value="">Selecciona...</option>
-                            <option value="HOME">HOME</option>
-                            <option value="DONA">DONA</option>
-                            <option value="NO BINARI">NO BINARI</option>
-                            <option value="ALTRES">ALTRES</option>
+                        <span class="label">Dèficit d'Atenció (TDA)</span>
+                        <span class="value" id="val-tda">-</span>
+                        <select id="in-tda" class="edit-input">
+                            <option value="No">No</option>
+                            <option value="Sí">Sí</option>
                         </select>
                     </div>
                     <div class="data-group">
-                        <span class="label">Nacionalitat</span>
-                        <span class="value" id="val-nacionalitat">-</span>
-                        <select id="in-nacionalitat" class="edit-input">
-                            <option value="">Selecciona...</option>
-                            <option value="Espanyola">Espanyola</option>
-                            <option value="Marroquina">Marroquina</option>
-                            <option value="Colombiana">Colombiana</option>
-                            <option value="Argentina">Argentina</option>
-                            <option value="Venezolana">Venezolana</option>
-                            <option value="Ucraïnesa">Ucraïnesa</option>
-                            <option value="Senegalesa">Senegalesa</option>
-                            <option value="Britànica">Britànica</option>
-                            <option value="Italiana">Italiana</option>
-                            <option value="Francesa">Francesa</option>
-                            <option value="Alemana">Alemana</option>
-                            <option value="Xinesa">Xinesa</option>
-                            <option value="Altres">Altres / No consta</option>
+                        <span class="label">Hiperactivitat (TDHA)</span>
+                        <span class="value" id="val-tdha">-</span>
+                        <select id="in-tdha" class="edit-input">
+                            <option value="No">No</option>
+                            <option value="Sí">Sí</option>
                         </select>
+                    </div>
+                    <div class="data-group">
+                        <span class="label">Dependència</span>
+                        <span class="value" id="val-dependencia">-</span>
+                        <select id="in-dependencia" class="edit-input" onchange="checkDependencia()">
+                            <option value="No">No</option>
+                            <option value="Sí">Sí</option>
+                        </select>
+                    </div>
+                    <div id="group-grau" class="data-group" style="display:none;">
+                        <span class="label">Grau de Dependència</span>
+                        <span class="value" id="val-grau">-</span>
+                        <select id="in-grau" class="edit-input">
+                            <option value="Grado I">Grado I</option>
+                            <option value="Grado II">Grado II</option>
+                            <option value="Grado III">Grado III</option>
+                        </select>
+                    </div>
+                    <div class="data-group" style="grid-column: span 3;">
+                        <span class="label">Altres dades mèdiques rellevants</span>
+                        <span class="value" id="val-observacions_mediques">-</span>
+                        <textarea id="in-observacions_mediques" class="edit-input" style="height:80px; font-family:inherit;"></textarea>
                     </div>
                 </div>
             </div>
+
+            <div id="habitatge" class="tab-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                    <h3>Unitat de Convivència i Vincles</h3>
+                    <button class="btn-action" onclick="obrirCercadorFamiliars()">+ Vincular Familiar</button>
+                </div>
+                <div id="llista-familia"></div>
             </div>
+
+            <div id="activitats" class="tab-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h3>Programes i Activitats</h3>
+                    <button class="btn-action" onclick="altaActivitat()">+ Inscriure</button>
+                </div>
+                <div id="llista-activitats"></div>
+            </div>
+
+            <div id="social" class="tab-content"><h3>Informació Socio-Laboral</h3><p>Dades laborals i de formació.</p></div>
+            <div id="seguiment" class="tab-content"><h3>Historial de Seguiment</h3><p>Notes de seguiment tècnic.</p></div>
+        </div>
     </main>
 
     <script>
@@ -164,77 +236,155 @@
 
         document.addEventListener('DOMContentLoaded', () => { carregarPerfil(); });
 
-        // --- FUNCIONS DEL MODAL ---
-        function showModal(title, msg, type, onConfirm) {
-            const modal = document.getElementById('customModal');
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalMsg').innerText = msg;
-            const btnContainer = document.getElementById('modalButtons');
-            btnContainer.innerHTML = '';
-
-            if (type === 'confirm') {
-                const btnCancel = document.createElement('button');
-                btnCancel.className = 'btn-modal btn-cancel';
-                btnCancel.innerText = 'Cancel·lar';
-                btnCancel.onclick = () => modal.style.display = 'none';
-
-                const btnConfirm = document.createElement('button');
-                btnConfirm.className = 'btn-modal btn-confirm';
-                btnConfirm.innerText = 'Sí, guardar';
-                btnConfirm.onclick = () => { modal.style.display = 'none'; onConfirm(); };
-
-                btnContainer.appendChild(btnCancel);
-                btnContainer.appendChild(btnConfirm);
-            } else {
-                const btnOk = document.createElement('button');
-                btnOk.className = 'btn-modal btn-ok';
-                btnOk.innerText = 'D\'acord';
-                btnOk.onclick = () => modal.style.display = 'none';
-                btnContainer.appendChild(btnOk);
-            }
-            modal.style.display = 'flex';
-        }
-
-        // Lògica de dades
         function carregarPerfil() {
-            if (userId === 'nou') {
-                document.getElementById('header-nom-complet').innerText = "Nou Registre";
-                document.getElementById('box-expedient').style.visibility = "hidden";
-                document.getElementById('btnSaveMain').innerText = "💾 Crear Usuari";
-                toggleEdit();
-            } else {
-                usuariActual = BBDD.expedients.find(u => u.id === userId);
-                if (usuariActual) omplirDades(usuariActual);
+            usuariActual = BBDD.expedients.find(u => u.id === userId);
+            if (usuariActual) {
+                if (!usuariActual.salut) {
+                    usuariActual.salut = { 
+                        te_alergies: "No", 
+                        alergies_detall: { amb: [], med: [], ali: [] },
+                        tda: "No", tdha: "No", dependencia: "No", grau: "", observacions: "" 
+                    };
+                }
+                if (!usuariActual.salut.alergies_detall) {
+                    usuariActual.salut.alergies_detall = { amb: [], med: [], ali: [] };
+                }
+                
+                omplirDades(usuariActual);
+                pintarActivitats(usuariActual);
+                pintarFamilia(usuariActual);
+                actualitzarCabeceraMedica(usuariActual);
             }
         }
 
-        function getEdatNumerica(data) {
-            if (!data) return 0;
-            const naix = new Date(data);
-            const avui = new Date();
-            let edat = avui.getFullYear() - naix.getFullYear();
-            if (avui.getMonth() < naix.getMonth() || (avui.getMonth() === naix.getMonth() && avui.getDate() < naix.getDate())) edat--;
-            return isNaN(edat) ? 0 : edat;
+        function manageLines(input) {
+            const container = input.parentElement;
+            const allInputs = container.querySelectorAll('.allergy-input');
+            const lastInput = allInputs[allInputs.length - 1];
+            
+            if (lastInput.value.trim() !== "") {
+                const newInput = document.createElement('input');
+                newInput.type = "text";
+                newInput.className = "edit-input allergy-input";
+                newInput.placeholder = "Nova al·lèrgia...";
+                newInput.oninput = function() { manageLines(this); };
+                container.appendChild(newInput);
+            }
         }
 
         function omplirDades(u) {
             document.getElementById('header-nom-complet').innerText = u.nom + " " + (u.cognoms || "");
             document.getElementById('header-dni').innerText = u.dni;
             document.getElementById('header-expedient').innerText = u.id;
-            document.getElementById('header-mobil').innerText = u.mobil || "-";
-            document.getElementById('header-email').innerText = u.email || "-";
-            document.getElementById('header-edat').innerText = (u.edat || getEdatNumerica(u.naixement)) + " anys";
             
-            const pill = document.getElementById('header-estat-pill');
-            pill.innerText = u.estat || "Actiu";
-            pill.style.background = u.estat === "Baixa" ? "#fee2e2" : "#dcfce7";
-            pill.style.color = u.estat === "Baixa" ? "#b91c1c" : "#15803d";
-
-            const camps = ['nom', 'cognoms', 'dni', 'naixement', 'sexe', 'nacionalitat', 'mobil', 'email'];
+            const camps = ['nom', 'cognoms', 'dni', 'naixement', 'mobil', 'email'];
             camps.forEach(c => {
                 if(document.getElementById('val-'+c)) document.getElementById('val-'+c).innerText = u[c] || "-";
                 if(document.getElementById('in-'+c)) document.getElementById('in-'+c).value = u[c] || "";
             });
+
+            const s = u.salut;
+            document.getElementById('val-te-alergies').innerText = s.te_alergies || "No";
+            document.getElementById('in-te-alergies').value = s.te_alergies || "No";
+            
+            // Pintar tags d'alèrgies en mode lectura
+            const tipus = ['amb', 'med', 'ali'];
+            tipus.forEach(t => {
+                const list = s.alergies_detall[t] || [];
+                document.getElementById('val-al-'+t).innerHTML = list.map(item => `<span style="background:#f1f5f9; padding:2px 8px; border-radius:4px; font-size:0.85rem;">${item}</span>`).join('');
+                
+                // Omplir inputs per editar
+                const container = document.getElementById('inputs-'+t);
+                container.innerHTML = '';
+                list.forEach(item => {
+                    const inp = document.createElement('input');
+                    inp.type = "text";
+                    inp.className = "edit-input allergy-input";
+                    inp.value = item;
+                    inp.oninput = function() { manageLines(this); };
+                    container.appendChild(inp);
+                });
+                const emptyInp = document.createElement('input');
+                emptyInp.type = "text";
+                emptyInp.className = "edit-input allergy-input";
+                emptyInp.placeholder = "Nova al·lèrgia...";
+                emptyInp.oninput = function() { manageLines(this); };
+                container.appendChild(emptyInp);
+            });
+
+            document.getElementById('val-tda').innerText = s.tda;
+            document.getElementById('in-tda').value = s.tda;
+            document.getElementById('val-tdha').innerText = s.tdha;
+            document.getElementById('in-tdha').value = s.tdha;
+            document.getElementById('val-dependencia').innerText = s.dependencia;
+            document.getElementById('in-dependencia').value = s.dependencia;
+            document.getElementById('val-grau').innerText = s.grau || "-";
+            document.getElementById('in-grau').value = s.grau || "Grado I";
+            document.getElementById('val-observacions_mediques').innerText = s.observacions || "-";
+            document.getElementById('in-observacions_mediques').value = s.observacions || "";
+
+            checkAlergies();
+            checkDependencia();
+        }
+
+        function actualitzarCabeceraMedica(u) {
+            const headerAlert = document.getElementById('header-medical-alert');
+            const detalls = u.salut.alergies_detall;
+            const téAlergies = u.salut.te_alergies === "Sí" && (detalls.amb.length > 0 || detalls.med.length > 0 || detalls.ali.length > 0);
+            
+            if (téAlergies || u.salut.dependencia === "Sí") {
+                headerAlert.style.display = 'block';
+            } else {
+                headerAlert.style.display = 'none';
+            }
+        }
+
+        function showMedicalModal() {
+            const s = usuariActual.salut;
+            let html = '<div style="text-align:left;">';
+            
+            const mapping = { amb: 'Ambientals', med: 'Medicaments', ali: 'Alimentícies' };
+            Object.keys(mapping).forEach(k => {
+                if(s.alergies_detall[k] && s.alergies_detall[k].length > 0) {
+                    html += `
+                        <div class="allergy-card">
+                            <h4>${mapping[k]}</h4>
+                            <p>${s.alergies_detall[k].join(', ')}</p>
+                        </div>`;
+                }
+            });
+
+            if (s.dependencia === "Sí") {
+                html += `
+                    <div class="allergy-card" style="background:#eff6ff; border-color:#dbeafe;">
+                        <h4 style="color:#2563eb;">DEPENDÈNCIA</h4>
+                        <p>${s.grau}</p>
+                    </div>`;
+            }
+
+            html += '</div>';
+            
+            document.getElementById('modalTitle').innerText = "Fitxa d'Alerta Mèdica";
+            document.getElementById('modalContent').innerHTML = html;
+            document.getElementById('modalButtons').innerHTML = '<button class="btn-modal btn-cancel" onclick="tancarModal()">Tancar</button>';
+            document.getElementById('customModal').style.display = 'flex';
+        }
+
+        function checkAlergies() {
+            const teAlergies = document.getElementById('in-te-alergies').value;
+            document.getElementById('group-detall-alergies').style.display = teAlergies === "Sí" ? "block" : "none";
+        }
+
+        function checkDependencia() {
+            const dep = document.getElementById('in-dependencia').value;
+            document.getElementById('group-grau').style.display = dep === "Sí" ? "block" : "none";
+        }
+
+        function openTab(evt, name) {
+            document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+            document.getElementById(name).classList.add("active");
+            evt.currentTarget.classList.add("active");
         }
 
         function toggleEdit() {
@@ -244,53 +394,60 @@
             document.getElementById('btnSaveMain').style.display = isEdit ? 'block' : 'none';
         }
 
-        // --- NOVES FUNCIONS DE GUARDAT AMB MODAL ---
+        function tancarModal() { document.getElementById('customModal').style.display = 'none'; }
+
         function confirmSave() {
-            showModal("Confirmació", "Estàs segur que vols guardar els canvis en aquest expedient?", "confirm", saveData);
+            usuariActual.nom = document.getElementById('in-nom').value;
+            usuariActual.cognoms = document.getElementById('in-cognoms').value;
+            usuariActual.dni = document.getElementById('in-dni').value;
+            usuariActual.mobil = document.getElementById('in-mobil').value;
+            
+            const getValues = (containerId) => {
+                return Array.from(document.getElementById(containerId).querySelectorAll('.allergy-input'))
+                            .map(i => i.value.trim())
+                            .filter(v => v !== "");
+            };
+
+            usuariActual.salut = {
+                te_alergies: document.getElementById('in-te-alergies').value,
+                alergies_detall: {
+                    amb: getValues('inputs-amb'),
+                    med: getValues('inputs-med'),
+                    ali: getValues('inputs-ali')
+                },
+                tda: document.getElementById('in-tda').value,
+                tdha: document.getElementById('in-tdha').value,
+                dependencia: document.getElementById('in-dependencia').value,
+                grau: document.getElementById('in-dependencia').value === "Sí" ? document.getElementById('in-grau').value : "",
+                observacions: document.getElementById('in-observacions_mediques').value
+            };
+
+            if (typeof desatElectronic === 'function') desatElectronic();
+            location.reload();
         }
 
-        function saveData() {
-            try {
-                const naixValue = document.getElementById('in-naixement').value;
-                const novaData = {
-                    nom: document.getElementById('in-nom').value,
-                    cognoms: document.getElementById('in-cognoms').value,
-                    dni: document.getElementById('in-dni').value,
-                    naixement: naixValue,
-                    edat: getEdatNumerica(naixValue),
-                    mobil: document.getElementById('in-mobil').value,
-                    email: document.getElementById('in-email').value,
-                    estat: "Actiu"
-                };
-
-                if (userId === 'nou') {
-                    const id = "EXP-2026-" + (BBDD.expedients.length + 1).toString().padStart(3, '0');
-                    userId = id;
-                    BBDD.expedients.push({ id, ...novaData });
-                    document.getElementById('box-expedient').style.visibility = "visible";
-                } else {
-                    const idx = BBDD.expedients.findIndex(u => u.id === userId);
-                    BBDD.expedients[idx] = { ...BBDD.expedients[idx], ...novaData };
-                }
-
-                if(typeof desatElectronic === 'function') desatElectronic(); 
-                
-                usuariActual = BBDD.expedients.find(u => u.id === userId);
-                omplirDades(usuariActual);
-                toggleEdit();
-                
-                showModal("Èxit", "✅ Les dades s'han guardat correctament.", "success");
-
-            } catch (error) {
-                showModal("Error", "❌ No s'han pogut guardar les dades.", "error");
+        function pintarFamilia(u) {
+            const container = document.getElementById('llista-familia');
+            if (!u.familia || u.familia.length === 0) {
+                container.innerHTML = "<p style='color:#94a3b8'>No hi ha familiars vinculats.</p>";
+                return;
             }
+            container.innerHTML = u.familia.map(f => {
+                const familiar = BBDD.expedients.find(e => e.id === f.id);
+                return `
+                    <div class="item-card">
+                        <div>
+                            <span class="label" style="margin:0">${f.parentiu}</span>
+                            <span class="value">${familiar ? familiar.nom + ' ' + familiar.cognoms : 'Expedient no trobat'}</span>
+                        </div>
+                        <a href="perfil.html?id=${f.id}" class="btn-link">Veure Perfil</a>
+                    </div>`;
+            }).join('');
         }
 
-        function openTab(evt, name) {
-            document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-            document.getElementById(name).classList.add("active");
-            evt.currentTarget.classList.add("active");
+        function pintarActivitats(u) {
+            const list = document.getElementById('llista-activitats');
+            list.innerHTML = (u.programes || []).map(p => `<div class="item-card"><span>${p}</span><b>ACTIU</b></div>`).join('');
         }
     </script>
 </body>

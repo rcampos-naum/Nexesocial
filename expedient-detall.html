@@ -9,67 +9,51 @@
     
     <style>
         .header-actions { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: flex-start; 
-            margin-bottom: 25px;
-            flex-wrap: wrap; gap: 15px;
+            display: flex; justify-content: space-between; align-items: flex-start; 
+            margin-bottom: 25px; flex-wrap: wrap; gap: 15px;
         }
-        
         .title-section h1 { margin: 0; font-size: 1.8rem; color: #1e293b; }
         .title-section p { margin: 5px 0 0 0; color: #64748b; font-size: 1rem; }
 
         .btn-nou { 
-            background: #10b981; 
-            color: white; border: none; 
-            padding: 12px 24px; border-radius: 10px; 
-            cursor: pointer; font-weight: 700; 
-            display: flex; align-items: center; gap: 8px;
-            transition: 0.3s;
+            background: #10b981; color: white; border: none; padding: 12px 24px; 
+            border-radius: 10px; cursor: pointer; font-weight: 700; 
+            display: flex; align-items: center; gap: 8px; transition: 0.3s;
         }
         .btn-nou:hover { background: #059669; transform: translateY(-2px); }
 
         .search-container {
-            background: white; padding: 20px;
-            border-radius: 12px; border: 1px solid #e2e8f0;
-            margin-bottom: 25px; display: flex;
-            justify-content: space-between; align-items: center;
+            background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;
+            margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;
             flex-wrap: wrap; gap: 15px;
         }
-
         .search-bar { 
-            padding: 12px 15px; border-radius: 8px; 
-            border: 1px solid #e2e8f0; width: 100%; max-width: 400px; 
-            font-size: 0.95rem; outline-color: var(--primary-blue);
+            padding: 12px 15px; border-radius: 8px; border: 1px solid #e2e8f0; 
+            width: 100%; max-width: 400px; font-size: 0.95rem; outline-color: #2563eb;
         }
 
-        .table-container { 
-            background: white; border-radius: 12px; 
-            border: 1px solid #e2e8f0; overflow-x: auto;
-        }
-
+        .table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
         table { width: 100%; border-collapse: collapse; min-width: 700px; }
         th { 
-            text-align: left; padding: 15px; 
-            background: #f8fafc; color: #64748b; 
-            font-size: 0.75rem; text-transform: uppercase; 
-            letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; 
+            text-align: left; padding: 15px; background: #f8fafc; color: #64748b; 
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; 
         }
         td { padding: 15px; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-size: 0.95rem; }
         
-        .status-pill { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
-        .status-actiu { background: #dcfce7; color: #15803d; }
-        .status-baixa { background: #fee2e2; color: #b91c1c; }
-        .status-espera { background: #fef3c7; color: #92400e; }
+        /* Fila clicable */
+        tbody tr { cursor: pointer; transition: 0.2s; }
+        tbody tr:hover { background-color: #f8faff; }
 
-        .btn-veure {
-            background: #2563eb; color: white;
-            border: none; padding: 8px 16px;
-            border-radius: 8px; cursor: pointer;
-            font-weight: 600; font-size: 0.85rem;
-            transition: 0.2s;
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
+        .badge-menor { background: #dcfce7; color: #166534; }
+        .badge-adult { background: #e0f2fe; color: #075985; }
+        .exp-num { font-family: monospace; font-weight: 800; color: #2563eb; }
+
+        .vincle-mini {
+            display: inline-block; background: #f1f5f9; padding: 2px 6px;
+            border-radius: 4px; font-size: 0.75rem; margin-right: 4px;
+            color: #475569; border: 1px solid #e2e8f0;
         }
-        .btn-veure:hover { background: #1d4ed8; }
     </style>
 </head>
 <body>
@@ -79,17 +63,24 @@
         <div class="header-actions">
             <div class="title-section">
                 <h1>Expedients Socials</h1>
-                <p>Gestió centralitzada d'usuaris de NexeSocial</p>
+                <p>Gestió centralitzada d'usuaris i unitats familiars</p>
             </div>
-            <button class="btn-nou" onclick="window.location.href='perfil-usuari.html?id=nou'">
-                <span>+</span> Nou Expedient
+            <button class="btn-nou" onclick="anarAlta()">
+                <span>+</span> Nou Registre Únic
             </button>
         </div>
 
         <div class="search-container">
-            <input type="text" id="buscador" class="search-bar" placeholder="Cerca per nom o DNI..." onkeyup="filtrarTaula()">
+            <div style="display:flex; gap:10px; flex-grow:1;">
+                <input type="text" id="buscador" class="search-bar" placeholder="Cerca per nom, DNI o nº d'expedient..." onkeyup="filtrarTaula()">
+                <select id="filtre-tipus" class="search-bar" style="max-width:150px;" onchange="filtrarTaula()">
+                    <option value="tots">Tots els perfils</option>
+                    <option value="menor">Menors</option>
+                    <option value="adult">Adults</option>
+                </select>
+            </div>
             <div style="color: #64748b; font-size: 0.9rem;">
-                Total: <strong id="count">0</strong> expedients actius
+                Total: <strong id="count">0</strong> registres
             </div>
         </div>
 
@@ -97,78 +88,79 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Codi</th>
+                        <th>Nº EXPEDIENT</th>
                         <th>Nom i Cognoms</th>
                         <th>DNI / NIE</th>
-                        <th>Estat</th>
-                        <th>Responsable</th>
-                        <th style="text-align:right;">Gestió</th>
+                        <th>Perfil</th>
+                        <th>Unitat Familiar</th>
                     </tr>
                 </thead>
-                <tbody id="taula-cos">
-                    </tbody>
+                <tbody id="taula-cos"></tbody>
             </table>
         </div>
     </main>
 
     <script>
-        // Funció per carregar i dibuixar la taula
-        function carregarTaula(dades) {
-            // 1. Assegurem que dades té contingut de BBDD si no ens passen res
-            const llista = dades || BBDD.expedients;
+        function carregarTaula(dadesFiltrades) {
+            let llista = dadesFiltrades || JSON.parse(localStorage.getItem('nexe_persones')) || BBDD.expedients;
             const tbody = document.getElementById('taula-cos');
             tbody.innerHTML = "";
 
             if (llista.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">No s'han trobat expedients.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:40px; color:#94a3b8;">No s'han trobat expedients.</td></tr>`;
                 document.getElementById('count').innerText = "0";
                 return;
             }
 
             llista.forEach(u => {
                 const fila = document.createElement('tr');
+                // Redirecció a perfil-usuari.html al fer clic a la fila
+                fila.onclick = () => window.location.href = `perfil-usuari.html?id=${u.id}`;
                 
-                let estatClase = 'status-actiu';
-                if(u.estat === 'Baixa') estatClase = 'status-baixa';
-                if(u.estat === "Llista d'Espera") estatClase = 'status-espera';
+                let vinclesHTML = u.vincles_detallats?.length > 0 
+                    ? u.vincles_detallats.map(v => `<span class="vincle-mini">${v.nom.split(' ')[0]} (${v.relacio})</span>`).join('')
+                    : `<small style="color:#cbd5e1;">Sense vincles</small>`;
 
                 fila.innerHTML = `
-                    <td style="font-weight:700; color:#2563eb;">${u.id}</td>
+                    <td><span class="exp-num">${u.id}</span></td>
                     <td><b>${u.nom} ${u.cognoms || ''}</b></td>
-                    <td style="font-family: monospace;">${u.dni}</td>
+                    <td style="font-family: monospace;">${u.dni || '---'}</td>
                     <td>
-                        <span class="status-pill ${estatClase}">
-                            ${u.estat || 'Actiu'}
+                        <span class="badge badge-${u.tipus || 'adult'}">
+                            ${u.tipus === 'menor' ? '👶 Menor' : '👤 Adult'}
                         </span>
                     </td>
-                    <td><small>${u.treballador || 'Sense assignar'}</small></td>
-                    <td style="text-align:right;">
-                        <button class="btn-veure" onclick="window.location.href='perfil-usuari.html?id=${u.id}'">
-                            👁️ Fitxa
-                        </button>
-                    </td>
+                    <td>${vinclesHTML}</td>
                 `;
                 tbody.appendChild(fila);
             });
-            
             document.getElementById('count').innerText = llista.length;
         }
 
-        // Funció de cerca en temps real
         function filtrarTaula() {
             const text = document.getElementById('buscador').value.toLowerCase();
-            const filtrats = BBDD.expedients.filter(u => 
-                u.nom.toLowerCase().includes(text) || 
-                (u.cognoms && u.cognoms.toLowerCase().includes(text)) ||
-                u.dni.toLowerCase().includes(text) ||
-                u.id.toLowerCase().includes(text)
-            );
+            const tipusFiltre = document.getElementById('filtre-tipus').value;
+            const totes = JSON.parse(localStorage.getItem('nexe_persones')) || BBDD.expedients;
+            
+            const filtrats = totes.filter(u => {
+                const nomComplet = (u.nom + " " + (u.cognoms || "")).toLowerCase();
+                const coincideixText = nomComplet.includes(text) || (u.dni?.toLowerCase().includes(text)) || u.id.toLowerCase().includes(text);
+                const coincideixTipus = (tipusFiltre === 'tots') || (u.tipus === tipusFiltre);
+                return coincideixText && coincideixTipus;
+            });
             carregarTaula(filtrats);
         }
 
-        // 2. Canvi clau: Esperem a DOMContentLoaded per assegurar que database.js ha carregat
+        function anarAlta() { window.location.href = 'perfil-usuari.html?id=nou'; }
+
         document.addEventListener('DOMContentLoaded', () => {
-            // El database.js carrega dades automàticament. Només hem de dibuixar.
+            if (!localStorage.getItem('nexe_persones')) {
+                const demoData = [
+                    { id: "U2026/01", nom: "Maria", cognoms: "Sánchez", dni: "12345678A", tipus: "adult", vincles_detallats: [] },
+                    { id: "U2026/02", nom: "Pol", cognoms: "Sánchez", dni: "---", tipus: "menor", vincles_detallats: [{nom: "Maria", relacio: "Mare"}] }
+                ];
+                localStorage.setItem('nexe_persones', JSON.stringify(demoData));
+            }
             carregarTaula();
         });
     </script>
