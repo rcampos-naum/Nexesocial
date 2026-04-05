@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>Informe Històric Familiar - NexeSocial</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <script src="database.js"></script>
+    <style>
+        /* Estils específics per a Impressió PDF */
+        @media print {
+            .no-print { display: none; }
+            body { background: white; padding: 0; }
+            .print-container { box-shadow: none; border: none; width: 100%; max-width: 100%; margin: 0; }
+        }
+
+        body { background: #f1f5f9; font-family: 'Inter', system-ui, sans-serif; }
+        
+        .print-container {
+            background: white;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 40px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            min-height: 297mm;
+        }
+
+        .header-print {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .logo-placeholder {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #2563eb;
+        }
+
+        .info-meta { text-align: right; font-size: 0.85rem; color: #64748b; }
+
+        .section-title {
+            background: #f8fafc;
+            padding: 8px 12px;
+            border-left: 4px solid #2563eb;
+            font-weight: 700;
+            margin: 25px 0 15px 0;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .hist-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .hist-table th {
+            text-align: left;
+            background: #f1f5f9;
+            padding: 10px;
+            font-size: 0.8rem;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .hist-table td {
+            padding: 10px;
+            font-size: 0.85rem;
+            border: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+
+        /* Estils per als informes detallats en l'històric */
+        .report-block {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 15px 0;
+        }
+        .report-block:last-child { border-bottom: none; }
+        .report-tag { font-size: 0.7rem; font-weight: 700; color: #2563eb; text-transform: uppercase; }
+        .report-text { font-size: 0.9rem; margin-top: 5px; color: #334155; line-height: 1.5; white-space: pre-wrap; }
+
+        .footer-print {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        .btn-print {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="btn-print no-print" onclick="window.print()">Imprimir Informe</button>
+    <button class="no-print" style="position: fixed; bottom: 20px; left: 20px; padding: 12px 24px; border-radius: 50px; border: 1px solid #cbd5e1; background: white; cursor: pointer;" onclick="window.history.back()">Tornar</button>
+
+    <div class="print-container">
+        <div class="header-print">
+            <div class="logo-placeholder">
+                NEXESOCIAL <br>
+                <small style="font-size: 0.7rem; color: #64748b; font-weight: 400;">Gestió d'Intervenció Social</small>
+            </div>
+            <div class="info-meta">
+                <strong>Informe Històric Familiar</strong><br>
+                Data d'impressió: <span id="print-date"></span><br>
+                Generat per: <span id="print-user">Administrador</span>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div>
+                <h1 id="fam-name" style="margin: 0; font-size: 1.4rem;">Família...</h1>
+                <p id="fam-id" style="color: #2563eb; font-weight: 700; margin: 5px 0;"></p>
+            </div>
+            <div style="text-align: right;">
+                <p><strong>Estat:</strong> Actiu</p>
+                <p><strong>Data Alta:</strong> <span id="fam-alta"></span></p>
+            </div>
+        </div>
+
+        <div class="section-title">Històric de Membres i Referents Tècnics</div>
+        <table class="hist-table">
+            <thead>
+                <tr>
+                    <th>Membre</th>
+                    <th>ID</th>
+                    <th>Projectes / Grups</th>
+                    <th>Referents Assignats</th>
+                </tr>
+            </thead>
+            <tbody id="membres-body"></tbody>
+        </table>
+
+        <div class="section-title">Detall d'Intervencions i Informes</div>
+        <div id="informes-list">
+            </div>
+
+        <div class="footer-print">
+            Aquest document és confidencial i conté dades de caràcter personal protegides per la Llei Orgànica 3/2018 (LOPDGDD).
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        // Hem d'assegurar-nos que el paràmetre coincideixi amb el que enviem (famId)
+        const famId = params.get('famId');
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // Data d'impressió
+            document.getElementById('print-date').innerText = new Date().toLocaleDateString('ca-ES', {
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+
+            const familia = BBDD.families.find(f => f.id === famId);
+            
+            if (familia) {
+                document.getElementById('fam-name').innerText = "Família " + familia.cognoms_referencia;
+                document.getElementById('fam-id').innerText = "EXP: " + familia.id;
+                document.getElementById('fam-alta').innerText = familia.data_creacio;
+
+                renderHistorialMembres(familia.membres);
+                renderDetallInformes(familia.id);
+            } else {
+                document.querySelector('.print-container').innerHTML = "<h1>No s'ha trobat l'expedient familiar.</h1>";
+            }
+        });
+
+        function renderHistorialMembres(membresIds) {
+            const tbody = document.getElementById('membres-body');
+            const html = membresIds.map(mId => {
+                const p = BBDD.expedients.find(e => e.id.trim() === mId.trim());
+                if (!p) return '';
+                
+                const programesStr = p.programes && p.programes.length > 0 ? p.programes.join(', ') : "Pla d'Atenció Familiar";
+                const referentsStr = "Tècnic Referent de Zona";
+
+                return `
+                    <tr>
+                        <td><strong>${p.nom} ${p.cognoms}</strong><br><small>${p.dni || 'Sense DNI'}</small></td>
+                        <td>${p.id}</td>
+                        <td>${programesStr}</td>
+                        <td>${referentsStr}</td>
+                    </tr>`;
+            }).join('');
+            tbody.innerHTML = html || '<tr><td colspan="4">No hi ha membres assignats</td></tr>';
+        }
+
+        function renderDetallInformes(fId) {
+            const listDiv = document.getElementById('informes-list');
+            const informesBBDD = JSON.parse(localStorage.getItem('nexe_informes')) || [];
+            const filtrats = informesBBDD.filter(inf => inf.familiaId === fId);
+
+            if (filtrats.length === 0) {
+                listDiv.innerHTML = '<p style="font-size: 0.85rem; color: #64748b;">No hi ha informes registrats per a aquesta unitat familiar.</p>';
+                return;
+            }
+
+            // Ordenem per data (més nou primer)
+            listDiv.innerHTML = filtrats.reverse().map(inf => `
+                <div class="report-block">
+                    <div style="display:flex; justify-content:space-between; align-items: baseline;">
+                        <span class="report-tag">${inf.titol}</span>
+                        <span style="font-size:0.75rem; color:#64748b;">${inf.data} - ${inf.redactor}</span>
+                    </div>
+                    <div class="report-text">${inf.contingut}</div>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

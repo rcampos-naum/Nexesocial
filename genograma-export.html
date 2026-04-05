@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exportar Genograma - NexePsy Suite</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --psy-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --nexe-dark: #0f172a;
+            --slate-500: #64748b;
+            --slate-200: #e2e8f0;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #f8fafc; 
+            margin: 0; 
+            padding: 50px 20px; 
+            color: var(--nexe-dark);
+        }
+
+        .export-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+            position: relative;
+            border: 1px solid var(--slate-200);
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .brand-logos { display: flex; align-items: center; gap: 20px; }
+        .logo-img { height: 45px; object-fit: contain; }
+        .divider { width: 2px; height: 40px; background: var(--slate-200); }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .meta-item {
+            background: #f8fafc;
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--slate-200);
+        }
+
+        .meta-label {
+            display: block;
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--slate-500);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 5px;
+        }
+
+        .meta-value {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--nexe-dark);
+        }
+
+        .genogram-preview-box {
+            background: #ffffff;
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 10px;
+            margin-bottom: 40px;
+            position: relative;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #imgPreview {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+        }
+
+        .footer-financiadores {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #f1f5f9;
+            text-align: left;
+        }
+        .financiadores-grid {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        .financiador-logo {
+            height: 40px;
+            max-width: 120px;
+            object-fit: contain;
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid var(--slate-200);
+            position: sticky;
+            bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        button {
+            padding: 12px 25px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .btn-secondary { background: white; color: var(--nexe-dark); border: 1px solid var(--slate-200); }
+        .btn-gradient { background: var(--psy-gradient); color: white; }
+
+        @media print {
+            .action-bar { display: none; }
+            body { padding: 0; background: white; }
+            .export-container { box-shadow: none; border: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="export-container" id="printArea">
+        <header class="report-header">
+            <div class="brand-logos">
+                <img src="img/NexeSocial-logo.png" id="logo1" class="logo-img" alt="NexeSocial">
+                <div class="divider"></div>
+                <img src="img/NexePsy.svg" id="logo2" class="logo-img" alt="NexePsy">
+            </div>
+            <div style="text-align: right">
+                <div style="font-weight: 800; font-size: 1.2rem; color: #1e293b;">INFORME GENOGRAMA</div>
+                <div style="color: #6366f1; font-weight: 700; font-size: 0.75rem;">Informe Psicosocial</div>
+            </div>
+        </header>
+
+        <div class="meta-grid">
+            <div class="meta-item">
+                <span class="meta-label">ID EXPEDIENT</span>
+                <span class="meta-value" id="valID">---</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">FAMÍLIA</span>
+                <span class="meta-value" id="valFam">---</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">TÈCNIC</span>
+                <span class="meta-value" id="valTec">---</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">DATA EMISSIÓ</span>
+                <span class="meta-value" id="valDate">---</span>
+            </div>
+        </div>
+
+        <div class="genogram-preview-box">
+            <img id="imgPreview" alt="Previsualització del Genograma">
+        </div>
+
+        <footer class="footer-financiadores">
+            <p style="font-size: 0.65rem; color: #94a3b8; margin: 0;">Amb el suport de:</p>
+            <div id="financiadoresContainer" class="financiadores-grid"></div>
+            <p style="margin-top: 20px; color: #94a3b8; font-size: 0.7rem; text-align: center;">
+                Aquest document conté informació confidencial protegida per la Llei Orgànica de Protecció de Dades.
+            </p>
+        </footer>
+    </div>
+
+    <div class="action-bar">
+        <button onclick="downloadImage('png')" class="btn-secondary">Descarregar PNG</button>
+        <button onclick="downloadImage('jpg')" class="btn-secondary">Descarregar JPG</button>
+        <button onclick="downloadPDF()" class="btn-gradient">Exportar PDF Professional</button>
+    </div>
+
+    <script>
+        const imgData = localStorage.getItem('genograma_temp');
+        const famRaw = localStorage.getItem('familia_data');
+        const financiadoresRaw = localStorage.getItem('financiadores_logos');
+
+        window.onload = () => {
+            if (imgData) document.getElementById('imgPreview').src = imgData;
+            
+            if (famRaw) {
+                const data = JSON.parse(famRaw);
+                document.getElementById('valID').innerText = data.id || 'N/A';
+                document.getElementById('valFam').innerText = (data.apellidos || 'Sense Cognoms').replace(/-/g, ' ');
+                document.getElementById('valTec').innerText = (data.tecnico || 'No Assignat').replace(/-/g, ' ');
+                document.getElementById('valDate').innerText = new Date().toLocaleDateString('ca-ES');
+            }
+
+            if (financiadoresRaw) {
+                const logos = JSON.parse(financiadoresRaw);
+                const container = document.getElementById('financiadoresContainer');
+                logos.forEach(src => {
+                    const img = document.createElement('img');
+                    img.src = src;
+                    img.className = 'financiador-logo';
+                    container.appendChild(img);
+                });
+            }
+        };
+
+        // Función para convertir imágenes (incluido SVG) a una versión compatible con Canvas/jsPDF
+        function getImageElement(url) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = () => resolve(img);
+                img.onerror = () => resolve(null);
+                img.src = url;
+            });
+        }
+
+        async function downloadImage(format) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const sourceImg = document.getElementById('imgPreview');
+            
+            canvas.width = Math.max(sourceImg.naturalWidth, 1200);
+            canvas.height = sourceImg.naturalHeight + 450;
+
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Cargar y dibujar logos de cabecera
+            const l1 = await getImageElement(document.getElementById('logo1').src);
+            const l2 = await getImageElement(document.getElementById('logo2').src);
+            if(l1) ctx.drawImage(l1, 50, 40, 150, 55);
+            if(l2) ctx.drawImage(l2, 220, 40, 150, 55);
+
+            ctx.fillStyle = "#1e293b";
+            ctx.font = "bold 32px Inter, sans-serif";
+            ctx.fillText("INFORME GENOGRAMA - NEXEPSY SUITE", 50, 150);
+            
+            ctx.font = "20px Inter, sans-serif";
+            ctx.fillStyle = "#64748b";
+            const info = `ID: ${document.getElementById('valID').innerText} | Família: ${document.getElementById('valFam').innerText}`;
+            ctx.fillText(info, 50, 190);
+
+            ctx.drawImage(sourceImg, 50, 250);
+
+            // Financiadores abajo a la izquierda
+            if (financiadoresRaw) {
+                const logos = JSON.parse(financiadoresRaw);
+                let x = 50;
+                ctx.font = "14px Inter";
+                ctx.fillStyle = "#94a3b8";
+                ctx.fillText("Amb el suport de:", 50, canvas.height - 120);
+                for (let src of logos) {
+                    const fLog = await getImageElement(src);
+                    if(fLog) {
+                        ctx.drawImage(fLog, x, canvas.height - 100, 100, 50);
+                        x += 120;
+                    }
+                }
+            }
+
+            const link = document.createElement('a');
+            const fam = document.getElementById('valFam').innerText.replace(/\s+/g, '_');
+            link.download = `Genograma_${fam}.${format}`;
+            link.href = canvas.toDataURL(`image/${format === 'jpg' ? 'jpeg' : 'png'}`, 1.0);
+            link.click();
+        }
+
+        async function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            const fam = document.getElementById('valFam').innerText;
+            const id = document.getElementById('valID').innerText;
+
+            // Procesar los logos de cabecera a Base64 para asegurar que jsPDF los acepte (especialmente el SVG)
+            const rasterize = async (elId) => {
+                const img = await getImageElement(document.getElementById(elId).src);
+                if (!img) return null;
+                const c = document.createElement('canvas');
+                c.width = img.width; c.height = img.height;
+                const cx = c.getContext('2d');
+                cx.drawImage(img, 0, 0);
+                return c.toDataURL('image/png');
+            };
+
+            const logo1Base64 = await rasterize('logo1');
+            const logo2Base64 = await rasterize('logo2');
+
+            // Header
+            if(logo1Base64) doc.addImage(logo1Base64, 'PNG', 15, 10, 30, 12);
+            if(logo2Base64) doc.addImage(logo2Base64, 'PNG', 50, 10, 30, 12);
+            
+            doc.setDrawColor(226, 232, 240);
+            doc.line(48, 10, 48, 22);
+
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(14); doc.setFont("helvetica", "bold");
+            doc.text("INFORME DE GENOGRAMA", 282, 15, { align: "right" });
+            
+            doc.setFontSize(9); doc.setFont("helvetica", "normal");
+            doc.text(`Expedient: ${id} | Família: ${fam}`, 282, 22, { align: "right" });
+
+            // Imagen principal
+            doc.addImage(imgData, 'PNG', 15, 40, 267, 130);
+
+            // Financiadores PIE DE PÁGINA IZQUIERDA
+            if (financiadoresRaw) {
+                const logos = JSON.parse(financiadoresRaw);
+                let xPos = 15;
+                doc.setFontSize(7); doc.setTextColor(150, 150, 150);
+                doc.text("Amb el suport de:", 15, 182);
+                
+                for (let src of logos.slice(0, 5)) {
+                    try {
+                        const img = await getImageElement(src);
+                        const c = document.createElement('canvas');
+                        c.width = img.width; c.height = img.height;
+                        c.getContext('2d').drawImage(img, 0, 0);
+                        const b64 = c.toDataURL('image/png');
+                        doc.addImage(b64, 'PNG', xPos, 185, 25, 10);
+                        xPos += 30;
+                    } catch(e){}
+                }
+            }
+
+            doc.setFontSize(8);
+            doc.text("Document confidencial - NexePsy Suite", 148, 205, { align: "center" });
+
+            doc.save(`Genograma_${id}_${fam}.pdf`);
+        }
+    </script>
+</body>
+</html>

@@ -133,3 +133,19 @@ const DB_Tools = {
 
 // Inicialitzem el desat per fixar canvis de migració o edats calculades
 desatElectronic();
+// Añadir esto a tu archivo database.js
+BBDD.families = [
+    {
+        id: "FAM-0001",
+        cognoms_referencia: "García Martí", // Corregido según tus datos iniciales
+        membres: ["U2026/01", "U2026/03"], // Marc y Laura que sí existen en tu BBDD
+        data_creacio: "2026-04-05",
+        observacions: "Unitat de convivència estable."
+    }
+];
+
+// Función para generar nuevo ID de familia
+function generarIdFamilia() {
+    const ultimId = BBDD.families.length;
+    return "FAM-" + String(ultimId + 1).padStart(4, '0');
+}

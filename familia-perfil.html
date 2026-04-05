@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Expedient Familiar</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <script src="database.js"></script>
+    <script src="printer.js"></script> 
+    <script src="autofirma.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        .fam-header {
+            background: white; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;
+        }
+        .member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+        .member-card { 
+            background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; 
+            display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;
+        }
+        .member-card:hover { border-color: #2563eb; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .member-avatar { width: 45px; height: 45px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #2563eb; }
+
+        .btn-flex { display: flex; align-items: center; gap: 8px; font-weight: 600; padding: 10px 18px; border-radius: 8px; cursor: pointer; border: none; transition: 0.2s; font-family: inherit; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-secondary { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .btn-flex svg { width: 18px; height: 18px; stroke-width: 2.5; }
+
+        .tab-nav { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
+        .tab-link { padding: 10px 20px; cursor: pointer; font-weight: 600; color: #64748b; border-bottom: 2px solid transparent; }
+        .tab-link.active { color: #2563eb; border-bottom-color: #2563eb; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        
+        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 10001; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 600px; border-radius: 15px; padding: 30px; position: relative; }
+        
+        .sign-option { border: 1px solid #e2e8f0; padding: 15px; border-radius: 10px; cursor: pointer; transition: 0.2s; text-align: left; margin-top: 10px; display: flex; align-items: center; gap: 15px; }
+        .sign-option:hover { border-color: #2563eb; background: #eff6ff; }
+        .sign-option svg { width: 24px; height: 24px; color: #2563eb; stroke: currentColor; fill: none; }
+        
+        #signature-pad { border: 2px dashed #cbd5e1; background: #f8fafc; cursor: crosshair; touch-action: none; }
+        .program-tag { background: #f0fdf4; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; border: 1px solid #bbf7d0; margin-right: 5px; }
+    </style>
+</head>
+<body>
+    <script src="sidebar.js"></script>
+
+    <div id="modalUser" class="modal-overlay">
+        <div class="modal-content">
+            <span style="position:absolute; top:15px; right:20px; cursor:pointer; font-size:1.5rem;" onclick="closeUserModal()">&times;</span>
+            <div id="modalUserData"></div>
+        </div>
+    </div>
+
+    <div id="modalSignature" class="modal-overlay">
+        <div class="modal-content" style="max-width: 450px;">
+            <h3>Opcions de Firma</h3>
+            <div class="sign-option" onclick="processarFirma('Autofirma')">
+                <svg viewBox="0 0 24 24"><path d="M3 21h18M3 10h18M5 10V7a7 7 0 1114 0v3M8 21v-7m4 7v-7m4 7v-7"/></svg>
+                <div><strong>Autofirma (Oficial)</strong><div style="font-size:0.75rem;">Invocació de programa local instal·lat.</div></div>
+            </div>
+            <div class="sign-option" onclick="obrirFirmaInterna()">
+                <svg viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                <div><strong>Firma Interna</strong><div style="font-size:0.75rem;">Ús intern del centre o presencial (PANTALLA).</div></div>
+            </div>
+            <button class="btn-flex btn-secondary" style="margin-top:20px; width:100%; justify-content:center;" onclick="tancarModalsFirma()">Tancar</button>
+        </div>
+    </div>
+
+    <div id="modalInterna" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px; text-align: center;">
+            <h3>Firma Interna</h3>
+            <canvas id="signature-pad" width="400" height="200" style="margin: 20px 0;"></canvas>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-flex btn-primary" style="flex:1; justify-content:center;" onclick="finalitzarFirmaInterna()">Generar PDF</button>
+                <button class="btn-flex btn-secondary" onclick="clearCanvas()">Esborrar</button>
+                <button class="btn-flex btn-secondary" onclick="tancarModalsFirma()">Tancar</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="profile-container">
+            <div class="fam-header">
+                <div>
+                    <span id="fam-id-tag" class="label" style="background:#eff6ff; color:#2563eb; padding:4px 8px; border-radius:4px;">...</span>
+                    <h1 id="fam-title" style="margin: 10px 0 5px 0;">Carregant...</h1>
+                    <p id="fam-desc" style="color:#64748b; margin:0;"></p>
+                    <div id="fam-programes" style="margin-top: 10px;"></div> 
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-flex btn-secondary" onclick="generarHistorico()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8m8 4H8m2-8H8"/></svg>
+                        PDF Històric
+                    </button>
+                    <button class="btn-flex btn-primary" onclick="nouInforme()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 4v16m8-8H4"/></svg>
+                        Alta Informe
+                    </button>
+                </div>
+            </div>
+
+            <div class="tab-nav">
+                <div class="tab-link active" onclick="showTab('membres', event)">Membres i Dades</div>
+                <div class="tab-link" onclick="showTab('informes', event)">Informes Tècnics</div>
+            </div>
+
+            <div id="tab-membres" class="tab-pane active"><div class="member-grid" id="grid-membres"></div></div>
+            <div id="tab-informes" class="tab-pane">
+                <div id="llista-informes-hist"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const famId = params.get('id');
+        let familiaActual = null;
+        let informeSeleccionat = null;
+
+        // --- Lógica Firma (Canvas) ---
+        let canvas = document.getElementById('signature-pad');
+        let ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        if(canvas) {
+            canvas.addEventListener('mousedown', () => drawing = true);
+            window.addEventListener('mouseup', () => drawing = false);
+            canvas.addEventListener('mousemove', (e) => {
+                if (!drawing) return;
+                const rect = canvas.getBoundingClientRect();
+                ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#000';
+                ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+                ctx.stroke(); ctx.beginPath(); ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+            });
+        }
+
+        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.beginPath(); }
+        function obrirModalFirma() { document.getElementById('modalSignature').style.display = 'flex'; }
+        function obrirFirmaInterna() { document.getElementById('modalSignature').style.display = 'none'; document.getElementById('modalInterna').style.display = 'flex'; clearCanvas(); }
+        function tancarModalsFirma() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'modalUser') m.style.display = 'none'; }); }
+
+        function processarFirma(metode) {
+            tancarModalsFirma();
+            if (metode === 'Autofirma') {
+                AutoFirmaConnector.signarInforme(informeSeleccionat, famId);
+            } else {
+                generarPDFInforme(metode);
+            }
+        }
+        function finalitzarFirmaInterna() { tancarModalsFirma(); generarPDFInforme('Firma Interna'); }
+
+        function generarPDFInforme(metode) {
+            NexePrinter.generarPDFInforme(informeSeleccionat, famId, metode);
+            closeUserModal();
+        }
+
+        // --- Navegación ---
+        function generarHistorico() { window.open(`familia-historico.html?famId=${famId}`, '_blank'); }
+        function nouInforme() { window.location.href = `informe-nou.html?famId=${famId}`; }
+
+        // --- Init & Render ---
+        document.addEventListener('DOMContentLoaded', () => {
+            familiaActual = BBDD.families.find(f => f.id === famId);
+            if(familiaActual) {
+                document.getElementById('fam-id-tag').innerText = familiaActual.id;
+                document.getElementById('fam-title').innerText = "Família " + familiaActual.cognoms_referencia;
+                document.getElementById('fam-desc').innerText = `Expedient obert el ${familiaActual.data_creacio}`;
+                renderProgramas();
+                renderMembers(); 
+                renderInformes();
+            }
+        });
+
+        function renderProgramas() {
+            const container = document.getElementById('fam-programes');
+            if(familiaActual.programes_actius) {
+                container.innerHTML = familiaActual.programes_actius.map(p => 
+                    `<span class="program-tag">${p.curs} - ${p.nom}</span>`
+                ).join('');
+            }
+        }
+
+        function renderMembers() {
+            const grid = document.getElementById('grid-membres');
+            grid.innerHTML = familiaActual.membres.map(mId => {
+                const p = BBDD.expedients.find(e => e.id.trim() === mId.trim());
+                // Corregido: Llamamos a la función que SÍ existe (openUserModal ahora llama a veureDetallPersona si fuera necesario, o la creamos)
+                return p ? `<div class="member-card" onclick="openUserModal('${p.id}')">
+                    <div class="member-avatar">${p.nom.charAt(0)}</div>
+                    <div><div style="font-weight:700;">${p.nom} ${p.cognoms}</div><div style="font-size:0.75rem; color:#64748b;">ID: ${p.id}</div></div>
+                </div>` : '';
+            }).join('');
+        }
+
+        // Función necesaria para los clics en miembros
+        function openUserModal(id) {
+            const p = BBDD.expedients.find(e => e.id === id);
+            document.getElementById('modalUserData').innerHTML = `
+                <h3>${p.nom} ${p.cognoms}</h3>
+                <p><strong>ID:</strong> ${p.id}</p>
+                <p><strong>DNI:</strong> ${p.dni || 'No disponible'}</p>
+                <button onclick="closeUserModal()" class="btn-flex btn-secondary" style="margin-top:15px;">Tancar</button>`;
+            document.getElementById('modalUser').style.display = 'flex';
+        }
+
+        function renderInformes() {
+            const container = document.getElementById('llista-informes-hist');
+            const informes = (JSON.parse(localStorage.getItem('nexe_informes')) || []).filter(inf => inf.familiaId === famId);
+            container.innerHTML = informes.length ? informes.map(inf => `
+                <div class="report-item" style="background: white; padding: 12px 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <div><strong>${inf.titol}</strong><br><small>${inf.data} - ${inf.redactor}</small></div>
+                    <button class="btn-flex btn-secondary" onclick="veureDetallInforme('${inf.id}')" style="font-size:0.75rem;">Veure Detall</button>
+                </div>`).join('') : '<p style="text-align:center; color:#64748b;">No hi ha informes.</p>';
+        }
+
+        function veureDetallInforme(id) {
+            const inf = (JSON.parse(localStorage.getItem('nexe_informes')) || []).find(i => i.id === id);
+            informeSeleccionat = inf;
+            document.getElementById('modalUserData').innerHTML = `
+                <h3>${inf.titol}</h3>
+                <p style="font-size:0.8rem; color:#64748b;">${inf.redactor} - ${inf.data}</p>
+                <div style="background:#f8fafc; padding:15px; border-radius:8px; margin:15px 0; max-height:200px; overflow-y:auto;">${inf.contingut}</div>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="obrirModalFirma()" class="btn-flex btn-primary">Signar / PDF</button>
+                    <button onclick="closeUserModal()" class="btn-flex btn-secondary">Tancar</button>
+                </div>`;
+            document.getElementById('modalUser').style.display = 'flex';
+        }
+
+        function closeUserModal() { document.getElementById('modalUser').style.display = 'none'; }
+        
+        function showTab(tab, e) {
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>

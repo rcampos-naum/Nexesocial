@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Gestió de Famílies</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <script src="database.js"></script>
+    <style>
+        .family-card {
+            background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; transition: all 0.2s; cursor: pointer;
+        }
+        .family-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: #2563eb; }
+        .family-info { display: flex; align-items: center; gap: 20px; }
+        .family-icon {
+            width: 50px; height: 50px; background: #eff6ff; color: #2563eb;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+        }
+        .family-icon svg { width: 26px; height: 26px; stroke-width: 2; }
+        .badge-members { background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+        
+        /* Estil botó i cercador */
+        .btn-action { background: #2563eb !important; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-action:hover { background: #1d4ed8 !important; }
+        .search-container { margin-bottom: 25px; position: relative; }
+        .search-input { 
+            width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid #e2e8f0; 
+            font-family: inherit; font-size: 0.95rem; box-sizing: border-box; outline: none; transition: 0.2s;
+        }
+        .search-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+    </style>
+</head>
+<body>
+    <script src="sidebar.js"></script>
+    
+    <main class="main-content">
+        <div class="profile-container">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+                <div>
+                    <h1 style="margin:0; color:#1e293b;">Directori de Famílies</h1>
+                    <p style="color:#64748b; margin:5px 0 0 0;">Gestió d'expedients d'unitats de convivència</p>
+                </div>
+                <button class="btn-action" onclick="crearFamilia()" style="display:flex; align-items:center; gap:8px;">
+                    <svg style="width:18px; height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Nova Unitat Familiar
+                </button>
+            </div>
+
+            <div class="search-container">
+                <input type="text" id="familySearch" class="search-input" placeholder="Cerca per cognoms o núm. d'expedient (Ex: FAM-0001 o García)..." oninput="filtrarFamilies()">
+            </div>
+            
+            <div id="llista-families"></div>
+        </div>
+    </main>
+
+    <script>
+        // Icona de família (Users)
+        const iconFamily = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+
+        function renderFamilies(data) {
+            const container = document.getElementById('llista-families');
+            if (data.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding:50px; color:#94a3b8;">No s'han trobat famílies amb aquests criteris.</div>`;
+                return;
+            }
+
+            container.innerHTML = data.map(f => `
+                <div class="family-card" onclick="window.location.href='familia-perfil.html?id=${f.id}'">
+                    <div class="family-info">
+                        <div class="family-icon">${iconFamily}</div>
+                        <div>
+                            <span class="label" style="font-size:0.7rem; letter-spacing:1px;">${f.id}</span>
+                            <h3 style="margin:2px 0 5px 0; color:#1e293b; font-size:1.1rem;">Família ${f.cognoms_referencia}</h3>
+                            <span class="badge-members">${f.membres.length} membres vinculats</span>
+                        </div>
+                    </div>
+                    <div style="color: #2563eb; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 5px;">
+                        Gestionar <svg style="width:16px; height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filtrarFamilies() {
+            const term = document.getElementById('familySearch').value.toLowerCase();
+            const filtrades = BBDD.families.filter(f => 
+                f.id.toLowerCase().includes(term) || 
+                f.cognoms_referencia.toLowerCase().includes(term)
+            );
+            renderFamilies(filtrades);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFamilies(BBDD.families);
+        });
+
+        function crearFamilia() {
+            if (typeof generarIdFamilia === 'function') {
+                const nouId = generarIdFamilia();
+                alert("S'ha generat l'expedient familiar: " + nouId);
+            }
+        }
+    </script>
+</body>
+</html>
