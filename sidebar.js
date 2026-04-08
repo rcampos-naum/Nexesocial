@@ -1,8 +1,11 @@
 // sidebar.js - Gestión Centralizada con NexePsy Integrado y Sidebar Colapsable
+
 function cargarInterfazBase() {
-    const userName = localStorage.getItem('userName') || "Demo";
+    // Obtenemos el usuario de la sesión activa definida en database.js
+    const userSession = typeof Auth !== 'undefined' ? Auth.getUser() : null;
+    const userName = userSession ? (userSession.displayName || userSession.nombre) : "Demo";
     
-    // 1. ESTILOS RESTAURADOS Y OPTIMIZADOS
+    // 1. ESTILOS (Mantengo tus estilos originales)
     const styles = `<style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
@@ -28,7 +31,6 @@ function cargarInterfazBase() {
             flex-direction: column;
         }
 
-        /* MAIN: Ajuste dinámico de ancho */
         main, .main-content {
             flex-grow: 1;
             margin-left: var(--sidebar-width);
@@ -131,20 +133,12 @@ function cargarInterfazBase() {
         .user-dropdown svg { width: 16px; height: 16px; opacity: 0.7; }
 
         .main-footer {
-            position: fixed;
-            bottom: 0;
-            left: var(--sidebar-width);
+            position: fixed; bottom: 0; left: var(--sidebar-width);
             width: calc(100% - var(--sidebar-width));
-            height: 50px;
-            padding: 0 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: white; 
-            border-top: 1px solid #e2e8f0;
-            color: var(--text-muted); 
-            font-size: 0.8rem;
-            z-index: 10000;
+            height: 50px; padding: 0 30px; display: flex;
+            align-items: center; justify-content: space-between;
+            background: white; border-top: 1px solid #e2e8f0;
+            color: var(--text-muted); font-size: 0.8rem; z-index: 10000;
             transition: all var(--transition-speed) ease;
         }
 
@@ -154,18 +148,12 @@ function cargarInterfazBase() {
         }
 
         .footer-signature {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: #f1f5f9;
-            padding: 4px 12px;
-            border-radius: 20px;
-            border: 1px solid #e2e8f0;
-            white-space: nowrap; 
+            display: flex; align-items: center; gap: 6px;
+            background: #f1f5f9; padding: 4px 12px;
+            border-radius: 20px; border: 1px solid #e2e8f0;
         }
         .heart-svg { width: 14px; height: 14px; fill: none; stroke: #ef4444; stroke-width: 2; }
 
-        /* --- NUEVOS ESTILOS PARA EL MODAL DE PERMISOS --- */
         .modal-psynexe-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px);
@@ -181,13 +169,6 @@ function cargarInterfazBase() {
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
             margin: 0 auto 20px; font-size: 30px; font-weight: bold;
         }
-        .modal-psynexe h3 { margin: 0 0 10px; color: #1e293b; font-size: 1.25rem; }
-        .modal-psynexe p { color: #64748b; font-size: 0.9rem; line-height: 1.5; margin-bottom: 20px; }
-        .btn-modal-psynexe {
-            background: #1e293b; color: white; border: none; padding: 10px 20px;
-            border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;
-        }
-        .btn-modal-psynexe:hover { background: #334155; }
         @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
     </style>`;
 
@@ -218,7 +199,7 @@ function cargarInterfazBase() {
             <div class="user-dropdown" id="userDropdown">
                 <a href="perfil.html">${icons.settings} Configuració</a>
                 <div style="height:1px; background:#f1f5f9; margin:0;"></div>
-                <a href="index.html" style="color:#ef4444;" onclick="localStorage.clear()">${icons.logout} Tancar sessió</a>
+                <a href="#" style="color:#ef4444;" id="logoutBtn">${icons.logout} Tancar sessió</a>
             </div>
         </div>
     </header>`;
@@ -266,38 +247,44 @@ function cargarInterfazBase() {
     document.body.insertAdjacentHTML('afterbegin', topBarHTML + sidebarHTML);
     document.body.insertAdjacentHTML('beforeend', footerHTML);
 
-    const toggleBtn = document.getElementById('sidebarToggle');
-    const trigger = document.getElementById('userMenuTrigger');
-    const dropdown = document.getElementById('userDropdown');
-
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', () => {
-            document.body.classList.toggle('collapsed');
-        });
-    }
-
-    if (trigger) {
-        trigger.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdown.classList.toggle('show-menu');
-        });
-    }
-
-    window.addEventListener('click', () => {
-        if (dropdown) dropdown.classList.remove('show-menu');
+    // Eventos
+    document.getElementById('sidebarToggle')?.addEventListener('click', () => document.body.classList.toggle('collapsed'));
+    document.getElementById('userMenuTrigger')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('userDropdown').classList.toggle('show-menu');
     });
+    document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if(typeof Auth !== 'undefined') Auth.logout();
+        else { localStorage.clear(); window.location.href = "index.html"; }
+    });
+
+    window.addEventListener('click', () => document.getElementById('userDropdown')?.classList.remove('show-menu'));
 }
 
-// --- NUEVA FUNCIÓN: VERIFICACIÓN DE ACCESO ---
+// --- FUNCIÓN ACTUALIZADA: VERIFICACIÓN CON AUTH ---
 function verificarAccesoPsy() {
-    const usuarios = JSON.parse(localStorage.getItem('nexe_usuarios')) || [];
-    const currentUser = localStorage.getItem('userName');
-    const userData = usuarios.find(u => u.nombre === currentUser || u.displayName === currentUser);
+    // Usamos el objeto Auth de database.js para verificar acceso
+    if (typeof Auth !== 'undefined') {
+        const user = Auth.getUser();
+        
+        // Si no hay usuario, mandamos al login
+        if (!user) {
+            window.location.href = 'index.html';
+            return;
+        }
 
-    // Si es administrador entra, si no, salta el modal
-    if (userData && userData.role === 'admin') {
-        window.location.href = 'nexepsy.html';
+        // Si es Admin Total o tiene permiso específico 'user'/'admin' en psy
+        const permiso = user.permisos ? user.permisos.psy : null;
+        
+        if (user.role === 'admin' || user.email === 'admin@nexesocial.com' || (permiso && permiso !== 'none')) {
+            window.location.href = 'nexepsy.html';
+        } else {
+            document.getElementById('psyModalError').style.display = 'flex';
+        }
     } else {
+        // Fallback por si database.js no cargó
+        console.error("Auth system not loaded");
         document.getElementById('psyModalError').style.display = 'flex';
     }
 }

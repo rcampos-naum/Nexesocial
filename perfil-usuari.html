@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="style-dashboard.css">
     <script src="database.js"></script>
     <style>
+        /* ESTILS GENERALS DEL PERFIL */
         .profile-container { max-width: 1100px; margin: 0 auto; }
         .user-header-main {
             background: white; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0;
@@ -20,58 +21,76 @@
         .tab-btn.active { background: #2563eb; color: white !important; }
         .tab-content { display: none; background: white; padding: 30px; border-radius: 15px; border: 1px solid #e2e8f0; min-height: 400px; }
         .tab-content.active { display: block; }
+        
+        /* QUADRÍCULA DE DADES */
         .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
         .data-group { border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
         .label { display: block; font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 6px; }
         .value { font-size: 1rem; color: #1e293b; font-weight: 500; display: block; min-height: 1.2rem; }
-        .edit-input { display: none; width: 100%; padding: 6px; border: 1px solid #2563eb; border-radius: 4px; font-size: 0.95rem; background: #f8faff; margin-bottom: 5px; }
+        
+        /* EDICIÓ */
+        .edit-input { display: none; width: 100%; padding: 8px; border: 1px solid #2563eb; border-radius: 6px; font-size: 0.95rem; background: #f8faff; margin-bottom: 5px; font-family: inherit; }
         body.is-editing .edit-input { display: block; }
         body.is-editing .value { display: none; }
+        
+        /* BOTONS I PÍNDOLES */
         .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; margin-left: 10px; }
         .status-actiu { background: #dcfce7; color: #16a34a; }
         .status-inactiu { background: #fee2e2; color: #ef4444; }
-        
         .icon-svg { width: 1.2em; height: 1.2em; fill: currentColor; vertical-align: middle; }
+        .btn-action { background: #10b981; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn-derivacio { background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .btn-link { color: #2563eb; text-decoration: none; font-weight: 600; cursor: pointer; }
 
+        /* ALERTA MÈDICA */
         .medical-alert-header { 
             display: none; background: #fee2e2; border: 1px solid #ef4444; 
             color: #b91c1c; padding: 8px 15px; border-radius: 8px; 
             margin-top: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            animation: pulse 2s infinite;
         }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
-        .item-card { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px;
-        }
-        .btn-action { background: #10b981; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        .btn-link { color: #2563eb; text-decoration: none; font-weight: 600; cursor: pointer; }
-
+        /* MODAL */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center;
         }
         .modal-box {
-            background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%;
-            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow-y: auto; max-height: 85vh;
+            background: white; padding: 30px; border-radius: 15px; max-width: 750px; width: 95%;
+            text-align: left; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow-y: auto; max-height: 90vh;
         }
         .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 25px; }
-        .btn-modal { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; flex: 1; }
+        .btn-modal { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; flex: 1; }
         .btn-confirm { background: #2563eb; color: white; }
         .btn-cancel { background: #e2e8f0; color: #64748b; }
 
-        /* Estils Millorats Buscador */
-        .search-box { margin-bottom: 15px; text-align: left; }
-        .search-input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 5px; outline: none; }
-        .search-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-        .results-list { max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 5px; background: white; }
-        .result-item { padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; justify-content: space-between; transition: 0.2s; }
-        .result-item:hover { background: #f8faff; color: #2563eb; }
-        .result-item:last-child { border-bottom: none; }
+        /* FORMULARI DE DERIVACIÓ DINS EL MODAL */
+        .derivacio-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .form-full { grid-column: span 2; }
+        .derivacio-form label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .derivacio-form input, .derivacio-form select, .derivacio-form textarea { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 5px; font-family: inherit; font-size: 0.9rem; }
+        
+        /* DISSENY MILLORAT DE LES TARGETES D'ACCEPTACIÓ */
+        .acceptacio-container { grid-column: span 2; margin-top: 20px; border-top: 2px solid #f1f5f9; pt: 20px; }
+        .acceptacio-card {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 15px 20px; margin-bottom: 10px; transition: all 0.2s ease; cursor: pointer;
+        }
+        .acceptacio-card:hover { border-color: #2563eb; background: #f8faff; transform: translateY(-1px); }
+        .acceptacio-card span { font-size: 0.9rem; color: #1e293b; font-weight: 500; line-height: 1.4; flex: 1; padding-right: 20px; }
+        .acceptacio-card input[type="checkbox"] { width: 22px; height: 22px; accent-color: #2563eb; cursor: pointer; flex-shrink: 0; }
 
-        .allergy-tag-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; }
-        .allergy-card { background: #fef2f2; border: 1px solid #fee2e2; padding: 10px; border-radius: 8px; text-align: left; margin-bottom: 10px; }
-        .allergy-card h4 { margin: 0 0 5px 0; font-size: 0.8rem; color: #ef4444; text-transform: uppercase; }
-        .allergy-card p { margin: 0; font-weight: 600; color: #1e293b; }
+        /* ALTRES ELEMENTS */
+        .item-card { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 10px; }
+        .allergy-tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+        .allergy-card { background: #fef2f2; border: 1px solid #fee2e2; padding: 12px; border-radius: 10px; text-align: left; margin-bottom: 10px; }
+        .allergy-card h4 { margin: 0 0 5px 0; font-size: 0.75rem; color: #ef4444; text-transform: uppercase; letter-spacing: 0.5px; }
+        .search-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 10px; }
+        .results-list { max-height: 200px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; }
+        .result-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; }
+        .result-item:hover { background: #f1f5f9; }
     </style>
 </head>
 <body>
@@ -79,10 +98,10 @@
 
     <div id="customModal" class="modal-overlay">
         <div class="modal-box">
-            <h3 id="modalTitle">Confirmació</h3>
+            <h3 id="modalTitle">Títol</h3>
             <div id="modalContent"></div>
-            <textarea id="modalTextarea" style="display:none; width:100%; height:120px; margin-top:15px; padding:10px; border:1px solid #ccc; border-radius:8px; font-family:inherit;"></textarea>
-            <p id="modalMsg" style="margin-top: 15px; color: #64748b;"></p>
+            <textarea id="modalTextarea" style="display:none; width:100%; height:150px; margin-top:15px; padding:12px; border:1px solid #ccc; border-radius:8px; font-family:inherit;"></textarea>
+            <p id="modalMsg" style="margin-top:15px; color:#64748b; font-size:0.9rem;"></p>
             <div id="modalButtons" class="modal-buttons"></div>
         </div>
     </div>
@@ -90,8 +109,12 @@
     <main class="main-content">
         <div class="profile-container">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <a href="expedient-detall.html" style="text-decoration: none; color: #64748b; font-weight: 600;">← Tornar al llistat</a>
+                <a href="expedient-llistat.html" style="text-decoration: none; color: #64748b; font-weight: 600;">← Tornar al llistat</a>
                 <div style="display: flex; gap: 10px;">
+                    <button class="btn-derivacio" onclick="obrirModalDerivacio()">
+                        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                        Derivació Psicològica
+                    </button>
                     <button onclick="canviarEstatExpedient()" style="background:#f1f5f9; color:#ef4444; border:1px solid #fee2e2; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">Baixa Expedient</button>
                     <button id="btnEdit" onclick="toggleEdit()" style="background:#2563eb; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">
                         <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Editar Fitxa
@@ -101,28 +124,28 @@
             </div>
 
             <div class="user-header-main">
-                <div style="display: flex; align-items: center; gap: 20px;">
-                    <div style="width: 70px; height: 70px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; color:#64748b">
-                        <svg class="icon-svg" style="width:40px; height:40px" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                <div style="display: flex; align-items: center; gap: 25px;">
+                    <div style="width: 80px; height: 80px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; color:#64748b">
+                        <svg class="icon-svg" style="width:45px; height:45px" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                     </div>
                     <div>
                         <h1 style="margin: 0; font-size: 1.8rem; color: #1e293b;">
                             <span id="header-nom-complet">Carregant...</span> 
                             <span id="header-estat-pill" class="status-pill">Estat</span>
                         </h1>
-                        <div style="display: flex; gap: 20px; margin-top: 8px; font-size: 0.9rem; color: #64748b; flex-wrap: wrap;">
+                        <div style="display: flex; gap: 20px; margin-top: 8px; font-size: 0.9rem; color: #64748b;">
                             <span>DNI: <strong id="header-dni">-</strong></span>
                             <span>Mòbil: <strong id="header-mobil">-</strong></span>
                             <span>Edat: <strong id="header-edat">-</strong></span>
                         </div>
                         <div id="header-medical-alert" class="medical-alert-header" onclick="showMedicalModal()">
-                            ⚠️ ALERTA MÈDICA
+                            ⚠️ ALERTA MÈDICA ACTIVA
                         </div>
                     </div>
                 </div>
                 <div id="box-expedient" style="text-align: right;">
                     <span class="label">Codi Expedient</span>
-                    <div id="header-expedient" style="color: #2563eb; font-size: 1.3rem; font-weight: 700;">EXP-0000</div>
+                    <div id="header-expedient" style="color: #2563eb; font-size: 1.4rem; font-weight: 800;">EXP-0000</div>
                 </div>
             </div>
 
@@ -140,10 +163,15 @@
                     <div class="data-group"><span class="label">Nom</span><span class="value" id="val-nom">-</span><input type="text" id="in-nom" class="edit-input"></div>
                     <div class="data-group"><span class="label">Primer Llinatge</span><span class="value" id="val-cognoms">-</span><input type="text" id="in-cognoms" class="edit-input"></div>
                     <div class="data-group"><span class="label">Segon Llinatge</span><span class="value" id="val-cognom2">-</span><input type="text" id="in-cognom2" class="edit-input"></div>
-                    <div class="data-group"><span class="label">DNI / NIE</span><span class="value" id="val-dni">-</span><input type="text" id="in-dni" class="edit-input"></div>
+                    <div class="data-group"><span class="label">DNI / NIE / Passaport</span><span class="value" id="val-dni">-</span><input type="text" id="in-dni" class="edit-input"></div>
                     <div class="data-group"><span class="label">Data Naixement</span><span class="value" id="val-naixement">-</span><input type="date" id="in-naixement" class="edit-input"></div>
                     <div class="data-group"><span class="label">Mòbil</span><span class="value" id="val-mobil">-</span><input type="text" id="in-mobil" class="edit-input"></div>
                     <div class="data-group"><span class="label">Email</span><span class="value" id="val-email">-</span><input type="email" id="in-email" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Gènere</span><span class="value" id="val-genere">-</span>
+                        <select id="in-genere" class="edit-input">
+                            <option value="Dona">Dona</option><option value="Home">Home</option><option value="No Binari">No Binari</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -154,6 +182,7 @@
                     <div class="data-group"><span class="label">Bretxa Digital</span><span class="value" id="val-bretxa">-</span>
                         <select id="in-bretxa" class="edit-input"><option value="No">No</option><option value="Sí">Sí</option></select>
                     </div>
+                    <div class="data-group"><span class="label">Origen Geogràfic</span><span class="value" id="val-origen">-</span><input type="text" id="in-origen" class="edit-input"></div>
                 </div>
             </div>
 
@@ -175,31 +204,28 @@
                         <span class="label">Té al·lèrgies?</span>
                         <span class="value" id="val-te-alergies">-</span>
                         <select id="in-te-alergies" class="edit-input" onchange="checkAlergies()">
-                            <option value="No">No</option>
-                            <option value="Sí">Sí</option>
+                            <option value="No">No</option><option value="Sí">Sí</option>
                         </select>
                     </div>
-
                     <div id="group-detall-alergies" class="data-group" style="grid-column: span 3; display:none;">
                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
-                            <div><span class="label">Ambientals</span><div id="val-al-amb" class="allergy-tag-container"></div><div id="inputs-amb" class="edit-input-container"><input type="text" class="edit-input allergy-input" oninput="manageLines(this)" placeholder="Nova..."></div></div>
-                            <div><span class="label">Medicaments</span><div id="val-al-med" class="allergy-tag-container"></div><div id="inputs-med" class="edit-input-container"><input type="text" class="edit-input allergy-input" oninput="manageLines(this)" placeholder="Nova..."></div></div>
-                            <div><span class="label">Alimentícies</span><div id="val-al-ali" class="allergy-tag-container"></div><div id="inputs-ali" class="edit-input-container"><input type="text" class="edit-input allergy-input" oninput="manageLines(this)" placeholder="Nova..."></div></div>
+                            <div><span class="label">Ambientals</span><div id="val-al-amb" class="allergy-tag-container"></div><div id="inputs-amb" class="edit-input-container"></div></div>
+                            <div><span class="label">Medicaments</span><div id="val-al-med" class="allergy-tag-container"></div><div id="inputs-med" class="edit-input-container"></div></div>
+                            <div><span class="label">Alimentícies</span><div id="val-al-ali" class="allergy-tag-container"></div><div id="inputs-ali" class="edit-input-container"></div></div>
                         </div>
                     </div>
-
                     <div class="data-group"><span class="label">TDA</span><span class="value" id="val-tda">-</span><select id="in-tda" class="edit-input"><option value="No">No</option><option value="Sí">Sí</option></select></div>
                     <div class="data-group"><span class="label">TDHA</span><span class="value" id="val-tdha">-</span><select id="in-tdha" class="edit-input"><option value="No">No</option><option value="Sí">Sí</option></select></div>
                     <div class="data-group"><span class="label">Dependència</span><span class="value" id="val-dependencia">-</span><select id="in-dependencia" class="edit-input" onchange="checkDependencia()"><option value="No">No</option><option value="Sí">Sí</option></select></div>
                     <div id="group-grau" class="data-group" style="display:none;"><span class="label">Grau</span><span class="value" id="val-grau">-</span><select id="in-grau" class="edit-input"><option value="Grado I">Grado I</option><option value="Grado II">Grado II</option><option value="Grado III">Grado III</option></select></div>
-                    <div class="data-group" style="grid-column: span 3;"><span class="label">Observacions mèdiques</span><span class="value" id="val-observacions_mediques">-</span><textarea id="in-observacions_mediques" class="edit-input" style="height:60px; font-family:inherit;"></textarea></div>
+                    <div class="data-group" style="grid-column: span 3;"><span class="label">Observacions mèdiques</span><span class="value" id="val-observacions_mediques">-</span><textarea id="in-observacions_mediques" class="edit-input" style="height:80px;"></textarea></div>
                 </div>
             </div>
 
             <div id="activitats" class="tab-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <h3>Programes i Activitats Actives</h3>
-                    <button class="btn-action" onclick="obrirModalActivitats()">+ Inscriure en Programa</button>
+                    <h3>Programes i Activitats</h3>
+                    <button class="btn-action" onclick="obrirModalActivitats()">+ Inscriure</button>
                 </div>
                 <div id="llista-activitats"></div>
             </div>
@@ -221,20 +247,13 @@
 
         document.addEventListener('DOMContentLoaded', () => { carregarPerfil(); });
 
-        function calcularEdat(data) {
-            if (!data) return "-";
-            const naix = new Date(data);
-            const avui = new Date();
-            let edat = avui.getFullYear() - naix.getFullYear();
-            const m = avui.getMonth() - naix.getMonth();
-            if (m < 0 || (m === 0 && avui.getDate() < naix.getDate())) edat--;
-            return edat + " anys";
-        }
-
         function carregarPerfil() {
             usuariActual = BBDD.expedients.find(u => u.id === userId);
             if (usuariActual) {
-                if (!usuariActual.salut) usuariActual.salut = { te_alergies: "No", alergies_detall: { amb: [], med: [], ali: [] }, tda: "No", tdha: "No", dependencia: "No", grau: "", observacions: "" };
+                // Inicialitzar objecte salut si no existeix
+                if (!usuariActual.salut) {
+                    usuariActual.salut = { te_alergies: "No", alergies_detall: { amb: [], med: [], ali: [] }, tda: "No", tdha: "No", dependencia: "No", grau: "", observacions: "" };
+                }
                 omplirDades(usuariActual);
                 pintarActivitats(usuariActual);
                 pintarFamilia(usuariActual);
@@ -254,12 +273,13 @@
             estatPill.innerText = u.estat || 'Actiu';
             estatPill.className = 'status-pill ' + (u.estat === 'Inactiu' ? 'status-inactiu' : 'status-actiu');
 
-            const camps = ['nom', 'cognoms', 'cognom2', 'dni', 'naixement', 'mobil', 'email', 'estudis', 'laboral', 'bretxa', 'domicili', 'context'];
+            const camps = ['nom', 'cognoms', 'cognom2', 'dni', 'naixement', 'mobil', 'email', 'estudis', 'laboral', 'bretxa', 'domicili', 'context', 'origen'];
             camps.forEach(c => {
                 if(document.getElementById('val-'+c)) document.getElementById('val-'+c).innerText = u[c] || "-";
                 if(document.getElementById('in-'+c)) document.getElementById('in-'+c).value = u[c] || "";
             });
 
+            // Salut
             const s = u.salut;
             document.getElementById('val-te-alergies').innerText = s.te_alergies;
             document.getElementById('in-te-alergies').value = s.te_alergies;
@@ -269,8 +289,18 @@
                 document.getElementById('val-al-'+t).innerHTML = list.map(item => `<span style="background:#f1f5f9; padding:2px 8px; border-radius:4px; font-size:0.85rem;">${item}</span>`).join('');
                 const container = document.getElementById('inputs-'+t);
                 container.innerHTML = '';
-                list.forEach(item => { const inp = document.createElement('input'); inp.className = "edit-input allergy-input"; inp.value = item; inp.oninput = function() { manageLines(this); }; container.appendChild(inp); });
-                const empty = document.createElement('input'); empty.className = "edit-input allergy-input"; empty.placeholder = "Nova..."; empty.oninput = function() { manageLines(this); }; container.appendChild(empty);
+                list.forEach(item => {
+                    const inp = document.createElement('input');
+                    inp.className = "edit-input allergy-input";
+                    inp.value = item;
+                    inp.oninput = function() { manageLines(this); };
+                    container.appendChild(inp);
+                });
+                const empty = document.createElement('input');
+                empty.className = "edit-input allergy-input";
+                empty.placeholder = "Nova...";
+                empty.oninput = function() { manageLines(this); };
+                container.appendChild(empty);
             });
 
             document.getElementById('val-tda').innerText = s.tda; document.getElementById('in-tda').value = s.tda;
@@ -278,74 +308,183 @@
             document.getElementById('val-dependencia').innerText = s.dependencia; document.getElementById('in-dependencia').value = s.dependencia;
             document.getElementById('val-grau').innerText = s.grau || "-"; document.getElementById('in-grau').value = s.grau || "Grado I";
             document.getElementById('val-observacions_mediques').innerText = s.observacions || "-"; document.getElementById('in-observacions_mediques').value = s.observacions || "";
-
-            checkAlergies(); checkDependencia();
+            
+            checkAlergies();
+            checkDependencia();
         }
 
-        /* VINCULACIÓ: Llegeix usuaris de expedient-detall.html (BBDD.expedients) */
+        /* --- LOGICA DE DERIVACIÓ AMB DISSENY MILLORAT --- */
+        function obrirModalDerivacio() {
+            const modal = document.getElementById('customModal');
+            document.getElementById('modalTitle').innerText = "Fitxa de Derivació al Servei de Psicologia";
+            const programesParticipa = (usuariActual.programes || []).join(', ') || 'Cap';
+
+            document.getElementById('modalContent').innerHTML = `
+                <div class="derivacio-form">
+                    <div class="form-full" style="background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                        <p style="margin:0; font-size:0.85rem; color:#64748b;">DADES IDENTIFICATIVES:</p>
+                        <p style="margin:5px 0 0 0;"><strong>${usuariActual.nom} ${usuariActual.cognoms}</strong> (${calcularEdat(usuariActual.naixement)})</p>
+                        <p style="margin:2px 0 0 0; font-size:0.85rem;">Programes: ${programesParticipa}</p>
+                    </div>
+                    <div><label>Servei d'Origen</label><input type="text" id="der-servei" value="Atenció Social Nexe"></div>
+                    <div><label>Professional Referent</label><input type="text" id="der-referent" placeholder="Nom professional"></div>
+                    <div class="form-full"><label>Motiu de Derivació</label><textarea id="der-motiu" rows="2" placeholder="Descripció de la situació detectada..."></textarea></div>
+                    <div class="form-full"><label>Demanda de la Persona</label><textarea id="der-demanda" rows="2" placeholder="Què demana l'usuari/ària?"></textarea></div>
+                    <div><label>Urgència</label><select id="der-urgencia"><option value="Baixa">Baixa</option><option value="Mitjana">Mitjana</option><option value="Alta">Alta</option></select></div>
+                    <div><label>Data Derivació</label><input type="date" id="der-data" value="${new Date().toISOString().split('T')[0]}"></div>
+                    
+                    <div class="acceptacio-container">
+                        <label style="margin-bottom:12px; display:block;">Acceptació i Compromís (Imprescindible)</label>
+                        
+                        <div class="acceptacio-card" onclick="toggleCheck('check-inf')">
+                            <span>He estat informat/da sobre el funcionament del servei d'atenció psicològica.</span>
+                            <input type="checkbox" id="check-inf" checked onclick="event.stopPropagation()">
+                        </div>
+                        
+                        <div class="acceptacio-card" onclick="toggleCheck('check-acc')">
+                            <span>Accepto voluntàriament la derivació al Servei de Psicologia.</span>
+                            <input type="checkbox" id="check-acc" checked onclick="event.stopPropagation()">
+                        </div>
+                        
+                        <div class="acceptacio-card" onclick="toggleCheck('check-com')">
+                            <span>Em comprometo a assistir a les sessions acordades o avisar amb antelació.</span>
+                            <input type="checkbox" id="check-com" checked onclick="event.stopPropagation()">
+                        </div>
+                        
+                        <div class="acceptacio-card" onclick="toggleCheck('check-aut')">
+                            <span>Autoritzo l'intercanvi d'informació tècnica entre els professionals implicats.</span>
+                            <input type="checkbox" id="check-aut" checked onclick="event.stopPropagation()">
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modalMsg').innerText = "En fer clic a 'Enviar', es crearà un registre automàtic al seguiment de l'usuari.";
+            document.getElementById('modalTextarea').style.display = "none";
+            document.getElementById('modalButtons').innerHTML = `
+                <button onclick="enviarDerivacio()" class="btn-modal btn-confirm">Enviar Derivació</button>
+                <button onclick="tancarModal()" class="btn-modal btn-cancel">Cancel·lar</button>
+            `;
+            modal.style.display = "flex";
+        }
+
+        function toggleCheck(id) {
+            const ck = document.getElementById(id);
+            ck.checked = !ck.checked;
+        }
+
+        function enviarDerivacio() {
+            const motiu = document.getElementById('der-motiu').value;
+            const urg = document.getElementById('der-urgencia').value;
+            const checks = ['check-inf', 'check-acc', 'check-com', 'check-aut'];
+            const totOk = checks.every(id => document.getElementById(id).checked);
+
+            if(!totOk) { alert("L'usuari ha d'acceptar tots els punts per procedir."); return; }
+            if(!motiu) { alert("Has d'especificar un motiu."); return; }
+
+            if (!usuariActual.seguiment) usuariActual.seguiment = [];
+            usuariActual.seguiment.unshift({
+                data: new Date().toLocaleDateString(),
+                text: `🧠 DERIVACIÓ PSICOLOGIA [Urgència: ${urg}]: ${motiu}`
+            });
+            
+            tancarModal();
+            pintarSeguiment();
+            openTab(null, 'seguiment');
+            alert("Derivació registrada correctament.");
+        }
+
+        /* --- RESTA DE FUNCIONS (SENSE REDUIR) --- */
+        function toggleEdit() {
+            document.body.classList.toggle('is-editing');
+            const isEditing = document.body.classList.contains('is-editing');
+            document.getElementById('btnEdit').style.display = isEditing ? 'none' : 'inline-flex';
+            document.getElementById('btnSaveMain').style.display = isEditing ? 'inline-flex' : 'none';
+        }
+
+        function confirmSave() {
+            // Guardar dades bàsiques
+            usuariActual.nom = document.getElementById('in-nom').value;
+            usuariActual.cognoms = document.getElementById('in-cognoms').value;
+            usuariActual.cognom2 = document.getElementById('in-cognom2').value;
+            usuariActual.dni = document.getElementById('in-dni').value;
+            usuariActual.naixement = document.getElementById('in-naixement').value;
+            usuariActual.mobil = document.getElementById('in-mobil').value;
+            usuariActual.email = document.getElementById('in-email').value;
+            usuariActual.origen = document.getElementById('in-origen').value;
+            
+            // Salut
+            usuariActual.salut.te_alergies = document.getElementById('in-te-alergies').value;
+            usuariActual.salut.alergies_detall = {
+                amb: Array.from(document.getElementById('inputs-amb').querySelectorAll('input')).map(i => i.value.trim()).filter(v => v),
+                med: Array.from(document.getElementById('inputs-med').querySelectorAll('input')).map(i => i.value.trim()).filter(v => v),
+                ali: Array.from(document.getElementById('inputs-ali').querySelectorAll('input')).map(i => i.value.trim()).filter(v => v)
+            };
+            usuariActual.salut.tda = document.getElementById('in-tda').value;
+            usuariActual.salut.tdha = document.getElementById('in-tdha').value;
+            usuariActual.salut.dependencia = document.getElementById('in-dependencia').value;
+            usuariActual.salut.grau = usuariActual.salut.dependencia === "Sí" ? document.getElementById('in-grau').value : "";
+            usuariActual.salut.observacions = document.getElementById('in-observacions_mediques').value;
+
+            location.reload();
+        }
+
         function obrirModalVincular() {
             const modal = document.getElementById('customModal');
             document.getElementById('modalTitle').innerText = "Vincular Familiar";
             document.getElementById('modalContent').innerHTML = `
-                <div class="search-box">
-                    <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;">Cerca qualsevol usuari registrat per afegir-lo com a familiar.</p>
-                    <input type="text" id="inputCercaFam" class="search-input" oninput="cercaFamiliar(this.value)" placeholder="Cerca per nom, DNI o ID..." autofocus>
-                    <div id="resultatsFam" class="results-list"></div>
-                </div>
+                <input type="text" class="search-input" oninput="cercaFamiliar(this.value)" placeholder="Escriu nom o ID de l'altre usuari...">
+                <div id="resultatsFam" class="results-list"></div>
             `;
-            document.getElementById('modalMsg').innerText = "";
             document.getElementById('modalTextarea').style.display = "none";
-            document.getElementById('modalButtons').innerHTML = `<button onclick="tancarModal()" class="btn-modal btn-cancel">Cancel·lar</button>`;
+            document.getElementById('modalButtons').innerHTML = `<button onclick="tancarModal()" class="btn-modal btn-cancel">Tancar</button>`;
             modal.style.display = "flex";
         }
 
         function cercaFamiliar(text) {
-            const results = document.getElementById('resultatsFam');
-            if (text.length < 2) { results.innerHTML = ""; return; }
-            const trobats = BBDD.expedients.filter(u => u.id !== userId && (
-                u.nom.toLowerCase().includes(text.toLowerCase()) || 
-                u.cognoms.toLowerCase().includes(text.toLowerCase()) || 
-                u.dni.toLowerCase().includes(text.toLowerCase()) ||
-                u.id.toLowerCase().includes(text.toLowerCase())
-            ));
-            results.innerHTML = trobats.map(u => `
-                <div class="result-item" onclick="seleccionarFamiliar('${u.id}', '${u.nom} ${u.cognoms}')">
-                    <span>${u.nom} ${u.cognoms} <small style="color:#94a3b8">(${u.id})</small></span>
-                    <strong style="font-size:0.75rem; color:#2563eb">Seleccionar</strong>
+            const res = document.getElementById('resultatsFam');
+            if (text.length < 2) { res.innerHTML = ""; return; }
+            const trobats = BBDD.expedients.filter(u => u.id !== userId && (u.nom.toLowerCase().includes(text.toLowerCase()) || u.id.toLowerCase().includes(text.toLowerCase())));
+            res.innerHTML = trobats.map(u => `
+                <div class="result-item" onclick="seleccionarFamiliar('${u.id}', '${u.nom}')">
+                    <span>${u.nom} ${u.cognoms || ''}</span>
+                    <strong>${u.id}</strong>
                 </div>
-            `).join('') || "<p style='padding:15px; color:#94a3b8; font-size:0.9rem;'>No s'han trobat coincidències.</p>";
+            `).join('');
         }
 
         function seleccionarFamiliar(id, nom) {
-            const parentiu = prompt(`Quin vincle té amb ${nom}? (ex: Mare, Fill, Pare...)`);
-            if (parentiu) {
+            const p = prompt(`Quin vincle té ${nom} amb l'usuari actual? (Ex: Mare, Fill, Germà...)`);
+            if (p) {
                 if (!usuariActual.familia) usuariActual.familia = [];
-                usuariActual.familia.push({ id: id, parentiu: parentiu });
-                tancarModal(); pintarFamilia(usuariActual);
+                usuariActual.familia.push({ id: id, parentiu: p });
+                tancarModal();
+                pintarFamilia(usuariActual);
             }
         }
 
-        /* ACTIVITATS: Llegeix els programes actius de programes-gestio.html (BBDD.programes) */
+        function pintarFamilia(u) {
+            const c = document.getElementById('llista-familia');
+            c.innerHTML = (u.familia || []).map(f => {
+                const fam = BBDD.expedients.find(e => e.id === f.id);
+                return `
+                    <div class="item-card">
+                        <div><span class="label">${f.parentiu}</span><span class="value">${fam ? fam.nom + ' ' + fam.cognoms : 'Extern'}</span></div>
+                        <a href="perfil.html?id=${f.id}" class="btn-link">Veure Fitxa →</a>
+                    </div>
+                `;
+            }).join('') || "<p style='color:#94a3b8'>No hi ha vincles familiars registrats.</p>";
+        }
+
         function obrirModalActivitats() {
             const modal = document.getElementById('customModal');
-            document.getElementById('modalTitle').innerText = "Inscripció a Programes";
-            
-            // Simulem la lectura del catàleg de programes (programes-gestio.html)
-            const catalegProgrames = ["Reforç Escolar", "Esport Jove", "Menjador Social", "Taller de Cuina", "Alfabetització", "Casal d'Estiu"];
-            
-            document.getElementById('modalContent').innerHTML = `
-                <div style="text-align:left; margin-bottom:15px;">
-                    <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;">Selecciona el programa on vols inscriure aquest expedient:</p>
-                    ${catalegProgrames.map(p => `
-                        <div class="item-card" style="padding: 10px; margin-bottom:5px;">
-                            <span style="font-weight:600;">${p}</span>
-                            <button class="btn-action" style="padding:5px 12px; font-size:0.8rem;" onclick="inscriureActivitat('${p}')">Inscriure</button>
-                        </div>
-                    `).join('')}
+            document.getElementById('modalTitle').innerText = "Inscriure a Programa/Activitat";
+            const progs = ["Reforç Escolar", "Esport Jove", "Menjador", "Taller de Cuina", "Alfabetització", "Centre de Dia"];
+            document.getElementById('modalContent').innerHTML = progs.map(p => `
+                <div class="item-card">
+                    <span>${p}</span>
+                    <button class="btn-action" onclick="inscriureActivitat('${p}')">Inscriure</button>
                 </div>
-            `;
-            document.getElementById('modalMsg').innerText = "";
-            document.getElementById('modalTextarea').style.display = "none";
+            `).join('');
             document.getElementById('modalButtons').innerHTML = `<button onclick="tancarModal()" class="btn-modal btn-cancel">Tancar</button>`;
             modal.style.display = "flex";
         }
@@ -354,157 +493,134 @@
             if (!usuariActual.programes) usuariActual.programes = [];
             if (!usuariActual.programes.includes(nom)) {
                 usuariActual.programes.push(nom);
-                tancarModal(); 
+                tancarModal();
                 pintarActivitats(usuariActual);
-                alert(`L'expedient s'ha inscrit correctament a: ${nom}`);
             } else {
-                alert("Aquest expedient ja està inscrit en aquest programa.");
+                alert("L'usuari ja està inscrit en aquesta activitat.");
             }
+        }
+
+        function pintarActivitats(u) {
+            const l = document.getElementById('llista-activitats');
+            l.innerHTML = (u.programes || []).map(p => `
+                <div class="item-card">
+                    <span>${p}</span>
+                    <strong style="color:#10b981">ACTIU</strong>
+                </div>
+            `).join('') || "<p style='color:#94a3b8'>No participa en cap activitat.</p>";
         }
 
         function obrirModalSeguiment() {
             const modal = document.getElementById('customModal');
             document.getElementById('modalTitle').innerText = "Nou Informe de Seguiment";
             document.getElementById('modalContent').innerHTML = "";
-            document.getElementById('modalMsg').innerText = "Detalla el contingut de l'atenció o seguiment:";
             document.getElementById('modalTextarea').style.display = "block";
             document.getElementById('modalTextarea').value = "";
             document.getElementById('modalButtons').innerHTML = `
-                <button onclick="guardarSeguiment()" class="btn-modal btn-confirm">Guardar Informe</button> 
-                <button onclick="tancarModal()" class="btn-modal btn-cancel">Cancel·lar</button>`;
+                <button onclick="guardarSeguiment()" class="btn-modal btn-confirm">Guardar Informe</button>
+                <button onclick="tancarModal()" class="btn-modal btn-cancel">Cancel·lar</button>
+            `;
             modal.style.display = "flex";
         }
 
         function guardarSeguiment() {
             const text = document.getElementById('modalTextarea').value;
-            if (text.trim() === "") return;
+            if (!text.trim()) return;
             if (!usuariActual.seguiment) usuariActual.seguiment = [];
-            usuariActual.seguiment.unshift({ data: new Date().toLocaleDateString(), text: text });
+            usuariActual.seguiment.unshift({
+                data: new Date().toLocaleDateString(),
+                text: text
+            });
             tancarModal();
             pintarSeguiment();
-            // Redirecció visual al primer tab per veure canvis
-            openTab(null, 'seguiment');
+        }
+
+        function pintarSeguiment() {
+            const c = document.getElementById('llista-seguiment');
+            c.innerHTML = (usuariActual.seguiment || []).map(s => `
+                <div class="item-card" style="display:block">
+                    <small><strong>${s.data}</strong></small>
+                    <p style="margin:8px 0 0 0; line-height:1.5; color:#334155;">${s.text}</p>
+                </div>
+            `).join('') || "<p style='color:#94a3b8'>No hi ha registres de seguiment.</p>";
         }
 
         function manageLines(input) {
             const container = input.parentElement;
             const all = container.querySelectorAll('.allergy-input');
             if (all[all.length - 1].value.trim() !== "") {
-                const n = document.createElement('input'); n.className = "edit-input allergy-input"; n.placeholder = "Nova..."; n.oninput = function() { manageLines(this); }; container.appendChild(n);
+                const n = document.createElement('input');
+                n.className = "edit-input allergy-input";
+                n.placeholder = "Nova...";
+                n.oninput = function() { manageLines(this); };
+                container.appendChild(n);
             }
-        }
-
-        function actualitzarCabeceraMedica(u) {
-            const h = document.getElementById('header-medical-alert');
-            const det = u.salut.alergies_detall;
-            const te = u.salut.te_alergies === "Sí" && (det.amb.length > 0 || det.med.length > 0 || det.ali.length > 0);
-            h.style.display = (te || u.salut.dependencia === "Sí") ? 'block' : 'none';
         }
 
         function showMedicalModal() {
             const s = usuariActual.salut;
-            let html = '<div style="text-align:left;">';
-            const m = { amb: 'Ambientals', med: 'Medicaments', ali: 'Alimentícies' };
-            Object.keys(m).forEach(k => { if(s.alergies_detall[k] && s.alergies_detall[k].length > 0) html += `<div class="allergy-card"><h4>${m[k]}</h4><p>${s.alergies_detall[k].join(', ')}</p></div>`; });
-            if (s.dependencia === "Sí") html += `<div class="allergy-card" style="background:#eff6ff; border-color:#dbeafe;"><h4 style="color:#2563eb;">DEPENDÈNCIA</h4><p>${s.grau}</p></div>`;
-            html += '</div>';
-            document.getElementById('modalTitle').innerText = "Alerta Mèdica Detallada";
-            document.getElementById('modalContent').innerHTML = html;
+            let html = '';
+            const labels = { amb: 'Ambientals', med: 'Medicaments', ali: 'Alimentícies' };
+            Object.keys(labels).forEach(k => {
+                if(s.alergies_detall[k]?.length) {
+                    html += `<div class="allergy-card"><h4>${labels[k]}</h4><p>${s.alergies_detall[k].join(', ')}</p></div>`;
+                }
+            });
+            if(s.dependencia === "Sí") {
+                html += `<div class="allergy-card" style="background:#eff6ff; border-color:#dbeafe;"><h4 style="color:#2563eb;">DEPENDÈNCIA</h4><p>${s.grau}</p></div>`;
+            }
+            if(s.observacions) {
+                html += `<div class="allergy-card" style="background:#f8fafc; border-color:#e2e8f0;"><h4 style="color:#64748b;">OBSERVACIONS</h4><p>${s.observacions}</p></div>`;
+            }
+
+            document.getElementById('modalTitle').innerText = "Alertes de Salut i Al·lèrgies";
+            document.getElementById('modalContent').innerHTML = html || "<p>No hi ha alertes registrades.</p>";
             document.getElementById('modalTextarea').style.display = "none";
-            document.getElementById('modalButtons').innerHTML = '<button class="btn-modal btn-cancel" onclick="tancarModal()">Tancar</button>';
+            document.getElementById('modalButtons').innerHTML = `<button class="btn-modal btn-cancel" onclick="tancarModal()">Tancar</button>`;
             document.getElementById('customModal').style.display = 'flex';
         }
 
-        function checkAlergies() { document.getElementById('group-detall-alergies').style.display = document.getElementById('in-te-alergies').value === "Sí" ? "block" : "none"; }
-        function checkDependencia() { document.getElementById('group-grau').style.display = document.getElementById('in-dependencia').value === "Sí" ? "block" : "none"; }
-        
-        function openTab(evt, name) { 
-            document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active")); 
-            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); 
-            document.getElementById(name).classList.add("active"); 
+        function actualitzarCabeceraMedica(u) {
+            const teAlertes = u.salut.te_alergies === "Sí" || u.salut.dependencia === "Sí" || u.salut.tda === "Sí" || u.salut.tdha === "Sí";
+            document.getElementById('header-medical-alert').style.display = teAlertes ? 'block' : 'none';
+        }
+
+        function calcularEdat(data) {
+            if (!data) return "-";
+            const naix = new Date(data);
+            const avui = new Date();
+            let edat = avui.getFullYear() - naix.getFullYear();
+            const m = avui.getMonth() - naix.getMonth();
+            if (m < 0 || (m === 0 && avui.getDate() < naix.getDate())) edat--;
+            return edat + " anys";
+        }
+
+        function checkAlergies() {
+            document.getElementById('group-detall-alergies').style.display = document.getElementById('in-te-alergies').value === "Sí" ? "block" : "none";
+        }
+
+        function checkDependencia() {
+            document.getElementById('group-grau').style.display = document.getElementById('in-dependencia').value === "Sí" ? "block" : "none";
+        }
+
+        function openTab(evt, name) {
+            document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+            document.getElementById(name).classList.add("active");
             if(evt) evt.currentTarget.classList.add("active");
-            else {
-                const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.innerText.toLowerCase().includes(name.substring(0,4)));
-                if(btn) btn.classList.add('active');
+        }
+
+        function tancarModal() {
+            document.getElementById('customModal').style.display = 'none';
+            document.getElementById('modalTextarea').style.display = 'none';
+        }
+
+        function canviarEstatExpedient() {
+            const nouEstat = usuariActual.estat === "Inactiu" ? "Actiu" : "Inactiu";
+            if(confirm(`Vols canviar l'estat de l'expedient a ${nouEstat}?`)) {
+                usuariActual.estat = nouEstat;
+                location.reload();
             }
-        }
-
-        function toggleEdit() { document.body.classList.toggle('is-editing'); const is = document.body.classList.contains('is-editing'); document.getElementById('btnEdit').style.display = is ? 'none' : 'block'; document.getElementById('btnSaveMain').style.display = is ? 'block' : 'none'; }
-        
-        function canviarEstatExpedient() { 
-            const msg = usuariActual.estat === "Inactiu" ? "Vols tornar a activar l'expedient?" : "Segur que vols donar de baixa l'expedient?";
-            if(confirm(msg)) { 
-                usuariActual.estat = usuariActual.estat === "Inactiu" ? "Actiu" : "Inactiu"; 
-                location.reload(); 
-            } 
-        }
-
-        function tancarModal() { document.getElementById('customModal').style.display = 'none'; }
-
-        function pintarSeguiment() {
-            const c = document.getElementById('llista-seguiment');
-            c.innerHTML = (usuariActual.seguiment || []).map(s => `
-                <div class="item-card" style="display:block">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                        <small><b>Data d'atenció: ${s.data}</b></small>
-                        <small style="color:#2563eb; cursor:pointer">Veure més</small>
-                    </div>
-                    <p style="margin:5px 0; font-size:0.95rem; line-height:1.4; color:#334155;">${s.text}</p>
-                </div>
-            `).join('') || "<p style='color:#94a3b8; padding:20px; text-align:center;'>Sense registres de seguiment encara.</p>";
-        }
-
-        function pintarFamilia(u) {
-            const c = document.getElementById('llista-familia');
-            if (!u.familia || u.familia.length === 0) { c.innerHTML = "<p style='color:#94a3b8; padding:10px;'>No hi ha familiars vinculats.</p>"; return; }
-            c.innerHTML = u.familia.map(f => {
-                const fam = BBDD.expedients.find(e => e.id === f.id);
-                return `
-                <div class="item-card">
-                    <div>
-                        <span class="label" style="margin:0">${f.parentiu}</span>
-                        <span class="value" style="font-size:1.1rem">${fam ? fam.nom + ' ' + fam.cognoms : 'No trobat'}</span>
-                    </div>
-                    <a href="perfil.html?id=${f.id}" class="btn-link">Anar al perfil →</a>
-                </div>`;
-            }).join('');
-        }
-
-        function pintarActivitats(u) {
-            const l = document.getElementById('llista-activitats');
-            l.innerHTML = (u.programes || []).map(p => `
-                <div class="item-card" style="border-left: 4px solid #10b981;">
-                    <div>
-                        <span style="font-weight:700; color:#1e293b; display:block;">${p}</span>
-                        <small style="color:#64748b;">Estat: Inscrit</small>
-                    </div>
-                    <span style="background:#dcfce7; color:#16a34a; padding:4px 10px; border-radius:12px; font-size:0.75rem; font-weight:700;">ACTIU</span>
-                </div>
-            `).join('') || "<p style='color:#94a3b8; padding:10px;'>L'usuari no participa actualment en cap programa.</p>";
-        }
-
-        function confirmSave() {
-            // Sincronització de dades des dels inputs al objecte usuari
-            usuariActual.nom = document.getElementById('in-nom').value; 
-            usuariActual.cognoms = document.getElementById('in-cognoms').value; 
-            usuariActual.cognom2 = document.getElementById('in-cognom2').value;
-            usuariActual.dni = document.getElementById('in-dni').value; 
-            usuariActual.naixement = document.getElementById('in-naixement').value;
-            usuariActual.mobil = document.getElementById('in-mobil').value; 
-            usuariActual.email = document.getElementById('in-email').value;
-            usuariActual.salut.te_alergies = document.getElementById('in-te-alergies').value;
-            usuariActual.salut.alergies_detall = { 
-                amb: Array.from(document.getElementById('inputs-amb').querySelectorAll('input')).map(i => i.value.trim()).filter(v => v),
-                med: Array.from(document.getElementById('inputs-med').querySelectorAll('input')).map(i => i.value.trim()).filter(v => v),
-                ali: Array.from(document.getElementById('inputs-ali').querySelectorAll('input')).map(i => i.value.trim()).filter(v => v)
-            };
-            usuariActual.salut.dependencia = document.getElementById('in-dependencia').value;
-            usuariActual.salut.grau = usuariActual.salut.dependencia === "Sí" ? document.getElementById('in-grau').value : "";
-            usuariActual.salut.observacions = document.getElementById('in-observacions_mediques').value;
-            
-            toggleEdit();
-            carregarPerfil();
-            alert("Dades actualitzades correctament.");
         }
     </script>
 </body>

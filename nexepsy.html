@@ -6,6 +6,8 @@
     <title>NexePsy - Suite Psicosocial</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <script src="database.js"></script>
+    
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -21,9 +23,7 @@
             transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        body.collapsed .main-content {
-            margin-left: 85px;
-        }
+        body.collapsed .main-content { margin-left: 85px; }
 
         .search-container { margin-bottom: 35px; position: relative; display: flex; gap: 10px; max-width: 800px; }
         .search-input { 
@@ -97,6 +97,23 @@
     <script src="sidebar-nexepsy.js"></script>
 
     <script>
+        // FUNCIÓN DE VERIFICACIÓN AL CARGAR LA VENTANA
+        window.onload = function() {
+            // 1. Comprobar si Auth existe (evita error de variable no definida)
+            if (typeof Auth !== 'undefined') {
+                const tieneAcceso = Auth.checkAccess('psy');
+                if (!tieneAcceso) return; // Si no tiene acceso, el checkAccess ya redirige
+            } else {
+                console.error("Error crítico: No se ha detectado el módulo de seguridad database.js");
+                alert("Error de sistema: No se pudo verificar la identidad.");
+                window.location.href = "login.html";
+                return;
+            }
+
+            // 2. Si hay acceso, cargar los datos
+            cargarCasos();
+        };
+
         const BBDD_PSICO = {
             families: [
                 { id: "EXP-2024-001", cognoms: "García Martí", obs: "Seguiment de dinàmiques de comunicació post-trauma i suport emocional continu." },
@@ -107,11 +124,11 @@
         };
 
         function prepararAcceso(id, cognoms) {
-            // Guardamos datos básicos en localStorage para que el editor de informes los recoja
+            const user = (typeof Auth !== 'undefined') ? Auth.getUser() : null;
             const data = {
                 id: id,
                 apellidos: cognoms,
-                tecnico: "Professional de NexePsy"
+                tecnico: user ? user.nombre : "Professional de NexePsy"
             };
             localStorage.setItem('familia_data', JSON.stringify(data));
         }
@@ -153,10 +170,6 @@
             const val = document.getElementById('mainSearch').value;
             cargarCasos(val); 
         }
-
-        window.addEventListener('load', () => {
-            cargarCasos();
-        });
     </script>
 </body>
 </html>

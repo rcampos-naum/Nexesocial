@@ -25,7 +25,6 @@
         .suite-field label { font-size: 0.7rem; font-weight: 800; color: #64748b; display: block; margin-bottom: 5px; }
         .suite-field select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; }
 
-        /* Estilos para iconos de acción */
         .action-btn { background: none; border: none; cursor: pointer; padding: 5px; border-radius: 4px; transition: 0.2s; vertical-align: middle; }
         .action-btn:hover { background: #f1f5f9; }
         .icon-svg { width: 18px; height: 18px; fill: #64748b; pointer-events: none; }
@@ -108,7 +107,7 @@
 
     <script src="database.js"></script>
     <script>
-        // Cargamos los usuarios de la BD (localStorage)
+        // 1. Càrrega d'usuaris des de localStorage
         let usuarios = JSON.parse(localStorage.getItem('nexe_usuarios')) || [];
 
         const icons = {
@@ -117,24 +116,27 @@
             key: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>`
         };
 
+        // 2. Renderitzat corregit per a l'objecte "permisos"
         function renderizarUsuarios() {
             const tbody = document.getElementById('taula-usuaris');
             if(!tbody) return;
             
-            tbody.innerHTML = usuarios.map(u => `
+            tbody.innerHTML = usuarios.map(u => {
+                const p = u.permisos || {}; // Seguretat per si no existeix l'objecte
+                return `
                 <tr>
                     <td style="font-weight: 700;">${u.nombre}<br><span style="font-weight:400; font-size:0.75rem; color:#64748b">${u.email}</span></td>
-                    <td><span class="suite-indicator ${u.psy && u.psy !== 'none' ? 'has-access' : 'no-access'}"></span>${u.psy || 'none'}</td>
-                    <td><span class="suite-indicator ${u.audit && u.audit !== 'none' ? 'has-access' : 'no-access'}"></span>${u.audit || 'none'}</td>
-                    <td><span class="suite-indicator ${u.rrhh && u.rrhh !== 'none' ? 'has-access' : 'no-access'}"></span>${u.rrhh || 'none'}</td>
-                    <td><span class="suite-indicator ${u.subv && u.subv !== 'none' ? 'has-access' : 'no-access'}"></span>${u.subv || 'none'}</td>
+                    <td><span class="suite-indicator ${p.psy && p.psy !== 'none' ? 'has-access' : 'no-access'}"></span>${p.psy || 'none'}</td>
+                    <td><span class="suite-indicator ${p.audit && p.audit !== 'none' ? 'has-access' : 'no-access'}"></span>${p.audit || 'none'}</td>
+                    <td><span class="suite-indicator ${p.rrhh && p.rrhh !== 'none' ? 'has-access' : 'no-access'}"></span>${p.rrhh || 'none'}</td>
+                    <td><span class="suite-indicator ${p.subv && p.subv !== 'none' ? 'has-access' : 'no-access'}"></span>${p.subv || 'none'}</td>
                     <td style="text-align: right;">
                         <button title="Reset Pass" class="action-btn btn-pass" onclick="resetPassDirecte(${u.id})">${icons.key}</button>
                         <button title="Editar" class="action-btn btn-edit" onclick="editarUser(${u.id})">${icons.edit}</button>
                         <button title="Eliminar" class="action-btn btn-delete" onclick="eliminarUser(${u.id})">${icons.delete}</button>
                     </td>
-                </tr>
-            `).join('');
+                </tr>`;
+            }).join('');
         }
 
         function obrirModal(userId = null) {
@@ -143,14 +145,15 @@
             
             if (userId) {
                 const u = usuarios.find(x => x.id == userId);
+                const p = u.permisos || {};
                 titol.innerText = "Editar Usuari";
                 document.getElementById('edit_user_id').value = u.id;
                 document.getElementById('nom_user').value = u.nombre;
                 document.getElementById('email_user').value = u.email;
-                document.getElementById('p_psy').value = u.psy || 'none';
-                document.getElementById('p_audit').value = u.audit || 'none';
-                document.getElementById('p_rrhh').value = u.rrhh || 'none';
-                document.getElementById('p_subv').value = u.subv || 'none';
+                document.getElementById('p_psy').value = p.psy || 'none';
+                document.getElementById('p_audit').value = p.audit || 'none';
+                document.getElementById('p_rrhh').value = p.rrhh || 'none';
+                document.getElementById('p_subv').value = p.subv || 'none';
             } else {
                 titol.innerText = "Alta Nou Usuari";
                 document.getElementById('edit_user_id').value = "";
@@ -166,6 +169,7 @@
 
         function tancarModal() { document.getElementById('modal-usuari').style.display = 'none'; }
 
+        // 3. Funció de guardat corregida per a l'estructura de database.js
         function guardarUsuari() {
             const idValue = document.getElementById('edit_user_id').value;
             const nom = document.getElementById('nom_user').value;
@@ -173,25 +177,26 @@
 
             if(!nom || !email) return alert("Siusplau, omple el nom i l'email");
 
-            const dadesPermisos = {
+            const estructuraBase = {
                 nombre: nom,
                 email: email,
-                psy: document.getElementById('p_psy').value,
-                audit: document.getElementById('p_audit').value,
-                rrhh: document.getElementById('p_rrhh').value,
-                subv: document.getElementById('p_subv').value
+                role: (email === "admin@nexesocial.com") ? "admin" : "user",
+                permisos: {
+                    psy: document.getElementById('p_psy').value,
+                    audit: document.getElementById('p_audit').value,
+                    rrhh: document.getElementById('p_rrhh').value,
+                    subv: document.getElementById('p_subv').value
+                }
             };
 
             if (idValue) {
-                // Modo Edición
                 const index = usuarios.findIndex(u => u.id == idValue);
-                usuarios[index] = { ...usuarios[index], ...dadesPermisos };
+                usuarios[index] = { ...usuarios[index], ...estructuraBase };
             } else {
-                // Modo Creación
                 const nouUsuari = {
                     id: Date.now(),
-                    ...dadesPermisos,
-                    pass: "nexe2026" // Pass por defecto
+                    ...estructuraBase,
+                    pass: "nexe2026"
                 };
                 usuarios.push(nouUsuari);
             }
@@ -199,6 +204,7 @@
             localStorage.setItem('nexe_usuarios', JSON.stringify(usuarios));
             renderizarUsuarios();
             tancarModal();
+            alert("Canvis desats correctament.");
         }
 
         function resetPassDirecte(id) {
@@ -211,7 +217,7 @@
 
         function generarNovaPass() {
             const idActual = document.getElementById('edit_user_id').value;
-            if(!idActual) return alert("Primer guarda l'usuari per assignar-li una contrasenya.");
+            if(!idActual) return alert("Primer guarda l'usuari.");
             resetPassDirecte(idActual);
         }
 
@@ -226,8 +232,7 @@
         }
 
         window.onclick = function(event) {
-            const modal = document.getElementById('modal-usuari');
-            if (event.target == modal) tancarModal();
+            if (event.target == document.getElementById('modal-usuari')) tancarModal();
         }
 
         document.addEventListener('DOMContentLoaded', renderizarUsuarios);
