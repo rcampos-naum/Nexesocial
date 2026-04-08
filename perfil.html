@@ -2,77 +2,184 @@
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NexeSocial - El Meu Perfil</title>
     <link rel="stylesheet" href="style-dashboard.css">
     <style>
-        .profile-card { max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; }
-        .profile-avatar { width: 100px; height: 100px; background: #2563eb; color: white; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; }
-        .settings-list { text-align: left; margin-top: 30px; border-top: 1px solid #f1f5f9; }
-        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
-        .status-select { padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: 600; }
+        /* Sub-Topbar Navegación */
+        .sub-topbar {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            padding: 0 20px;
+            gap: 25px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .sub-nav-item {
+            padding: 15px 5px;
+            font-weight: 600;
+            color: #64748b;
+            text-decoration: none;
+            border-bottom: 3px solid transparent;
+            transition: 0.2s;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sub-nav-item:hover { color: #2563eb; }
+        .sub-nav-item.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+
+        /* Contenedor */
+        .profile-container { 
+            width: 100%; 
+            display: flex; 
+            justify-content: center; 
+            padding: 40px 20px; 
+            box-sizing: border-box; 
+        }
+
+        .profile-card { 
+            width: 100%; 
+            max-width: 550px; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+        }
+
+        .profile-avatar { width: 70px; height: 70px; background: #2563eb; color: white; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: bold; }
+        .setting-item { display: flex; flex-direction: column; padding: 12px 0; border-bottom: 1px solid #f1f5f9; gap: 5px; text-align: left; }
+        
+        @media (min-width: 480px) {
+            .setting-item { flex-direction: row; justify-content: space-between; align-items: center; }
+            .profile-input { width: 60% !important; }
+        }
+
+        .profile-input { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; width: 100%; font-size: 0.9rem; }
+        .input-readonly { background: #f1f5f9; cursor: not-allowed; color: #64748b; }
+
+        .password-section { margin-top: 15px; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .validation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; }
+        .val-item { font-size: 0.7rem; color: #94a3b8; display: flex; align-items: center; gap: 5px; }
+        .val-item.valid { color: #22c55e; font-weight: bold; }
+        .val-item.valid::before { content: "✓"; }
+
+        .btn-save { background: #1e293b; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 20px; }
+        .admin-only { display: none; }
     </style>
 </head>
 <body>
-   <script src="sidebar.js"></script>
+    <script src="sidebar.js"></script>
 
     <main class="main-content">
-        <div class="profile-card">
-            <div class="profile-avatar" id="avatar-letra">R</div>
-            <h2 id="display-name">Demo</h2>
-            <p id="display-email" style="color: #64748b; margin-bottom: 20px;">administrador@nexesocial.cat</p>
-            
-            <div class="settings-list">
-                <div class="setting-item">
-                    <span><strong>Nom d'usuari</strong></span>
-                    <input type="text" id="edit-name" value="Demo" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
-                </div>
-                <div class="setting-item">
-                    <span><strong>Rol de l'usuari</strong></span>
-                    <select id="role-selector" class="status-select">
-                        <option value="admin">⭐ Administrador</option>
-                        <option value="manteniment">🛠️ Manteniment</option>
-                        <option value="empleat">👤 Empleat</option>
-                    </select>
-                </div>
-                <div class="setting-item">
-                    <span><strong>Centre assignat</strong></span>
-                    <span style="color: #2563eb; font-weight: bold;">NexeSocial Central</span>
-                </div>
-            </div>
-            
-            <button class="btn-save" style="width: 100%; margin-top:30px; height: 45px;" onclick="guardarPerfil()">Actualitzar Perfil</button>
-        </div>
+        <nav class="sub-topbar">
+            <a href="perfil.html" class="sub-nav-item active">👤 El Meu Perfil</a>
+            <a href="gestio-usuaris.html" class="sub-nav-item admin-only" id="admin-nav-link">👥 Gestió d'Usuaris</a>
+        </nav>
 
-        <footer style="text-align:center; margin-top:40px; font-size:0.8rem; color:#94a3b8;">
-            Desenvolupat amb ❤️ per <strong id="firma-footer">Rafa Campos</strong>
-        </footer>
+        <div class="profile-container">
+            <div class="profile-card">
+                <div class="profile-avatar" id="avatar-letra">-</div>
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <h2 id="display-title" style="margin:0; font-size: 1.4rem;">Cregant...</h2>
+                    <p id="display-email" style="color: #64748b; font-size: 0.85rem;">-</p>
+                </div>
+
+                <div class="setting-item">
+                    <span><strong>Nom Complet</strong></span>
+                    <input type="text" id="read-name" class="profile-input input-readonly" readonly>
+                </div>
+                <div class="setting-item">
+                    <span><strong>Correu</strong></span>
+                    <input type="email" id="read-email" class="profile-input input-readonly" readonly>
+                </div>
+                <div class="setting-item">
+                    <span><strong>Nom Públic</strong></span>
+                    <input type="text" id="edit-display-name" class="profile-input" placeholder="Com vols aparèixer?">
+                </div>
+                
+                <div style="text-align: center; margin-top: 15px;">
+                    <button type="button" style="border:none; background:none; color: #2563eb; font-weight:600; cursor:pointer; font-size: 0.8rem;" onclick="toggleElement('pass-section-profile')">🔒 Canviar Contrasenya</button>
+                </div>
+
+                <div id="pass-section-profile" class="password-section" style="display:none;">
+                    <input type="password" id="new-pass" placeholder="Nova contrasenya" class="profile-input" oninput="validarPass()">
+                    <div class="validation-grid" id="v-grid-profile">
+                        <div class="val-item v-length">8-16 caràcters</div>
+                        <div class="val-item v-upper">1 Majúscula</div>
+                        <div class="val-item v-lower">1 Minúscula</div>
+                        <div class="val-item v-num">1 Número</div>
+                        <div class="val-item v-spec">1 Caràcter especial</div>
+                    </div>
+                </div>
+                <button class="btn-save" onclick="guardarPerfilPropio()">Actualitzar Dades</button>
+            </div>
+        </div>
     </main>
 
     <script>
-        function guardarPerfil() {
-            const nom = document.getElementById('edit-name').value;
-            const rol = document.getElementById('role-selector').value;
-            
-            localStorage.setItem('userName', nom);
-            localStorage.setItem('userRole', rol);
-            
-            document.getElementById('display-name').innerText = nom;
-            document.getElementById('avatar-letra').innerText = nom.charAt(0);
-            
-            alert("Perfil de " + rol.toUpperCase() + " guardat correctament.");
+        let usuarios = JSON.parse(localStorage.getItem('nexe_usuarios')) || [];
+        let currentUserName = localStorage.getItem('userName') || "Demo";
+        let userIndex = usuarios.findIndex(u => u.nombre === currentUserName || u.displayName === currentUserName);
+        let currentUser = userIndex !== -1 ? usuarios[userIndex] : { nombre: "Admin", role: "admin" };
+
+        function toggleElement(id) {
+            const el = document.getElementById(id);
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function validarPass() {
+            const pass = document.getElementById('new-pass').value;
+            const grid = document.getElementById('v-grid-profile');
+            const checks = {
+                length: pass.length >= 8 && pass.length <= 16,
+                upper: /[A-Z]/.test(pass),
+                lower: /[a-z]/.test(pass),
+                num: /[0-9]/.test(pass),
+                spec: /[!@#$%^&*(),.?":{}|<>]/.test(pass)
+            };
+            grid.querySelector('.v-length').classList.toggle('valid', checks.length);
+            grid.querySelector('.v-upper').classList.toggle('valid', checks.upper);
+            grid.querySelector('.v-lower').classList.toggle('valid', checks.lower);
+            grid.querySelector('.v-num').classList.toggle('valid', checks.num);
+            grid.querySelector('.v-spec').classList.toggle('valid', checks.spec);
+            return Object.values(checks).every(Boolean);
+        }
+
+        function guardarPerfilPropio() {
+            const nouDisplay = document.getElementById('edit-display-name').value.trim();
+            const novaPass = document.getElementById('new-pass').value;
+            if (novaPass !== "" && !validarPass()) { alert("Contrasenya no vàlida"); return; }
+            if (novaPass !== "") currentUser.pass = novaPass;
+            currentUser.displayName = nouDisplay || currentUser.nombre;
+            if (userIndex !== -1) usuarios[userIndex] = currentUser;
+            localStorage.setItem('nexe_usuarios', JSON.stringify(usuarios));
+            localStorage.setItem('userName', currentUser.displayName);
+            alert("Perfil actualitzat!");
             window.location.reload();
         }
 
         window.onload = () => {
-            const nom = localStorage.getItem('userName') || "Rafa Campos";
-            const rol = localStorage.getItem('userRole') || "admin";
-            
-            document.getElementById('edit-name').value = nom;
-            document.getElementById('display-name').innerText = nom;
-            document.getElementById('role-selector').value = rol;
-            document.getElementById('avatar-letra').innerText = nom.charAt(0);
+            document.getElementById('read-name').value = currentUser.nombre;
+            document.getElementById('read-email').value = currentUser.email || "";
+            document.getElementById('edit-display-name').value = currentUser.displayName || "";
+            document.getElementById('display-title').innerText = currentUser.displayName || currentUser.nombre;
+            document.getElementById('display-email').innerText = currentUser.email || "";
+            document.getElementById('avatar-letra').innerText = (currentUser.displayName || currentUser.nombre).charAt(0).toUpperCase();
+
+            // Mostrar el link si es admin
+            if (currentUser.role === 'admin') {
+                document.getElementById('admin-nav-link').style.display = 'flex';
+            }
         };
     </script>
-    <script src="database.js"></script>
 </body>
 </html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe Estadístic - NexePsy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            margin: 0; background-color: #f1f5f9; color: #1e293b; 
+            font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; 
+        }
+
+        .main-content {
+            flex-grow: 1; margin-left: 280px; padding: 40px;
+            transition: margin-left 0.4s ease;
+        }
+
+        body.collapsed .main-content { margin-left: 85px; }
+
+        /* PAPEL DEL INFORME */
+        .report-paper {
+            background: white; max-width: 900px; margin: 0 auto;
+            padding: 60px; border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0; position: relative;
+        }
+
+        /* CABECERA CON LOGOS INCRUSTADOS */
+        .report-header-logos {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 40px; padding-bottom: 25px; border-bottom: 2px solid #6366f1;
+        }
+
+        .brand-container { display: flex; align-items: center; gap: 15px; }
+        .logo-nexe { height: 25px; }
+        .logo-psy { height: 32px; }
+        .v-sep { width: 1.5px; height: 30px; background: #e2e8f0; }
+
+        .report-info { text-align: right; }
+        .report-info h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1.5px; color: #6366f1; margin: 0; }
+        .report-info p { font-size: 0.8rem; color: #64748b; margin: 5px 0 0; font-weight: 600; }
+
+        /* SECCIONES */
+        .report-title-section { margin-bottom: 40px; }
+        .report-title-section h1 { font-size: 2.2rem; font-weight: 800; color: #0f172a; letter-spacing: -0.03em; margin: 0; }
+
+        .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px; }
+        .stat-box { background: #f8fafc; padding: 22px; border-radius: 15px; border: 1px solid #e2e8f0; }
+        .stat-box h3 { font-size: 0.85rem; margin: 0 0 15px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* BARRAS DE PROGRESO */
+        .bar-container { margin-bottom: 15px; }
+        .bar-label { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px; font-weight: 700; }
+        .bar-bg { background: #e2e8f0; height: 10px; border-radius: 10px; overflow: hidden; }
+        .bar-fill { background: #6366f1; height: 100%; border-radius: 10px; }
+
+        /* AREA EDITABLE */
+        .editable-area {
+            border: 1px dashed transparent; padding: 15px; border-radius: 10px;
+            line-height: 1.8; color: #334155; font-size: 1rem; outline: none; transition: 0.3s;
+        }
+        .editable-area:hover { border-color: #6366f1; background: #f8faff; }
+        .editable-area:focus { border-style: solid; background: white; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+
+        /* ACCIONES */
+        .actions-bar { position: fixed; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 1000; }
+        .btn-print {
+            background: #0f172a; color: white; border: none; padding: 12px 24px;
+            border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: 0.2s;
+        }
+        .btn-print:hover { transform: translateY(-2px); background: #1e293b; }
+
+        @media print {
+            .sidebar, .main-footer, .actions-bar, #sidebar-container { display: none !important; }
+            .main-content { margin-left: 0 !important; padding: 0 !important; }
+            body { background: white; }
+            .report-paper { border: none; box-shadow: none; padding: 0; max-width: 100%; }
+            .editable-area { border: none !important; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar-container"></div>
+
+    <div class="actions-bar">
+        <button onclick="window.print()" class="btn-print">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Imprimir Informe
+        </button>
+    </div>
+
+    <main class="main-content">
+        <article class="report-paper">
+            
+            <header class="report-header-logos">
+                <div class="brand-container">
+                    <img src="img/NexeSocial-logo.png" class="logo-nexe" alt="Nexe Social">
+                    <div class="v-sep"></div>
+                    <img src="img/NexePsy.svg" class="logo-psy" alt="NexePsy">
+                </div>
+                <div class="report-info">
+                    <h2>Memòria Estadística</h2>
+                    <p>Exercici 2026 · Ref: STAT-001</p>
+                </div>
+            </header>
+
+            <div class="report-title-section">
+                <h1>Informe de Rendiment Anual</h1>
+                <p style="color: #64748b; font-weight: 500; margin-top: 10px;">Anàlisi quantitativa de la intervenció psicosocial i gestió de casos.</p>
+            </div>
+
+            <section>
+                <div class="grid-stats">
+                    <div class="stat-box">
+                        <h3>Distribució per Àrees</h3>
+                        <div class="bar-container">
+                            <div class="bar-label"><span>Familiar</span><span>65%</span></div>
+                            <div class="bar-bg"><div class="bar-fill" style="width: 65%;"></div></div>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-label"><span>Individual</span><span>35%</span></div>
+                            <div class="bar-bg"><div class="bar-fill" style="width: 35%; background: #94a3b8;"></div></div>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <h3>Estat de Resolució</h3>
+                        <div class="bar-container">
+                            <div class="bar-label"><span>Completats</span><span>82%</span></div>
+                            <div class="bar-bg"><div class="bar-fill" style="width: 82%; background: #10b981;"></div></div>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-label"><span>En espera</span><span>18%</span></div>
+                            <div class="bar-bg"><div class="bar-fill" style="width: 18%; background: #f59e0b;"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2 style="font-size: 1.1rem; color: #0f172a; margin-bottom: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                    <svg width="20" height="20" fill="none" stroke="#6366f1" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Conclusions i Valoració Tècnica
+                </h2>
+                <div id="conclusiones" class="editable-area" contenteditable="true">
+                    Escriviu aquí les conclusions de l'informe estadístic...
+                </div>
+            </section>
+
+            <footer style="margin-top: 100px; border-top: 1px solid #e2e8f0; padding-top: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+                <div style="font-size: 0.75rem; color: #94a3b8; line-height: 1.5;">
+                    Aquest document ha estat generat de forma automàtica<br>
+                    per la plataforma <strong>NexePsy Suite</strong>.
+                </div>
+                <div style="text-align: center; width: 220px;">
+                    <div style="height: 60px; border-bottom: 1.5px solid #0f172a; margin-bottom: 10px;"></div>
+                    <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a; text-transform: uppercase;">Signatura Direcció Tècnica</div>
+                </div>
+            </footer>
+        </article>
+    </main>
+
+    <script src="sidebar-nexepsy.js"></script>
+</body>
+</html>

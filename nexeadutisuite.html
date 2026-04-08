@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexe Audit Suite | Gestió ISO:9001</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        :root {
+            --audit-primary: #1e293b;
+            --audit-accent: #2563eb;
+            --audit-bg: #f1f5f9;
+            --success: #10b981;
+            --danger: #ef4444;
+            --danger-pastel: #ffe6e6;
+            --sidebar-width: 280px;
+            --sidebar-collapsed: 80px;
+        }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--audit-bg); font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+        /* --- SIDEBAR --- */
+        #sidebar-container { display: flex; height: 100vh; }
+        .sidebar-audit { 
+            width: var(--sidebar-width); 
+            background: var(--audit-primary); 
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 25px; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            flex-shrink: 0; 
+        }
+
+        body.collapsed .sidebar-audit { width: var(--sidebar-collapsed); padding: 25px 15px; }
+        body.collapsed .link-text, body.collapsed .nav-label, body.collapsed .logo-text, body.collapsed #add-program { display: none !important; }
+        body.collapsed .nav-link { justify-content: center; padding: 12px 0; }
+
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 12px; color: #cbd5e1; text-decoration: none; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: 0.2s; }
+        .nav-link:hover { background: rgba(255,255,255,0.05); }
+        .nav-link.active { background: var(--audit-accent); color: white; font-weight: 600; }
+        .nav-label { font-size: 0.65rem; text-transform: uppercase; color: #94a3b8; margin: 25px 0 10px 0; font-weight: 700; display: block; }
+
+        /* --- WORKSPACE & DASHBOARD --- */
+        .workspace { flex-grow: 1; overflow-y: auto; padding: 40px; }
+        .dashboard-header { max-width: 1100px; margin: 0 auto 30px auto; display: flex; justify-content: space-between; align-items: center; }
+        .form-container { background: white; max-width: 1100px; margin: 0 auto; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding: 40px; border: 1px solid #e2e8f0; }
+
+        .audit-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .audit-table th { text-align: left; font-size: 0.7rem; color: #94a3b8; padding: 15px; border-bottom: 2px solid #f1f5f9; text-transform: uppercase; letter-spacing: 0.5px; }
+        .audit-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; color: var(--audit-primary); }
+        .dept-badge { background: #eff6ff; color: var(--audit-accent); padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+
+        /* --- MODAL FORMULARIO --- */
+        #form-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--audit-bg); z-index: 1000; overflow-y: auto; padding: 40px 20px; }
+        .modal-form-content { background: white; max-width: 900px; margin: 0 auto; padding: 50px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .pdf-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 30px; }
+        .logo-bar-separator { font-size: 28px; color: #cbd5e1; margin: 0 15px; font-weight: 300; }
+
+        .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+        .field { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; }
+        input, select, textarea { border: 1.5px solid #e2e8f0; padding: 10px; border-radius: 8px; font-family: inherit; font-size: 0.9rem; width: 100%; }
+
+        .btn { padding: 12px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; font-size: 0.85rem; }
+        .btn-save { background: var(--success); color: white; }
+        .btn-print { background: var(--audit-primary); color: white; }
+        .btn-add { width: 100%; padding: 12px; border: 2px dashed #e2e8f0; background: #f8fafc; color: var(--audit-accent); border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 15px; }
+        .btn-remove { color: var(--danger); background: none; border: none; padding: 5px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+
+        .nc-description { margin-top: 10px; border-left: 3px solid var(--danger); padding-left: 10px; display: none; }
+        .row-item.has-nc { background-color: var(--danger-pastel); }
+        .row-item.has-nc .nc-description { display: block; }
+
+        #custom-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-small { background: white; padding: 30px; border-radius: 16px; width: 400px; }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar-container"></div>
+
+    <main class="workspace">
+        <div class="dashboard-header">
+            <div>
+                <h1 style="color: var(--audit-primary); margin: 0;">Historial d'Auditories</h1>
+                <p style="color: #64748b; margin: 5px 0 0 0;">Gestió de l'estàndard ISO 9001:2015</p>
+            </div>
+            <button class="btn" style="background: var(--audit-accent); color: white; padding: 15px 25px;" onclick="openNewAuditModal()">+ NOU INFORME</button>
+        </div>
+
+        <div class="form-container">
+            <table class="audit-table">
+                <thead>
+                    <tr>
+                        <th>ID Informe</th>
+                        <th>Programa</th>
+                        <th>Data</th>
+                        <th>Auditor</th>
+                        <th style="text-align: right;">Accions</th>
+                    </tr>
+                </thead>
+                <tbody id="audit-list-body"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <div id="form-modal">
+        <div class="modal-form-content">
+            <header class="pdf-header">
+                <div style="display: flex; align-items: center;">
+                    <img id="pdf-logo-nexe" src="img/NexeSocial-logo.png" height="45" alt="Nexe Social">
+                    <span class="logo-bar-separator">/</span>
+                    <img id="pdf-logo-suite" src="img/nexeauditsuit.svg" height="45" alt="Audit Suite">
+                </div>
+                <div style="text-align: right;">
+                    <div id="modal-report-id" style="font-weight: 800; color: var(--audit-accent); font-size: 1.2rem;">ID: ---</div>
+                    <div id="modal-dept-badge" class="dept-badge" style="margin-top: 5px;">PROGRAMA</div>
+                </div>
+            </header>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label>Auditor Responsable</label>
+                    <input type="text" id="edit_auditor" placeholder="Nom de l'auditor">
+                </div>
+                <div class="field">
+                    <label>Data de l'Audit</label>
+                    <input type="date" id="edit_date">
+                </div>
+            </div>
+
+            <table class="audit-table">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">Codi Requisit</th>
+                        <th style="width: 70%;">Evidències i Troballes Objectives</th>
+                        <th style="width: 15%;">Estat</th>
+                    </tr>
+                </thead>
+                <tbody id="modal-rows-body"></tbody>
+            </table>
+            <button class="btn-add" onclick="addRowToModal()">+ Afegir Punt de Control (ISO)</button>
+
+            <div class="field" style="margin-top: 30px;">
+                <label>Conclusions, No Conformitats i Millores</label>
+                <textarea id="edit_conclusions" rows="4" placeholder="Resum executiu per a conformitat ISO 9001..."></textarea>
+            </div>
+
+            <div class="action-bar" style="margin-top: 40px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn" onclick="closeFormModal()" style="background:#f1f5f9; color: #64748b;">Tancar</button>
+                <button class="btn btn-save" onclick="saveAuditData()">Guardar Canvis</button>
+                <button class="btn btn-print" onclick="generateISO9001PDF()">Generar Informe ISO PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="custom-modal">
+        <div class="modal-small">
+            <h3 id="modal-title" style="margin:0 0 20px 0;">Títol</h3>
+            <div id="modal-input-group">
+                <div class="field">
+                    <label id="modal-label">Etiqueta:</label>
+                    <input type="text" id="modal-input" placeholder="...">
+                </div>
+            </div>
+            <p id="modal-message" style="display:none; color: #475569; font-size: 0.9rem; line-height: 1.5;"></p>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:25px;">
+                <button class="btn" id="modal-cancel-btn" onclick="closeModal()" style="background:#f1f5f9; color: #64748b;">Cancel·lar</button>
+                <button class="btn btn-print" id="modal-confirm-btn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="nexeauditsuite-sidebar.js"></script>
+    <script>
+        let audits = JSON.parse(localStorage.getItem('nexe_audits_db')) || [];
+        let currentEditingId = null;
+
+        window.onload = () => renderAuditList();
+
+        function renderAuditList() {
+            const body = document.getElementById('audit-list-body');
+            body.innerHTML = '';
+            audits.sort((a, b) => b.id.localeCompare(a.id)).forEach(audit => {
+                const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
+                tr.onclick = () => openEditModal(audit.id);
+                tr.innerHTML = `
+                    <td style="font-weight:700; color:var(--audit-accent)">${audit.id}</td>
+                    <td><span class="dept-badge">${audit.dept}</span></td>
+                    <td>${audit.date}</td>
+                    <td>${audit.auditor || '---'}</td>
+                    <td style="text-align:right">
+                        <button class="btn-remove" title="Eliminar" onclick="confirmDelete(event, '${audit.id}')">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function openCustomModal({title, label, isConfirm, message, callback}) {
+            const m = document.getElementById('custom-modal');
+            const inputGroup = document.getElementById('modal-input-group');
+            const msgPara = document.getElementById('modal-message');
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+            document.getElementById('modal-title').innerText = title;
+            if(message) {
+                inputGroup.style.display = 'none';
+                msgPara.style.display = 'block';
+                msgPara.innerText = message;
+                confirmBtn.className = isConfirm ? 'btn btn-danger' : 'btn btn-print';
+            } else {
+                inputGroup.style.display = 'block';
+                msgPara.style.display = 'none';
+                document.getElementById('modal-label').innerText = label;
+                confirmBtn.className = 'btn btn-print';
+            }
+            m.style.display = 'flex';
+            const input = document.getElementById('modal-input');
+            input.value = '';
+            input.focus();
+            confirmBtn.onclick = () => { callback(input.value); closeModal(); };
+        }
+
+        function closeModal() { document.getElementById('custom-modal').style.display = 'none'; }
+
+        function openNewAuditModal() {
+            openCustomModal({
+                title: "Nou Informe",
+                label: "Programa / Àrea:",
+                callback: (prog) => {
+                    if (!prog) return;
+                    const newId = `AUD-${new Date().getFullYear()}-${String(audits.length + 1).padStart(3, '0')}`;
+                    audits.push({
+                        id: newId,
+                        dept: prog.toUpperCase(),
+                        date: new Date().toISOString().split('T')[0],
+                        auditor: '',
+                        conclusions: '',
+                        rows: [{code: '4.4', evidence: 'Gestió per processos', status: 'C', nc_text: ''}]
+                    });
+                    saveDB(); renderAuditList(); openEditModal(newId);
+                }
+            });
+        }
+
+        function confirmDelete(e, id) {
+            e.stopPropagation();
+            openCustomModal({
+                title: "Eliminar Informe",
+                message: `Estàs segur que vols eliminar l'informe ${id}?`,
+                isConfirm: true,
+                callback: () => { audits = audits.filter(a => a.id !== id); saveDB(); renderAuditList(); }
+            });
+        }
+
+        function openEditModal(id) {
+            currentEditingId = id;
+            const audit = audits.find(a => a.id === id);
+            document.getElementById('modal-report-id').innerText = `ID: ${audit.id}`;
+            document.getElementById('modal-dept-badge').innerText = audit.dept;
+            document.getElementById('edit_auditor').value = audit.auditor || '';
+            document.getElementById('edit_date').value = audit.date;
+            document.getElementById('edit_conclusions').value = audit.conclusions || '';
+            const rowsBody = document.getElementById('modal-rows-body');
+            rowsBody.innerHTML = '';
+            audit.rows.forEach(r => addRowToModal(r));
+            document.getElementById('form-modal').style.display = 'block';
+        }
+
+        function addRowToModal(data = {code: '', evidence: '', status: 'C', nc_text: ''}) {
+            const tr = document.createElement('tr');
+            tr.className = `row-item ${data.status === 'NC' ? 'has-nc' : ''}`;
+            tr.innerHTML = `
+                <td><input type="text" class="r-code" value="${data.code}" placeholder="ISO 9.1"></td>
+                <td>
+                    <textarea class="r-evidence" rows="2" placeholder="Evidències trobades...">${data.evidence}</textarea>
+                    <div class="nc-description">
+                        <textarea class="r-nc-text" rows="2" placeholder="Acció correctora requerida...">${data.nc_text || ''}</textarea>
+                    </div>
+                </td>
+                <td>
+                    <select class="r-status" onchange="this.closest('.row-item').classList.toggle('has-nc', this.value==='NC')">
+                        <option value="C" ${data.status==='C'?'selected':''}>Conforme</option>
+                        <option value="NC" ${data.status==='NC'?'selected':''}>No Conf.</option>
+                    </select>
+                </td>
+            `;
+            document.getElementById('modal-rows-body').appendChild(tr);
+        }
+
+        function saveAuditData(silent = false) {
+            const index = audits.findIndex(a => a.id === currentEditingId);
+            const rows = Array.from(document.querySelectorAll('.row-item')).map(tr => ({
+                code: tr.querySelector('.r-code').value,
+                evidence: tr.querySelector('.r-evidence').value,
+                status: tr.querySelector('.r-status').value,
+                nc_text: tr.querySelector('.r-nc-text').value 
+            }));
+
+            audits[index] = {
+                ...audits[index],
+                auditor: document.getElementById('edit_auditor').value,
+                date: document.getElementById('edit_date').value,
+                conclusions: document.getElementById('edit_conclusions').value,
+                rows: rows
+            };
+
+            saveDB();
+            renderAuditList();
+            if(!silent) alert("Dades guardades correctament.");
+        }
+
+        async function generateISO9001PDF() {
+            saveAuditData(true); 
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const audit = audits.find(a => a.id === currentEditingId);
+
+            // Cabecera Técnica ISO 9001
+            doc.setDrawColor(30, 41, 59);
+            doc.rect(10, 10, 190, 35); 
+            doc.line(60, 10, 60, 45); 
+            doc.line(145, 10, 145, 45);
+
+            // Logos
+            try {
+                const logoNexe = document.getElementById('pdf-logo-nexe');
+                const logoSuite = document.getElementById('pdf-logo-suite');
+                doc.addImage(logoNexe, 'PNG', 15, 18, 35, 12);
+                doc.addImage(logoSuite, 'SVG', 150, 15, 25, 25);
+            } catch (e) { console.warn("Error logos:", e); }
+
+            // Textos Cabecera
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(11);
+            doc.text("SISTEMA DE GESTIÓ DE QUALITAT", 102, 22, {align: 'center'});
+            doc.setFontSize(13);
+            doc.text("INFORME D'AUDITORIA INTERNA", 102, 30, {align: 'center'});
+            doc.setFontSize(9);
+            doc.text("ISO 9001:2015", 102, 38, {align: 'center'});
+
+            doc.setFontSize(8);
+            doc.text(`CODI: ${audit.id}`, 148, 20);
+            doc.text(`DATA: ${audit.date}`, 148, 28);
+            doc.text(`PÀG: 1 de 1`, 148, 36);
+
+            // Info General
+            doc.setFontSize(10);
+            doc.text(`PROGRAMA AUDITAT: ${audit.dept}`, 10, 55);
+            doc.text(`AUDITOR: ${audit.auditor || '---'}`, 10, 62);
+
+            // Tabla de Hallazgos
+            const tableBody = audit.rows.map(r => [
+                r.code, 
+                r.status === 'NC' ? `${r.evidence}\n\nNO CONFORMITAT:\n${r.nc_text}` : r.evidence, 
+                r.status === 'C' ? 'CONFORME' : 'NO CONFORME'
+            ]);
+
+            doc.autoTable({
+                startY: 70,
+                head: [['REQUISIT ISO', 'EVIDÈNCIES I OBSERVACIONS', 'RESULTAT']],
+                body: tableBody,
+                theme: 'grid',
+                headStyles: { fillColor: [30, 41, 59], fontSize: 9 },
+                styles: { fontSize: 8, cellPadding: 5 },
+                columnStyles: { 0: { cellWidth: 25 }, 2: { cellWidth: 30 } },
+                didParseCell: (data) => {
+                    if (data.row.raw[2] === 'NO CONFORME') data.cell.styles.fillColor = [255, 230, 230];
+                }
+            });
+
+            // Conclusions
+            const finalY = doc.lastAutoTable.finalY + 10;
+            doc.setFont("helvetica", "bold");
+            doc.text("CONCLUSIONS I PLANS D'ACCIÓ:", 10, finalY);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9);
+            const splitText = doc.splitTextToSize(audit.conclusions || "Sense observacions addicionals.", 180);
+            doc.text(splitText, 10, finalY + 7);
+
+            // Firmas
+            const footerY = doc.internal.pageSize.height - 30;
+            doc.line(20, footerY, 70, footerY);
+            doc.line(130, footerY, 180, footerY);
+            doc.setFontSize(7);
+            doc.text("Signatura Auditor", 45, footerY + 5, {align: 'center'});
+            doc.text("Signatura Responsable Programa", 155, footerY + 5, {align: 'center'});
+
+            doc.save(`${audit.id}_ISO9001.pdf`);
+        }
+
+        function saveDB() { localStorage.setItem('nexe_audits_db', JSON.stringify(audits)); }
+        function closeFormModal() { document.getElementById('form-modal').style.display = 'none'; }
+    </script>
+</body>
+</html>

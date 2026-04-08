@@ -28,15 +28,17 @@
         body.is-editing .edit-input { display: block; }
         body.is-editing .value { display: none; }
         .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; margin-left: 10px; }
+        .status-actiu { background: #dcfce7; color: #16a34a; }
+        .status-inactiu { background: #fee2e2; color: #ef4444; }
         
-        /* ALERTES CABECERA */
+        .icon-svg { width: 1.2em; height: 1.2em; fill: currentColor; vertical-align: middle; }
+
         .medical-alert-header { 
             display: none; background: #fee2e2; border: 1px solid #ef4444; 
             color: #b91c1c; padding: 8px 15px; border-radius: 8px; 
             margin-top: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
         }
 
-        /* Estils Activitats i Família */
         .item-card { 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px;
@@ -44,21 +46,28 @@
         .btn-action { background: #10b981; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; }
         .btn-link { color: #2563eb; text-decoration: none; font-weight: 600; cursor: pointer; }
 
-        /* MODAL */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;
         }
         .modal-box {
             background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%;
-            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow-y: auto; max-height: 85vh;
         }
         .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 25px; }
         .btn-modal { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; flex: 1; }
         .btn-confirm { background: #2563eb; color: white; }
         .btn-cancel { background: #e2e8f0; color: #64748b; }
 
-        /* FITXES ALERGIES */
+        /* Estils Millorats Buscador */
+        .search-box { margin-bottom: 15px; text-align: left; }
+        .search-input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 5px; outline: none; }
+        .search-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .results-list { max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 5px; background: white; }
+        .result-item { padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; justify-content: space-between; transition: 0.2s; }
+        .result-item:hover { background: #f8faff; color: #2563eb; }
+        .result-item:last-child { border-bottom: none; }
+
         .allergy-tag-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; }
         .allergy-card { background: #fef2f2; border: 1px solid #fee2e2; padding: 10px; border-radius: 8px; text-align: left; margin-bottom: 10px; }
         .allergy-card h4 { margin: 0 0 5px 0; font-size: 0.8rem; color: #ef4444; text-transform: uppercase; }
@@ -72,7 +81,8 @@
         <div class="modal-box">
             <h3 id="modalTitle">Confirmació</h3>
             <div id="modalContent"></div>
-            <p id="modalMsg"></p>
+            <textarea id="modalTextarea" style="display:none; width:100%; height:120px; margin-top:15px; padding:10px; border:1px solid #ccc; border-radius:8px; font-family:inherit;"></textarea>
+            <p id="modalMsg" style="margin-top: 15px; color: #64748b;"></p>
             <div id="modalButtons" class="modal-buttons"></div>
         </div>
     </div>
@@ -82,14 +92,19 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <a href="expedient-detall.html" style="text-decoration: none; color: #64748b; font-weight: 600;">← Tornar al llistat</a>
                 <div style="display: flex; gap: 10px;">
-                    <button id="btnEdit" onclick="toggleEdit()" style="background:#2563eb; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">✏️ Editar Fitxa</button>
+                    <button onclick="canviarEstatExpedient()" style="background:#f1f5f9; color:#ef4444; border:1px solid #fee2e2; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">Baixa Expedient</button>
+                    <button id="btnEdit" onclick="toggleEdit()" style="background:#2563eb; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">
+                        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Editar Fitxa
+                    </button>
                     <button id="btnSaveMain" onclick="confirmSave()" style="display:none; background:#10b981; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">💾 Guardar Canvis</button>
                 </div>
             </div>
 
             <div class="user-header-main">
                 <div style="display: flex; align-items: center; gap: 20px;">
-                    <div style="width: 70px; height: 70px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem;">👤</div>
+                    <div style="width: 70px; height: 70px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; color:#64748b">
+                        <svg class="icon-svg" style="width:40px; height:40px" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    </div>
                     <div>
                         <h1 style="margin: 0; font-size: 1.8rem; color: #1e293b;">
                             <span id="header-nom-complet">Carregant...</span> 
@@ -98,6 +113,7 @@
                         <div style="display: flex; gap: 20px; margin-top: 8px; font-size: 0.9rem; color: #64748b; flex-wrap: wrap;">
                             <span>DNI: <strong id="header-dni">-</strong></span>
                             <span>Mòbil: <strong id="header-mobil">-</strong></span>
+                            <span>Edat: <strong id="header-edat">-</strong></span>
                         </div>
                         <div id="header-medical-alert" class="medical-alert-header" onclick="showMedicalModal()">
                             ⚠️ ALERTA MÈDICA
@@ -122,12 +138,35 @@
             <div id="personals" class="tab-content active">
                 <div class="info-grid">
                     <div class="data-group"><span class="label">Nom</span><span class="value" id="val-nom">-</span><input type="text" id="in-nom" class="edit-input"></div>
-                    <div class="data-group"><span class="label">Cognoms</span><span class="value" id="val-cognoms">-</span><input type="text" id="in-cognoms" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Primer Llinatge</span><span class="value" id="val-cognoms">-</span><input type="text" id="in-cognoms" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Segon Llinatge</span><span class="value" id="val-cognom2">-</span><input type="text" id="in-cognom2" class="edit-input"></div>
                     <div class="data-group"><span class="label">DNI / NIE</span><span class="value" id="val-dni">-</span><input type="text" id="in-dni" class="edit-input"></div>
                     <div class="data-group"><span class="label">Data Naixement</span><span class="value" id="val-naixement">-</span><input type="date" id="in-naixement" class="edit-input"></div>
                     <div class="data-group"><span class="label">Mòbil</span><span class="value" id="val-mobil">-</span><input type="text" id="in-mobil" class="edit-input"></div>
                     <div class="data-group"><span class="label">Email</span><span class="value" id="val-email">-</span><input type="email" id="in-email" class="edit-input"></div>
                 </div>
+            </div>
+
+            <div id="social" class="tab-content">
+                <div class="info-grid">
+                    <div class="data-group"><span class="label">Nivell d'estudis</span><span class="value" id="val-estudis">-</span><input type="text" id="in-estudis" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Situació Laboral</span><span class="value" id="val-laboral">-</span><input type="text" id="in-laboral" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Bretxa Digital</span><span class="value" id="val-bretxa">-</span>
+                        <select id="in-bretxa" class="edit-input"><option value="No">No</option><option value="Sí">Sí</option></select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="habitatge" class="tab-content">
+                <div class="info-grid" style="margin-bottom: 25px;">
+                    <div class="data-group"><span class="label">Situació Domicili</span><span class="value" id="val-domicili">-</span><input type="text" id="in-domicili" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Context Familiar</span><span class="value" id="val-context">-</span><input type="text" id="in-context" class="edit-input"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                    <h3>Unitat de Convivència i Vincles</h3>
+                    <button class="btn-action" onclick="obrirModalVincular()">+ Vincular Familiar</button>
+                </div>
+                <div id="llista-familia"></div>
             </div>
 
             <div id="medical" class="tab-content">
@@ -143,89 +182,35 @@
 
                     <div id="group-detall-alergies" class="data-group" style="grid-column: span 3; display:none;">
                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
-                            <div>
-                                <span class="label">Ambientals</span>
-                                <div id="val-al-amb" class="allergy-tag-container"></div>
-                                <div id="inputs-amb" class="edit-input-container">
-                                    <input type="text" class="edit-input allergy-input" data-type="amb" oninput="manageLines(this)" placeholder="Nova al·lèrgia...">
-                                </div>
-                            </div>
-                            <div>
-                                <span class="label">Medicaments</span>
-                                <div id="val-al-med" class="allergy-tag-container"></div>
-                                <div id="inputs-med" class="edit-input-container">
-                                    <input type="text" class="edit-input allergy-input" data-type="med" oninput="manageLines(this)" placeholder="Nova al·lèrgia...">
-                                </div>
-                            </div>
-                            <div>
-                                <span class="label">Alimentícies</span>
-                                <div id="val-al-ali" class="allergy-tag-container"></div>
-                                <div id="inputs-ali" class="edit-input-container">
-                                    <input type="text" class="edit-input allergy-input" data-type="ali" oninput="manageLines(this)" placeholder="Nova al·lèrgia...">
-                                </div>
-                            </div>
+                            <div><span class="label">Ambientals</span><div id="val-al-amb" class="allergy-tag-container"></div><div id="inputs-amb" class="edit-input-container"><input type="text" class="edit-input allergy-input" oninput="manageLines(this)" placeholder="Nova..."></div></div>
+                            <div><span class="label">Medicaments</span><div id="val-al-med" class="allergy-tag-container"></div><div id="inputs-med" class="edit-input-container"><input type="text" class="edit-input allergy-input" oninput="manageLines(this)" placeholder="Nova..."></div></div>
+                            <div><span class="label">Alimentícies</span><div id="val-al-ali" class="allergy-tag-container"></div><div id="inputs-ali" class="edit-input-container"><input type="text" class="edit-input allergy-input" oninput="manageLines(this)" placeholder="Nova..."></div></div>
                         </div>
                     </div>
 
-                    <div class="data-group">
-                        <span class="label">Dèficit d'Atenció (TDA)</span>
-                        <span class="value" id="val-tda">-</span>
-                        <select id="in-tda" class="edit-input">
-                            <option value="No">No</option>
-                            <option value="Sí">Sí</option>
-                        </select>
-                    </div>
-                    <div class="data-group">
-                        <span class="label">Hiperactivitat (TDHA)</span>
-                        <span class="value" id="val-tdha">-</span>
-                        <select id="in-tdha" class="edit-input">
-                            <option value="No">No</option>
-                            <option value="Sí">Sí</option>
-                        </select>
-                    </div>
-                    <div class="data-group">
-                        <span class="label">Dependència</span>
-                        <span class="value" id="val-dependencia">-</span>
-                        <select id="in-dependencia" class="edit-input" onchange="checkDependencia()">
-                            <option value="No">No</option>
-                            <option value="Sí">Sí</option>
-                        </select>
-                    </div>
-                    <div id="group-grau" class="data-group" style="display:none;">
-                        <span class="label">Grau de Dependència</span>
-                        <span class="value" id="val-grau">-</span>
-                        <select id="in-grau" class="edit-input">
-                            <option value="Grado I">Grado I</option>
-                            <option value="Grado II">Grado II</option>
-                            <option value="Grado III">Grado III</option>
-                        </select>
-                    </div>
-                    <div class="data-group" style="grid-column: span 3;">
-                        <span class="label">Altres dades mèdiques rellevants</span>
-                        <span class="value" id="val-observacions_mediques">-</span>
-                        <textarea id="in-observacions_mediques" class="edit-input" style="height:80px; font-family:inherit;"></textarea>
-                    </div>
+                    <div class="data-group"><span class="label">TDA</span><span class="value" id="val-tda">-</span><select id="in-tda" class="edit-input"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                    <div class="data-group"><span class="label">TDHA</span><span class="value" id="val-tdha">-</span><select id="in-tdha" class="edit-input"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                    <div class="data-group"><span class="label">Dependència</span><span class="value" id="val-dependencia">-</span><select id="in-dependencia" class="edit-input" onchange="checkDependencia()"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                    <div id="group-grau" class="data-group" style="display:none;"><span class="label">Grau</span><span class="value" id="val-grau">-</span><select id="in-grau" class="edit-input"><option value="Grado I">Grado I</option><option value="Grado II">Grado II</option><option value="Grado III">Grado III</option></select></div>
+                    <div class="data-group" style="grid-column: span 3;"><span class="label">Observacions mèdiques</span><span class="value" id="val-observacions_mediques">-</span><textarea id="in-observacions_mediques" class="edit-input" style="height:60px; font-family:inherit;"></textarea></div>
                 </div>
-            </div>
-
-            <div id="habitatge" class="tab-content">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                    <h3>Unitat de Convivència i Vincles</h3>
-                    <button class="btn-action" onclick="obrirCercadorFamiliars()">+ Vincular Familiar</button>
-                </div>
-                <div id="llista-familia"></div>
             </div>
 
             <div id="activitats" class="tab-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <h3>Programes i Activitats</h3>
-                    <button class="btn-action" onclick="altaActivitat()">+ Inscriure</button>
+                    <h3>Programes i Activitats Actives</h3>
+                    <button class="btn-action" onclick="obrirModalActivitats()">+ Inscriure en Programa</button>
                 </div>
                 <div id="llista-activitats"></div>
             </div>
 
-            <div id="social" class="tab-content"><h3>Informació Socio-Laboral</h3><p>Dades laborals i de formació.</p></div>
-            <div id="seguiment" class="tab-content"><h3>Historial de Seguiment</h3><p>Notes de seguiment tècnic.</p></div>
+            <div id="seguiment" class="tab-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h3>Historial de Seguiment</h3>
+                    <button class="btn-action" onclick="obrirModalSeguiment()">+ Nou Informe</button>
+                </div>
+                <div id="llista-seguiment"></div>
+            </div>
         </div>
     </main>
 
@@ -236,39 +221,25 @@
 
         document.addEventListener('DOMContentLoaded', () => { carregarPerfil(); });
 
+        function calcularEdat(data) {
+            if (!data) return "-";
+            const naix = new Date(data);
+            const avui = new Date();
+            let edat = avui.getFullYear() - naix.getFullYear();
+            const m = avui.getMonth() - naix.getMonth();
+            if (m < 0 || (m === 0 && avui.getDate() < naix.getDate())) edat--;
+            return edat + " anys";
+        }
+
         function carregarPerfil() {
             usuariActual = BBDD.expedients.find(u => u.id === userId);
             if (usuariActual) {
-                if (!usuariActual.salut) {
-                    usuariActual.salut = { 
-                        te_alergies: "No", 
-                        alergies_detall: { amb: [], med: [], ali: [] },
-                        tda: "No", tdha: "No", dependencia: "No", grau: "", observacions: "" 
-                    };
-                }
-                if (!usuariActual.salut.alergies_detall) {
-                    usuariActual.salut.alergies_detall = { amb: [], med: [], ali: [] };
-                }
-                
+                if (!usuariActual.salut) usuariActual.salut = { te_alergies: "No", alergies_detall: { amb: [], med: [], ali: [] }, tda: "No", tdha: "No", dependencia: "No", grau: "", observacions: "" };
                 omplirDades(usuariActual);
                 pintarActivitats(usuariActual);
                 pintarFamilia(usuariActual);
+                pintarSeguiment();
                 actualitzarCabeceraMedica(usuariActual);
-            }
-        }
-
-        function manageLines(input) {
-            const container = input.parentElement;
-            const allInputs = container.querySelectorAll('.allergy-input');
-            const lastInput = allInputs[allInputs.length - 1];
-            
-            if (lastInput.value.trim() !== "") {
-                const newInput = document.createElement('input');
-                newInput.type = "text";
-                newInput.className = "edit-input allergy-input";
-                newInput.placeholder = "Nova al·lèrgia...";
-                newInput.oninput = function() { manageLines(this); };
-                container.appendChild(newInput);
             }
         }
 
@@ -276,178 +247,264 @@
             document.getElementById('header-nom-complet').innerText = u.nom + " " + (u.cognoms || "");
             document.getElementById('header-dni').innerText = u.dni;
             document.getElementById('header-expedient').innerText = u.id;
+            document.getElementById('header-mobil').innerText = u.mobil || "-";
+            document.getElementById('header-edat').innerText = calcularEdat(u.naixement);
             
-            const camps = ['nom', 'cognoms', 'dni', 'naixement', 'mobil', 'email'];
+            const estatPill = document.getElementById('header-estat-pill');
+            estatPill.innerText = u.estat || 'Actiu';
+            estatPill.className = 'status-pill ' + (u.estat === 'Inactiu' ? 'status-inactiu' : 'status-actiu');
+
+            const camps = ['nom', 'cognoms', 'cognom2', 'dni', 'naixement', 'mobil', 'email', 'estudis', 'laboral', 'bretxa', 'domicili', 'context'];
             camps.forEach(c => {
                 if(document.getElementById('val-'+c)) document.getElementById('val-'+c).innerText = u[c] || "-";
                 if(document.getElementById('in-'+c)) document.getElementById('in-'+c).value = u[c] || "";
             });
 
             const s = u.salut;
-            document.getElementById('val-te-alergies').innerText = s.te_alergies || "No";
-            document.getElementById('in-te-alergies').value = s.te_alergies || "No";
+            document.getElementById('val-te-alergies').innerText = s.te_alergies;
+            document.getElementById('in-te-alergies').value = s.te_alergies;
             
-            // Pintar tags d'alèrgies en mode lectura
-            const tipus = ['amb', 'med', 'ali'];
-            tipus.forEach(t => {
+            ['amb', 'med', 'ali'].forEach(t => {
                 const list = s.alergies_detall[t] || [];
                 document.getElementById('val-al-'+t).innerHTML = list.map(item => `<span style="background:#f1f5f9; padding:2px 8px; border-radius:4px; font-size:0.85rem;">${item}</span>`).join('');
-                
-                // Omplir inputs per editar
                 const container = document.getElementById('inputs-'+t);
                 container.innerHTML = '';
-                list.forEach(item => {
-                    const inp = document.createElement('input');
-                    inp.type = "text";
-                    inp.className = "edit-input allergy-input";
-                    inp.value = item;
-                    inp.oninput = function() { manageLines(this); };
-                    container.appendChild(inp);
-                });
-                const emptyInp = document.createElement('input');
-                emptyInp.type = "text";
-                emptyInp.className = "edit-input allergy-input";
-                emptyInp.placeholder = "Nova al·lèrgia...";
-                emptyInp.oninput = function() { manageLines(this); };
-                container.appendChild(emptyInp);
+                list.forEach(item => { const inp = document.createElement('input'); inp.className = "edit-input allergy-input"; inp.value = item; inp.oninput = function() { manageLines(this); }; container.appendChild(inp); });
+                const empty = document.createElement('input'); empty.className = "edit-input allergy-input"; empty.placeholder = "Nova..."; empty.oninput = function() { manageLines(this); }; container.appendChild(empty);
             });
 
-            document.getElementById('val-tda').innerText = s.tda;
-            document.getElementById('in-tda').value = s.tda;
-            document.getElementById('val-tdha').innerText = s.tdha;
-            document.getElementById('in-tdha').value = s.tdha;
-            document.getElementById('val-dependencia').innerText = s.dependencia;
-            document.getElementById('in-dependencia').value = s.dependencia;
-            document.getElementById('val-grau').innerText = s.grau || "-";
-            document.getElementById('in-grau').value = s.grau || "Grado I";
-            document.getElementById('val-observacions_mediques').innerText = s.observacions || "-";
-            document.getElementById('in-observacions_mediques').value = s.observacions || "";
+            document.getElementById('val-tda').innerText = s.tda; document.getElementById('in-tda').value = s.tda;
+            document.getElementById('val-tdha').innerText = s.tdha; document.getElementById('in-tdha').value = s.tdha;
+            document.getElementById('val-dependencia').innerText = s.dependencia; document.getElementById('in-dependencia').value = s.dependencia;
+            document.getElementById('val-grau').innerText = s.grau || "-"; document.getElementById('in-grau').value = s.grau || "Grado I";
+            document.getElementById('val-observacions_mediques').innerText = s.observacions || "-"; document.getElementById('in-observacions_mediques').value = s.observacions || "";
 
-            checkAlergies();
-            checkDependencia();
+            checkAlergies(); checkDependencia();
+        }
+
+        /* VINCULACIÓ: Llegeix usuaris de expedient-detall.html (BBDD.expedients) */
+        function obrirModalVincular() {
+            const modal = document.getElementById('customModal');
+            document.getElementById('modalTitle').innerText = "Vincular Familiar";
+            document.getElementById('modalContent').innerHTML = `
+                <div class="search-box">
+                    <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;">Cerca qualsevol usuari registrat per afegir-lo com a familiar.</p>
+                    <input type="text" id="inputCercaFam" class="search-input" oninput="cercaFamiliar(this.value)" placeholder="Cerca per nom, DNI o ID..." autofocus>
+                    <div id="resultatsFam" class="results-list"></div>
+                </div>
+            `;
+            document.getElementById('modalMsg').innerText = "";
+            document.getElementById('modalTextarea').style.display = "none";
+            document.getElementById('modalButtons').innerHTML = `<button onclick="tancarModal()" class="btn-modal btn-cancel">Cancel·lar</button>`;
+            modal.style.display = "flex";
+        }
+
+        function cercaFamiliar(text) {
+            const results = document.getElementById('resultatsFam');
+            if (text.length < 2) { results.innerHTML = ""; return; }
+            const trobats = BBDD.expedients.filter(u => u.id !== userId && (
+                u.nom.toLowerCase().includes(text.toLowerCase()) || 
+                u.cognoms.toLowerCase().includes(text.toLowerCase()) || 
+                u.dni.toLowerCase().includes(text.toLowerCase()) ||
+                u.id.toLowerCase().includes(text.toLowerCase())
+            ));
+            results.innerHTML = trobats.map(u => `
+                <div class="result-item" onclick="seleccionarFamiliar('${u.id}', '${u.nom} ${u.cognoms}')">
+                    <span>${u.nom} ${u.cognoms} <small style="color:#94a3b8">(${u.id})</small></span>
+                    <strong style="font-size:0.75rem; color:#2563eb">Seleccionar</strong>
+                </div>
+            `).join('') || "<p style='padding:15px; color:#94a3b8; font-size:0.9rem;'>No s'han trobat coincidències.</p>";
+        }
+
+        function seleccionarFamiliar(id, nom) {
+            const parentiu = prompt(`Quin vincle té amb ${nom}? (ex: Mare, Fill, Pare...)`);
+            if (parentiu) {
+                if (!usuariActual.familia) usuariActual.familia = [];
+                usuariActual.familia.push({ id: id, parentiu: parentiu });
+                tancarModal(); pintarFamilia(usuariActual);
+            }
+        }
+
+        /* ACTIVITATS: Llegeix els programes actius de programes-gestio.html (BBDD.programes) */
+        function obrirModalActivitats() {
+            const modal = document.getElementById('customModal');
+            document.getElementById('modalTitle').innerText = "Inscripció a Programes";
+            
+            // Simulem la lectura del catàleg de programes (programes-gestio.html)
+            const catalegProgrames = ["Reforç Escolar", "Esport Jove", "Menjador Social", "Taller de Cuina", "Alfabetització", "Casal d'Estiu"];
+            
+            document.getElementById('modalContent').innerHTML = `
+                <div style="text-align:left; margin-bottom:15px;">
+                    <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;">Selecciona el programa on vols inscriure aquest expedient:</p>
+                    ${catalegProgrames.map(p => `
+                        <div class="item-card" style="padding: 10px; margin-bottom:5px;">
+                            <span style="font-weight:600;">${p}</span>
+                            <button class="btn-action" style="padding:5px 12px; font-size:0.8rem;" onclick="inscriureActivitat('${p}')">Inscriure</button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            document.getElementById('modalMsg').innerText = "";
+            document.getElementById('modalTextarea').style.display = "none";
+            document.getElementById('modalButtons').innerHTML = `<button onclick="tancarModal()" class="btn-modal btn-cancel">Tancar</button>`;
+            modal.style.display = "flex";
+        }
+
+        function inscriureActivitat(nom) {
+            if (!usuariActual.programes) usuariActual.programes = [];
+            if (!usuariActual.programes.includes(nom)) {
+                usuariActual.programes.push(nom);
+                tancarModal(); 
+                pintarActivitats(usuariActual);
+                alert(`L'expedient s'ha inscrit correctament a: ${nom}`);
+            } else {
+                alert("Aquest expedient ja està inscrit en aquest programa.");
+            }
+        }
+
+        function obrirModalSeguiment() {
+            const modal = document.getElementById('customModal');
+            document.getElementById('modalTitle').innerText = "Nou Informe de Seguiment";
+            document.getElementById('modalContent').innerHTML = "";
+            document.getElementById('modalMsg').innerText = "Detalla el contingut de l'atenció o seguiment:";
+            document.getElementById('modalTextarea').style.display = "block";
+            document.getElementById('modalTextarea').value = "";
+            document.getElementById('modalButtons').innerHTML = `
+                <button onclick="guardarSeguiment()" class="btn-modal btn-confirm">Guardar Informe</button> 
+                <button onclick="tancarModal()" class="btn-modal btn-cancel">Cancel·lar</button>`;
+            modal.style.display = "flex";
+        }
+
+        function guardarSeguiment() {
+            const text = document.getElementById('modalTextarea').value;
+            if (text.trim() === "") return;
+            if (!usuariActual.seguiment) usuariActual.seguiment = [];
+            usuariActual.seguiment.unshift({ data: new Date().toLocaleDateString(), text: text });
+            tancarModal();
+            pintarSeguiment();
+            // Redirecció visual al primer tab per veure canvis
+            openTab(null, 'seguiment');
+        }
+
+        function manageLines(input) {
+            const container = input.parentElement;
+            const all = container.querySelectorAll('.allergy-input');
+            if (all[all.length - 1].value.trim() !== "") {
+                const n = document.createElement('input'); n.className = "edit-input allergy-input"; n.placeholder = "Nova..."; n.oninput = function() { manageLines(this); }; container.appendChild(n);
+            }
         }
 
         function actualitzarCabeceraMedica(u) {
-            const headerAlert = document.getElementById('header-medical-alert');
-            const detalls = u.salut.alergies_detall;
-            const téAlergies = u.salut.te_alergies === "Sí" && (detalls.amb.length > 0 || detalls.med.length > 0 || detalls.ali.length > 0);
-            
-            if (téAlergies || u.salut.dependencia === "Sí") {
-                headerAlert.style.display = 'block';
-            } else {
-                headerAlert.style.display = 'none';
-            }
+            const h = document.getElementById('header-medical-alert');
+            const det = u.salut.alergies_detall;
+            const te = u.salut.te_alergies === "Sí" && (det.amb.length > 0 || det.med.length > 0 || det.ali.length > 0);
+            h.style.display = (te || u.salut.dependencia === "Sí") ? 'block' : 'none';
         }
 
         function showMedicalModal() {
             const s = usuariActual.salut;
             let html = '<div style="text-align:left;">';
-            
-            const mapping = { amb: 'Ambientals', med: 'Medicaments', ali: 'Alimentícies' };
-            Object.keys(mapping).forEach(k => {
-                if(s.alergies_detall[k] && s.alergies_detall[k].length > 0) {
-                    html += `
-                        <div class="allergy-card">
-                            <h4>${mapping[k]}</h4>
-                            <p>${s.alergies_detall[k].join(', ')}</p>
-                        </div>`;
-                }
-            });
-
-            if (s.dependencia === "Sí") {
-                html += `
-                    <div class="allergy-card" style="background:#eff6ff; border-color:#dbeafe;">
-                        <h4 style="color:#2563eb;">DEPENDÈNCIA</h4>
-                        <p>${s.grau}</p>
-                    </div>`;
-            }
-
+            const m = { amb: 'Ambientals', med: 'Medicaments', ali: 'Alimentícies' };
+            Object.keys(m).forEach(k => { if(s.alergies_detall[k] && s.alergies_detall[k].length > 0) html += `<div class="allergy-card"><h4>${m[k]}</h4><p>${s.alergies_detall[k].join(', ')}</p></div>`; });
+            if (s.dependencia === "Sí") html += `<div class="allergy-card" style="background:#eff6ff; border-color:#dbeafe;"><h4 style="color:#2563eb;">DEPENDÈNCIA</h4><p>${s.grau}</p></div>`;
             html += '</div>';
-            
-            document.getElementById('modalTitle').innerText = "Fitxa d'Alerta Mèdica";
+            document.getElementById('modalTitle').innerText = "Alerta Mèdica Detallada";
             document.getElementById('modalContent').innerHTML = html;
+            document.getElementById('modalTextarea').style.display = "none";
             document.getElementById('modalButtons').innerHTML = '<button class="btn-modal btn-cancel" onclick="tancarModal()">Tancar</button>';
             document.getElementById('customModal').style.display = 'flex';
         }
 
-        function checkAlergies() {
-            const teAlergies = document.getElementById('in-te-alergies').value;
-            document.getElementById('group-detall-alergies').style.display = teAlergies === "Sí" ? "block" : "none";
+        function checkAlergies() { document.getElementById('group-detall-alergies').style.display = document.getElementById('in-te-alergies').value === "Sí" ? "block" : "none"; }
+        function checkDependencia() { document.getElementById('group-grau').style.display = document.getElementById('in-dependencia').value === "Sí" ? "block" : "none"; }
+        
+        function openTab(evt, name) { 
+            document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active")); 
+            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); 
+            document.getElementById(name).classList.add("active"); 
+            if(evt) evt.currentTarget.classList.add("active");
+            else {
+                const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.innerText.toLowerCase().includes(name.substring(0,4)));
+                if(btn) btn.classList.add('active');
+            }
         }
 
-        function checkDependencia() {
-            const dep = document.getElementById('in-dependencia').value;
-            document.getElementById('group-grau').style.display = dep === "Sí" ? "block" : "none";
-        }
-
-        function openTab(evt, name) {
-            document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-            document.getElementById(name).classList.add("active");
-            evt.currentTarget.classList.add("active");
-        }
-
-        function toggleEdit() {
-            document.body.classList.toggle('is-editing');
-            const isEdit = document.body.classList.contains('is-editing');
-            document.getElementById('btnEdit').style.display = isEdit ? 'none' : 'block';
-            document.getElementById('btnSaveMain').style.display = isEdit ? 'block' : 'none';
+        function toggleEdit() { document.body.classList.toggle('is-editing'); const is = document.body.classList.contains('is-editing'); document.getElementById('btnEdit').style.display = is ? 'none' : 'block'; document.getElementById('btnSaveMain').style.display = is ? 'block' : 'none'; }
+        
+        function canviarEstatExpedient() { 
+            const msg = usuariActual.estat === "Inactiu" ? "Vols tornar a activar l'expedient?" : "Segur que vols donar de baixa l'expedient?";
+            if(confirm(msg)) { 
+                usuariActual.estat = usuariActual.estat === "Inactiu" ? "Actiu" : "Inactiu"; 
+                location.reload(); 
+            } 
         }
 
         function tancarModal() { document.getElementById('customModal').style.display = 'none'; }
 
-        function confirmSave() {
-            usuariActual.nom = document.getElementById('in-nom').value;
-            usuariActual.cognoms = document.getElementById('in-cognoms').value;
-            usuariActual.dni = document.getElementById('in-dni').value;
-            usuariActual.mobil = document.getElementById('in-mobil').value;
-            
-            const getValues = (containerId) => {
-                return Array.from(document.getElementById(containerId).querySelectorAll('.allergy-input'))
-                            .map(i => i.value.trim())
-                            .filter(v => v !== "");
-            };
-
-            usuariActual.salut = {
-                te_alergies: document.getElementById('in-te-alergies').value,
-                alergies_detall: {
-                    amb: getValues('inputs-amb'),
-                    med: getValues('inputs-med'),
-                    ali: getValues('inputs-ali')
-                },
-                tda: document.getElementById('in-tda').value,
-                tdha: document.getElementById('in-tdha').value,
-                dependencia: document.getElementById('in-dependencia').value,
-                grau: document.getElementById('in-dependencia').value === "Sí" ? document.getElementById('in-grau').value : "",
-                observacions: document.getElementById('in-observacions_mediques').value
-            };
-
-            if (typeof desatElectronic === 'function') desatElectronic();
-            location.reload();
+        function pintarSeguiment() {
+            const c = document.getElementById('llista-seguiment');
+            c.innerHTML = (usuariActual.seguiment || []).map(s => `
+                <div class="item-card" style="display:block">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <small><b>Data d'atenció: ${s.data}</b></small>
+                        <small style="color:#2563eb; cursor:pointer">Veure més</small>
+                    </div>
+                    <p style="margin:5px 0; font-size:0.95rem; line-height:1.4; color:#334155;">${s.text}</p>
+                </div>
+            `).join('') || "<p style='color:#94a3b8; padding:20px; text-align:center;'>Sense registres de seguiment encara.</p>";
         }
 
         function pintarFamilia(u) {
-            const container = document.getElementById('llista-familia');
-            if (!u.familia || u.familia.length === 0) {
-                container.innerHTML = "<p style='color:#94a3b8'>No hi ha familiars vinculats.</p>";
-                return;
-            }
-            container.innerHTML = u.familia.map(f => {
-                const familiar = BBDD.expedients.find(e => e.id === f.id);
+            const c = document.getElementById('llista-familia');
+            if (!u.familia || u.familia.length === 0) { c.innerHTML = "<p style='color:#94a3b8; padding:10px;'>No hi ha familiars vinculats.</p>"; return; }
+            c.innerHTML = u.familia.map(f => {
+                const fam = BBDD.expedients.find(e => e.id === f.id);
                 return `
-                    <div class="item-card">
-                        <div>
-                            <span class="label" style="margin:0">${f.parentiu}</span>
-                            <span class="value">${familiar ? familiar.nom + ' ' + familiar.cognoms : 'Expedient no trobat'}</span>
-                        </div>
-                        <a href="perfil.html?id=${f.id}" class="btn-link">Veure Perfil</a>
-                    </div>`;
+                <div class="item-card">
+                    <div>
+                        <span class="label" style="margin:0">${f.parentiu}</span>
+                        <span class="value" style="font-size:1.1rem">${fam ? fam.nom + ' ' + fam.cognoms : 'No trobat'}</span>
+                    </div>
+                    <a href="perfil.html?id=${f.id}" class="btn-link">Anar al perfil →</a>
+                </div>`;
             }).join('');
         }
 
         function pintarActivitats(u) {
-            const list = document.getElementById('llista-activitats');
-            list.innerHTML = (u.programes || []).map(p => `<div class="item-card"><span>${p}</span><b>ACTIU</b></div>`).join('');
+            const l = document.getElementById('llista-activitats');
+            l.innerHTML = (u.programes || []).map(p => `
+                <div class="item-card" style="border-left: 4px solid #10b981;">
+                    <div>
+                        <span style="font-weight:700; color:#1e293b; display:block;">${p}</span>
+                        <small style="color:#64748b;">Estat: Inscrit</small>
+                    </div>
+                    <span style="background:#dcfce7; color:#16a34a; padding:4px 10px; border-radius:12px; font-size:0.75rem; font-weight:700;">ACTIU</span>
+                </div>
+            `).join('') || "<p style='color:#94a3b8; padding:10px;'>L'usuari no participa actualment en cap programa.</p>";
+        }
+
+        function confirmSave() {
+            // Sincronització de dades des dels inputs al objecte usuari
+            usuariActual.nom = document.getElementById('in-nom').value; 
+            usuariActual.cognoms = document.getElementById('in-cognoms').value; 
+            usuariActual.cognom2 = document.getElementById('in-cognom2').value;
+            usuariActual.dni = document.getElementById('in-dni').value; 
+            usuariActual.naixement = document.getElementById('in-naixement').value;
+            usuariActual.mobil = document.getElementById('in-mobil').value; 
+            usuariActual.email = document.getElementById('in-email').value;
+            usuariActual.salut.te_alergies = document.getElementById('in-te-alergies').value;
+            usuariActual.salut.alergies_detall = { 
+                amb: Array.from(document.getElementById('inputs-amb').querySelectorAll('input')).map(i => i.value.trim()).filter(v => v),
+                med: Array.from(document.getElementById('inputs-med').querySelectorAll('input')).map(i => i.value.trim()).filter(v => v),
+                ali: Array.from(document.getElementById('inputs-ali').querySelectorAll('input')).map(i => i.value.trim()).filter(v => v)
+            };
+            usuariActual.salut.dependencia = document.getElementById('in-dependencia').value;
+            usuariActual.salut.grau = usuariActual.salut.dependencia === "Sí" ? document.getElementById('in-grau').value : "";
+            usuariActual.salut.observacions = document.getElementById('in-observacions_mediques').value;
+            
+            toggleEdit();
+            carregarPerfil();
+            alert("Dades actualitzades correctament.");
         }
     </script>
 </body>

@@ -1,41 +1,89 @@
-/* 1. Asegurar que la página ocupe todo el alto */
+/* 1. ESTRUCTURA GLOBAL Y RESET */
 html, body {
     height: 100%;
     margin: 0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: #f8fafc;
 }
 
 body {
     display: flex;
-    flex-direction: column; /* Apila el contenido verticalmente */
+    flex-direction: column; /* Apila contenido verticalmente */
     min-height: 100vh;
 }
 
-/* 2. El contenido principal ocupa el espacio disponible */
+/* 2. CONTENIDO PRINCIPAL */
 .main-content {
-    flex: 1; /* Esto empuja el footer hacia abajo */
-    padding-bottom: 40px; /* Espacio para que el contenido no toque el footer */
-    /* ... otros estilos que ya tengas ... */
+    flex: 1; /* Empuja el footer hacia abajo si hay poco contenido */
+    margin-left: 250px; /* Deja espacio para el sidebar */
+    width: calc(100% - 250px);
+    padding: 40px;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
 }
 
-/* 3. Estilos del Footer */
+/* Ajuste para pantallas pequeñas (Móviles) */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 20px;
+    }
+}
+
+/* 3. TAULER D'AVISOS (ESTILOS ESPECÍFICOS) */
+.aviso-banner { 
+    padding: 15px; 
+    border-radius: 8px; 
+    border: 1px solid #facc15; 
+    background: #fef08a; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 5px; 
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.1); 
+    position: relative; 
+}
+
+.prio-alta { border-left: 8px solid #ef4444; }
+.prio-mitja { border-left: 8px solid #f59e0b; }
+.prio-baixa { border-left: 8px solid #2563eb; }
+
+.aviso-meta { 
+    display: flex; 
+    justify-content: space-between; 
+    font-size: 0.75rem; 
+    color: #854d0e; 
+    font-weight: 700; 
+}
+
+.aviso-titol { 
+    font-weight: 800; 
+    color: #1e293b; 
+    font-size: 1rem; 
+    border-bottom: 1px solid rgba(0,0,0,0.05); 
+    padding-bottom: 3px; 
+}
+
+/* 4. SECCIÓN DE BIENVENIDA */
+.welcome-section {
+    margin-top: 20px;
+    padding: 40px;
+    background: white;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    text-align: center;
+}
+
+/* 5. ESTILOS DEL FOOTER */
 .main-footer {
-    background-color: white; /* O un gris muy claro #f8fafc */
+    background-color: white;
     padding: 15px 40px;
     border-top: 1px solid #e2e8f0;
     font-size: 0.85rem;
     color: #64748b;
-    /* Esto asegura que el sidebar no lo tape si es fijo */
-    width: calc(100% - 250px); /* Suponiendo que tu sidebar mide 250px */
+    width: calc(100% - 250px); /* Ajustado al sidebar */
     margin-left: 250px;
     box-sizing: border-box;
-}
-
-/* Ajuste si el sidebar no es fijo o mide distinto */
-@media (max-width: 768px) {
-    .main-footer {
-        width: 100%;
-        margin-left: 0;
-    }
 }
 
 .footer-content {
@@ -46,6 +94,14 @@ body {
     margin: 0 auto;
 }
 
+@media (max-width: 768px) {
+    .main-footer {
+        width: 100%;
+        margin-left: 0;
+        padding: 15px 20px;
+    }
+}
+
 .author-tag {
     background: #f1f5f9;
     padding: 5px 12px;
@@ -54,5 +110,5 @@ body {
 }
 
 .author-tag strong {
-    color: #2563eb; /* Un color azul para tu nombre */
+    color: #2563eb;
 }

@@ -5,104 +5,52 @@
     <title>NexeSocial - Accés Protegit</title>
     <link rel="stylesheet" href="style-dashboard.css">
     <style>
+        /* Mantenim els teus estils originals que són excel·lents */
         .login-body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh; /* Altura fixa de la pantalla */
-            background: url('img/fondo-login.png') no-repeat center center fixed;
-            background-size: cover;
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden; /* Evita qualsevol intent de fer scroll */
+            display: flex; align-items: center; justify-content: center;
+            height: 100vh; background: url('img/fondo-login.png') no-repeat center center fixed;
+            background-size: cover; margin: 0; font-family: 'Inter', sans-serif; overflow: hidden;
         }
         
         .login-card {
-            background: rgba(255, 255, 255, 0.8); 
-            backdrop-filter: blur(12px);
-            padding: 40px;
-            border-radius: 24px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
-            width: 100%;
-            max-width: 380px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            /* Eliminat el margin-bottom gran per evitar el scroll */
-            position: relative;
-            z-index: 1;
-            transform: translateY(-20px); /* Pugem una mica la caixa per estètica */
+            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px);
+            padding: 40px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+            width: 100%; max-width: 380px; text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.4); transform: translateY(-20px);
         }
 
         .login-card img { width: 140px; margin-bottom: 25px; }
-        .login-card h2 { color: #1e293b; margin-bottom: 8px; font-size: 1.5rem; }
-        .login-card p { color: #64748b; font-size: 0.9rem; margin-bottom: 30px; }
-        
         .input-group { text-align: left; margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 5px; margin-left: 5px; }
+        .input-group label { display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 5px; }
         .input-group input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: 0.3s;
-            box-sizing: border-box;
-            background: rgba(255, 255, 255, 0.5);
+            width: 100%; padding: 12px 15px; border: 1.5px solid #e2e8f0;
+            border-radius: 10px; font-size: 1rem; box-sizing: border-box; background: rgba(255, 255, 255, 0.5);
         }
-        .input-group input:focus { border-color: #2563eb; outline: none; background: white; }
-
         .btn-login {
-            width: 100%;
-            padding: 14px;
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 10px;
+            width: 100%; padding: 14px; background: #2563eb; color: white; border: none;
+            border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 10px;
         }
-        .btn-login:hover { background: #1d4ed8; transform: translateY(-1px); }
+        #error-msg { color: #ef4444; font-size: 0.85rem; margin-top: 15px; display: none; }
         
-        #error-msg { color: #ef4444; font-size: 0.85rem; margin-top: 15px; font-weight: 500; display: none; }
-        
-        .main-footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.6); 
-            backdrop-filter: blur(8px);
-            padding: 15px 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
-            z-index: 10;
-        }
-        .footer-content {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            font-size: 0.75rem;
-            color: #475569;
-        }
-        .author-tag strong { color: #2563eb; }
-
         @keyframes shake {
             0%, 100% {transform: translateX(0);}
             25% {transform: translateX(-8px);}
             75% {transform: translateX(8px);}
         }
+
+        .main-footer { position: fixed; bottom: 0; width: 100%; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(8px); padding: 15px 0; }
     </style>
 </head>
 <body class="login-body">
+
     <div class="login-card">
         <img src="img/NexeSocial-logo.png" alt="Logo NexeSocial">
-        <h2>Benvingut de nou</h2>
-        <p>Introdueix les teves credencials de demostració</p>
+        <h2 style="color: #1e293b; margin-bottom: 8px;">Benvingut de nou</h2>
+        <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 30px;">Gestió d'usuaris centralitzada</p>
         
         <div class="input-group">
-            <label>Usuari</label>
-            <input type="text" id="userInput" placeholder="Ex: admin">
+            <label>Correu Electrònic</label>
+            <input type="email" id="userInput" placeholder="Ex: admin@nexesocial.com">
         </div>
         
         <div class="input-group">
@@ -112,40 +60,45 @@
 
         <button class="btn-login" onclick="intentarLogin()">Accedir al Sistema</button>
         
-        <p id="error-msg">⚠️ Usuari o contrasenya incorrectes</p>
+        <p id="error-msg">⚠️ Credencials incorrectes o sense accés</p>
 
         <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.05);">
-            <p style="font-size: 0.7rem; color: #64748b;">USUARI DEMO: <b>admin</b> | PASS: <b>nexe2026</b></p>
+            <p style="font-size: 0.7rem; color: #64748b;">ACCÉS ADMIN: <b>admin@nexesocial.com</b> | PASS: <b>1234</b></p>
         </div>
     </div>
 
     <footer class="main-footer">
-        <div class="footer-content">
-            <span>© 2026 NexeSocial - Sistema de Gestió</span>
-            <span class="author-tag">Desenvolupat amb ❤️ per <strong>Rafa Campos</strong></span>
+        <div style="display: flex; justify-content: space-around; font-size: 0.75rem; color: #475569;">
+            <span>© 2026 NexeSocial</span>
+            <span>Desenvolupat per <strong>Rafa Campos</strong></span>
         </div>
     </footer>
 
+    <script src="database.js"></script>
+
     <script>
         function intentarLogin() {
-            const user = document.getElementById('userInput').value;
+            const email = document.getElementById('userInput').value;
             const pass = document.getElementById('passInput').value;
             const error = document.getElementById('error-msg');
+            const card = document.querySelector('.login-card');
 
-            if(user === "admin" && pass === "nexe2026") {
+            // Usem la funció Auth que hem definit a database.js
+            if (Auth.login(email, pass)) {
+                // Si el login és correcte, anem a la Home
                 window.location.href = 'home.html';
             } else {
+                // Si falla, efecte de vibració
                 error.style.display = 'block';
-                const card = document.querySelector('.login-card');
                 card.style.animation = "shake 0.4s";
                 setTimeout(() => { card.style.animation = ""; }, 400);
             }
         }
 
+        // Permetre entrar amb la tecla Enter
         document.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') intentarLogin();
         });
     </script>
-    <script src="database.js"></script>
 </body>
 </html>

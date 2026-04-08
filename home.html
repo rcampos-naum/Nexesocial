@@ -62,8 +62,7 @@
     </main>
 
     <footer class="footer-firma">
-        <span>© 2026 NexeSocial - Sistema de Gestió</span>
-    </footer>
+        </footer>
 
     <script src="database.js"></script>
     <script>
@@ -71,7 +70,6 @@
             const cont = document.getElementById('contenedor-avisos-home');
             const countLabel = document.getElementById('contador-avisos');
             
-            // CANVI CLAU: Llegim de localStorage en lloc de BBDD.avisos
             const avisos = JSON.parse(localStorage.getItem('nexe_avisos')) || [];
 
             countLabel.innerText = `${avisos.length} avisos actius`;
@@ -83,7 +81,6 @@
             }
 
             cont.style.display = "grid";
-            // .reverse() per veure primer els més nous
             cont.innerHTML = avisos.slice().reverse().map(a => `
                 <div class="aviso-banner prio-${a.prioritat}">
                     <div class="aviso-meta">
@@ -96,7 +93,6 @@
             `).join('');
         }
 
-        // Tornar a carregar si l'usuari canvia de pestanya i torna
         window.addEventListener('focus', carregarAvisosPrioritaris);
         document.addEventListener('DOMContentLoaded', carregarAvisosPrioritaris);
     </script>

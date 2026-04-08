@@ -5,314 +5,128 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NexePsy - Suite Psicosocial</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        :root {
-            --psy-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-            --psy-soft: #f5f3ff;
-            --nexe-dark: #0f172a;
-            --nexe-bg: #f8fafc;
-            --sidebar-width: 280px;
-            --transition: all 0.2s ease;
-        }
-
         * { box-sizing: border-box; }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Inter', sans-serif; background-color: var(--nexe-bg); color: var(--nexe-dark); overflow: hidden; }
-
-        .nexepsy-app { display: flex; width: 100vw; height: 100vh; }
-
-        /* --- SIDEBAR --- */
-        .psy-sidebar { 
-            width: var(--sidebar-width); height: 100%; background: white; 
-            border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; 
+        body { 
+            margin: 0; background-color: #f8fafc; color: #1e293b; 
+            font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; 
         }
 
-        .back-to-nexe { padding: 15px 20px; }
-        .btn-back { 
-            width: auto; padding: 8px 14px; background: #f8fafc; border: 1px solid #e2e8f0; 
-            border-radius: 10px; color: #64748b; font-weight: 600; font-size: 0.75rem; 
-            cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: var(--transition);
+        .main-content {
+            flex-grow: 1;
+            margin-left: 280px; 
+            padding: 40px 60px;
+            max-width: 100%;
+            transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .btn-back:hover { background: #f1f5f9; color: var(--nexe-dark); border-color: #cbd5e1; }
 
-        .psy-brand { padding: 10px 20px 25px; }
-        .logo-svg { width: 100%; height: auto; max-width: 200px; }
-
-        .psy-menu { flex-grow: 1; padding: 0 12px; }
-        .menu-label { font-size: 0.6rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin: 20px 0 8px 12px; letter-spacing: 0.05em; }
-        .menu-item { 
-            width: 100%; padding: 10px 12px; margin-bottom: 2px; border: none; background: transparent; 
-            border-radius: 10px; display: flex; align-items: center; gap: 10px; color: #64748b; 
-            font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: var(--transition); text-align: left;
+        body.collapsed .main-content {
+            margin-left: 85px;
         }
-        .menu-item:hover, .menu-item.active { background: var(--psy-soft); color: #6366f1; }
-        .menu-item svg { width: 18px; height: 18px; stroke-width: 2px; }
 
-        /* --- CONTENT AREA --- */
-        .psy-content-area { flex-grow: 1; overflow-y: auto; padding: 40px 50px; }
-        .psy-view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .psy-view-header h1 { font-size: 2.2rem; font-weight: 800; margin: 4px 0 0; letter-spacing: -0.04em; }
-        .welcome-tag { color: #6366f1; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; }
-
-        .search-container { margin-bottom: 30px; position: relative; display: flex; gap: 10px; }
+        .search-container { margin-bottom: 35px; position: relative; display: flex; gap: 10px; max-width: 800px; }
         .search-input { 
-            flex-grow: 1; padding: 15px 20px 15px 45px; border-radius: 15px; border: 2px solid #e2e8f0;
-            background: white; font-size: 0.95rem; outline: none; transition: var(--transition);
+            flex-grow: 1; padding: 16px 20px 16px 50px; border-radius: 18px; border: 2px solid #e2e8f0;
+            background: white; font-size: 1rem; outline: none; transition: 0.2s;
         }
         .search-input:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
-        .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        .search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
 
-        .case-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+        .case-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 25px; margin-bottom: 80px; }
         .case-card { 
-            background: white; border-radius: 24px; padding: 28px; 
-            border: 1px solid #e2e8f0; transition: var(--transition);
+            background: white; border-radius: 28px; padding: 35px; 
+            border: 1px solid #e2e8f0; transition: 0.3s; position: relative;
+            display: flex; flex-direction: column;
         }
-        .case-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -10px rgba(0,0,0,0.1); border-color: #c7d2fe; }
-        .case-id { font-size: 0.65rem; font-weight: 800; color: #6366f1; margin-bottom: 5px; display: block; }
-        .case-card h3 { font-size: 1.25rem; margin: 0 0 10px; font-weight: 700; }
-        .case-card p { color: #64748b; font-size: 0.9rem; margin-bottom: 25px; }
+        .case-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.05); border-color: #6366f1; }
+        .case-id { font-size: 0.75rem; font-weight: 800; color: #6366f1; margin-bottom: 10px; text-transform: uppercase; }
+        .case-card h3 { font-size: 1.5rem; margin: 0 0 15px; font-weight: 800; color: #0f172a; letter-spacing: -0.03em; }
+        .case-card p { color: #64748b; font-size: 0.95rem; line-height: 1.6; margin-bottom: 30px; flex-grow: 1; }
 
         .btn-nexe-sm { 
-            padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 0.8rem; 
-            border: none; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 8px;
+            display: inline-flex !important;
+            align-items: center; 
+            justify-content: center;
+            padding: 14px 24px; 
+            border-radius: 15px; 
+            font-weight: 700; 
+            font-size: 0.85rem; 
+            border: none; 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            text-decoration: none !important;
+            text-align: center;
         }
-        .btn-psy-primary { background: var(--psy-gradient); color: white; }
-        .btn-psy-secondary { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
-        .btn-psy-dark { background: var(--nexe-dark); color: white; }
 
-        .psy-user-profile { padding: 15px; border-top: 1px solid #f1f5f9; display: flex; align-items: center; gap: 10px; }
-        .avatar-psy { width: 34px; height: 34px; border-radius: 8px; background: var(--psy-soft); color: #6366f1; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; }
-
-        /* --- MODALS --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(5px);
-            display: none; align-items: center; justify-content: center; z-index: 1000;
-        }
-        .modal-content { background: white; padding: 35px; border-radius: 24px; width: 450px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.2); position: relative; }
-        .modal-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.02em; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 0.7rem; font-weight: 800; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
-        .form-group input, .form-group select { 
-            width: 100%; padding: 12px; border: 2px solid #f1f5f9; border-radius: 12px; 
-            font-family: inherit; font-size: 0.9rem; outline: none; transition: var(--transition);
-        }
-        .form-group input:focus { border-color: #6366f1; }
+        .btn-psy-primary { background: #6366f1 !important; color: white !important; }
+        .btn-psy-secondary { background: #f1f5f9 !important; color: #475569 !important; }
+        .btn-psy-dark { background: #0f172a !important; color: white !important; }
         
-        /* LOGOS TERCEROS */
-        .logos-preview { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; max-height: 200px; overflow-y: auto; padding-right: 5px; }
-        .logo-row { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 10px 15px; border-radius: 12px; border: 1px solid #e2e8f0; }
-        .upload-area { border: 2px dashed #cbd5e1; border-radius: 15px; padding: 20px; text-align: center; cursor: pointer; transition: var(--transition); }
-        .upload-area:hover { border-color: #6366f1; background: #f5f3ff; }
+        .btn-nexe-sm:hover { opacity: 0.9; transform: translateY(-2px); }
 
-        .btn-delete-logo { background: none; border: none; color: #ef4444; cursor: pointer; padding: 5px; display: flex; align-items: center; border-radius: 5px; transition: var(--transition); }
-        .btn-delete-logo:hover { background: #fee2e2; }
-        
-        /* Custom Scrollbar per llistats */
-        #searchAltaResults::-webkit-scrollbar, .logos-preview::-webkit-scrollbar { width: 6px; }
-        #searchAltaResults::-webkit-scrollbar-thumb, .logos-preview::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        @media (max-width: 768px) {
+            .main-content { margin-left: 0 !important; padding: 20px; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="nexepsy-app">
-        <aside class="psy-sidebar">
-            <div class="back-to-nexe">
-                <button class="btn-back" onclick="window.location.href='home.html'">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                    Tornar a NexeSocial
-                </button>
-            </div>
-            
-            <div class="psy-brand">
-                <svg class="logo-svg" viewBox="0 0 220 65" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
-                        </linearGradient>
-                    </defs>
-                    <g transform="translate(10, 15)">
-                        <path d="M5 25 Q15 5 25 25 T5 25" fill="none" stroke="url(#logoGrad)" stroke-width="3.5" stroke-linecap="round"/>
-                        <circle cx="15" cy="25" r="4.5" fill="#1e293b"/>
-                        <circle cx="5" cy="25" r="2.5" fill="url(#logoGrad)"/><circle cx="25" cy="25" r="2.5" fill="url(#logoGrad)"/>
-                    </g>
-                    <g transform="translate(50, 38)">
-                        <text font-family="Inter, sans-serif" font-weight="800" font-size="34" letter-spacing="-2" fill="#1e293b">Nexe<tspan font-weight="600" fill="url(#logoGrad)">Psy</tspan></text>
-                        <text y="16" font-family="Inter, sans-serif" font-weight="600" font-size="10" fill="#94a3b8" letter-spacing="-0.5">SUITE PSICOSOCIAL</text>
-                    </g>
-                </svg>
-            </div>
+    <div id="sidebar-container"></div>
 
-            <nav class="psy-menu">
-                <div class="menu-label">Intervenció</div>
-                <button class="menu-item active">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-width="2"></path></svg>
-                    Seguiment de Famílies
-                </button>
-                <button class="menu-item" onclick="mostrarModalGenograma()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-width="2"></path></svg>
-                    Genograma Lliure
-                </button>
-                <div class="menu-label">Configuració</div>
-                <button class="menu-item" onclick="mostrarModalLogos()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h14a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="2"></path></svg>
-                    Logos Finançadors
-                </button>
-            </nav>
-
-            <div class="psy-user-profile">
-                <div class="avatar-psy">PS</div>
-                <div>
-                    <div style="font-weight: 700; font-size: 0.8rem;">Pau Soler</div>
-                    <div style="font-size: 0.65rem; color: #94a3b8;">Psicòleg Clínic</div>
-                </div>
+    <main class="main-content">
+        <header style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px;">
+            <div>
+                <span style="color: #6366f1; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Gestió de Casos</span>
+                <h1 style="font-size: 2.8rem; font-weight: 800; margin: 8px 0 0; letter-spacing: -0.05em; color: #0f172a;">Seguiment Actiu</h1>
             </div>
-        </aside>
-
-        <main class="psy-content-area">
-            <header class="psy-view-header">
-                <div>
-                    <span class="welcome-tag">Gestió de casos</span>
-                    <h1>Seguiment Actiu</h1>
-                </div>
-                <button class="btn-nexe-sm btn-psy-dark" onclick="mostrarModalAlta()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18"><path d="M12 4v16m8-8H4" stroke-width="2.5" stroke-linecap="round"></path></svg>
-                    Nova Alta Psicosocial
-                </button>
-            </header>
-
-            <div class="search-container">
-                <svg class="search-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2.5" stroke-linecap="round"></path></svg>
-                <input type="text" id="mainSearch" class="search-input" placeholder="Cerca família per cognoms o ID d'expedient..." onkeyup="filtrarCasos()">
-            </div>
-
-            <div class="case-grid" id="caseContainer"></div>
-        </main>
-    </div>
-
-    <div class="modal-overlay" id="modalAlta" onclick="cerrarSiFuera(event, 'modalAlta')">
-        <div class="modal-content" style="width: 550px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <div class="modal-title" style="margin: 0;">Nova Alta al Programa</div>
-                <button onclick="tancarModals()" style="background:none; border:none; color:#94a3b8; cursor:pointer;">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round"/></svg>
-                </button>
-            </div>
-            <div class="form-group">
-                <label>Cercar per ID o Cognoms (Base de dades general)</label>
-                <input type="text" id="searchAltaInput" placeholder="Ex: FAM-102 o García..." onkeyup="buscarParaAlta()">
-            </div>
-            <div id="altaSugeridosLabel" class="menu-label" style="margin-left: 0; margin-top: 10px;">Resultats i Suggeriments</div>
-            <div id="searchAltaResults" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-height: 250px; overflow-y: auto; padding: 5px; margin-top: 5px;"></div>
-            <div id="confirmAltaSection" style="display:none; margin-top:20px; padding:20px; background:#f8fafc; border-radius:15px; border: 1px solid #e2e8f0;">
-                <div style="margin-bottom:15px;">
-                    <span class="case-id">Assignació d'expedient</span>
-                    <div id="selectedFamDisplay" style="font-weight:700; font-size:1.1rem; color:var(--nexe-dark);"></div>
-                </div>
-                <div class="form-group">
-                    <label>Nou Número d'Expedient Psicosocial</label>
-                    <input type="text" id="newExpId" readonly style="background:#fff; font-weight:700; color:#6366f1;">
-                </div>
-                <div style="display:flex; gap:10px; margin-top:20px;">
-                    <button class="btn-nexe-sm btn-psy-secondary" style="flex:1; justify-content: center;" onclick="tancarModals()">Cancel·lar</button>
-                    <button class="btn-nexe-sm btn-psy-primary" style="flex:1; justify-content: center;" onclick="confirmarAlta()">Confirmar Alta</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modalGenograma" onclick="cerrarSiFuera(event, 'modalGenograma')">
-        <div class="modal-content">
-            <div class="modal-title">Genograma Lliure</div>
-            <div class="form-group">
-                <label>Cognoms de la Família</label>
-                <input type="text" id="freeFamName" placeholder="Ex: Pérez Garcia">
-            </div>
-            <div class="form-group">
-                <label>Tècnic/a responsable</label>
-                <input type="text" id="freeTecName" value="Pau Soler">
-            </div>
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button class="btn-nexe-sm btn-psy-secondary" style="flex:1" onclick="tancarModals()">Tornar</button>
-                <button class="btn-nexe-sm btn-psy-primary" style="flex:1" onclick="anarAGenogramaLliure()">Obrir Editor</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modalLogos" onclick="cerrarSiFuera(event, 'modalLogos')">
-        <div class="modal-content">
-            <div class="modal-title">Logos de Finançadors</div>
-            <p style="font-size: 0.8rem; color: #64748b; margin-top: -15px; margin-bottom: 20px;">Activa els logos que vols que apareguin als informes exportats.</p>
-            <div class="logos-preview" id="logosList">
-                <div class="logo-row">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <input type="checkbox" checked>
-                        <span>Logo Generalitat</span>
-                    </div>
-                    <button class="btn-delete-logo" onclick="eliminarLogo(this)"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                </div>
-                <div class="logo-row">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <input type="checkbox" checked>
-                        <span>Logo Ajuntament</span>
-                    </div>
-                    <button class="btn-delete-logo" onclick="eliminarLogo(this)"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                </div>
-            </div>
-            <button class="btn-nexe-sm btn-psy-primary" style="width:100%; margin-top:15px; justify-content: center;" onclick="abrirSubirLogo()">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="2"/></svg>
-                Afegir Nou Logo
+            <button onclick="alert('Funcionalitat en desenvolupament')" class="btn-nexe-sm btn-psy-dark">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" stroke-width="3" style="margin-right: 8px;"><path d="M12 4v16m8-8H4" stroke-linecap="round"/></svg>
+                Nova Alta
             </button>
-            <button class="btn-nexe-sm btn-psy-dark" style="width:100%; margin-top:20px; justify-content: center;" onclick="tancarModals()">Guardar Configuració</button>
-        </div>
-    </div>
+        </header>
 
-    <div class="modal-overlay" id="modalUploadLogo" style="z-index: 1100; background: rgba(0,0,0,0.4);">
-        <div class="modal-content" style="width: 400px; border: 1px solid #e2e8f0;">
-            <div class="modal-title" style="font-size: 1.1rem;">Carregar Imatge</div>
-            <div class="form-group">
-                <label>A qui pertany el logo?</label>
-                <input type="text" id="logoOwner" placeholder="Ex: Consell Comarcal...">
-            </div>
-            <div class="upload-area" onclick="document.getElementById('fileInput').click()" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)">
-                <svg width="30" height="30" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#94a3b8; margin-bottom:10px;"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <p style="font-size: 0.8rem; color:#64748b; margin:0;">Clica per seleccionar o arrossega la imatge</p>
-                <input type="file" id="fileInput" hidden accept="image/*" onchange="fileSelected()">
-            </div>
-            <div id="fileName" style="font-size: 0.7rem; color: #6366f1; margin-top:10px; font-weight:700;"></div>
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button class="btn-nexe-sm btn-psy-secondary" style="flex:1; justify-content: center;" onclick="document.getElementById('modalUploadLogo').style.display='none'">Tornar</button>
-                <button class="btn-nexe-sm btn-psy-primary" style="flex:1; justify-content: center;" onclick="confirmarSubidaLogo()">Afegir</button>
-            </div>
+        <div class="search-container">
+            <svg class="search-icon" width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round"/></svg>
+            <input type="text" id="mainSearch" class="search-input" placeholder="Cerca cognoms o expedient..." onkeyup="filtrarCasos()">
         </div>
-    </div>
+
+        <div class="case-grid" id="caseContainer"></div>
+    </main>
+
+    <script src="sidebar-nexepsy.js"></script>
 
     <script>
-        let BBDD_PSICO = {
+        const BBDD_PSICO = {
             families: [
-                { id: "EXP-2024-001", cognoms: "García Martí", obs: "Seguiment de dinàmiques de comunicació post-trauma." },
-                { id: "EXP-2024-002", cognoms: "Sánchez Pérez", obs: "Pendent d'avaluació inicial del nucli de convivència." }
+                { id: "EXP-2024-001", cognoms: "García Martí", obs: "Seguiment de dinàmiques de comunicació post-trauma i suport emocional continu." },
+                { id: "EXP-2024-002", cognoms: "Sánchez Pérez", obs: "Pendent d'avaluació inicial del nucli de convivència i mapping de xarxa social." },
+                { id: "EXP-2024-003", cognoms: "Rodríguez López", obs: "Intervenció sistèmica en curs. Treballant límits i rols familiars." },
+                { id: "EXP-2024-004", cognoms: "Fernández Belmonte", obs: "Situació d'alta vulnerabilitat. Coordinació amb serveis educatius." }
             ]
         };
 
-        const BBDD_GENERAL = [
-            { id: "FAM-0099", cognoms: "Vila Mas" },
-            { id: "FAM-0102", cognoms: "Romero Soler" },
-            { id: "FAM-0055", cognoms: "López Hurtado" },
-            { id: "FAM-0210", cognoms: "Pérez Reverte" },
-            { id: "FAM-0344", cognoms: "Duran i Lleida" },
-            { id: "FAM-0156", cognoms: "Martorell Sans" }
-        ];
-
-        let familiaSeleccionadaParaAlta = null;
+        function prepararAcceso(id, cognoms) {
+            // Guardamos datos básicos en localStorage para que el editor de informes los recoja
+            const data = {
+                id: id,
+                apellidos: cognoms,
+                tecnico: "Professional de NexePsy"
+            };
+            localStorage.setItem('familia_data', JSON.stringify(data));
+        }
 
         function cargarCasos(filtro = "") {
             const container = document.getElementById('caseContainer');
+            if (!container) return;
+            
             container.innerHTML = "";
+            
             const filtrados = BBDD_PSICO.families.filter(f => 
                 f.cognoms.toLowerCase().includes(filtro.toLowerCase()) || 
                 f.id.toLowerCase().includes(filtro.toLowerCase())
             );
+            
             filtrados.forEach(f => {
                 const card = document.createElement('div');
                 card.className = 'case-card';
@@ -320,138 +134,29 @@
                     <span class="case-id">${f.id}</span>
                     <h3>Família ${f.cognoms}</h3>
                     <p>${f.obs}</p>
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn-nexe-sm btn-psy-primary" onclick="alert('Mòdul d\'informes en desenvolupament...')">Nou Informe</button>
-                        <button class="btn-nexe-sm btn-psy-secondary" onclick="window.location.href='genograma_editor.html?id_familia=${f.id}'">Genograma</button>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                        <a href="informe-psicosocial.html?famId=${f.id}&name=${encodeURIComponent(f.cognoms)}" 
+                           onclick="prepararAcceso('${f.id}', '${f.cognoms}')"
+                           class="btn-nexe-sm btn-psy-primary">
+                            Nou Informe
+                        </a>
+                        <a href="genograma_editor.html?famId=${f.id}" 
+                           class="btn-nexe-sm btn-psy-secondary">
+                            Genograma
+                        </a>
                     </div>`;
                 container.appendChild(card);
             });
         }
 
-        function filtrarCasos() { cargarCasos(document.getElementById('mainSearch').value); }
-
-        function tancarModals() { 
-            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); 
-            document.getElementById('confirmAltaSection').style.display = 'none';
+        function filtrarCasos() { 
+            const val = document.getElementById('mainSearch').value;
+            cargarCasos(val); 
         }
 
-        function cerrarSiFuera(event, id) {
-            if (event.target.id === id) tancarModals();
-        }
-
-        window.onkeydown = function(event) {
-            if (event.key === "Escape") tancarModals();
-        };
-
-        function mostrarModalAlta() { 
-            document.getElementById('modalAlta').style.display = 'flex';
-            document.getElementById('searchAltaInput').value = "";
-            document.getElementById('searchAltaInput').focus();
-            renderizarSugeridos(""); 
-        }
-
-        function buscarParaAlta() {
-            const val = document.getElementById('searchAltaInput').value.toLowerCase();
-            renderizarSugeridos(val);
-        }
-
-        function renderizarSugeridos(filtro) {
-            const resCont = document.getElementById('searchAltaResults');
-            resCont.innerHTML = "";
-            const filtrados = BBDD_GENERAL.filter(f => 
-                f.cognoms.toLowerCase().includes(filtro) || f.id.toLowerCase().includes(filtro)
-            );
-            
-            if (filtrados.length === 0) {
-                resCont.innerHTML = "<div style='grid-column: 1/-1; color: #94a3b8; font-size: 0.8rem; text-align: center; padding: 20px;'>No s'han trobat coincidències</div>";
-                return;
-            }
-
-            filtrados.forEach(f => {
-                const div = document.createElement('div');
-                div.style.cssText = "background:white; border:1px solid #e2e8f0; padding:12px; border-radius:12px; cursor:pointer; transition:all 0.2s;";
-                div.innerHTML = `<div style="font-size:0.6rem; font-weight:800; color:#6366f1;">${f.id}</div><div style="font-weight:600; font-size:0.85rem;">${f.cognoms}</div>`;
-                div.onclick = () => seleccionarParaAlta(f);
-                div.onmouseover = () => div.style.borderColor = "#6366f1";
-                div.onmouseout = () => div.style.borderColor = "#e2e8f0";
-                resCont.appendChild(div);
-            });
-        }
-
-        function seleccionarParaAlta(fam) {
-            familiaSeleccionadaParaAlta = fam;
-            document.getElementById('selectedFamDisplay').innerText = `Família ${fam.cognoms}`;
-            document.getElementById('confirmAltaSection').style.display = 'block';
-            document.getElementById('newExpId').value = `PSI-2026-${Math.floor(Math.random()*900)+100}`;
-            document.getElementById('confirmAltaSection').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function confirmarAlta() {
-            const nuevoCaso = {
-                id: document.getElementById('newExpId').value,
-                cognoms: familiaSeleccionadaParaAlta.cognoms,
-                obs: "Alta generada recentment."
-            };
-            BBDD_PSICO.families.unshift(nuevoCaso);
+        window.addEventListener('load', () => {
             cargarCasos();
-            tancarModals();
-        }
-
-        function mostrarModalGenograma() { document.getElementById('modalGenograma').style.display = 'flex'; }
-        
-        function anarAGenogramaLliure() {
-            const fam = document.getElementById('freeFamName').value || "Lliure";
-            window.location.href = `genograma_editor.html?id_familia=NONE&cognoms=${encodeURIComponent(fam)}`;
-        }
-
-        // --- FUNCIONS LOGOS ---
-        function mostrarModalLogos() { document.getElementById('modalLogos').style.display = 'flex'; }
-        
-        function abrirSubirLogo() {
-            document.getElementById('modalUploadLogo').style.display = 'flex';
-            document.getElementById('logoOwner').value = "";
-            document.getElementById('fileName').innerText = "";
-        }
-
-        function dragOverHandler(ev) { ev.preventDefault(); }
-        function dropHandler(ev) {
-            ev.preventDefault();
-            if (ev.dataTransfer.files.length) {
-                document.getElementById('fileName').innerText = "Imatge: " + ev.dataTransfer.files[0].name;
-            }
-        }
-        function fileSelected() {
-            const input = document.getElementById('fileInput');
-            if(input.files.length) document.getElementById('fileName').innerText = "Imatge: " + input.files[0].name;
-        }
-
-        function confirmarSubidaLogo() {
-            const owner = document.getElementById('logoOwner').value;
-            if(!owner) { alert("Escriu a qui pertany el logo"); return; }
-            
-            const list = document.getElementById('logosList');
-            const row = document.createElement('div');
-            row.className = "logo-row";
-            row.innerHTML = `
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <input type="checkbox" checked>
-                    <span>Logo ${owner}</span>
-                </div>
-                <button class="btn-delete-logo" onclick="eliminarLogo(this)">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </button>`;
-            list.appendChild(row);
-            
-            document.getElementById('modalUploadLogo').style.display = 'none';
-        }
-
-        function eliminarLogo(btn) {
-            if(confirm("Segur que vols eliminar aquest logo?")) {
-                btn.closest('.logo-row').remove();
-            }
-        }
-
-        window.onload = () => cargarCasos();
+        });
     </script>
 </body>
 </html>

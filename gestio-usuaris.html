@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Gestió d'Usuaris</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        .main-content { max-width: 100% !important; width: 100%; padding: 20px; box-sizing: border-box; }
+        .admin-section { padding: 30px; background: white; border-radius: 20px; border: 1px solid #e2e8f0; margin-top: 20px; }
+        .nexe-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .nexe-table th { text-align: left; padding: 12px; color: #64748b; font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
+        .nexe-table td { padding: 15px 12px; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-size: 0.9rem; }
+
+        .suite-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+        .has-access { background: #22c55e; box-shadow: 0 0 5px #22c55e; }
+        .no-access { background: #e2e8f0; }
+
+        .btn-nexe { background: #1e293b; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-nexe:hover { background: #334155; }
+
+        .modal-nexe { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-nexe-content { background: white; padding: 30px; border-radius: 20px; width: 550px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        
+        .suites-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .suite-field label { font-size: 0.7rem; font-weight: 800; color: #64748b; display: block; margin-bottom: 5px; }
+        .suite-field select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; }
+
+        /* Estilos para iconos de acción */
+        .action-btn { background: none; border: none; cursor: pointer; padding: 5px; border-radius: 4px; transition: 0.2s; vertical-align: middle; }
+        .action-btn:hover { background: #f1f5f9; }
+        .icon-svg { width: 18px; height: 18px; fill: #64748b; pointer-events: none; }
+        .btn-pass:hover .icon-svg { fill: #f59e0b; }
+        .btn-edit:hover .icon-svg { fill: #2563eb; }
+        .btn-delete:hover .icon-svg { fill: #ef4444; }
+    </style>
+</head>
+<body>
+    <script src="sidebar.js"></script>
+
+    <main class="main-content">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 10px;">
+            <h3 style="margin:0; color: #1e293b; display: flex; align-items: center; gap: 10px;">🔐 Administració de Permisos NexeSocial</h3>
+            <button class="btn-nexe" onclick="obrirModal()">+ Alta Nou Usuari</button>
+        </div>
+
+        <section class="admin-section">
+            <table class="nexe-table">
+                <thead>
+                    <tr>
+                        <th>Empleat</th>
+                        <th>NexePsy</th>
+                        <th>NexeAudit</th>
+                        <th>NexeRRHH</th>
+                        <th>NexeSubv</th>
+                        <th style="text-align: right;">Accions</th>
+                    </tr>
+                </thead>
+                <tbody id="taula-usuaris"></tbody>
+            </table>
+        </section>
+    </main>
+
+    <div id="modal-usuari" class="modal-nexe">
+        <div class="modal-nexe-content">
+            <h3 id="modal-titol" style="margin-top: 0;">Configuració d'Accés Global</h3>
+            <input type="hidden" id="edit_user_id">
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div>
+                    <label style="font-size:0.75rem; font-weight:700; color:#475569;">Nom Complet</label>
+                    <input type="text" id="nom_user" style="width:100%; padding:10px; border-radius:8px; border:1px solid #e2e8f0; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="font-size:0.75rem; font-weight:700; color:#475569;">Correu Electrònic</label>
+                    <input type="email" id="email_user" style="width:100%; padding:10px; border-radius:8px; border:1px solid #e2e8f0; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <label style="display:block; margin-bottom:10px; font-weight:800; font-size:0.8rem; color:#1e293b;">PERMISOS PER SUITE</label>
+            <div class="suites-grid">
+                <div class="suite-field">
+                    <label>NEXE PSY</label>
+                    <select id="p_psy"><option value="none">Cap</option><option value="user">Usuari</option><option value="admin">Admin</option></select>
+                </div>
+                <div class="suite-field">
+                    <label>NEXE AUDIT</label>
+                    <select id="p_audit"><option value="none">Cap</option><option value="viewer">Consulta</option><option value="auditor">Auditor</option><option value="admin">Admin</option></select>
+                </div>
+                <div class="suite-field">
+                    <label>NEXE RRHH</label>
+                    <select id="p_rrhh"><option value="none">Cap</option><option value="user">Usuari</option><option value="admin">Admin</option></select>
+                </div>
+                <div class="suite-field">
+                    <label>NEXE SUBV</label>
+                    <select id="p_subv"><option value="none">Cap</option><option value="user">Usuari</option><option value="admin">Admin</option></select>
+                </div>
+            </div>
+
+            <div style="margin-top: 25px; display: flex; align-items: center; justify-content: space-between;">
+                <button onclick="generarNovaPass()" class="btn-nexe" style="background:#f59e0b; font-size: 0.8rem;">🔑 Reset Contrasenya</button>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="tancarModal()" style="background: none; border: none; color: #64748b; cursor: pointer; font-weight: 600;">Enrere</button>
+                    <button id="btn-save" class="btn-nexe" onclick="guardarUsuari()">Guardar Canvis</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="database.js"></script>
+    <script>
+        // Cargamos los usuarios de la BD (localStorage)
+        let usuarios = JSON.parse(localStorage.getItem('nexe_usuarios')) || [];
+
+        const icons = {
+            edit: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
+            delete: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`,
+            key: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>`
+        };
+
+        function renderizarUsuarios() {
+            const tbody = document.getElementById('taula-usuaris');
+            if(!tbody) return;
+            
+            tbody.innerHTML = usuarios.map(u => `
+                <tr>
+                    <td style="font-weight: 700;">${u.nombre}<br><span style="font-weight:400; font-size:0.75rem; color:#64748b">${u.email}</span></td>
+                    <td><span class="suite-indicator ${u.psy && u.psy !== 'none' ? 'has-access' : 'no-access'}"></span>${u.psy || 'none'}</td>
+                    <td><span class="suite-indicator ${u.audit && u.audit !== 'none' ? 'has-access' : 'no-access'}"></span>${u.audit || 'none'}</td>
+                    <td><span class="suite-indicator ${u.rrhh && u.rrhh !== 'none' ? 'has-access' : 'no-access'}"></span>${u.rrhh || 'none'}</td>
+                    <td><span class="suite-indicator ${u.subv && u.subv !== 'none' ? 'has-access' : 'no-access'}"></span>${u.subv || 'none'}</td>
+                    <td style="text-align: right;">
+                        <button title="Reset Pass" class="action-btn btn-pass" onclick="resetPassDirecte(${u.id})">${icons.key}</button>
+                        <button title="Editar" class="action-btn btn-edit" onclick="editarUser(${u.id})">${icons.edit}</button>
+                        <button title="Eliminar" class="action-btn btn-delete" onclick="eliminarUser(${u.id})">${icons.delete}</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function obrirModal(userId = null) {
+            const modal = document.getElementById('modal-usuari');
+            const titol = document.getElementById('modal-titol');
+            
+            if (userId) {
+                const u = usuarios.find(x => x.id == userId);
+                titol.innerText = "Editar Usuari";
+                document.getElementById('edit_user_id').value = u.id;
+                document.getElementById('nom_user').value = u.nombre;
+                document.getElementById('email_user').value = u.email;
+                document.getElementById('p_psy').value = u.psy || 'none';
+                document.getElementById('p_audit').value = u.audit || 'none';
+                document.getElementById('p_rrhh').value = u.rrhh || 'none';
+                document.getElementById('p_subv').value = u.subv || 'none';
+            } else {
+                titol.innerText = "Alta Nou Usuari";
+                document.getElementById('edit_user_id').value = "";
+                document.getElementById('nom_user').value = "";
+                document.getElementById('email_user').value = "";
+                document.getElementById('p_psy').value = "none";
+                document.getElementById('p_audit').value = "none";
+                document.getElementById('p_rrhh').value = "none";
+                document.getElementById('p_subv').value = "none";
+            }
+            modal.style.display = 'flex';
+        }
+
+        function tancarModal() { document.getElementById('modal-usuari').style.display = 'none'; }
+
+        function guardarUsuari() {
+            const idValue = document.getElementById('edit_user_id').value;
+            const nom = document.getElementById('nom_user').value;
+            const email = document.getElementById('email_user').value;
+
+            if(!nom || !email) return alert("Siusplau, omple el nom i l'email");
+
+            const dadesPermisos = {
+                nombre: nom,
+                email: email,
+                psy: document.getElementById('p_psy').value,
+                audit: document.getElementById('p_audit').value,
+                rrhh: document.getElementById('p_rrhh').value,
+                subv: document.getElementById('p_subv').value
+            };
+
+            if (idValue) {
+                // Modo Edición
+                const index = usuarios.findIndex(u => u.id == idValue);
+                usuarios[index] = { ...usuarios[index], ...dadesPermisos };
+            } else {
+                // Modo Creación
+                const nouUsuari = {
+                    id: Date.now(),
+                    ...dadesPermisos,
+                    pass: "nexe2026" // Pass por defecto
+                };
+                usuarios.push(nouUsuari);
+            }
+
+            localStorage.setItem('nexe_usuarios', JSON.stringify(usuarios));
+            renderizarUsuarios();
+            tancarModal();
+        }
+
+        function resetPassDirecte(id) {
+            const u = usuarios.find(x => x.id == id);
+            const nova = Math.random().toString(36).slice(-8);
+            u.pass = nova;
+            localStorage.setItem('nexe_usuarios', JSON.stringify(usuarios));
+            alert(`Nova contrasenya per ${u.nombre}: ${nova}`);
+        }
+
+        function generarNovaPass() {
+            const idActual = document.getElementById('edit_user_id').value;
+            if(!idActual) return alert("Primer guarda l'usuari per assignar-li una contrasenya.");
+            resetPassDirecte(idActual);
+        }
+
+        function editarUser(id) { obrirModal(id); }
+
+        function eliminarUser(id) { 
+            if(confirm("Eliminar aquest usuari definitivament?")) { 
+                usuarios = usuarios.filter(u => u.id != id); 
+                localStorage.setItem('nexe_usuarios', JSON.stringify(usuarios)); 
+                renderizarUsuarios(); 
+            } 
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal-usuari');
+            if (event.target == modal) tancarModal();
+        }
+
+        document.addEventListener('DOMContentLoaded', renderizarUsuarios);
+    </script>
+</body>
+</html>
