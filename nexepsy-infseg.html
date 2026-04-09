@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe de Seguiment - NexePsy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="database.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #f8fafc;
+            --border: #e2e8f0;
+        }
+
+        body { 
+            margin: 0; background: var(--bg-body); color: var(--text-main); 
+            font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; 
+        }
+
+        .main-content { flex-grow: 1; padding: 40px; max-width: 1100px; margin: 0 auto; width: 100%; box-sizing: border-box;}
+
+        .report-header {
+            background: white; border-radius: 24px; padding: 30px;
+            border: 1px solid var(--border); margin-bottom: 30px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;
+        }
+
+        .section-card {
+            background: white; border-radius: 20px; padding: 30px;
+            border: 1px solid var(--border); margin-bottom: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        }
+
+        .section-title {
+            font-size: 1.1rem; font-weight: 800; color: var(--primary);
+            margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        .grid-inputs { display: flex; flex-wrap: wrap; gap: 20px; }
+        .form-group { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 8px; }
+        
+        textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 100px; }
+        input, textarea, select {
+            padding: 14px 18px; border-radius: 12px; border: 1px solid var(--border);
+            font-family: inherit; font-size: 0.95rem; transition: 0.2s;
+        }
+
+        .actions-bar {
+            position: sticky; bottom: 20px; background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px); padding: 20px; border-radius: 20px;
+            border: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 15px;
+            z-index: 100; margin-top: 40px; box-shadow: 0 -10px 20px rgba(0,0,0,0.05);
+        }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px;
+            border-radius: 12px; font-weight: 700; cursor: pointer; border: none; transition: 0.3s;
+        }
+        .btn-draft { background: white; color: var(--text-main); border: 1px solid var(--border); }
+        .btn-supervise { background: var(--warning); color: white; }
+        .btn-save { background: var(--success); color: white; }
+        .btn-cancel { background: #f1f5f9; color: var(--text-muted); }
+        
+        .btn:hover { transform: translateY(-2px); filter: brightness(0.95); }
+
+        /* Modales */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.7); display: none; 
+            justify-content: center; align-items: center; z-index: 2000;
+        }
+        .modal-content {
+            background: white; padding: 40px; border-radius: 24px; max-width: 450px; 
+            text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+        }
+        .modal-icon { font-size: 3.5rem; margin-bottom: 20px; }
+        .modal-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
+
+        .tag-info { background: #eef2ff; color: var(--primary); padding: 6px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-content">
+            <div id="confirmIcon" class="modal-icon">❓</div>
+            <h2 id="confirmTitle" style="margin-top:0">Estàs segur?</h2>
+            <p id="confirmMsg" style="color: var(--text-muted); line-height: 1.6;">Aquesta acció desarà els canvis al sistema.</p>
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" onclick="closeConfirm()">Cancel·lar</button>
+                <button id="confirmBtnAction" class="btn btn-save">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="customAlert" class="modal-overlay">
+        <div class="modal-content">
+            <div id="alertIcon" class="modal-icon">✅</div>
+            <h2 id="alertTitle" style="margin-top:0">Èxit</h2>
+            <p id="alertMsg" style="color: var(--text-muted); line-height: 1.6;">Operació realitzada.</p>
+            <button class="btn btn-save" style="width:100%; margin-top:20px;" onclick="closeAlert()">D'acord</button>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <form id="formSeguiment">
+            <div class="report-header">
+                <div>
+                    <h1 style="margin:0; font-size: 1.8rem; letter-spacing: -0.5px;">Informe de Seguiment</h1>
+                    <p style="margin:5px 0 0; color: var(--text-muted);">Redacció de revisió periòdica</p>
+                </div>
+                <div style="text-align: right;">
+                    <span class="tag-info" id="dataInforme">--/--/----</span>
+                    <div style="margin-top:10px; font-weight: 800;" id="codiReferencia">REF: --</div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-title">1. Identificació del Cas</div>
+                <div class="grid-inputs">
+                    <div class="form-group"><label>Nom Usuari/a</label><input type="text" id="nomUsuari" readonly></div>
+                    <div class="form-group"><label>Edat/Sexe</label><input type="text" id="edatSexe" readonly></div>
+                    <div class="form-group"><label>Període</label><input type="text" id="periodoSeguiment" placeholder="Ex: Gener 2026"></div>
+                </div>
+            </div>
+
+            <div class="section-card"><div class="section-title">2. Motiu i Objectius</div><textarea id="motiu"></textarea></div>
+            <div class="section-card"><div class="section-title">3. Antecedents</div><textarea id="antecedents"></textarea></div>
+            <div class="section-card"><div class="section-title">4. Evolució</div><textarea id="evolucio"></textarea></div>
+            <div class="section-card"><div class="section-title">5. Avaluació</div><textarea id="avaluacio"></textarea></div>
+            <div class="section-card"><div class="section-title">6. Intervencions</div><textarea id="intervencions"></textarea></div>
+            <div class="section-card"><div class="section-title">7. Pla d'Acció</div><textarea id="pla"></textarea></div>
+            <div class="section-card"><div class="section-title">8. Conclusió</div><textarea id="conclusio"></textarea></div>
+
+            <div class="section-card" style="border-left: 6px solid var(--primary);">
+                <div class="section-title">9. Responsable</div>
+                <div class="grid-inputs">
+                    <div class="form-group"><label>Tècnic/a</label><input type="text" id="tecnicNom" readonly></div>
+                    <div class="form-group"><label>Especialitat</label><input type="text" id="tecnicCarrec" readonly></div>
+                </div>
+            </div>
+
+            <div class="actions-bar">
+                <button type="button" class="btn btn-draft" onclick="prepararGuardat('borrador')">Guardar Borrador</button>
+                <button type="button" class="btn btn-supervise" onclick="prepararGuardat('supervisio')">Enviar a Supervisió</button>
+                <button type="button" class="btn btn-save" onclick="prepararGuardat('definitiu')">Guardar Definitiu</button>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const userId = params.get('id');
+        let currentType = '';
+
+        window.onload = function() {
+            document.getElementById('dataInforme').innerText = new Date().toLocaleDateString('ca-ES');
+            document.getElementById('tecnicNom').value = "Dr. Xavier Nexe";
+            document.getElementById('tecnicCarrec').value = "Psicòleg General Sanitari";
+
+            if (typeof DB_Tools !== 'undefined' && userId) {
+                const user = DB_Tools.buscarPerID(userId);
+                if (user) {
+                    document.getElementById('nomUsuari').value = `${user.nom} ${user.cognoms}`;
+                    document.getElementById('edatSexe').value = `${user.edat || '--'} anys | ${user.sexe || '--'}`;
+                    document.getElementById('codiReferencia').innerText = `REF: ${user.id_psy || 'ERR'}`;
+                }
+            }
+        };
+
+        // PAS 1: Obrir pre-confirmació
+        function prepararGuardat(tipus) {
+            currentType = tipus;
+            const titles = {
+                'borrador': 'Guardar Borrador?',
+                'supervisio': 'Enviar a Supervisió?',
+                'definitiu': 'Guardar com a Definitiu?'
+            };
+            const msgs = {
+                'borrador': 'Podràs continuar editant aquest informe més tard.',
+                'supervisio': 'L\'informe serà revisat per coordinació i no podràs editar-lo temporalment.',
+                'definitiu': 'ATENCIÓ: Un cop guardat com a definitiu, l\'informe quedarà bloquejat permanentment.'
+            };
+
+            document.getElementById('confirmTitle').innerText = titles[tipus];
+            document.getElementById('confirmMsg').innerText = msgs[tipus];
+            document.getElementById('confirmIcon').innerText = tipus === 'definitiu' ? '⚠️' : '💾';
+            
+            // Assignar funció final al botó de confirmar
+            document.getElementById('confirmBtnAction').onclick = ejecutarGuardado;
+            
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+
+        function closeConfirm() { document.getElementById('confirmModal').style.display = 'none'; }
+
+        // PAS 2: Executar i guardar a la BD
+        function ejecutarGuardado() {
+            closeConfirm();
+            
+            const nouRegistre = {
+                data: new Date().toLocaleDateString('ca-ES'),
+                tipus: "Informe de Seguiment",
+                estat: currentType.charAt(0).toUpperCase() + currentType.slice(1),
+                tecnic: document.getElementById('tecnicNom').value,
+                resum: document.getElementById('conclusio').value.substring(0, 60) + "..."
+            };
+
+            // Guardar a database.js
+            if (typeof DB_Tools !== 'undefined' && userId) {
+                DB_Tools.afegirHistorial(userId, nouRegistre);
+            }
+
+            // Mostrar alerta final
+            if(currentType === 'borrador') {
+                showAlert("Desat", "L'esborrany s'ha guardat al sistema.");
+            } else if (currentType === 'supervisio') {
+                showAlert("Enviat", "Informe enviat a la cua de supervisió.", "warning");
+            } else {
+                showAlert("Finalitzat", "L'informe s'ha publicat correctament.");
+                setTimeout(() => { if(window.parent.tancarModals) window.parent.tancarModals(); }, 2000);
+            }
+        }
+
+        function showAlert(title, msg, type = 'success') {
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMsg').innerText = msg;
+            document.getElementById('alertIcon').innerText = type === 'success' ? '✅' : '🔔';
+            document.getElementById('customAlert').style.display = 'flex';
+        }
+
+        function closeAlert() { document.getElementById('customAlert').style.display = 'none'; }
+    </script>
+</body>
+</html>

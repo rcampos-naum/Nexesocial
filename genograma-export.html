@@ -18,7 +18,7 @@
             font-family: 'Inter', sans-serif; 
             background: #f8fafc; 
             margin: 0; 
-            padding: 50px 20px; 
+            padding: 50px 20px 100px 20px; 
             color: var(--nexe-dark);
         }
 
@@ -117,39 +117,68 @@
             object-fit: contain;
         }
 
-        .action-bar {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 20px;
-            border: 1px solid var(--slate-200);
-            position: sticky;
+        .floating-action-bar {
+            position: fixed;
             bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 9999;
         }
 
-        button {
-            padding: 12px 25px;
-            border-radius: 12px;
+        .float-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
             border: none;
-            font-weight: 700;
-            font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
         }
 
-        button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .btn-secondary { background: white; color: var(--nexe-dark); border: 1px solid var(--slate-200); }
-        .btn-gradient { background: var(--psy-gradient); color: white; }
+        .btn-float-back { background: white; color: var(--nexe-dark); border: 1px solid var(--slate-200); }
+        .btn-float-main { background: var(--psy-gradient); color: white; }
+        .float-btn:hover { transform: scale(1.1); }
+
+        .download-options {
+            position: absolute;
+            bottom: 75px;
+            right: 0;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            padding: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            width: 200px;
+            border: 1px solid var(--slate-200);
+        }
+        .download-options.active { display: flex; animation: slideUp 0.3s ease; }
+
+        .opt-item {
+            padding: 12px 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--nexe-dark);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .opt-item:hover { background: #f1f5f9; color: #6366f1; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         @media print {
-            .action-bar { display: none; }
+            .floating-action-bar { display: none; }
             body { padding: 0; background: white; }
             .export-container { box-shadow: none; border: none; }
         }
@@ -166,21 +195,21 @@
             </div>
             <div style="text-align: right">
                 <div style="font-weight: 800; font-size: 1.2rem; color: #1e293b;">INFORME GENOGRAMA</div>
-                <div style="color: #6366f1; font-weight: 700; font-size: 0.75rem;">Informe Psicosocial</div>
+                <div style="color: #6366f1; font-weight: 700; font-size: 0.75rem;">NexePsy Suite v2026</div>
             </div>
         </header>
 
         <div class="meta-grid">
             <div class="meta-item">
-                <span class="meta-label">ID EXPEDIENT</span>
+                <span class="meta-label">ID FAMÍLIA</span>
                 <span class="meta-value" id="valID">---</span>
             </div>
             <div class="meta-item">
-                <span class="meta-label">FAMÍLIA</span>
+                <span class="meta-label">COGNOMS REF.</span>
                 <span class="meta-value" id="valFam">---</span>
             </div>
             <div class="meta-item">
-                <span class="meta-label">TÈCNIC</span>
+                <span class="meta-label">TÈCNIC RESPONSABLE</span>
                 <span class="meta-value" id="valTec">---</span>
             </div>
             <div class="meta-item">
@@ -197,35 +226,57 @@
             <p style="font-size: 0.65rem; color: #94a3b8; margin: 0;">Amb el suport de:</p>
             <div id="financiadoresContainer" class="financiadores-grid"></div>
             <p style="margin-top: 20px; color: #94a3b8; font-size: 0.7rem; text-align: center;">
-                Aquest document conté informació confidencial protegida per la Llei Orgànica de Protecció de Dades.
+                Aquest document conté informació confidencial vinculada a la BBDD NexeSocial protegida per la LOPD.
             </p>
         </footer>
     </div>
 
-    <div class="action-bar">
-        <button onclick="downloadImage('png')" class="btn-secondary">Descarregar PNG</button>
-        <button onclick="downloadImage('jpg')" class="btn-secondary">Descarregar JPG</button>
-        <button onclick="downloadPDF()" class="btn-gradient">Exportar PDF Professional</button>
+    <div class="floating-action-bar">
+        <button class="float-btn btn-float-back" onclick="window.history.back()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <div style="position: relative;">
+            <div class="download-options" id="downloadMenu">
+                <div class="opt-item" onclick="downloadImage('png')">Descarregar PNG</div>
+                <div class="opt-item" onclick="downloadImage('jpg')">Descarregar JPG</div>
+                <div class="opt-item" onclick="downloadPDF()">Exportar PDF Oficial</div>
+            </div>
+            <button class="float-btn btn-float-main" onclick="document.getElementById('downloadMenu').classList.toggle('active')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            </button>
+        </div>
     </div>
 
     <script>
-        const imgData = localStorage.getItem('genograma_temp');
-        const famRaw = localStorage.getItem('familia_data');
-        const financiadoresRaw = localStorage.getItem('financiadores_logos');
-
+        // --- CONEXIÓ AMB LA BBDD SIMULADA ---
         window.onload = () => {
-            if (imgData) document.getElementById('imgPreview').src = imgData;
-            
-            if (famRaw) {
-                const data = JSON.parse(famRaw);
-                document.getElementById('valID').innerText = data.id || 'N/A';
-                document.getElementById('valFam').innerText = (data.apellidos || 'Sense Cognoms').replace(/-/g, ' ');
-                document.getElementById('valTec').innerText = (data.tecnico || 'No Assignat').replace(/-/g, ' ');
-                document.getElementById('valDate').innerText = new Date().toLocaleDateString('ca-ES');
-            }
+            // 1. Obtenir Sessió de l'usuari (Tècnic)
+            const session = JSON.parse(sessionStorage.getItem('nexe_session'));
+            const tecnicoNombre = session ? session.nombre : "Tècnic No Identificat";
+            document.getElementById('valTec').innerText = tecnicoNombre;
 
-            if (financiadoresRaw) {
-                const logos = JSON.parse(financiadoresRaw);
+            // 2. Obtenir Imatge Temporal del Genograma
+            const imgData = localStorage.getItem('genograma_temp');
+            if (imgData) document.getElementById('imgPreview').src = imgData;
+
+            // 3. Obtenir dades de la Família de la BBDD (Simulada)
+            // Nota: Aquí normalment passaries un ID per URL, per ara agafem la primera de la BBDD
+            const dbPersones = JSON.parse(localStorage.getItem('nexe_persones'));
+            
+            // Simulem que estem treballant amb la FAM-0001 definida a la teva BBDD
+            const familiaMock = {
+                id: "FAM-0001",
+                cognoms: "García Martí"
+            };
+
+            document.getElementById('valID').innerText = familiaMock.id;
+            document.getElementById('valFam').innerText = familiaMock.cognoms;
+            document.getElementById('valDate').innerText = new Date().toLocaleDateString('ca-ES');
+
+            // 4. Finançadors (Logos)
+            const logosRaw = localStorage.getItem('financiadores_logos');
+            if (logosRaw) {
+                const logos = JSON.parse(logosRaw);
                 const container = document.getElementById('financiadoresContainer');
                 logos.forEach(src => {
                     const img = document.createElement('img');
@@ -236,7 +287,7 @@
             }
         };
 
-        // Función para convertir imágenes (incluido SVG) a una versión compatible con Canvas/jsPDF
+        // --- FUNCIONS D'EXPORTACIÓ (MANTINGUDES) ---
         function getImageElement(url) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -252,48 +303,39 @@
             const ctx = canvas.getContext('2d');
             const sourceImg = document.getElementById('imgPreview');
             
-            canvas.width = Math.max(sourceImg.naturalWidth, 1200);
-            canvas.height = sourceImg.naturalHeight + 450;
-
+            canvas.width = 2400; 
+            canvas.height = 1800;
             ctx.fillStyle = "white";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Cargar y dibujar logos de cabecera
             const l1 = await getImageElement(document.getElementById('logo1').src);
             const l2 = await getImageElement(document.getElementById('logo2').src);
-            if(l1) ctx.drawImage(l1, 50, 40, 150, 55);
-            if(l2) ctx.drawImage(l2, 220, 40, 150, 55);
+            if(l1) ctx.drawImage(l1, 100, 80, 220, 80);
+            if(l2) ctx.drawImage(l2, 350, 80, 220, 80);
 
-            ctx.fillStyle = "#1e293b";
-            ctx.font = "bold 32px Inter, sans-serif";
-            ctx.fillText("INFORME GENOGRAMA - NEXEPSY SUITE", 50, 150);
-            
-            ctx.font = "20px Inter, sans-serif";
+            ctx.fillStyle = "#f8fafc";
+            ctx.beginPath();
+            ctx.roundRect(100, 200, 2200, 140, 20);
+            ctx.fill();
+
             ctx.fillStyle = "#64748b";
-            const info = `ID: ${document.getElementById('valID').innerText} | Família: ${document.getElementById('valFam').innerText}`;
-            ctx.fillText(info, 50, 190);
+            ctx.font = "800 24px Inter";
+            ctx.fillText("ID FAMÍLIA", 150, 250);
+            ctx.fillText("COGNOMS", 650, 250);
+            ctx.fillText("TÈCNIC", 1300, 250);
+            ctx.fillText("DATA", 1950, 250);
 
-            ctx.drawImage(sourceImg, 50, 250);
+            ctx.fillStyle = "#0f172a";
+            ctx.font = "bold 32px Inter";
+            ctx.fillText(document.getElementById('valID').innerText, 150, 300);
+            ctx.fillText(document.getElementById('valFam').innerText, 650, 300);
+            ctx.fillText(document.getElementById('valTec').innerText, 1300, 300);
+            ctx.fillText(document.getElementById('valDate').innerText, 1950, 300);
 
-            // Financiadores abajo a la izquierda
-            if (financiadoresRaw) {
-                const logos = JSON.parse(financiadoresRaw);
-                let x = 50;
-                ctx.font = "14px Inter";
-                ctx.fillStyle = "#94a3b8";
-                ctx.fillText("Amb el suport de:", 50, canvas.height - 120);
-                for (let src of logos) {
-                    const fLog = await getImageElement(src);
-                    if(fLog) {
-                        ctx.drawImage(fLog, x, canvas.height - 100, 100, 50);
-                        x += 120;
-                    }
-                }
-            }
+            ctx.drawImage(sourceImg, 100, 400, 2200, 1200);
 
             const link = document.createElement('a');
-            const fam = document.getElementById('valFam').innerText.replace(/\s+/g, '_');
-            link.download = `Genograma_${fam}.${format}`;
+            link.download = `Genograma_${document.getElementById('valID').innerText}.${format}`;
             link.href = canvas.toDataURL(`image/${format === 'jpg' ? 'jpeg' : 'png'}`, 1.0);
             link.click();
         }
@@ -301,64 +343,42 @@
         async function downloadPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
-            const fam = document.getElementById('valFam').innerText;
-            const id = document.getElementById('valID').innerText;
-
-            // Procesar los logos de cabecera a Base64 para asegurar que jsPDF los acepte (especialmente el SVG)
+            
             const rasterize = async (elId) => {
                 const img = await getImageElement(document.getElementById(elId).src);
                 if (!img) return null;
                 const c = document.createElement('canvas');
                 c.width = img.width; c.height = img.height;
-                const cx = c.getContext('2d');
-                cx.drawImage(img, 0, 0);
+                c.getContext('2d').drawImage(img, 0, 0);
                 return c.toDataURL('image/png');
             };
 
             const logo1Base64 = await rasterize('logo1');
             const logo2Base64 = await rasterize('logo2');
 
-            // Header
-            if(logo1Base64) doc.addImage(logo1Base64, 'PNG', 15, 10, 30, 12);
-            if(logo2Base64) doc.addImage(logo2Base64, 'PNG', 50, 10, 30, 12);
+            if(logo1Base64) doc.addImage(logo1Base64, 'PNG', 15, 10, 35, 12);
+            if(logo2Base64) doc.addImage(logo2Base64, 'PNG', 55, 10, 35, 12);
             
-            doc.setDrawColor(226, 232, 240);
-            doc.line(48, 10, 48, 22);
+            doc.setFillColor(248, 250, 252);
+            doc.roundedRect(15, 28, 267, 18, 3, 3, 'F');
 
-            doc.setTextColor(15, 23, 42);
-            doc.setFontSize(14); doc.setFont("helvetica", "bold");
-            doc.text("INFORME DE GENOGRAMA", 282, 15, { align: "right" });
-            
-            doc.setFontSize(9); doc.setFont("helvetica", "normal");
-            doc.text(`Expedient: ${id} | Família: ${fam}`, 282, 22, { align: "right" });
+            doc.setFontSize(6); doc.setTextColor(100, 116, 139);
+            doc.text("ID FAMÍLIA", 20, 33);
+            doc.text("COGNOMS", 80, 33);
+            doc.text("TÈCNIC RESPONSABLE", 150, 33);
+            doc.text("DATA EMISSIÓ", 230, 33);
 
-            // Imagen principal
-            doc.addImage(imgData, 'PNG', 15, 40, 267, 130);
+            doc.setFontSize(9); doc.setTextColor(15, 23, 42); doc.setFont("helvetica", "bold");
+            doc.text(document.getElementById('valID').innerText, 20, 40);
+            doc.text(document.getElementById('valFam').innerText, 80, 40);
+            doc.text(document.getElementById('valTec').innerText, 150, 40);
+            doc.text(document.getElementById('valDate').innerText, 230, 40);
 
-            // Financiadores PIE DE PÁGINA IZQUIERDA
-            if (financiadoresRaw) {
-                const logos = JSON.parse(financiadoresRaw);
-                let xPos = 15;
-                doc.setFontSize(7); doc.setTextColor(150, 150, 150);
-                doc.text("Amb el suport de:", 15, 182);
-                
-                for (let src of logos.slice(0, 5)) {
-                    try {
-                        const img = await getImageElement(src);
-                        const c = document.createElement('canvas');
-                        c.width = img.width; c.height = img.height;
-                        c.getContext('2d').drawImage(img, 0, 0);
-                        const b64 = c.toDataURL('image/png');
-                        doc.addImage(b64, 'PNG', xPos, 185, 25, 10);
-                        xPos += 30;
-                    } catch(e){}
-                }
-            }
+            doc.addImage(document.getElementById('imgPreview').src, 'PNG', 15, 50, 267, 130);
+            doc.setFontSize(8); doc.setFont("helvetica", "normal");
+            doc.text("NexePsy Suite - Document d'ús professional confidencial", 148, 200, { align: "center" });
 
-            doc.setFontSize(8);
-            doc.text("Document confidencial - NexePsy Suite", 148, 205, { align: "center" });
-
-            doc.save(`Genograma_${id}_${fam}.pdf`);
+            doc.save(`Genograma_${document.getElementById('valID').innerText}.pdf`);
         }
     </script>
 </body>

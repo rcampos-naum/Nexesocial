@@ -6,7 +6,8 @@
 const dadesInicials = {
     expedients: [
         { 
-            id: "U2026/01", 
+            id: "U2026/01",         // ID NexeSocial
+            id_psy: "EXP-2024-001", // ID NexePsy (Enllaçat)
             nom: "Marc", 
             cognoms: "García Martí", 
             dni: "44556677L",
@@ -17,13 +18,20 @@ const dadesInicials = {
             vincles_detallats: [
                 { nom: "Laura Martí", relacio: "Mare", id_vincle: "U2026/03" }
             ],
+            // Camps ampliats per a l'àrea clínica (NexePsy)
+            genograma: "https://via.placeholder.com/600x400?text=Genograma+Marc+García", 
+            estat_expedient: "obert", // obert / tancat
+            motiu_tancament: "",
             salut: { 
                 alergies: { ambientals: ["Pols"], medicaments: [], alimentaries: ["Lactosa"] }, 
-                tda: "No", tdha: "Sí", dependencia: "No", grau: "", observacions: "" 
+                tda: "No", tdha: "Sí", dependencia: "No", grau: "", 
+                diagnostics: "F90.1 Trastorn d'activitat de l'atenció i hipercinètic.",
+                observacions: "Requereix seguiment de dinàmiques post-trauma i reforç en habilitats socials." 
             }
         },
         { 
             id: "U2026/02", 
+            id_psy: "EXP-2024-002", 
             nom: "Pol", 
             cognoms: "Sánchez Pérez", 
             dni: "12312312K",
@@ -32,13 +40,19 @@ const dadesInicials = {
             edat: 0, 
             programes: ["PROG-JOVE"],
             vincles_detallats: [],
+            genograma: null,
+            estat_expedient: "obert",
+            motiu_tancament: "",
             salut: { 
                 alergies: { ambientals: [], medicaments: [], alimentaries: [] }, 
-                tda: "No", tdha: "No", dependencia: "No", grau: "", observacions: "" 
+                tda: "No", tdha: "No", dependencia: "No", grau: "", 
+                diagnostics: "", 
+                observacions: "Pendent d'avaluació inicial de xarxa social." 
             }
         },
         { 
             id: "U2026/03", 
+            id_psy: null, 
             nom: "Laura", 
             cognoms: "Martí Sole", 
             dni: "33221144P",
@@ -49,9 +63,14 @@ const dadesInicials = {
             vincles_detallats: [
                 { nom: "Marc García", relacio: "Fill", id_vincle: "U2026/01" }
             ],
+            genograma: null,
+            estat_expedient: "obert",
+            motiu_tancament: "",
             salut: { 
                 alergies: { ambientals: [], medicaments: [], alimentaries: [] }, 
-                tda: "No", tdha: "No", dependencia: "No", grau: "", observacions: "" 
+                tda: "No", tdha: "No", dependencia: "No", grau: "", 
+                diagnostics: "", 
+                observacions: "" 
             }
         }
     ]
@@ -79,14 +98,14 @@ if (!localStorage.getItem(DB_KEY)) {
 
 let expedientsData = JSON.parse(localStorage.getItem(DB_KEY));
 
-// Migració i càlcul automàtic d'edats
+// Migració: Assegurar que els nous camps existeixen per a registres antics
 expedientsData = expedientsData.map(usuari => {
-    if (!usuari.salut) {
-        usuari.salut = { 
-            alergies: { ambientals: [], medicaments: [], alimentaries: [] }, 
-            tda: "No", tdha: "No", dependencia: "No", grau: "", observacions: "" 
-        };
-    }
+    if (!usuari.salut) usuari.salut = {};
+    if (usuari.salut.diagnostics === undefined) usuari.salut.diagnostics = "";
+    if (usuari.salut.observacions === undefined) usuari.salut.observacions = "";
+    if (usuari.genograma === undefined) usuari.genograma = null;
+    if (usuari.estat_expedient === undefined) usuari.estat_expedient = "obert";
+    
     if (usuari.dataNaixement) {
         usuari.edat = calcularEdat(usuari.dataNaixement);
     }
@@ -123,6 +142,25 @@ const DB_Tools = {
     generarIdFamilia: function() {
         return "FAM-" + String(BBDD.families.length + 1).padStart(4, '0');
     },
+    buscarPerID: function(idBuscat) {
+        return BBDD.expedients.find(u => u.id === idBuscat || u.id_psy === idBuscat);
+    },
+    // NOVA FUNCIÓ: Actualitza dades específiques d'un usuari i desa
+    actualitzar: function(id, dadesNoves) {
+        const index = BBDD.expedients.findIndex(u => u.id === id || u.id_psy === id);
+        if (index !== -1) {
+            // Fusió profunda simple per a l'objecte salut si cal
+            if (dadesNoves.salut) {
+                BBDD.expedients[index].salut = { ...BBDD.expedients[index].salut, ...dadesNoves.salut };
+                delete dadesNoves.salut;
+            }
+            // Fusió de la resta de camps
+            BBDD.expedients[index] = { ...BBDD.expedients[index], ...dadesNoves };
+            desatElectronic();
+            return true;
+        }
+        return false;
+    },
     reiniciarDemo: function() {
         localStorage.removeItem(DB_KEY);
         localStorage.removeItem('nexe_usuarios');
@@ -143,7 +181,7 @@ const usuariosIniciales = [
         nombre: "Administrador Nexe", 
         email: "admin@nexesocial.com", 
         pass: "1234",
-        role: "admin", // Afegit rol per a major seguretat
+        role: "admin",
         permisos: {
             psy: "admin",
             audit: "admin",
@@ -153,7 +191,6 @@ const usuariosIniciales = [
     }
 ];
 
-// Inicialitzar usuaris si no existeixen
 if (!localStorage.getItem(USERS_KEY)) {
     localStorage.setItem(USERS_KEY, JSON.stringify(usuariosIniciales));
 }
@@ -169,28 +206,20 @@ const Auth = {
         }
         return false;
     },
-
     logout: function() {
         sessionStorage.removeItem(SESSION_KEY);
         window.location.href = "index.html";
     },
-
     checkAccess: function(suiteNombre) {
         const session = sessionStorage.getItem(SESSION_KEY);
         if (!session) {
             window.location.href = "index.html";
             return false;
         }
-        
         const user = JSON.parse(session);
-
-        // CLAU MESTRA: Si ets l'admin o tens el rol d'admin, entres a tot arreu
-        if (user.email === "admin@nexesocial.com" || user.role === "admin") {
-            return true;
-        }
+        if (user.email === "admin@nexesocial.com" || user.role === "admin") return true;
 
         const permiso = user.permisos ? user.permisos[suiteNombre] : null;
-
         if (!permiso || permiso === "none") {
             alert("No tens autorització per entrar a Nexe" + suiteNombre.toUpperCase());
             window.location.href = "index.html"; 
@@ -198,11 +227,9 @@ const Auth = {
         }
         return true;
     },
-
     getUser: function() {
         return JSON.parse(sessionStorage.getItem(SESSION_KEY));
     }
 };
 
-// Inicialització final
 desatElectronic();

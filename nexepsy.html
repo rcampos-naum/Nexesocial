@@ -34,11 +34,14 @@
         .search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
 
         .case-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 25px; margin-bottom: 80px; }
+        
         .case-card { 
             background: white; border-radius: 28px; padding: 35px; 
             border: 1px solid #e2e8f0; transition: 0.3s; position: relative;
             display: flex; flex-direction: column;
+            cursor: pointer; /* Indica que la targeta és clicable */
         }
+        
         .case-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.05); border-color: #6366f1; }
         .case-id { font-size: 0.75rem; font-weight: 800; color: #6366f1; margin-bottom: 10px; text-transform: uppercase; }
         .case-card h3 { font-size: 1.5rem; margin: 0 0 15px; font-weight: 800; color: #0f172a; letter-spacing: -0.03em; }
@@ -97,20 +100,26 @@
     <script src="sidebar-nexepsy.js"></script>
 
     <script>
-        // FUNCIÓN DE VERIFICACIÓN AL CARGAR LA VENTANA
         window.onload = function() {
-            // 1. Comprobar si Auth existe (evita error de variable no definida)
             if (typeof Auth !== 'undefined') {
                 const tieneAcceso = Auth.checkAccess('psy');
-                if (!tieneAcceso) return; // Si no tiene acceso, el checkAccess ya redirige
+                if (!tieneAcceso) return; 
             } else {
-                console.error("Error crítico: No se ha detectado el módulo de seguridad database.js");
-                alert("Error de sistema: No se pudo verificar la identidad.");
+                console.error("Error: database.js no detectat");
                 window.location.href = "login.html";
                 return;
             }
 
-            // 2. Si hay acceso, cargar los datos
+            // Lògica per detectar si venim d'un clic a una targeta (mateix fitxer)
+            const params = new URLSearchParams(window.location.search);
+            const idDetall = params.get('id');
+            
+            if (idDetall) {
+                // Aquí podríem carregar una vista de detall, de moment fem un avís
+                console.log("Has seleccionat l'expedient:", idDetall);
+                // Si vols que mostri la llista igualment però filtrada o un detall, ho faríem aquí
+            }
+
             cargarCasos();
         };
 
@@ -147,6 +156,16 @@
             filtrados.forEach(f => {
                 const card = document.createElement('div');
                 card.className = 'case-card';
+
+                // --- CLIC A LA TARGETA (REDIRECCIÓ AL MATEIX FITXER) ---
+                card.onclick = (e) => {
+                    // Evitem que el clic als botons (Nou Informe/Genograma) activi la redirecció del pare
+                    if (!e.target.closest('.btn-nexe-sm')) {
+                        const secureID = encodeURIComponent(f.id);
+                        window.location.href = `nexepsy-exp.html?id=${secureID}`;
+                    }
+                };
+                
                 card.innerHTML = `
                     <span class="case-id">${f.id}</span>
                     <h3>Família ${f.cognoms}</h3>

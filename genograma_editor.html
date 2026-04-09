@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor Genograma - NexePsy</title>
+    <title>Editor Genograma Social - NexePsy</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -11,7 +11,7 @@
             --nexe-bg: #f1f5f9;
             --nexe-dark: #0f172a;
             --sidebar-w: 380px;
-            --transition: all 0.2s ease;
+            --success: #10b981;
         }
 
         * { box-sizing: border-box; }
@@ -26,7 +26,16 @@
         }
         .sidebar-header { padding: 20px; border-bottom: 1px solid #f1f5f9; }
         .scroll-content { flex-grow: 1; overflow-y: auto; padding: 20px; }
-        h2 { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; margin: 20px 0 10px; }
+        
+        /* Info Expediente desde BBDD */
+        .expediente-info {
+            background: #f8fafc; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 20px;
+        }
+        .expediente-label { font-size: 0.6rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin-bottom: 4px; }
+        .expediente-val-id { font-weight: 700; color: #6366f1; font-size: 0.9rem; }
+        .expediente-val-fam { font-size: 0.8rem; color: #475569; font-weight: 500; }
+
+        h2 { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; margin: 20px 0 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; }
         
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .input-group { margin-bottom: 10px; }
@@ -40,31 +49,45 @@
         .btn-main {
             width: 100%; padding: 12px; background: var(--psy-gradient); color: white;
             border: none; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 5px;
+            transition: transform 0.2s, opacity 0.2s;
         }
+        .btn-main:active { transform: scale(0.98); }
 
-        /* --- CANVAS & GRID --- */
-        .canvas-area { flex-grow: 1; position: relative; display: flex; align-items: center; justify-content: center; padding: 20px; background: #cbd5e1; }
+        /* --- CANVAS AREA --- */
+        .canvas-area { flex-grow: 1; position: relative; display: flex; align-items: center; justify-content: center; padding: 20px; background: #cbd5e1; overflow: auto; }
         
         #genogram-stage { 
             background-color: white;
             background-image: 
                 linear-gradient(#f1f5f9 1px, transparent 1px),
-                linear-gradient(90deg, #f1f5f9 1px, transparent 1px),
-                linear-gradient(90deg, #e2e8f0 2px, transparent 2px),
-                linear-gradient(#e2e8f0 2px, transparent 2px);
-            background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
-            border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); cursor: crosshair; 
+                linear-gradient(90deg, #f1f5f9 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-radius: 8px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            cursor: crosshair;
+            width: 900px; 
+            height: 700px;
         }
 
         .bottom-toolbar {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: white; padding: 6px; border-radius: 100px; display: flex; gap: 5px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 90%; overflow-x: auto;
         }
         .tool-item {
             padding: 8px 15px; border-radius: 100px; border: none; background: transparent;
-            font-size: 0.65rem; font-weight: 700; color: #64748b; cursor: pointer;
+            font-size: 0.65rem; font-weight: 700; color: #64748b; cursor: pointer; white-space: nowrap;
         }
         .tool-item.active { background: var(--nexe-dark); color: white; }
+
+        #saveToast {
+            position: fixed; top: 20px; right: 20px; background: var(--success); color: white;
+            padding: 12px 25px; border-radius: 10px; font-weight: 700; font-size: 0.8rem;
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2); display: none; z-index: 2000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
 
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -72,13 +95,12 @@
             display: none; align-items: center; justify-content: center; z-index: 1000;
         }
         .modal-content { background: white; padding: 30px; border-radius: 20px; width: 380px; text-align: center; }
-        .modal-icon { width: 50px; height: 50px; margin: 0 auto 15px; color: #f59e0b; }
-        .btn-modal { padding: 10px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; flex: 1; }
-
         .edit-badge { position: absolute; top: 15px; right: 15px; background: #6366f1; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.6rem; font-weight: 800; display: none; }
     </style>
 </head>
 <body>
+
+    <div id="saveToast">✔ Canvis guardats correctament</div>
 
     <div class="app-wrapper">
         <aside class="config-sidebar">
@@ -88,11 +110,23 @@
             </div>
             
             <div class="scroll-content">
-                <h2 id="formTitle">Nou Membre</h2>
+                <div class="expediente-info">
+                    <div class="expediente-label">Expedient Actiu (BBDD)</div>
+                    <div id="disp_id" class="expediente-val-id">Carregant ID...</div>
+                    <div id="disp_fam" class="expediente-val-fam">Buscant família...</div>
+                </div>
+
+                <h2 id="formTitle">Identificació Membre</h2>
                 <div class="form-grid">
+                    <div class="input-group full">
+                        <label>Seleccionar de l'Expedient</label>
+                        <select id="selectFromDB" onchange="autoFillFromDB()">
+                            <option value="">-- Triar persona --</option>
+                        </select>
+                    </div>
                     <div class="input-group full"><label>Nom i Cognoms</label><input type="text" id="nodeName"></div>
                     <div class="input-group full">
-                        <label>Data Naixement (DD/MM/AAAA)</label>
+                        <label>Data Naixement</label>
                         <div style="display: flex; gap: 5px;">
                             <input type="number" id="birthDay" placeholder="DD" oninput="calcularEdadExacta()">
                             <input type="number" id="birthMonth" placeholder="MM" oninput="calcularEdadExacta()">
@@ -100,117 +134,207 @@
                         </div>
                     </div>
                     <div class="input-group"><label>Edat Actual</label><input type="text" id="nodeAge" readonly style="background:#e2e8f0"></div>
+                    
                     <div class="input-group">
-                        <label>Símbol</label>
+                        <label>Tipus d'Element</label>
                         <select id="nodeType">
-                            <option value="male">Home</option><option value="female">Dona</option>
-                            <option value="ip_male">P. Principal (H)</option><option value="ip_female">P. Principal (D)</option>
-                            <option value="preg">Embaràs</option><option value="pet">Mascota</option>
+                            <option value="male">Home (Quadrat)</option>
+                            <option value="female">Dona (Cercle)</option>
+                            <option value="nonbinary">No Binari (Rombe)</option>
+                            <option value="inst">Institució / Recurs</option>
+                            <option value="preg">Embaràs</option>
+                            <option value="pet">Mascota</option>
                         </select>
                     </div>
+
                     <div class="input-group">
-                        <label>Estat Vital</label>
-                        <select id="nodeDead"><option value="no">Viu</option><option value="yes">Difunt (X)</option></select>
+                        <label>Rol Clínic</label>
+                        <select id="nodeRole">
+                            <option value="normal">Familiar Estàndard</option>
+                            <option value="ip">Persona Principal (IP)</option>
+                            <option value="dead">Difunt (X)</option>
+                        </select>
                     </div>
-                    <div class="input-group full"><label>Social / Salut</label><input type="text" id="nodeSocial"></div>
+
+                    <div class="input-group">
+                        <label>Àmbit / Xarxa</label>
+                        <select id="nodeNetwork">
+                            <option value="family">Xarxa Familiar</option>
+                            <option value="pro">Xarxa Professional</option>
+                            <option value="informal">Amistats / Veïnat</option>
+                        </select>
+                    </div>
+
+                    <h2 class="full">Salut i Social</h2>
+                    <div class="input-group full">
+                        <label>Indicador de Risc / Salut</label>
+                        <select id="nodeRisk">
+                            <option value="">Cap</option>
+                            <option value="⚠">⚠ Risc Social</option>
+                            <option value="🧠">🧠 Salut Mental</option>
+                            <option value="🍺">🍺 Consum Substàncies</option>
+                            <option value="💸">💸 Dificultat Econòmica</option>
+                            <option value="⭐">⭐ Factor Protecció</option>
+                        </select>
+                    </div>
+                    <div class="input-group full"><label>Observacions Socials</label><input type="text" id="nodeSocial" placeholder="Ex: Treballa a Correus"></div>
                 </div>
+
                 <button id="btnSave" class="btn-main" onclick="guardarMiembro()">Afegir al Mapa</button>
                 <button id="btnCancelEdit" class="btn-main" style="background:#94a3b8; display:none;" onclick="cancelarEdicion()">Cancel·lar Edició</button>
                 
-                <hr style="margin: 20px 0; border: 0; border-top: 1px solid #f1f5f9;">
-                <button class="btn-main" style="background: #0f172a;" onclick="abrirExportar()">Exportar Genograma</button>
+                <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn-main" style="background: #10b981;" onclick="guardarProgreso(true)">Guardar Canvis</button>
+                    <button class="btn-main" style="background: #0f172a;" onclick="exportarProceso()">Exportar Genograma</button>
+                </div>
             </div>
         </aside>
 
         <main class="canvas-area">
-            <div class="edit-badge" id="editBadge">MODRE EDICIÓ ACTIU</div>
-            <canvas id="genogram-stage" width="900" height="700"></canvas>
+            <div class="edit-badge" id="editBadge">MODE EDICIÓ ACTIU</div>
+            <canvas id="genogram-stage"></canvas>
             
             <nav class="bottom-toolbar">
-                <button class="tool-item active" onclick="setTool('select', this)">Selecció / Editar</button>
-                <button class="tool-item" onclick="setTool('line_mat', this)">Matrimoni</button>
-                <button class="tool-item" onclick="setTool('line_child', this)">Fill</button>
-                <button class="tool-item" onclick="setTool('line_conflict', this)" style="color:#ef4444">Conflicte</button>
+                <button class="tool-item active" onclick="setTool('select', this)">Selecció</button>
+                <button class="tool-item" onclick="setTool('l_norm', this)">Relació</button>
+                <button class="tool-item" onclick="setTool('l_strong', this)">Forta</button>
+                <button class="tool-item" onclick="setTool('l_weak', this)">Dèbil</button>
+                <button class="tool-item" onclick="setTool('l_conflict', this)" style="color:#ef4444">Conflicte</button>
+                <button class="tool-item" onclick="setTool('l_unstable', this)" style="color:#f59e0b">~~~ Inestable</button>
+                <button class="tool-item" onclick="setTool('l_abuse', this)" style="color:#7c3aed">Abús (->)</button>
+                <button class="tool-item" onclick="setTool('l_sep', this)" style="color:#64748b">Separació (/)</button>
+                <button class="tool-item" onclick="setTool('l_div', this)" style="color:#1e293b">Divorci (//)</button>
             </nav>
         </main>
     </div>
 
     <div class="modal-overlay" id="exitModal">
         <div class="modal-content">
-            <div class="modal-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
-            <div class="modal-title">Canvis sense guardar</div>
-            <div class="modal-text">Si surts ara perdràs el disseny actual.</div>
-            <div class="modal-btns" style="display:flex; gap:10px;">
-                <button class="btn-modal" style="background:#f1f5f9" onclick="cerrarModal()">Tornar</button>
-                <button class="btn-modal" style="background:#ef4444; color:white" onclick="window.location.href=rutaSuite">Sortir</button>
+            <div style="font-weight:800; margin-bottom:10px;">Sortir de l'editor?</div>
+            <div style="font-size:0.8rem; margin-bottom:20px;">Assegura't de guardar els canvis abans de sortir.</div>
+            <div style="display:flex; gap:10px;">
+                <button style="background:#f1f5f9; border:none; padding:10px; flex:1; border-radius:8px; cursor:pointer;" onclick="cerrarModal()">Tornar</button>
+                <button style="background:#ef4444; color:white; border:none; padding:10px; flex:1; border-radius:8px; cursor:pointer;" onclick="window.location.href='nexepsy.html'">Sortir</button>
             </div>
         </div>
     </div>
 
-    <script src="js/bbdd.js"></script>
     <script>
         const canvas = document.getElementById('genogram-stage');
         const ctx = canvas.getContext('2d');
+        
+        function setupCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = 900 * dpr;
+            canvas.height = 700 * dpr;
+            ctx.scale(dpr, dpr);
+            canvas.style.width = '900px';
+            canvas.style.height = '700px';
+        }
+        setupCanvas();
+
         let nodes = []; let links = [];
         let currentTool = 'select';
-        let isChanged = false;
         let selectedNode = null;
-        const rutaSuite = 'nexepsy.html';
+        let isDragging = false;
+        let startX, startY;
+        let expedientesDB = [];
 
-        // --- CONEXIÓ AUTOMÀTICA BBDD ---
-        const params = new URLSearchParams(window.location.search);
-        const idFam = params.get('id_familia');
-        const tec = params.get('tecnico') || "Tècnic no assignat";
-
+        // --- CARGA DESDE LA "BASE DE DATOS" (LocalStorage) ---
         window.onload = function() {
-            if (idFam && typeof BBDD !== 'undefined') {
-                const familia = BBDD.families.find(f => f.id === idFam);
-                if (familia) {
-                    // Desa dades de capçalera per a l'exportació
-                    localStorage.setItem('familia_data', JSON.stringify({
-                        id: familia.id,
-                        apellidos: (familia.cognoms_referencia || familia.cognoms || "").replace(/-/g, ' '),
-                        tecnico: tec
-                    }));
-                    importarMembres(familia.membres);
+            // 1. Obtener ID del expediente actual
+            const currentID = localStorage.getItem('current_id_expedient') || "U2026/01";
+            
+            // 2. Cargar expedientes de la BBDD simulada
+            const rawExp = localStorage.getItem('nexe_persones');
+            expedientesDB = rawExp ? JSON.parse(rawExp) : [];
+
+            // 3. Buscar el expediente activo y su familia
+            const activo = expedientesDB.find(e => e.id === currentID);
+            
+            if(activo) {
+                document.getElementById('disp_id').innerText = "ID: " + activo.id;
+                document.getElementById('disp_fam').innerText = "Família: " + activo.cognoms;
+                
+                // Llenar el selector con él y sus vínculos
+                const select = document.getElementById('selectFromDB');
+                
+                // Añadir al titular
+                let opt = document.createElement('option');
+                opt.value = activo.id;
+                opt.text = activo.nom + " (Titular)";
+                select.add(opt);
+
+                // Añadir vínculos conocidos
+                if(activo.vincles_detallats) {
+                    activo.vincles_detallats.forEach(v => {
+                        let optV = document.createElement('option');
+                        optV.value = v.id_vincle;
+                        optV.text = v.nom + " (" + v.relacio + ")";
+                        select.add(optV);
+                    });
                 }
             }
+
+            // Cargar estado anterior del lienzo si existe
+            const savedNodes = localStorage.getItem('genograma_nodes');
+            const savedLinks = localStorage.getItem('genograma_links');
+            if(savedNodes) nodes = JSON.parse(savedNodes);
+            if(savedLinks) links = JSON.parse(savedLinks);
+            
             render();
         };
 
-        function importarMembres(membres) {
-            membres.forEach((m, i) => {
-                let d = "", mon = "", y = "";
-                if(m.data_naixement && m.data_naixement.includes('/')) {
-                    const parts = m.data_naixement.split('/');
-                    d = parts[0]; mon = parts[1]; y = parts[2];
-                } else if (m.data_naixement && m.data_naixement.includes('-')) {
-                    const parts = m.data_naixement.split('-');
-                    y = parts[0]; mon = parts[1]; d = parts[2];
+        // Función para autocompletar desde el selector
+        function autoFillFromDB() {
+            const id = document.getElementById('selectFromDB').value;
+            if(!id) return;
+
+            const persona = expedientesDB.find(p => p.id === id);
+            if(persona) {
+                document.getElementById('nodeName').value = persona.nom + " " + (persona.cognoms || "");
+                if(persona.dataNaixement) {
+                    const fecha = new Date(persona.dataNaixement);
+                    document.getElementById('birthDay').value = fecha.getDate();
+                    document.getElementById('birthMonth').value = fecha.getMonth() + 1;
+                    document.getElementById('birthYear').value = fecha.getFullYear();
+                    calcularEdadExacta();
                 }
-
-                nodes.push({
-                    id: Date.now() + i,
-                    name: m.nom || "Membre",
-                    day: d, month: mon, year: y,
-                    age: calcularEdadBase(d, mon, y),
-                    type: (m.rol === 'Pare' || m.rol === 'Fill') ? 'male' : 'female',
-                    dead: 'no',
-                    social: m.instruccions || '',
-                    x: 150 + (i * 120), y: 250 + (i % 2 * 50)
-                });
-            });
+                document.getElementById('nodeType').value = persona.tipus === 'adult' ? 'male' : 'male'; // Ajuste manual por el usuario
+                if(persona.id === localStorage.getItem('current_id_expedient')) {
+                    document.getElementById('nodeRole').value = 'ip';
+                }
+            }
         }
 
-        function calcularEdadBase(d, m, y) {
-            if(!y || y < 1900) return "";
-            const birth = new Date(y, m - 1, d);
-            const today = new Date();
-            let age = today.getFullYear() - birth.getFullYear();
-            if (today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) age--;
-            return age >= 0 ? age : "";
+        // --- LÓGICA DE GUARDADO ---
+        function guardarProgreso(showToast = true) {
+            const tempSelected = selectedNode;
+            selectedNode = null;
+            render();
+
+            try {
+                localStorage.setItem('genograma_temp', canvas.toDataURL('image/png'));
+                localStorage.setItem('genograma_nodes', JSON.stringify(nodes));
+                localStorage.setItem('genograma_links', JSON.stringify(links));
+
+                if(showToast) {
+                    const toast = document.getElementById('saveToast');
+                    toast.style.display = 'block';
+                    setTimeout(() => toast.style.display = 'none', 2500);
+                }
+            } catch (e) { console.error("Error al guardar:", e); }
+
+            selectedNode = tempSelected;
+            render();
         }
 
+        function exportarProceso() {
+            guardarProgreso(false);
+            window.location.href = 'genograma-export.html';
+        }
+
+        // --- FUNCIONES DEL CANVAS (Mantenidas) ---
         function setTool(tool, btn) {
             currentTool = tool;
             document.querySelectorAll('.tool-item').forEach(b => b.classList.remove('active'));
@@ -221,7 +345,12 @@
             const d = document.getElementById('birthDay').value;
             const m = document.getElementById('birthMonth').value;
             const y = document.getElementById('birthYear').value;
-            document.getElementById('nodeAge').value = calcularEdadBase(d, m, y);
+            if(!y || y < 1900) return;
+            const birth = new Date(y, m - 1, d);
+            const today = new Date();
+            let age = today.getFullYear() - birth.getFullYear();
+            if (today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) age--;
+            document.getElementById('nodeAge').value = age >= 0 ? age : "";
         }
 
         function guardarMiembro() {
@@ -232,7 +361,9 @@
                 year: document.getElementById('birthYear').value,
                 age: document.getElementById('nodeAge').value,
                 type: document.getElementById('nodeType').value,
-                dead: document.getElementById('nodeDead').value,
+                role: document.getElementById('nodeRole').value,
+                network: document.getElementById('nodeNetwork').value,
+                risk: document.getElementById('nodeRisk').value,
                 social: document.getElementById('nodeSocial').value
             };
 
@@ -242,27 +373,20 @@
             } else {
                 nodes.push({...data, id: Date.now(), x: 450, y: 350});
             }
-            isChanged = true; resetForm(); render();
+            resetForm(); render();
         }
 
         function resetForm() {
-            ['nodeName','birthDay','birthMonth','birthYear','nodeAge','nodeSocial'].forEach(id => document.getElementById(id).value = "");
-            document.getElementById('nodeType').value = "male";
-            document.getElementById('nodeDead').value = "no";
+            ['nodeName','birthDay','birthMonth','birthYear','nodeAge','nodeSocial','selectFromDB'].forEach(id => document.getElementById(id).value = "");
         }
 
         function cargarDatosEdicion(node) {
             selectedNode = node;
             document.getElementById('nodeName').value = node.name;
-            document.getElementById('birthDay').value = node.day;
-            document.getElementById('birthMonth').value = node.month;
-            document.getElementById('birthYear').value = node.year;
             document.getElementById('nodeAge').value = node.age;
             document.getElementById('nodeType').value = node.type;
-            document.getElementById('nodeDead').value = node.dead;
-            document.getElementById('nodeSocial').value = node.social;
-            
-            document.getElementById('formTitle').innerText = "Editant Membre";
+            document.getElementById('nodeRole').value = node.role;
+            document.getElementById('formTitle').innerText = "Editant Element";
             document.getElementById('btnSave').innerText = "Guardar Canvis";
             document.getElementById('btnCancelEdit').style.display = "block";
             document.getElementById('editBadge').style.display = "block";
@@ -271,7 +395,7 @@
         function cancelarEdicion() {
             selectedNode = null;
             resetForm();
-            document.getElementById('formTitle').innerText = "Nou Membre";
+            document.getElementById('formTitle').innerText = "Identificació Membre";
             document.getElementById('btnSave').innerText = "Afegir al Mapa";
             document.getElementById('btnCancelEdit').style.display = "none";
             document.getElementById('editBadge').style.display = "none";
@@ -279,77 +403,56 @@
         }
 
         function render() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, 900, 700);
             links.forEach(l => {
-                ctx.beginPath(); 
-                ctx.strokeStyle = (l.type === 'line_conflict') ? '#ef4444' : '#1e293b';
-                ctx.lineWidth = 2; 
-                ctx.moveTo(l.x1, l.y1); ctx.lineTo(l.x2, l.y2); 
+                ctx.beginPath();
+                ctx.lineWidth = (l.type === 'l_strong') ? 4 : 2;
+                ctx.strokeStyle = "#1e293b";
+                ctx.setLineDash(l.type === 'l_weak' ? [5, 5] : []);
+                ctx.moveTo(l.x1, l.y1); ctx.lineTo(l.x2, l.y2);
                 ctx.stroke();
             });
             nodes.forEach(n => {
                 ctx.save(); ctx.translate(n.x, n.y);
                 ctx.strokeStyle = (selectedNode === n) ? "#6366f1" : "#1e293b";
-                ctx.lineWidth = (selectedNode === n) ? 4 : 2;
+                ctx.lineWidth = (n.role === 'ip') ? 4 : 2;
                 ctx.beginPath();
-                if(n.type.includes('male')) ctx.strokeRect(-20, -20, 40, 40);
-                else if(n.type.includes('female')) { ctx.arc(0,0,20,0,Math.PI*2); ctx.stroke(); }
-                if(n.dead === 'yes') { 
-                    ctx.beginPath(); ctx.lineWidth = 2;
-                    ctx.moveTo(-15,-15); ctx.lineTo(15,15); ctx.moveTo(15,-15); ctx.lineTo(-15,15); 
-                    ctx.stroke(); 
-                }
-                ctx.fillStyle = "#1e293b"; ctx.textAlign = "center"; ctx.font = "bold 10px Inter";
-                ctx.fillText(n.age, 0, 4); 
-                ctx.font = "600 11px Inter";
-                ctx.fillText(n.name, 0, 35);
+                if (n.type === 'male') ctx.strokeRect(-20, -20, 40, 40);
+                else if (n.type === 'female') { ctx.arc(0, 0, 20, 0, Math.PI * 2); ctx.stroke(); }
+                ctx.fillStyle = "#1e293b"; ctx.textAlign = "center"; 
+                ctx.font = "bold 10px Inter"; ctx.fillText(n.age || "", 0, 4); 
+                ctx.font = "600 11px Inter"; ctx.fillText(n.name, 0, 40);
                 ctx.restore();
             });
         }
 
-        let isDragging = false; let startX, startY;
         canvas.addEventListener('mousedown', e => {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left; const y = e.clientY - rect.top;
             const target = nodes.find(n => Math.hypot(n.x - x, n.y - y) < 30);
             if(currentTool === 'select' && target) {
                 cargarDatosEdicion(target); isDragging = true;
-            } else if(currentTool !== 'select') {
-                startX = x; startY = y;
+            } else if(currentTool.startsWith('l_') && target) {
+                startX = target.x; startY = target.y; isDragging = "link";
             }
-            render();
         });
 
         canvas.addEventListener('mousemove', e => {
-            if(!isDragging || !selectedNode) return;
+            if(!isDragging || isDragging === "link") return;
             const rect = canvas.getBoundingClientRect();
-            selectedNode.x = e.clientX - rect.left;
-            selectedNode.y = e.clientY - rect.top;
+            selectedNode.x = e.clientX - rect.left; selectedNode.y = e.clientY - rect.top;
             render();
         });
 
         canvas.addEventListener('mouseup', e => {
-            if(currentTool !== 'select' && !isDragging) {
+            if(isDragging === "link") {
                 const rect = canvas.getBoundingClientRect();
-                links.push({x1: startX, y1: startY, x2: e.clientX - rect.left, y2: e.clientY - rect.top, type: currentTool});
-                render();
+                const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+                const target = nodes.find(n => Math.hypot(n.x - x, n.y - y) < 30);
+                if(target) links.push({x1: startX, y1: startY, x2: target.x, y2: target.y, type: currentTool});
             }
-            isDragging = false;
+            isDragging = false; render();
         });
-
-        window.addEventListener('keydown', e => {
-            if((e.key === "Delete" || e.key === "Backspace") && selectedNode) {
-                nodes = nodes.filter(n => n !== selectedNode);
-                cancelarEdicion();
-            }
-        });
-
-        function abrirExportar() {
-            selectedNode = null; render();
-            const dataUrl = canvas.toDataURL("image/png");
-            localStorage.setItem('genograma_temp', dataUrl);
-            window.open('genograma-export.html', '_blank');
-        }
 
         function mostrarModal() { document.getElementById('exitModal').style.display = 'flex'; }
         function cerrarModal() { document.getElementById('exitModal').style.display = 'none'; }

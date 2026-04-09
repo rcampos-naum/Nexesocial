@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detall d'Expedient - NexePsy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --danger: #ef4444;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #f8fafc;
+            --border: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; }
+        body { 
+            margin: 0; background-color: var(--bg-body); color: var(--text-main); 
+            font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; 
+        }
+
+        /* EFECTE BLUR (DESENFOQUE) DINÀMIC */
+        #sidebar-container, .main-content { transition: filter 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s ease; }
+        body.modal-active #sidebar-container, body.modal-active .main-content {
+            filter: blur(12px); pointer-events: none; transform: scale(0.98);
+        }
+
+        .main-content { flex-grow: 1; margin-left: 280px; padding: 40px 60px; max-width: calc(100% - 280px); }
+
+        /* BOTONS VITAMINATS */
+        .btn-svg {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 12px 22px; border-radius: 14px; font-weight: 700;
+            cursor: pointer; border: none; transition: 0.3s; font-family: inherit; font-size: 0.95rem;
+        }
+        .btn-svg-primary { background: var(--primary); color: white; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3); }
+        .btn-svg-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
+        
+        .btn-svg-outline { background: white; color: var(--text-main); border: 1px solid var(--border); }
+        .btn-svg-outline:hover { background: #f1f5f9; border-color: #cbd5e1; }
+
+        .btn-svg-danger { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        .btn-svg-danger:hover { background: #fecaca; transform: translateY(-2px); }
+
+        /* HEADER CARD */
+        .exp-header-card {
+            background: white; border-radius: 28px; padding: 35px;
+            border: 1px solid var(--border); display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .user-profile { display: flex; align-items: center; gap: 25px; }
+        .avatar-circle {
+            width: 70px; height: 70px; background: var(--primary); color: white;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; font-weight: 800; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+        }
+
+        /* GRID & PANELS */
+        .info-grid { display: grid; grid-template-columns: 380px 1fr; gap: 30px; }
+        .panel { background: white; border-radius: 24px; border: 1px solid var(--border); padding: 30px; margin-bottom: 30px; }
+        
+        /* GENOGRAMA DISPLAY */
+        .genograma-container {
+            width: 100%; height: 220px; background: #f1f5f9; border-radius: 18px;
+            border: 2px dashed #cbd5e1; margin-top: 15px; display: flex; align-items: center;
+            justify-content: center; overflow: hidden; position: relative;
+        }
+        .genograma-container img { width: 100%; height: 100%; object-fit: contain; padding: 10px; }
+        .genograma-tag { position: absolute; top: 10px; right: 10px; background: white; padding: 4px 8px; border-radius: 6px; font-size: 0.6rem; font-weight: 800; color: var(--text-muted); }
+
+        /* DROPDOWN */
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content {
+            display: none; position: absolute; right: 0; background-color: white;
+            min-width: 200px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            border-radius: 16px; z-index: 100; border: 1px solid var(--border); padding: 8px;
+        }
+        .dropdown-content a {
+            color: var(--text-main); padding: 12px 16px; text-decoration: none;
+            display: block; font-size: 0.9rem; font-weight: 600; border-radius: 10px;
+        }
+        .dropdown-content a:hover { background-color: #f1f5f9; color: var(--primary); }
+        .dropdown:hover .dropdown-content { display: block; }
+
+        /* MODALS AMPLIATS */
+        .modal {
+            display: none; position: fixed; z-index: 9999;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.7); align-items: center; justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: white; padding: 40px; width: 95%; max-width: 1000px;
+            max-height: 92vh; overflow-y: auto; border-radius: 35px; position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .close-modal { position: absolute; right: 30px; top: 25px; font-size: 32px; cursor: pointer; color: var(--text-muted); transition: 0.2s; }
+        .close-modal:hover { color: var(--danger); }
+
+        /* ESTIL PER AL MODAL D'IFRAME (INFORMES NOUS) */
+        .modal-iframe-container {
+            width: 100%;
+            height: 75vh;
+            border: none;
+            border-radius: 15px;
+        }
+
+        /* REPORTS DETALLATS */
+        .report-item {
+            padding: 22px; background: #ffffff; border-radius: 20px; margin-bottom: 15px;
+            border: 1px solid var(--border); transition: 0.3s;
+        }
+        .report-item:hover { border-color: var(--primary); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04); }
+        
+        .type-tag { font-size: 0.7rem; padding: 5px 12px; border-radius: 50px; font-weight: 800; text-transform: uppercase; }
+        .tag-inicial { background: #e0f2fe; color: #0369a1; }
+        .tag-seguiment { background: #fef3c7; color: #92400e; }
+        .tag-final { background: #fee2e2; color: #991b1b; }
+        
+        .data-label { color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-top: 20px; display: block; letter-spacing: 0.5px; }
+
+        /* PDF STYLE */
+        .pdf-report-block { border-bottom: 1px solid #eee; padding: 20px 0; page-break-inside: avoid; }
+        .pdf-report-block:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar-container"></div>
+
+    <main class="main-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <a href="nexepsy.html" class="btn-svg btn-svg-outline">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 19l-7-7 7-7"/></svg>
+                Tornar al llistat
+            </a>
+            <button class="btn-svg btn-svg-danger" onclick="obrirModalTancament()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18.36 6.64a9 9 0 11-12.73 0M12 2v10"/></svg>
+                Tancar Expedient Clínic
+            </button>
+        </div>
+
+        <div class="exp-header-card" id="headerCard" style="display: none;">
+            <div class="user-profile">
+                <div class="avatar-circle" id="avatar">?</div>
+                <div>
+                    <h1 id="nomComplet" style="margin:0; font-size: 2rem; letter-spacing: -1px;">Carregant...</h1>
+                    <p id="subInfo" style="margin: 5px 0 0; color: var(--text-muted); font-size: 1.1rem; font-weight: 500;"></p>
+                </div>
+            </div>
+            <button class="btn-svg btn-svg-primary" onclick="obrirModal('modalExpedientComplet')">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Generar PDF Expedient Complet
+            </button>
+        </div>
+
+        <div class="info-grid" id="mainGrid" style="display: none;">
+            <div class="left-col">
+                <div class="panel">
+                    <h3 style="margin-top:0;">Genograma Familiar</h3>
+                    <div class="genograma-container" id="genogramaDisplay">
+                        <span style="color:var(--text-muted); font-size: 0.8rem;">Sense genograma assignat</span>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3 style="margin-top:0;">Estat Clínic Actual</h3>
+                    <span class="data-label">Diagnòstics Principals</span>
+                    <div class="editable-field" id="valDiagnos" onclick="activarEdicio('valDiagnos')" style="cursor:pointer; padding:15px; border:1px dashed #cbd5e1; border-radius:12px; margin-top:8px; background: #fcfcfd; min-height: 60px;"></div>
+                    
+                    <span class="data-label">Observacions Terapèutiques</span>
+                    <div class="editable-field" id="valObs" onclick="activarEdicio('valObs')" style="cursor:pointer; padding:15px; border:1px dashed #cbd5e1; border-radius:12px; margin-top:8px; background: #fcfcfd; min-height: 60px;"></div>
+                </div>
+            </div>
+
+            <div class="right-col">
+                <div class="panel">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+                        <h3 style="margin:0;">Historial d'Intervencions</h3>
+                        <div class="dropdown">
+                            <button class="btn-svg btn-svg-primary">+ Nou Informe</button>
+                            <div class="dropdown-content">
+                                <a href="#" onclick="nouInforme('inicial')">Informe Inicial</a>
+                                <a href="#" onclick="nouInforme('seguiment')">Informe Seguiment</a>
+                                <a href="#" onclick="nouInforme('final')">Informe Final</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="reportList"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modalInforme" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="tancarModals()">&times;</span>
+            <h2 id="modalInformeTitol">Detall de la Intervenció</h2>
+            <div id="printableSingleReport">
+                <div id="contingutInformeDetallat" style="background:#f8fafc; padding:30px; border-radius:20px; border:1px solid var(--border); line-height: 1.6;">
+                </div>
+            </div>
+            <div style="margin-top:30px; text-align:right; display:flex; justify-content:flex-end; gap:15px;">
+                <button class="btn-svg btn-svg-outline" onclick="tancarModals()">Tancar Vista</button>
+                <button id="btnImprimirIndividual" class="btn-svg btn-svg-primary">Imprimir Informe</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalFormulari" class="modal">
+        <div class="modal-content" style="max-width: 1200px; width: 95%;">
+            <span class="close-modal" onclick="tancarModals()">&times;</span>
+            <h2 id="modalFormulariTitol" style="margin-bottom: 20px;">Nou Informe</h2>
+            <iframe id="iframeFormulari" src="" class="modal-iframe-container"></iframe>
+        </div>
+    </div>
+
+    <div id="modalTancament" class="modal">
+        <div class="modal-content" style="max-width: 550px;">
+            <span class="close-modal" onclick="tancarModals()">&times;</span>
+            <h2 style="color:var(--danger);">Tancament d'Expedient</h2>
+            <p style="color:var(--text-muted); margin-bottom: 25px;">En tancar l'expedient, aquest quedarà arxivat i no es podran afegir més informes sense reobrir-lo.</p>
+            
+            <label style="font-weight:700; font-size:0.9rem;">Motiu del tancament:</label>
+            <select id="motiuTancament" style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--border); margin-top:10px; font-family:inherit; font-weight:600; color:var(--text-main);">
+                <option value="alta">Alta per finalització de tractament (Objectius complerts)</option>
+                <option value="abandonament">Abandonament / Baixa voluntària del pacient</option>
+                <option value="derivacio">Derivació a un altre recurs extern</option>
+                <option value="altres">Altres motius clínics/administratius</option>
+            </select>
+            
+            <label style="font-weight:700; font-size:0.9rem; display:block; margin-top:20px;">Resum de tancament:</label>
+            <textarea id="obsTancament" placeholder="Escriu una breu conclusió final sobre el cas..." style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--border); margin-top:10px; font-family:inherit;" rows="4"></textarea>
+            
+            <div style="margin-top:30px; display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <button class="btn-svg btn-svg-outline" onclick="tancarModals()">Cancel·lar</button>
+                <button class="btn-svg btn-svg-danger" onclick="confirmarTancament()" style="background:var(--danger); color:white; justify-content:center;">Confirmar Tancament</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalExpedientComplet" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="tancarModals()">&times;</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; border-bottom:1px solid #eee; padding-bottom:20px;">
+                <div>
+                    <h2 style="margin:0;">Previsualització d'Expedient Clínic</h2>
+                    <p style="margin:5px 0 0; color:var(--text-muted); font-size:0.9rem;">Documentació integral del pacient segons la LOPD.</p>
+                </div>
+                <button class="btn-svg btn-svg-primary" onclick="generarPDF()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    Baixar PDF Oficial
+                </button>
+            </div>
+
+            <div id="printableArea" style="background:white; padding:50px; border:1px solid #e2e8f0; color:#1a1a1a; font-family: 'Inter', sans-serif;">
+                <div style="display:flex; justify-content:space-between; border-bottom:3px solid #6366f1; padding-bottom:25px; margin-bottom:40px;">
+                    <img src="img/NexeSocial-logo.png" style="height:50px;">
+                    <div style="text-align:right;">
+                        <img src="img/NexePsy.svg" style="height:45px;">
+                        <p style="margin:5px 0 0; font-size:8pt; font-weight:700; color:#6366f1;">SERVEIS D'ATENCIÓ PSICOLÒGICA</p>
+                    </div>
+                </div>
+
+                <h1 id="pdf-nom" style="font-size: 26pt; margin:0; letter-spacing:-1px;"></h1>
+                <p id="pdf-meta" style="font-size: 11pt; color:#555; margin-bottom:40px;"></p>
+
+                <div style="margin-bottom:40px;">
+                    <h3 style="background:#f1f5f9; padding:10px 15px; border-radius:8px; font-size:14pt;">1. ESTRUCTURA FAMILIAR (GENOGRAMA)</h3>
+                    <div id="pdf-genograma-img" style="width:100%; border:1px solid #eee; border-radius:15px; text-align:center; padding:20px;">
+                        </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px; margin-bottom:40px;">
+                    <div>
+                        <h4 style="color:#6366f1; border-bottom:1px solid #eee; padding-bottom:5px;">DIAGNÒSTICS</h4>
+                        <p id="pdf-diagnos" style="font-size:10pt; line-height:1.5; white-space: pre-wrap;"></p>
+                    </div>
+                    <div>
+                        <h4 style="color:#6366f1; border-bottom:1px solid #eee; padding-bottom:5px;">OBSERVACIONS CLÍNIQUES</h4>
+                        <p id="pdf-obs" style="font-size:10pt; line-height:1.5; white-space: pre-wrap;"></p>
+                    </div>
+                </div>
+
+                <h3 style="background:#f1f5f9; padding:10px 15px; border-radius:8px; font-size:14pt;">2. HISTORIAL DE TRACTAMENT I EVOLUCIÓ</h3>
+                <div id="pdf-llista-informes-detall"></div>
+
+                <div style="margin-top:60px; border-top:1px solid #eee; padding-top:20px; font-size:8pt; color:#999; text-align:center;">
+                    Aquest document conté informació confidencial. El seu tractament està subjecte al Reglament (UE) 2016/679 de Protecció de Dades.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="sidebar-nexepsy.js"></script>
+
+    <script>
+        let expedientActual = null;
+        const targetID = new URLSearchParams(window.location.search).get('id');
+
+        // Dades simulades d'informes amb contingut extens
+        const dadesInformes = [
+            { 
+                id: 1, 
+                titol: "Valoració de Benvinguda i Anamnesi", 
+                data: "12/04/2026", 
+                tipus: "inicial", 
+                tag: "tag-inicial",
+                contingut: "S'ha realitzat l'entrevista inicial amb el pacient. Es detecta un quadre d'ansietat generalitzada vinculat a l'entorn laboral. S'ha explicat el consentiment informat i s'ha acceptat el pla de treball inicial de 10 sessions.",
+                objectius: "Establir aliança terapèutica. Avaluar l'impacte de l'ansietat en el son."
+            },
+            { 
+                id: 2, 
+                titol: "Evolució Trimestral - Q2", 
+                data: "15/06/2026", 
+                tipus: "seguiment", 
+                tag: "tag-seguiment",
+                contingut: "Millora notable en la higiene del son. El pacient ha començat a aplicar tècniques de reestructuració cognitiva davant pensaments intrusius. Es manté la pauta terapèutica.",
+                objectius: "Consolidar eines d'autoajuda. Començar treball d'exposició gradual."
+            }
+        ];
+
+        window.onload = function() {
+            if (typeof DB_Tools !== 'undefined' && targetID) {
+                expedientActual = DB_Tools.buscarPerID(targetID);
+                if (expedientActual) mostrarDades(expedientActual);
+            }
+        };
+
+        function mostrarDades(exp) {
+            document.getElementById('headerCard').style.display = 'flex';
+            document.getElementById('mainGrid').style.display = 'grid';
+            document.getElementById('nomComplet').innerText = `${exp.nom} ${exp.cognoms}`;
+            document.getElementById('avatar').innerText = exp.nom.charAt(0);
+            document.getElementById('subInfo').innerText = `DNI: ${exp.dni} | Edat: ${exp.edat || '--'} anys | ID: ${exp.id_psy}`;
+            document.getElementById('valDiagnos').innerText = exp.salut.diagnostics || "Sense dades registrades. Clica per editar.";
+            document.getElementById('valObs').innerText = exp.salut.observacions || "Sense dades registrades. Clica per editar.";
+            
+            // Carregar Genograma a la UI
+            if(exp.genograma) {
+                document.getElementById('genogramaDisplay').innerHTML = `
+                    <img src="${exp.genograma}" alt="Genograma del pacient">
+                    <div class="genograma-tag">ACTUALITZAT 2026</div>
+                `;
+            }
+
+            // Carregar llista d'informes a la UI
+            const llista = document.getElementById('reportList');
+            llista.innerHTML = dadesInformes.map(i => `
+                <div class="report-item">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <span class="type-tag ${i.tag}">${i.tipus}</span>
+                            <div style="font-weight:800; margin-top:10px; font-size:1.1rem;">${i.titol}</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Data de registre: ${i.data}</div>
+                        </div>
+                        <button class="btn-svg btn-svg-outline" onclick="obrirVisualitzador(${i.id})">Veure Detall</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- CONTROL MODALS AMB EFECTE BLUR ---
+        function obrirModal(id) {
+            document.getElementById(id).style.display = 'flex';
+            document.body.classList.add('modal-active');
+            
+            // Si és el PDF, omplim les dades detallades
+            if(id === 'modalExpedientComplet') {
+                document.getElementById('pdf-nom').innerText = `${expedientActual.nom} ${expedientActual.cognoms}`;
+                document.getElementById('pdf-meta').innerText = `DNI: ${expedientActual.dni} | ID: ${expedientActual.id_psy} | Data document: ${new Date().toLocaleDateString()}`;
+                document.getElementById('pdf-diagnos').innerText = expedientActual.salut.diagnostics || "N/A";
+                document.getElementById('pdf-obs').innerText = expedientActual.salut.observacions || "N/A";
+
+                // Genograma al PDF
+                const genImgPdf = document.getElementById('pdf-genograma-img');
+                if(expedientActual.genograma) {
+                    genImgPdf.innerHTML = `<img src="${expedientActual.genograma}" style="max-width:80%; max-height:300px;">`;
+                } else {
+                    genImgPdf.innerHTML = "<p style='color:#999'>No s'ha generat cap genograma per a aquest pacient.</p>";
+                }
+
+                // Informes desplegats al PDF
+                const llistaDetallada = document.getElementById('pdf-llista-informes-detall');
+                llistaDetallada.innerHTML = dadesInformes.map(inf => `
+                    <div class="pdf-report-block">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <strong style="font-size:12pt; text-transform:uppercase;">${inf.titol}</strong>
+                            <span style="font-size:9pt; color:#666;">Data: ${inf.data}</span>
+                        </div>
+                        <p style="font-size:10pt; margin:5px 0;"><strong>Evolució:</strong> ${inf.contingut}</p>
+                        <p style="font-size:10pt; margin:5px 0;"><strong>Objectius:</strong> ${inf.objectius}</p>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function obrirVisualitzador(id) {
+            const inf = dadesInformes.find(x => x.id === id);
+            document.getElementById('modalInformeTitol').innerText = inf.titol;
+            document.getElementById('contingutInformeDetallat').innerHTML = `
+                <p><strong>Data de la sessió:</strong> ${inf.data}</p>
+                <p><strong>Evolució Clínica:</strong><br>${inf.contingut}</p>
+                <hr style="border:0; border-top:1px solid #e2e8f0; margin:20px 0;">
+                <p><strong>Objectius Terapèutics:</strong><br>${inf.objectius}</p>
+            `;
+            
+            // Assignar funció d'impressió al botó
+            document.getElementById('btnImprimirIndividual').onclick = () => imprimirInformeIndividual(id);
+            
+            obrirModal('modalInforme');
+        }
+
+        function obrirModalTancament() {
+            obrirModal('modalTancament');
+        }
+
+        function tancarModals() {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(m => m.style.display = 'none');
+            document.body.classList.remove('modal-active');
+            // Netejar src de l'iframe per seguretat al tancar
+            document.getElementById('iframeFormulari').src = "";
+        }
+
+        // --- NOVA FUNCIÓ D'IMPRESSIÓ INDIVIDUAL ---
+        function imprimirInformeIndividual(id) {
+            const inf = dadesInformes.find(x => x.id === id);
+            const element = document.createElement('div');
+            
+            // Estructura visual per al PDF individual
+            element.innerHTML = `
+                <div style="padding: 40px; font-family: 'Inter', sans-serif;">
+                    <div style="display:flex; justify-content:space-between; border-bottom:2px solid #6366f1; padding-bottom:15px; margin-bottom:30px;">
+                        <div style="font-size: 10pt; color: #64748b;">NexePsy - Informe de Sessió</div>
+                        <div style="font-size: 10pt; font-weight: bold; color: #6366f1;">PACIENT: ${expedientActual.nom} ${expedientActual.cognoms}</div>
+                    </div>
+                    <h1 style="font-size: 20pt; margin-bottom: 5px;">${inf.titol}</h1>
+                    <p style="color: #64748b; margin-bottom: 30px;">Data de l'informe: ${inf.data}</p>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">Evolució Clínica</h3>
+                        <p style="font-size: 11pt; line-height: 1.6;">${inf.contingut}</p>
+                    </div>
+
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">Objectius Terapèutics</h3>
+                        <p style="font-size: 11pt; line-height: 1.6;">${inf.objectius}</p>
+                    </div>
+
+                    <div style="margin-top: 50px; text-align: center; font-size: 9pt; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+                        Document generat des de la plataforma clínica NexePsy.
+                    </div>
+                </div>
+            `;
+
+            const opt = {
+                margin: 15,
+                filename: `Informe_${inf.tipus}_${expedientActual.nom}_${inf.data.replace(/\//g,'-')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // --- ACCIONS ACTUALITZADES ---
+        function nouInforme(tipus) {
+            const iframe = document.getElementById('iframeFormulari');
+            const titol = document.getElementById('modalFormulariTitol');
+            
+            if (tipus === 'inicial') {
+                window.location.href = `informe-psicosocial.html?id=${targetID}`;
+            } 
+            else if (tipus === 'seguiment') {
+                titol.innerText = "Nou Informe de Seguiment";
+                iframe.src = `nexepsy-infseg.html?id=${targetID}`;
+                obrirModal('modalFormulari');
+            } 
+            else if (tipus === 'final') {
+                titol.innerText = "Nou Informe Final";
+                iframe.src = `nexepsy-inffin.html?id=${targetID}`;
+                obrirModal('modalFormulari');
+            }
+        }
+
+        function confirmarTancament() {
+            const motiu = document.getElementById('motiuTancament').value;
+            const obs = document.getElementById('obsTancament').value;
+            alert(`Expedient de ${expedientActual.nom} tancat correctament.\nMotiu: ${motiu}\nObs: ${obs}`);
+            tancarModals();
+            window.location.href = "nexepsy-exp.html";
+        }
+
+        function generarPDF() {
+            const element = document.getElementById('printableArea');
+            const opt = {
+                margin: 10,
+                filename: `Expedient_${expedientActual.nom}_${expedientActual.id_psy}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // --- EDICIÓ DINÀMICA ---
+        function activarEdicio(id) {
+            const el = document.getElementById(id);
+            const textActual = (el.innerText.includes("Sense dades")) ? "" : el.innerText;
+            
+            el.innerHTML = `
+                <textarea id="input_${id}" style="width:100%; padding:12px; border-radius:10px; border:2px solid var(--primary); font-family:inherit; min-height:100px;">${textActual}</textarea>
+                <div style="margin-top:10px; display:flex; gap:10px;">
+                    <button class="btn-svg btn-svg-primary" style="padding:6px 15px; font-size:0.8rem;" onclick="guardarDada('${id}')">Desar Canvis</button>
+                    <button class="btn-svg btn-svg-outline" style="padding:6px 15px; font-size:0.8rem;" onclick="cancelarEdicio('${id}', '${textActual}')">Cancel·lar</button>
+                </div>
+            `;
+            el.onclick = null;
+        }
+
+        function guardarDada(id) {
+            const nouText = document.getElementById('input_'+id).value;
+            const el = document.getElementById(id);
+            el.innerText = nouText || "Sense dades registrades. Clica per editar.";
+            el.onclick = () => activarEdicio(id);
+        }
+
+        function cancelarEdicio(id, textVell) {
+            const el = document.getElementById(id);
+            el.innerText = textVell || "Sense dades registrades. Clica per editar.";
+            el.onclick = () => activarEdicio(id);
+        }
+    </script>
+</body>
+</html>
