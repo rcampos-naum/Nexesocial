@@ -1,0 +1,75 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDocPath() {
+      return /databases/(default)/documents/usuarios/$(request.auth.uid);
+    }
+
+    function userExists() {
+      return isSignedIn() && firestore.exists(userDocPath());
+    }
+
+    function userRole() {
+      return !userExists()
+        ? 'viewer'
+        : (firestore.get(userDocPath()).data.role != null
+            ? firestore.get(userDocPath()).data.role
+            : (firestore.get(userDocPath()).data.rol != null ? firestore.get(userDocPath()).data.rol : 'viewer'));
+    }
+
+    function canUpload() {
+      return isSignedIn() && userRole() in ['admin', 'superadmin', 'editor', 'gestor', 'coordinacion', 'coordinador', 'tecnico', 'educador', 'monitor', 'auditor'];
+    }
+
+    function isAdmin() {
+      return isSignedIn() && userRole() in ['admin', 'superadmin'];
+    }
+
+    match /admin/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if canUpload();
+      allow delete: if isAdmin();
+    }
+
+    match /plantilles/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() && request.resource.size < 10 * 1024 * 1024
+                    && request.resource.contentType.matches('application/vnd.openxmlformats.*');
+      allow delete: if isAdmin();
+    }
+
+    match /biblioteca/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow create: if canUpload() && request.resource.size < 20 * 1024 * 1024;
+      allow delete: if isAdmin();
+    }
+
+    match /reportes/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if canUpload();
+      allow delete: if isAdmin();
+    }
+
+    match /perfiles/{userId}/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if request.auth.uid == userId || canUpload();
+      allow delete: if request.auth.uid == userId || isAdmin();
+    }
+
+    match /exports/{allPaths=**} {
+      allow read: if canUpload();
+      allow write: if canUpload();
+      allow delete: if isAdmin();
+    }
+
+    match /{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if canUpload();
+    }
+  }
+}

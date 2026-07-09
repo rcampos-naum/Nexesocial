@@ -1,0 +1,22 @@
+{
+  "name": "nexesocial-security-tests",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Firestore security rules tests for NexeSocial",
+  "scripts": {
+    "test:rules": "firebase emulators:exec --only firestore \"node scripts/test-firestore-rules.js\"",
+    "ops:readiness": "powershell -ExecutionPolicy Bypass -File .\\ops-readiness.ps1",
+    "ops:routes": "powershell -ExecutionPolicy Bypass -File .\\demo-routes-check.ps1",
+    "ops:preflight": "powershell -ExecutionPolicy Bypass -File .\\ops-preflight.ps1",
+    "ops:start": "powershell -ExecutionPolicy Bypass -File .\\ops-start.ps1",
+    "demo:readiness": "powershell -ExecutionPolicy Bypass -File .\\demo-readiness.ps1",
+    "demo:routes": "powershell -ExecutionPolicy Bypass -File .\\demo-routes-check.ps1",
+    "demo:preflight": "powershell -ExecutionPolicy Bypass -File .\\demo-preflight.ps1",
+    "demo:freeze": "powershell -ExecutionPolicy Bypass -File .\\demo-freeze.ps1",
+    "demo:launch": "powershell -ExecutionPolicy Bypass -File .\\demo-launch.ps1"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.3",
+    "firebase": "^10.14.1"
+  }
+}

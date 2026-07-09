@@ -1,0 +1,500 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDocPath() {
+      return /databases/$(database)/documents/usuarios/$(request.auth.uid);
+    }
+
+    function userExists() {
+      return isSignedIn() && exists(userDocPath());
+    }
+
+    function userRole() {
+      return !userExists()
+        ? 'viewer'
+        : (get(userDocPath()).data.role != null
+            ? get(userDocPath()).data.role
+            : (get(userDocPath()).data.rol != null ? get(userDocPath()).data.rol : 'viewer'));
+    }
+
+    function isAdmin() {
+      return isSignedIn() && userRole() in ['admin', 'superadmin'];
+    }
+
+    function canEditOperationalData() {
+      return isSignedIn() && userRole() in ['admin', 'superadmin', 'editor', 'gestor', 'coordinacion', 'coordinador', 'tecnico', 'educador', 'monitor', 'auditor'];
+    }
+
+    function canCreateCorrectiveTicketAsReporter() {
+      return isSignedIn()
+        && request.resource.data.keys().hasOnly([
+          'codiInc',
+          'rmt',
+          'desc',
+          'qui',
+          'quiEmail',
+          'dataSolicitud',
+          'gravetat',
+          'estat',
+          'tecnic',
+          'resolucio',
+          'activNom',
+          'salaId',
+          'salaNom',
+          'createdAt',
+          'canal',
+          'localizador',
+          'reporterUid'
+        ])
+        && request.resource.data.codiInc is string
+        && request.resource.data.desc is string
+        && request.resource.data.desc.size() >= 8
+        && request.resource.data.qui is string
+        && request.resource.data.qui.size() >= 2
+        && request.resource.data.quiEmail is string
+        && request.resource.data.quiEmail == request.auth.token.email
+        && request.resource.data.gravetat in ['baixa', 'mitja', 'alta']
+        && request.resource.data.estat == 'Pendent'
+        && request.resource.data.tecnic == ''
+        && request.resource.data.resolucio == ''
+        && (!('reporterUid' in request.resource.data)
+            || request.resource.data.reporterUid == request.auth.uid)
+        && (!('canal' in request.resource.data)
+            || request.resource.data.canal == 'web_usuari');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function hasForbiddenCredentialFields(data) {
+      return data.keys().hasAny(['pass', 'password', 'contrasena', 'contrasenya']);
+    }
+
+    function ownerCanUpdateOwnProfileOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'nombre',
+        'email',
+        'displayName',
+        'photoURL',
+        'telefono',
+        'signatureRole',
+        'ultimaModificacion',
+        'updatedAt'
+      ]);
+    }
+
+    function ownerCanCreateOwnUserDoc(userId) {
+      return isOwner(userId)
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'nombre',
+          'email',
+          'displayName',
+          'photoURL',
+          'telefono',
+          'signatureRole',
+          'fechaAlta',
+          'ultimaModificacion',
+          'updatedAt'
+        ])
+        && !request.resource.data.keys().hasAny([
+          'role',
+          'rol',
+          'roles',
+          'funcRole',
+          'permisos',
+          'scope',
+          'extraPerms',
+          'mustChangePassword'
+        ])
+        && (!('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid);
+    }
+
+    function canWriteSignatureRequestStatus() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'signatures',
+        'decisions',
+        'status',
+        'updatedAt',
+        'rejectedByUid',
+        'rejectedByName',
+        'rejectedReason'
+      ]);
+    }
+
+    function requestPath(requestId) {
+      return /databases/$(database)/documents/firmas_requests/$(requestId);
+    }
+
+    function canAccessRequestById(requestId) {
+      return requestId != null
+        && exists(requestPath(requestId))
+        && (
+          isAdmin()
+          || get(requestPath(requestId)).data.createdByUid == request.auth.uid
+          || (get(requestPath(requestId)).data.participantsUid != null
+              && request.auth.uid in get(requestPath(requestId)).data.participantsUid)
+        );
+    }
+
+    match /usuarios/{userId} {
+      allow read: if isSignedIn();
+      allow create: if (
+        isAdmin() || ownerCanCreateOwnUserDoc(userId)
+      ) && !hasForbiddenCredentialFields(request.resource.data);
+      allow update: if (
+        isAdmin()
+        || (isOwner(userId) && ownerCanUpdateOwnProfileOnly())
+      ) && !hasForbiddenCredentialFields(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // NexeSing — Firmes Unificades
+    // ============================================================
+    match /firmas_requests/{requestId} {
+      allow read: if isSignedIn()
+        && (
+          isAdmin()
+          || resource.data.createdByUid == request.auth.uid
+          || (resource.data.participantsUid != null 
+              && request.auth.uid in resource.data.participantsUid)
+        );
+
+      allow create: if isSignedIn()
+        && request.resource.data.createdByUid == request.auth.uid
+        && !hasForbiddenCredentialFields(request.resource.data);
+
+      allow update: if isSignedIn()
+        && (
+          isAdmin()
+          || (
+            (resource.data.createdByUid == request.auth.uid
+             || (resource.data.participantsUid != null 
+                 && request.auth.uid in resource.data.participantsUid))
+            && canWriteSignatureRequestStatus()
+            && !hasForbiddenCredentialFields(request.resource.data)
+          )
+        );
+
+      allow delete: if isAdmin();
+    }
+
+    match /firmas_sessions/{sessionId} {
+      allow read: if isSignedIn()
+        && (
+          isAdmin()
+          || resource.data.signerUid == request.auth.uid
+          || (resource.data.requestId != null
+              && exists(requestPath(resource.data.requestId))
+              && (
+                get(requestPath(resource.data.requestId)).data.createdByUid == request.auth.uid
+                || (get(requestPath(resource.data.requestId)).data.participantsUid != null
+                    && request.auth.uid in get(requestPath(resource.data.requestId)).data.participantsUid)
+              ))
+        );
+
+      allow create: if isSignedIn()
+        && request.resource.data.signerUid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && canAccessRequestById(request.resource.data.requestId)
+        && !hasForbiddenCredentialFields(request.resource.data);
+
+      allow update: if isSignedIn()
+        && (
+          isAdmin()
+          || (
+            resource.data.signerUid == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'status',
+              'signatureDataUrl',
+              'signerName',
+              'completedAt',
+              'completedAtISO',
+              'updatedAt'
+            ])
+          )
+        )
+        && !hasForbiddenCredentialFields(request.resource.data);
+
+      allow delete: if isAdmin();
+    }
+
+    match /roles/{roleId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /metadata/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /departamentos/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /actividades/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /grupos/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /beneficiarios_grupos/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /asistencia/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /expedientes/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /agenda/{docId} {
+      allow read: if isSignedIn();
+      allow create: if canEditOperationalData();
+      allow update: if canEditOperationalData()
+        || (request.auth != null
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estat', 'arrivedAt', 'updatedAt'])
+            && request.resource.data.estat == 'arribat'
+            && resource.data.estat in ['pendent', 'confirmat']);
+      allow delete: if isAdmin();
+    }
+
+    match /solicituds/{docId} {
+      allow read: if canEditOperationalData();
+      allow create: if canEditOperationalData();
+      allow update: if canEditOperationalData();
+      allow delete: if isAdmin();
+    }
+
+    match /familias/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /empleados/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || canEditOperationalData();
+    }
+
+    match /subvenciones/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || userRole() in ['editor', 'gestor', 'coordinacion', 'coordinador'];
+    }
+
+    match /documentos/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /proyectos/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /auditoria_log/{docId} {
+      allow read: if isAdmin() || userRole() in ['superadmin', 'auditor'];
+      allow create: if isSignedIn();
+      allow update, delete: if false;
+    }
+
+    match /reportes/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /entitats_xarxa/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /permisos_solicitudes/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /room_reservations/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /citas/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    // Encryption salt: any authenticated user can read (needed to derive key),
+    // any authenticated user can CREATE if the doc doesn't exist yet (first-time setup),
+    // only admins can update or delete it afterwards.
+    match /config/encryption {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /config/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /cpi_pressupost/{cursId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /cpi_familias/{famId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+      match /ajudes/{ajuId} {
+        allow read: if isSignedIn();
+        allow write: if canEditOperationalData();
+      }
+      match /documents/{docId} {
+        allow read: if isSignedIn();
+        allow write: if canEditOperationalData();
+      }
+    }
+
+    // Age exception authorization requests
+    match /autoritzacions_edat/{autId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if canEditOperationalData();
+      allow delete: if isAdmin();
+    }
+
+    // NexePsy: counter de numeració d'expedients (transacció atòmica)
+    match /nexepsy/config/contadors/{docId} {
+      allow read, write: if canEditOperationalData();
+    }
+
+    // NexePsy: col·leccions principals
+    match /nexepsy/{docId}/{subCol}/{subDocId} {
+      allow read: if canEditOperationalData();
+      allow write: if canEditOperationalData();
+      match /{col}/{id} {
+        allow read: if canEditOperationalData();
+        allow write: if canEditOperationalData();
+      }
+    }
+
+    // NexePsy: notificacions de derivació per als professionals
+    match /nexepsy_notificacions/{notifId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.destinatari_uid || canEditOperationalData());
+      allow create: if canEditOperationalData();
+      allow update: if isSignedIn() && request.auth.uid == resource.data.destinatari_uid;
+      allow delete: if isAdmin();
+    }
+
+    // Informes i memòria anual de l'entitat
+    match /informes_entitat/{informeId} {
+      allow read: if canEditOperationalData();
+      allow create: if canEditOperationalData();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // RMT — Manteniment Tècnic
+    // ============================================================
+    match /rmt_sales/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /rmt_actius/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /rmt_correctiu/{docId} {
+      allow read: if isSignedIn();
+      allow create: if canEditOperationalData() || canCreateCorrectiveTicketAsReporter();
+      allow update, delete: if canEditOperationalData();
+    }
+
+    match /rmt_preventiu/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    // rmt_firmes: mobile signature sessions.
+    // Restrict to authenticated users to avoid anonymous tampering of signature sessions.
+    match /rmt_firmes/{sid} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /{document=**} {
+      allow read: if isSignedIn()
+        && !resource.__name__.split('/')[4] in ['firmas_requests', 'firmas_sessions'];
+      allow write: if isAdmin();
+    }
+
+    // ============================================================
+    // Donacions i Socis
+    // ============================================================
+    match /donants/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    match /donacions/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    // ============================================================
+    // Directori de Proveïdors
+    // ============================================================
+    match /proveidors/{docId} {
+      allow read: if isSignedIn();
+      allow write: if canEditOperationalData();
+    }
+
+    // ============================================================
+    // Plantilles de Documents
+    // ============================================================
+    match /plantilles/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // Biblioteca de Documents
+    // ============================================================
+    match /biblioteca_docs/{docId} {
+      allow read: if isSignedIn();
+      allow create: if canEditOperationalData();
+      allow update: if canEditOperationalData();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // Configuració de la Plataforma (superadmin)
+    // ============================================================
+    match /platform_settings/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

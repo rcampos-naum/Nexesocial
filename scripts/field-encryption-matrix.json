@@ -1,0 +1,177 @@
+{
+  "version": 1,
+  "description": "Field-level encryption rules for safe migration with dashboard/filter compatibility",
+  "collections": [
+    {
+      "name": "usuarios",
+      "fields": [
+        { "path": "id", "action": "clear" },
+        { "path": "role", "action": "clear" },
+        { "path": "roles", "action": "clear" },
+        { "path": "permisos", "action": "clear" },
+        { "path": "departamentoId", "action": "clear" },
+        { "path": "departamentoIds", "action": "clear" },
+        { "path": "ultimaModificacion", "action": "clear" },
+        { "path": "email", "action": "encrypted_indexed", "encryptedField": "email_enc", "indexField": "email_idx", "normalizer": "lower_trim" },
+        { "path": "nombre", "action": "encrypted", "encryptedField": "nombre_enc" },
+        { "path": "telefono", "action": "encrypted", "encryptedField": "telefono_enc" },
+        { "path": "departamento", "action": "encrypted", "encryptedField": "departamento_enc" }
+      ]
+    },
+    {
+      "name": "expedientes",
+      "fields": [
+        { "path": "numero_expediente", "action": "clear" },
+        { "path": "estado", "action": "clear" },
+        { "path": "fecha_apertura", "action": "clear" },
+        { "path": "periodId", "action": "clear" },
+        { "path": "departamentoId", "action": "clear" },
+        { "path": "dades_personals.nom", "action": "encrypted", "encryptedField": "dades_personals_nom_enc" },
+        { "path": "dades_personals.cognoms", "action": "encrypted", "encryptedField": "dades_personals_cognoms_enc" },
+        { "path": "dades_personals.dni", "action": "encrypted", "encryptedField": "dades_personals_dni_enc" },
+        { "path": "dades_personals.telefon", "action": "encrypted", "encryptedField": "dades_personals_telefon_enc" },
+        { "path": "dades_personals.data_naixement", "action": "encrypted", "encryptedField": "dades_personals_data_naixement_enc" },
+        { "path": "salut.diagnostics", "action": "encrypted", "encryptedField": "salut_diagnostics_enc" },
+        { "path": "salut.alergies", "action": "encrypted", "encryptedField": "salut_alergies_enc" },
+        { "path": "salut.dependencia", "action": "encrypted", "encryptedField": "salut_dependencia_enc" },
+        { "path": "salut.grau", "action": "encrypted", "encryptedField": "salut_grau_enc" }
+      ]
+    },
+    {
+      "name": "familias",
+      "fields": [
+        { "path": "estado", "action": "clear" },
+        { "path": "fechaRegistro", "action": "clear" },
+        { "path": "programasActivos", "action": "clear" },
+        { "path": "asignasidoPor", "action": "clear" },
+        { "path": "apellido", "action": "encrypted", "encryptedField": "apellido_enc" },
+        { "path": "nombreRepresentante", "action": "encrypted", "encryptedField": "nombreRepresentante_enc" },
+        { "path": "telefono", "action": "encrypted", "encryptedField": "telefono_enc" },
+        { "path": "email", "action": "encrypted_indexed", "encryptedField": "email_enc", "indexField": "email_idx", "normalizer": "lower_trim" },
+        { "path": "direccion", "action": "encrypted", "encryptedField": "direccion_enc" },
+        { "path": "ciudad", "action": "encrypted", "encryptedField": "ciudad_enc" },
+        { "path": "codigoPostal", "action": "encrypted", "encryptedField": "codigoPostal_enc" },
+        { "path": "notas", "action": "encrypted", "encryptedField": "notas_enc" }
+      ]
+    },
+    {
+      "name": "beneficiarios_grupos",
+      "fields": [
+        { "path": "beneficiarioId", "action": "clear" },
+        { "path": "grupoId", "action": "clear" },
+        { "path": "actividadId", "action": "clear" },
+        { "path": "departamentoId", "action": "clear" },
+        { "path": "periodId", "action": "clear" },
+        { "path": "estado", "action": "clear" },
+        { "path": "beneficiarioNombre", "action": "encrypted", "encryptedField": "beneficiarioNombre_enc" }
+      ]
+    },
+    {
+      "name": "asistencia",
+      "fields": [
+        { "path": "beneficiarioId", "action": "clear" },
+        { "path": "grupoId", "action": "clear" },
+        { "path": "actividadId", "action": "clear" },
+        { "path": "departamentoId", "action": "clear" },
+        { "path": "periodId", "action": "clear" },
+        { "path": "estado", "action": "clear" },
+        { "path": "fecha", "action": "clear" },
+        { "path": "observaciones", "action": "encrypted", "encryptedField": "observaciones_enc" }
+      ]
+    },
+    {
+      "name": "notificaciones",
+      "fields": [
+        { "path": "target", "action": "clear" },
+        { "path": "targetUid", "action": "clear" },
+        { "path": "targetEmail", "action": "clear" },
+        { "path": "createdAt", "action": "clear" },
+        { "path": "type", "action": "clear" },
+        { "path": "route", "action": "clear" },
+        { "path": "activa", "action": "clear" },
+        { "path": "missatge", "action": "encrypted", "encryptedField": "missatge_enc" },
+        { "path": "title", "action": "encrypted", "encryptedField": "title_enc" },
+        { "path": "body", "action": "encrypted", "encryptedField": "body_enc" }
+      ]
+    },
+    {
+      "name": "empleados",
+      "fields": [
+        { "path": "estado", "action": "clear" },
+        { "path": "departamentoId", "action": "clear" },
+        { "path": "departamentoIds", "action": "clear" },
+        { "path": "fechaModificacion", "action": "clear" },
+        { "path": "nombre", "action": "encrypted", "encryptedField": "nombre_enc" },
+        { "path": "email", "action": "encrypted_indexed", "encryptedField": "email_enc", "indexField": "email_idx", "normalizer": "lower_trim" },
+        { "path": "telefono", "action": "encrypted", "encryptedField": "telefono_enc" },
+        { "path": "rol", "action": "encrypted", "encryptedField": "rol_enc" },
+        { "path": "tipoRelacion", "action": "encrypted", "encryptedField": "tipoRelacion_enc" }
+      ]
+    },
+    {
+      "name": "cpi_familias",
+      "fields": [
+        { "path": "curs", "action": "clear" },
+        { "path": "estat", "action": "clear" },
+        { "path": "compleix", "action": "clear" },
+        { "path": "createdAt", "action": "clear" },
+        { "path": "updatedAt", "action": "clear" },
+        { "path": "nom", "action": "encrypted", "encryptedField": "nom_enc" },
+        { "path": "nif", "action": "encrypted", "encryptedField": "nif_enc" },
+        { "path": "ingressos_anuals", "action": "encrypted", "encryptedField": "ingressos_anuals_enc" },
+        { "path": "notes", "action": "encrypted", "encryptedField": "notes_enc" }
+      ]
+    },
+    {
+      "name": "nexepsy/intervenciones/intervenciones",
+      "fields": [
+        { "path": "estado", "action": "clear" },
+        { "path": "fechaCreacion", "action": "clear" },
+        { "path": "pacienteId", "action": "clear" },
+        { "path": "beneficiariId", "action": "clear" },
+        { "path": "familiaId", "action": "clear" },
+        { "path": "numExpedient", "action": "clear" },
+        { "path": "diagnostico", "action": "encrypted", "encryptedField": "diagnostico_enc" },
+        { "path": "observaciones", "action": "encrypted", "encryptedField": "observaciones_enc" },
+        { "path": "motivoConsulta", "action": "encrypted", "encryptedField": "motivoConsulta_enc" }
+      ]
+    },
+    {
+      "name": "nexepsy/intervenciones/sesiones",
+      "fields": [
+        { "path": "estado", "action": "clear" },
+        { "path": "fechaSesion", "action": "clear" },
+        { "path": "interventionId", "action": "clear" },
+        { "path": "observaciones", "action": "encrypted", "encryptedField": "observaciones_enc" },
+        { "path": "acuerdos", "action": "encrypted", "encryptedField": "acuerdos_enc" },
+        { "path": "contenidoSesion", "action": "encrypted", "encryptedField": "contenidoSesion_enc" }
+      ]
+    },
+    {
+      "name": "nexepsy/pacientes/pacientes",
+      "fields": [
+        { "path": "estado", "action": "clear" },
+        { "path": "createdAt", "action": "clear" },
+        { "path": "updatedAt", "action": "clear" },
+        { "path": "nombre", "action": "encrypted", "encryptedField": "nombre_enc" },
+        { "path": "apellidos", "action": "encrypted", "encryptedField": "apellidos_enc" },
+        { "path": "dni", "action": "encrypted", "encryptedField": "dni_enc" },
+        { "path": "telefono", "action": "encrypted", "encryptedField": "telefono_enc" },
+        { "path": "direccion", "action": "encrypted", "encryptedField": "direccion_enc" },
+        { "path": "notes", "action": "encrypted", "encryptedField": "notes_enc" }
+      ]
+    },
+    {
+      "name": "nexepsy/derivacions/solicituds",
+      "fields": [
+        { "path": "estat", "action": "clear" },
+        { "path": "data", "action": "clear" },
+        { "path": "createdAt", "action": "clear" },
+        { "path": "nom", "action": "encrypted", "encryptedField": "nom_enc" },
+        { "path": "telefon", "action": "encrypted", "encryptedField": "telefon_enc" },
+        { "path": "motiu", "action": "encrypted", "encryptedField": "motiu_enc" },
+        { "path": "comentaris", "action": "encrypted", "encryptedField": "comentaris_enc" }
+      ]
+    }
+  ]
+}
