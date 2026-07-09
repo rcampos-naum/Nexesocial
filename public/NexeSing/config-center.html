@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexeSing - Configuration Center</title>
+    <link rel="stylesheet" href="../style-dashboard.css">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #f8fafc; padding: 20px; }
+        .config-container { max-width: 1400px; margin: 0 auto; }
+        .config-header { background: white; padding: 30px; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .config-header h1 { margin: 0; color: #0f172a; font-size: 1.8rem; }
+        .config-tabs { display: flex; gap: 8px; margin-top: 20px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; }
+        .config-tab { padding: 12px 20px; border: none; background: none; cursor: pointer; font-weight: 600; color: #64748b; font-size: 0.95rem; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+        .config-tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+        .config-tab:hover { color: #1e293b; }
+        .config-content { background: white; border-radius: 12px; padding: 30px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .config-section { margin-bottom: 40px; }
+        .config-section:last-child { margin-bottom: 0; }
+        .section-title { font-size: 1.2rem; font-weight: 800; color: #0f172a; margin: 0 0 20px 0; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0; }
+        .form-group { margin-bottom: 20px; display: grid; grid-template-columns: 200px 1fr; gap: 20px; align-items: center; }
+        .form-group.full { grid-template-columns: 1fr; }
+        .form-label { font-weight: 600; color: #1e293b; font-size: 0.9rem; }
+        .form-label small { display: block; color: #64748b; font-weight: 400; font-size: 0.8rem; margin-top: 4px; }
+        .form-input, .form-select, .form-textarea { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; font-family: inherit; font-size: 0.9rem; }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .form-textarea { resize: vertical; min-height: 100px; }
+        .toggle-group { display: flex; gap: 10px; }
+        .toggle-btn { padding: 8px 16px; border: 1px solid #e2e8f0; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; color: #64748b; transition: all 0.2s; }
+        .toggle-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
+        .module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+        .module-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; }
+        .module-card.active { border-color: #2563eb; background: #f8fafc; }
+        .module-card h4 { margin: 0 0 15px 0; color: #1e293b; font-size: 1rem; }
+        .module-settings { display: flex; flex-direction: column; gap: 12px; }
+        .setting-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: white; border-radius: 8px; }
+        .setting-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #2563eb; }
+        .setting-item label { flex: 1; cursor: pointer; color: #475569; font-size: 0.9rem; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+        .badge.green { background: #dcfce7; color: #166534; }
+        .badge.blue { background: #dbeafe; color: #1d4ed8; }
+        .badge.orange { background: #fed7aa; color: #9a3412; }
+        .button-group { display: flex; gap: 10px; margin-top: 24px; }
+        .btn-save { background: #10b981; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: opacity 0.2s; }
+        .btn-save:hover { opacity: 0.9; }
+        .btn-reset { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .status-message { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-weight: 600; }
+        .status-success { background: #dcfce7; color: #166534; }
+        .status-error { background: #fee2e2; color: #b91c1c; }
+    </style>
+</head>
+<body>
+    <div class="config-container">
+        <!-- Header -->
+        <div class="config-header">
+            <h1>⚙️ NexeSing Configuration Center</h1>
+            <p style="margin: 8px 0 0; color: #64748b;">Personalize signature workflows and system behavior</p>
+            
+            <div class="config-tabs">
+                <button class="config-tab active" onclick="switchTab('general')">⚙️ General</button>
+                <button class="config-tab" onclick="switchTab('modules')">📦 Modules</button>
+                <button class="config-tab" onclick="switchTab('signatures')">✍️ Signatures</button>
+                <button class="config-tab" onclick="switchTab('notifications')">🔔 Notifications</button>
+                <button class="config-tab" onclick="switchTab('permissions')">🔐 Permissions</button>
+            </div>
+        </div>
+
+        <!-- Status Message -->
+        <div id="statusMessage" style="display: none;"></div>
+
+        <!-- Content -->
+        <div class="config-content">
+
+            <!-- TAB: GENERAL -->
+            <div id="tab-general" class="config-tab-content">
+                <div class="config-section">
+                    <h2 class="section-title">System Configuration</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Organization Name<small>Appears in reports</small></label>
+                        <input type="text" class="form-input" id="orgName" value="NexeSocial" placeholder="Organization name">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Default Signature Role<small>Primary signer category</small></label>
+                        <select class="form-select" id="defaultRole">
+                            <option value="Director">Director</option>
+                            <option value="Tècnic">Tècnic</option>
+                            <option value="Coordinador">Coordinador</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Session Timeout (minutes)<small>Mobile QR expiry</small></label>
+                        <input type="number" class="form-input" id="sessionTimeout" value="15" min="5" max="60">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Enable AutoFirma<small>Local binary signing support</small></label>
+                        <div class="toggle-group">
+                            <button class="toggle-btn active" data-value="true" onclick="toggleSetting(this, 'enableAutoFirma')">Enabled</button>
+                            <button class="toggle-btn" data-value="false" onclick="toggleSetting(this, 'enableAutoFirma')">Disabled</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group full">
+                        <label class="form-label">Welcome Message<small>Shown on NexeSing entry</small></label>
+                        <textarea class="form-textarea" id="welcomeMsg">Bienvenido al sistema de firmas NexeSing. Por favor, selecciona un documento para firmar.</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: MODULES -->
+            <div id="tab-modules" class="config-tab-content" style="display: none;">
+                <div class="config-section">
+                    <h2 class="section-title">Module Configuration</h2>
+                    <div class="module-grid">
+                        
+                        <div class="module-card active">
+                            <h4>📋 Informe Psicosocial</h4>
+                            <div class="module-settings">
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-infpsy-active" checked>
+                                    <label for="mod-infpsy-active">Signature enabled</label>
+                                    <span class="badge blue">Phase 1</span>
+                                </div>
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-infpsy-chain" checked>
+                                    <label for="mod-infpsy-chain">Chain signatures required</label>
+                                </div>
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-infpsy-audit" checked>
+                                    <label for="mod-infpsy-audit">Audit logging enabled</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="module-card active">
+                            <h4>🏥 NexePsy - Informe Seguiment</h4>
+                            <div class="module-settings">
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-infseg-active" checked>
+                                    <label for="mod-infseg-active">Signature enabled</label>
+                                    <span class="badge blue">Phase 1</span>
+                                </div>
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-infseg-chain" checked>
+                                    <label for="mod-infseg-chain">Chain signatures required</label>
+                                </div>
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-infseg-mobile" checked>
+                                    <label for="mod-infseg-mobile">Mobile signing allowed</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="module-card active">
+                            <h4>📜 Convenios</h4>
+                            <div class="module-settings">
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-conv-active" checked>
+                                    <label for="mod-conv-active">Signature enabled</label>
+                                    <span class="badge blue">Phase 1</span>
+                                </div>
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-conv-director" checked>
+                                    <label for="mod-conv-director">Director approval required</label>
+                                </div>
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-conv-timestamp" checked>
+                                    <label for="mod-conv-timestamp">Timestamp verification</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="module-card">
+                            <h4>🏢 Centre Dia Docs</h4>
+                            <div class="module-settings">
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-cdia-active" checked>
+                                    <label for="mod-cdia-active">Signature enabled</label>
+                                    <span class="badge orange">Phase 2</span>
+                                </div>
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-cdia-multi">
+                                    <label for="mod-cdia-multi">Multiple signers allowed</label>
+                                </div>
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-cdia-archive" checked>
+                                    <label for="mod-cdia-archive">Auto-archive after signature</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="module-card">
+                            <h4>📊 Programes Gestió</h4>
+                            <div class="module-settings">
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-prog-active" checked>
+                                    <label for="mod-prog-active">Signature enabled</label>
+                                    <span class="badge orange">Phase 2</span>
+                                </div>
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-prog-coordinator" checked>
+                                    <label for="mod-prog-coordinator">Coordinator signature required</label>
+                                </div>
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-prog-notify" checked>
+                                    <label for="mod-prog-notify">Email notifications</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="module-card">
+                            <h4>📝 Passar Llista</h4>
+                            <div class="module-settings">
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-llista-active" checked>
+                                    <label for="mod-llista-active">Signature enabled</label>
+                                    <span class="badge green">Phase 3</span>
+                                </div>
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-llista-daily" checked>
+                                    <label for="mod-llista-daily">Daily signature requirement</label>
+                                </div>
+                                <div class="setting-item">
+                                    <input type="checkbox" id="mod-llista-report" checked>
+                                    <label for="mod-llista-report">Monthly report generation</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: SIGNATURES -->
+            <div id="tab-signatures" class="config-tab-content" style="display: none;">
+                <div class="config-section">
+                    <h2 class="section-title">Signature Method Configuration</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Enable Screen Signatures<small>SignaturePad on-screen signing</small></label>
+                        <div class="toggle-group">
+                            <button class="toggle-btn active" data-value="true" onclick="toggleSetting(this, 'enableScreen')">Enabled</button>
+                            <button class="toggle-btn" data-value="false" onclick="toggleSetting(this, 'enableScreen')">Disabled</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Enable QR Mobile Signing<small>Mobile session-based signing</small></label>
+                        <div class="toggle-group">
+                            <button class="toggle-btn active" data-value="true" onclick="toggleSetting(this, 'enableQR')">Enabled</button>
+                            <button class="toggle-btn" data-value="false" onclick="toggleSetting(this, 'enableQR')">Disabled</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Signature Chain Mode<small>Require sequential or parallel signatures</small></label>
+                        <select class="form-select" id="chainMode">
+                            <option value="parallel">Parallel (all simultaneous)</option>
+                            <option value="sequential">Sequential (one by one)</option>
+                            <option value="mixed">Mixed (configurable per module)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Timestamp Requirement<small>Server timestamp for compliance</small></label>
+                        <div class="toggle-group">
+                            <button class="toggle-btn active" data-value="true" onclick="toggleSetting(this, 'requireTimestamp')">Required</button>
+                            <button class="toggle-btn" data-value="false" onclick="toggleSetting(this, 'requireTimestamp')">Optional</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group full">
+                        <label class="form-label">Signature Validation Rules<small>Custom validation logic (JSON)</small></label>
+                        <textarea class="form-textarea" id="validationRules">{
+  "minSignatures": 1,
+  "requireDirector": false,
+  "requireCoordinator": true,
+  "allowRejection": true,
+  "requireComment": false
+}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: NOTIFICATIONS -->
+            <div id="tab-notifications" class="config-tab-content" style="display: none;">
+                <div class="config-section">
+                    <h2 class="section-title">Notification Configuration</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Email on Signature Request<small>Notify signers of pending requests</small></label>
+                        <div class="toggle-group">
+                            <button class="toggle-btn active" data-value="true" onclick="toggleSetting(this, 'emailRequest')">Enabled</button>
+                            <button class="toggle-btn" data-value="false" onclick="toggleSetting(this, 'emailRequest')">Disabled</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email on Signature Completion<small>Notify requester when signed</small></label>
+                        <div class="toggle-group">
+                            <button class="toggle-btn active" data-value="true" onclick="toggleSetting(this, 'emailCompletion')">Enabled</button>
+                            <button class="toggle-btn" data-value="false" onclick="toggleSetting(this, 'emailCompletion')">Disabled</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email on Signature Rejection<small>Notify requester of rejected signatures</small></label>
+                        <div class="toggle-group">
+                            <button class="toggle-btn active" data-value="true" onclick="toggleSetting(this, 'emailRejection')">Enabled</button>
+                            <button class="toggle-btn" data-value="false" onclick="toggleSetting(this, 'emailRejection')">Disabled</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">In-app Notifications<small>Toast messages and alerts</small></label>
+                        <div class="toggle-group">
+                            <button class="toggle-btn active" data-value="true" onclick="toggleSetting(this, 'inAppNotif')">Enabled</button>
+                            <button class="toggle-btn" data-value="false" onclick="toggleSetting(this, 'inAppNotif')">Disabled</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Notification Language<small>Default language for messages</small></label>
+                        <select class="form-select" id="notifLanguage">
+                            <option value="ca">Català</option>
+                            <option value="es">Español</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full">
+                        <label class="form-label">Custom Notification Templates<small>Customize email/message content</small></label>
+                        <textarea class="form-textarea" id="notifTemplates">Request: New signature request for {{document_title}} from {{requester_name}}
+Completion: {{signer_name}} has signed {{document_title}}
+Rejection: Signature request for {{document_title}} has been rejected</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: PERMISSIONS -->
+            <div id="tab-permissions" class="config-tab-content" style="display: none;">
+                <div class="config-section">
+                    <h2 class="section-title">Role-Based Access Control</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Director Role Permissions<small>Can perform these actions</small></label>
+                        <div class="module-settings">
+                            <div class="setting-item">
+                                <input type="checkbox" id="perm-dir-create" checked>
+                                <label for="perm-dir-create">Create signature requests</label>
+                            </div>
+                            <div class="setting-item">
+                                <input type="checkbox" id="perm-dir-sign" checked>
+                                <label for="perm-dir-sign">Sign documents</label>
+                            </div>
+                            <div class="setting-item">
+                                <input type="checkbox" id="perm-dir-reject" checked>
+                                <label for="perm-dir-reject">Reject signatures</label>
+                            </div>
+                            <div class="setting-item">
+                                <input type="checkbox" id="perm-dir-view" checked>
+                                <label for="perm-dir-view">View all signatures</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Tècnic Role Permissions<small>Can perform these actions</small></label>
+                        <div class="module-settings">
+                            <div class="setting-item">
+                                <input type="checkbox" id="perm-tec-create" checked>
+                                <label for="perm-tec-create">Create signature requests</label>
+                            </div>
+                            <div class="setting-item">
+                                <input type="checkbox" id="perm-tec-sign" checked>
+                                <label for="perm-tec-sign">Sign documents</label>
+                            </div>
+                            <div class="setting-item">
+                                <input type="checkbox" id="perm-tec-reject">
+                                <label for="perm-tec-reject">Reject signatures</label>
+                            </div>
+                            <div class="setting-item">
+                                <input type="checkbox" id="perm-tec-view" checked>
+                                <label for="perm-tec-view">View own signatures</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Admin Role Permissions<small>Can perform these actions</small></label>
+                        <div class="module-settings">
+                            <div class="setting-item">
+                                <input type="checkbox" id="perm-admin-create" checked>
+                                <label for="perm-admin-create">Create signature requests</label>
+                            </div>
+                            <div class="setting-item">
+                                <input type="checkbox" id="perm-admin-sign" checked>
+                                <label for="perm-admin-sign">Sign documents</label>
+                            </div>
+                            <div class="setting-item">
+                                <input type="checkbox" id="perm-admin-reject" checked>
+                                <label for="perm-admin-reject">Reject signatures</label>
+                            </div>
+                            <div class="setting-item">
+                                <input type="checkbox" id="perm-admin-view" checked>
+                                <label for="perm-admin-view">View all signatures</label>
+                            </div>
+                            <div class="setting-item">
+                                <input type="checkbox" id="perm-admin-config" checked>
+                                <label for="perm-admin-config">Modify system configuration</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Save/Reset Buttons -->
+        <div class="button-group" style="margin-top: 30px;">
+            <button class="btn-save" onclick="saveConfiguration()">💾 Save Configuration</button>
+            <button class="btn-reset" onclick="resetConfiguration()">↻ Reset to Defaults</button>
+        </div>
+    </div>
+
+    <script type="module">
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.config-tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.config-tab').forEach(el => el.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(`tab-${tabName}`).style.display = 'block';
+            event.target.classList.add('active');
+        }
+
+        window.toggleSetting = function(btn, settingName) {
+            const buttons = btn.parentElement.querySelectorAll('.toggle-btn');
+            buttons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        };
+
+        window.saveConfiguration = async function() {
+            const config = {
+                general: {
+                    orgName: document.getElementById('orgName').value,
+                    defaultRole: document.getElementById('defaultRole').value,
+                    sessionTimeout: parseInt(document.getElementById('sessionTimeout').value),
+                    enableAutoFirma: document.querySelector('[data-value="true"]')?.classList.contains('active'),
+                    welcomeMsg: document.getElementById('welcomeMsg').value,
+                },
+                modules: {
+                    infoPsicosocial: document.getElementById('mod-infpsy-active').checked,
+                    infoSeguiment: document.getElementById('mod-infseg-active').checked,
+                    convenios: document.getElementById('mod-conv-active').checked,
+                    centreDia: document.getElementById('mod-cdia-active').checked,
+                    programes: document.getElementById('mod-prog-active').checked,
+                    passarLlista: document.getElementById('mod-llista-active').checked,
+                },
+                signatures: {
+                    chainMode: document.getElementById('chainMode').value,
+                    validationRules: JSON.parse(document.getElementById('validationRules').value),
+                },
+                notifications: {
+                    language: document.getElementById('notifLanguage').value,
+                },
+                timestamp: new Date().toISOString(),
+            };
+
+            // Save to localStorage for now (can be extended to Firestore)
+            localStorage.setItem('nexesing_config', JSON.stringify(config));
+
+            showStatus('✅ Configuration saved successfully!', 'success');
+        };
+
+        window.resetConfiguration = function() {
+            if (confirm('Are you sure? This will reset all configuration to defaults.')) {
+                localStorage.removeItem('nexesing_config');
+                location.reload();
+            }
+        };
+
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = `status-message status-${type}`;
+            statusEl.style.display = 'block';
+            setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
+        }
+
+        // Load configuration on page load
+        function loadConfiguration() {
+            const stored = localStorage.getItem('nexesing_config');
+            if (stored) {
+                const config = JSON.parse(stored);
+                if (config.general) {
+                    document.getElementById('orgName').value = config.general.orgName || 'NexeSocial';
+                    document.getElementById('sessionTimeout').value = config.general.sessionTimeout || 15;
+                }
+            }
+        }
+
+        loadConfiguration();
+    </script>
+</body>
+</html>

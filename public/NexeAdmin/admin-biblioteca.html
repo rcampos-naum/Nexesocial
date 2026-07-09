@@ -1,0 +1,907 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" type="image/svg+xml" href="../img/nexeadmin-icon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../variables.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; margin: 0; display: flex; min-height: 100vh; }
+
+        /* â”€â”€ LAYOUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .page-shell { display: grid; grid-template-columns: 240px 1fr; flex: 1; min-height: 0; }
+
+        /* â”€â”€ FOLDER TREE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        .folder-sidebar {
+            background: white; border-right: 1.5px solid #e2e8f0;
+            padding: 20px 0; overflow-y: auto;
+        }
+        .folder-sidebar-title {
+            padding: 0 16px 10px; font-size: .72rem; font-weight: 800;
+            text-transform: uppercase; color: #94a3b8; letter-spacing: .5px;
+        }
+        .folder-item {
+            display: flex; align-items: center; gap: 9px; padding: 8px 16px;
+            cursor: pointer; font-size: .85rem; color: #475569; border-radius: 0;
+            transition: .12s; user-select: none; border-left: 3px solid transparent;
+        }
+        .folder-item:hover { background: #f8fafc; color: #1e293b; }
+        .folder-item.active { background: #eff6ff; color: #1d4ed8; border-left-color: #3b82f6; font-weight: 700; }
+        .folder-item .folder-icon { font-size: 1rem; flex-shrink: 0; }
+        .folder-item .folder-count {
+            margin-left: auto; background: #f1f5f9; color: #94a3b8;
+            font-size: .68rem; font-weight: 700; padding: 1px 7px; border-radius: 20px;
+        }
+        .folder-item.active .folder-count { background: #dbeafe; color: #1d4ed8; }
+        .folder-divider { height: 1px; background: #f1f5f9; margin: 8px 16px; }
+
+        /* â”€â”€ TOP BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        .top-bar {
+            padding: 28px 36px 0; display: flex; align-items: center;
+            justify-content: space-between; gap: 12px; flex-wrap: wrap;
+        }
+        .top-bar h1 { margin: 0; font-size: 1.3rem; color: #1e293b; display: flex; align-items: center; gap: 10px; }
+        .top-bar-actions { display: flex; gap: 10px; align-items: center; }
+
+        /* â”€â”€ SEARCH + FILTER BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        .filter-bar {
+            padding: 14px 36px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+        }
+        .search-box {
+            flex: 1; min-width: 200px; max-width: 340px;
+            display: flex; align-items: center; gap: 8px;
+            background: white; border: 1.5px solid #e2e8f0; border-radius: 10px;
+            padding: 8px 14px;
+        }
+        .search-box input { border: none; outline: none; font-size: .85rem; flex: 1; font-family: inherit; }
+        .search-box svg { flex-shrink: 0; stroke: #94a3b8; }
+        .format-pill { padding: 5px 13px; border-radius: 20px; border: 1.5px solid #e2e8f0; font-size: .75rem; font-weight: 600; cursor: pointer; background: white; color: #475569; transition: .12s; }
+        .format-pill.active { border-color: #1e293b; background: #1e293b; color: white; }
+        .view-toggle { display: flex; border: 1.5px solid #e2e8f0; border-radius: 9px; overflow: hidden; background: white; }
+        .view-btn { padding: 6px 10px; background: none; border: none; cursor: pointer; color: #94a3b8; transition: .12s; }
+        .view-btn.active { background: #1e293b; color: white; }
+
+        /* â”€â”€ STATS ROW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        .stats-row { display: flex; gap: 16px; padding: 0 36px 16px; flex-wrap: wrap; }
+        .stat-pill {
+            background: white; border: 1px solid #e2e8f0; border-radius: 10px;
+            padding: 10px 18px; display: flex; align-items: center; gap: 10px;
+        }
+        .stat-pill-val { font-size: 1.3rem; font-weight: 800; color: #1e293b; }
+        .stat-pill-lbl { font-size: .72rem; color: #64748b; }
+
+        /* â”€â”€ DOCUMENT GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        .docs-area { padding: 0 36px 36px; flex: 1; overflow-y: auto; }
+        .docs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+        .docs-list { display: flex; flex-direction: column; gap: 6px; }
+
+        /* Grid card */
+        .doc-card {
+            background: white; border: 1.5px solid #e2e8f0; border-radius: 14px;
+            padding: 18px 16px; cursor: pointer; transition: .15s; position: relative;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .doc-card:hover { border-color: #94a3b8; box-shadow: 0 4px 16px rgba(0,0,0,.07); transform: translateY(-1px); }
+        .doc-card .doc-fmt-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 1.6rem;
+        }
+        .doc-card .doc-name { font-weight: 700; font-size: .85rem; color: #1e293b; word-break: break-word; }
+        .doc-card .doc-meta { font-size: .72rem; color: #94a3b8; }
+        .doc-card .doc-badges { display: flex; flex-wrap: wrap; gap: 4px; }
+        .doc-card .doc-actions {
+            display: none; position: absolute; top: 10px; right: 10px;
+            gap: 4px; flex-direction: column;
+        }
+        .doc-card:hover .doc-actions { display: flex; }
+        .doc-action-btn {
+            background: white; border: 1.5px solid #e2e8f0; border-radius: 7px;
+            padding: 4px 6px; cursor: pointer; font-size: .75rem; color: #475569;
+            white-space: nowrap; transition: .1s;
+        }
+        .doc-action-btn:hover { border-color: #94a3b8; color: #1e293b; }
+        .doc-action-btn.del:hover { border-color: #fca5a5; color: #dc2626; background: #fff5f5; }
+
+        /* List row */
+        .doc-row {
+            background: white; border: 1.5px solid #e2e8f0; border-radius: 10px;
+            padding: 10px 14px; display: grid;
+            grid-template-columns: 36px 1fr auto auto auto auto;
+            align-items: center; gap: 12px; transition: .12s; cursor: pointer;
+        }
+        .doc-row:hover { border-color: #94a3b8; }
+        .doc-row .row-icon { font-size: 1.3rem; text-align: center; }
+        .doc-row .row-name { font-weight: 600; font-size: .85rem; color: #1e293b; }
+        .doc-row .row-cat { font-size: .75rem; color: #64748b; }
+        .doc-row .row-size { font-size: .75rem; color: #94a3b8; text-align: right; }
+        .doc-row .row-date { font-size: .75rem; color: #94a3b8; text-align: right; white-space: nowrap; }
+        .doc-row .row-actions { display: flex; gap: 5px; }
+
+        /* â”€â”€ BADGES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: .68rem; font-weight: 700; }
+        .badge-pdf { background: #fee2e2; color: #dc2626; }
+        .badge-docx { background: #dbeafe; color: #1d4ed8; }
+        .badge-xlsx { background: #dcfce7; color: #16a34a; }
+        .badge-img { background: #f5f3ff; color: #7c3aed; }
+        .badge-other { background: #f1f5f9; color: #64748b; }
+        .badge-exp { background: #fef9c3; color: #92400e; }
+        .badge-gen { background: #f0fdf4; color: #16a34a; }
+
+        /* â”€â”€ BUTTONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        .btn { padding: 9px 18px; border: none; border-radius: 9px; font-weight: 700; font-size: .85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; font-family: inherit; transition: .15s; }
+        .btn-primary { background: #1e293b; color: white; }
+        .btn-primary:hover:not(:disabled) { background: #0f172a; }
+        .btn-blue { background: #3b82f6; color: white; }
+        .btn-blue:hover { background: #2563eb; }
+        .btn-ghost { background: #f1f5f9; color: #475569; }
+        .btn-ghost:hover { background: #e2e8f0; }
+        .btn-red { background: #fee2e2; color: #dc2626; }
+        .btn-red:hover { background: #fecaca; }
+        .btn:disabled { opacity: .5; cursor: not-allowed; }
+        .btn-sm { padding: 5px 11px; font-size: .76rem; border-radius: 7px; }
+
+        /* â”€â”€ MODALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: white; border-radius: 18px; padding: 28px; box-shadow: 0 24px 80px rgba(0,0,0,.22); width: min(95vw, 560px); max-height: 90vh; overflow-y: auto; }
+        .modal-title { font-size: 1.05rem; font-weight: 800; color: #1e293b; margin: 0 0 4px; }
+        .modal-sub { font-size: .83rem; color: #64748b; margin: 0 0 20px; }
+
+        /* upload modal wider */
+        #modal-upload .modal-box { width: min(95vw, 640px); }
+
+        /* â”€â”€ UPLOAD ZONE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        .upload-zone {
+            border: 2px dashed #cbd5e1; border-radius: 12px; padding: 32px 20px;
+            text-align: center; cursor: pointer; transition: .2s; background: #f8fafc;
+        }
+        .upload-zone:hover, .upload-zone.drag-over { border-color: #3b82f6; background: #eff6ff; }
+        .upload-zone svg { width: 36px; height: 36px; stroke: #94a3b8; margin-bottom: 10px; }
+        .upload-zone p { margin: 5px 0; color: #475569; font-size: .86rem; }
+        .upload-zone small { color: #94a3b8; font-size: .76rem; }
+        #bib-file-input { display: none; }
+
+        /* â”€â”€ FORM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        .fg { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+        .fg label { font-size: .72rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .fg input, .fg select, .fg textarea { padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: .87rem; font-family: inherit; outline: none; transition: border-color .15s; }
+        .fg input:focus, .fg select:focus, .fg textarea:focus { border-color: #3b82f6; }
+        .form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+        /* â”€â”€ PROGRESS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        .progress-wrap { margin-top: 12px; display: none; }
+        .progress-bar { height: 6px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #3b82f6; border-radius: 99px; transition: width .2s; }
+        .progress-label { font-size: .73rem; color: #64748b; margin-top: 4px; }
+
+        /* â”€â”€ EMPTY STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        .empty-state { text-align: center; padding: 64px 20px; color: #94a3b8; }
+        .empty-state svg { width: 56px; height: 56px; stroke: #cbd5e1; margin-bottom: 14px; }
+        .empty-state h3 { color: #64748b; margin: 0 0 6px; font-size: 1.05rem; }
+        .empty-state p { font-size: .85rem; margin: 0; }
+
+        /* â”€â”€ PREVIEW MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        #modal-preview .modal-box { width: min(95vw, 900px); max-height: 92vh; padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+        .preview-header { padding: 18px 24px; border-bottom: 1.5px solid #e2e8f0; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+        .preview-header h3 { margin: 0; flex: 1; font-size: .95rem; color: #1e293b; }
+        .preview-body { flex: 1; overflow: auto; background: #f8fafc; }
+        .preview-body iframe { width: 100%; height: 70vh; border: none; display: block; }
+        .preview-body img { max-width: 100%; max-height: 70vh; display: block; margin: auto; padding: 20px; }
+        .preview-no-support { padding: 60px 20px; text-align: center; color: #64748b; }
+
+        @media (max-width: 900px) {
+            .page-shell { grid-template-columns: 1fr; }
+            .folder-sidebar { display: none; }
+            .top-bar, .filter-bar, .stats-row, .docs-area { padding-left: 16px; padding-right: 16px; }
+        }
+    </style>
+</head>
+<body>
+<aside class="admin-sidebar"></aside>
+<main class="main-content">
+
+    <div class="top-bar">
+        <h1>
+            <svg width="22" height="22" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <path d="M3 7a2 2 0 012-2h3l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+            </svg>
+            Biblioteca de Documents
+        </h1>
+        <div class="top-bar-actions">
+            <button class="btn btn-primary" onclick="openUpload()">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Pujar document
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="stats-row">
+        <div class="stat-pill"><div class="stat-pill-val" id="st-total">â€”</div><div class="stat-pill-lbl">Documents totals</div></div>
+        <div class="stat-pill"><div class="stat-pill-val" id="st-size">â€”</div><div class="stat-pill-lbl">Espai total</div></div>
+        <div class="stat-pill"><div class="stat-pill-val" id="st-gen">â€”</div><div class="stat-pill-lbl">Generals</div></div>
+        <div class="stat-pill"><div class="stat-pill-val" id="st-exp">â€”</div><div class="stat-pill-lbl">Vinculats a casos</div></div>
+    </div>
+
+    <div class="page-shell">
+        <!-- Left: folder tree -->
+        <nav class="folder-sidebar" id="folder-sidebar">
+            <div class="folder-sidebar-title">Carpetes</div>
+            <!-- rendered by JS -->
+        </nav>
+
+        <!-- Right: content area -->
+        <div style="display:flex;flex-direction:column;min-width:0;">
+            <!-- Filter bar -->
+            <div class="filter-bar">
+                <div class="search-box">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="search-input" placeholder="Cerca per nom..." oninput="applyFilters()">
+                </div>
+                <div id="format-pills" style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <button class="format-pill active" data-fmt="tots" onclick="filterFmt(this,'tots')">Tots</button>
+                    <button class="format-pill" data-fmt="pdf" onclick="filterFmt(this,'pdf')">PDF</button>
+                    <button class="format-pill" data-fmt="docx" onclick="filterFmt(this,'docx')">Word</button>
+                    <button class="format-pill" data-fmt="xlsx" onclick="filterFmt(this,'xlsx')">Excel</button>
+                    <button class="format-pill" data-fmt="img" onclick="filterFmt(this,'img')">Imatges</button>
+                    <button class="format-pill" data-fmt="altres" onclick="filterFmt(this,'altres')">Altres</button>
+                </div>
+                <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+                    <select id="sort-sel" onchange="applyFilters()" style="padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.78rem;background:white;cursor:pointer;font-family:inherit;outline:none;">
+                        <option value="data_desc">MÃ©s recent</option>
+                        <option value="data_asc">MÃ©s antic</option>
+                        <option value="nom_asc">Nom Aâ†’Z</option>
+                        <option value="nom_desc">Nom Zâ†’A</option>
+                        <option value="mida_desc">Mida â†“</option>
+                    </select>
+                    <div class="view-toggle">
+                        <button class="view-btn active" id="btn-grid" onclick="setView('grid')" title="Graella">
+                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M1 2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 01-1 1H2a1 1 0 01-1-1V2zm5 0a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 01-1 1H7a1 1 0 01-1-1V2zm5 0a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 01-1 1h-2a1 1 0 01-1-1V2zM1 7a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 01-1 1H2a1 1 0 01-1-1V7zm5 0a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 01-1 1H7a1 1 0 01-1-1V7zm5 0a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 01-1 1h-2a1 1 0 01-1-1V7zM1 12a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 01-1 1H2a1 1 0 01-1-1v-2zm5 0a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 01-1 1H7a1 1 0 01-1-1v-2zm5 0a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 01-1 1h-2a1 1 0 01-1-1v-2z"/></svg>
+                        </button>
+                        <button class="view-btn" id="btn-list" onclick="setView('list')" title="Llista">
+                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M2.5 12a.5.5 0 01.5-.5h10a.5.5 0 010 1H3a.5.5 0 01-.5-.5zm0-4a.5.5 0 01.5-.5h10a.5.5 0 010 1H3a.5.5 0 01-.5-.5zm0-4a.5.5 0 01.5-.5h10a.5.5 0 010 1H3a.5.5 0 01-.5-.5z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Docs grid/list -->
+            <div class="docs-area">
+                <div id="docs-container">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h3l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+                        <h3>Carregant biblioteca...</h3>
+                        <p></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• UPLOAD MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<div class="modal-overlay" id="modal-upload">
+    <div class="modal-box">
+        <div class="modal-title">Pujar document</div>
+        <p class="modal-sub">Selecciona el fitxer i omple les dades per afegir-lo a la biblioteca.</p>
+
+        <div class="upload-zone" id="bib-upload-zone"
+             onclick="document.getElementById('bib-file-input').click()"
+             ondragover="event.preventDefault();this.classList.add('drag-over')"
+             ondragleave="this.classList.remove('drag-over')"
+             ondrop="bibHandleDrop(event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                <line x1="12" y1="11" x2="12" y2="17"/><polyline points="9 14 12 11 15 14"/>
+            </svg>
+            <p id="bib-drop-label">Arrossega el fitxer aquÃ­ o fes clic</p>
+            <small>PDF, Word, Excel, imatges Â· MÃ xim 20 MB</small>
+        </div>
+        <input type="file" id="bib-file-input" onchange="bibHandleFile(this.files[0])">
+
+        <div class="form-2col" style="margin-top:16px;">
+            <div class="fg">
+                <label>Nom del document *</label>
+                <input type="text" id="bib-nom" placeholder="Ex: Circular RRHH Juliol 2026">
+            </div>
+            <div class="fg">
+                <label>Carpeta *</label>
+                <select id="bib-cat">
+                    <option value="">â€” Selecciona â€”</option>
+                    <option value="rrhh">Recursos Humans</option>
+                    <option value="legal">Legal i Normativa</option>
+                    <option value="protocols">Protocols i Procediments</option>
+                    <option value="formacio">FormaciÃ³</option>
+                    <option value="comunicacio">ComunicaciÃ³</option>
+                    <option value="qualitat">Qualitat</option>
+                    <option value="finances">Finances</option>
+                    <option value="expedients">Documents d'Expedients</option>
+                    <option value="altres">Altres</option>
+                </select>
+            </div>
+        </div>
+        <div class="fg">
+            <label>DescripciÃ³</label>
+            <textarea id="bib-desc" rows="2" placeholder="Resum breu del contingut..."></textarea>
+        </div>
+        <div class="form-2col">
+            <div class="fg">
+                <label>Visibilitat</label>
+                <select id="bib-visibilitat">
+                    <option value="tots">Tot el personal</option>
+                    <option value="admins">NomÃ©s administradors</option>
+                </select>
+            </div>
+            <div class="fg">
+                <label>Vincular a expedient (opcional)</label>
+                <input type="text" id="bib-expedient" placeholder="NÂº d'expedient o ID...">
+            </div>
+        </div>
+        <div class="fg">
+            <label>Etiquetes (separades per comes)</label>
+            <input type="text" id="bib-tags" placeholder="Ex: formaciÃ³, 2026, obligatori">
+        </div>
+
+        <div class="progress-wrap" id="bib-progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" id="bib-progress-fill" style="width:0%"></div></div>
+            <div class="progress-label" id="bib-progress-label">Pujant...</div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+            <button class="btn btn-ghost" onclick="closeUpload()">CancelÂ·lar</button>
+            <button class="btn btn-primary" id="bib-btn-upload" onclick="bibUpload()" disabled>
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Pujar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• EDIT MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<div class="modal-overlay" id="modal-edit">
+    <div class="modal-box">
+        <div class="modal-title">Editar document</div>
+        <p class="modal-sub">Modifica les metadades d'aquest document.</p>
+        <input type="hidden" id="edit-id">
+        <div class="fg">
+            <label>Nom del document *</label>
+            <input type="text" id="edit-nom">
+        </div>
+        <div class="form-2col">
+            <div class="fg">
+                <label>Carpeta</label>
+                <select id="edit-cat">
+                    <option value="rrhh">Recursos Humans</option>
+                    <option value="legal">Legal i Normativa</option>
+                    <option value="protocols">Protocols i Procediments</option>
+                    <option value="formacio">FormaciÃ³</option>
+                    <option value="comunicacio">ComunicaciÃ³</option>
+                    <option value="qualitat">Qualitat</option>
+                    <option value="finances">Finances</option>
+                    <option value="expedients">Documents d'Expedients</option>
+                    <option value="altres">Altres</option>
+                </select>
+            </div>
+            <div class="fg">
+                <label>Visibilitat</label>
+                <select id="edit-visibilitat">
+                    <option value="tots">Tot el personal</option>
+                    <option value="admins">NomÃ©s administradors</option>
+                </select>
+            </div>
+        </div>
+        <div class="fg">
+            <label>DescripciÃ³</label>
+            <textarea id="edit-desc" rows="2"></textarea>
+        </div>
+        <div class="fg">
+            <label>Vincular a expedient (opcional)</label>
+            <input type="text" id="edit-expedient" placeholder="NÂº d'expedient o ID...">
+        </div>
+        <div class="fg">
+            <label>Etiquetes (separades per comes)</label>
+            <input type="text" id="edit-tags">
+        </div>
+        <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+            <button class="btn btn-ghost" onclick="closeEdit()">CancelÂ·lar</button>
+            <button class="btn btn-primary" id="edit-save-btn" onclick="saveEdit()">Desar canvis</button>
+        </div>
+    </div>
+</div>
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DELETE MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<div class="modal-overlay" id="modal-delete">
+    <div class="modal-box" style="max-width:420px;text-align:center;">
+        <div style="display:flex;align-items:center;justify-content:center;margin-bottom:10px;"><svg width="32" height="32" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></div>
+        <div class="modal-title">Eliminar document</div>
+        <p class="modal-sub" id="del-msg">Segur que vols eliminar aquest document? AcciÃ³ irreversible.</p>
+        <input type="hidden" id="del-id">
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:10px;">
+            <button class="btn btn-ghost" onclick="document.getElementById('modal-delete').classList.remove('open')">CancelÂ·lar</button>
+            <button class="btn btn-red" id="del-confirm-btn" onclick="confirmDelete()">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PREVIEW MODAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<div class="modal-overlay" id="modal-preview">
+    <div class="modal-box">
+        <div class="preview-header">
+            <span id="preview-icon" style="font-size:1.4rem;"></span>
+            <h3 id="preview-name"></h3>
+            <a id="preview-download" href="#" target="_blank" download class="btn btn-ghost btn-sm">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Descarregar
+            </a>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('modal-preview').classList.remove('open')">Tancar</button>
+        </div>
+        <div class="preview-body" id="preview-body"></div>
+    </div>
+</div>
+
+<script type="module">
+import { db, auth, storage } from '../firebase-config.js';
+import {
+    collection, addDoc, getDocs, updateDoc, deleteDoc,
+    doc, query, orderBy, serverTimestamp, where
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import {
+    ref, uploadBytesResumable, getDownloadURL, deleteObject
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+// â”€â”€ Auth guard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+onAuthStateChanged(auth, user => {
+    if (!user) { window.location.href = '../index.html'; return; }
+    loadDocs();
+});
+
+// â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+let _allDocs   = [];
+let _activeFolder = 'tots';
+let _activeFmt    = 'tots';
+let _activeView   = 'grid';
+let _selFile      = null;
+
+const CATS = {
+    tots:       { label: 'Tots els documents', icon: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h3l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>' },
+    rrhh:       { label: 'Recursos Humans',     icon: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>' },
+    legal:      { label: 'Legal i Normativa',   icon: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' },
+    protocols:  { label: 'Protocols',           icon: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>' },
+    formacio:   { label: 'FormaciÃ³',            icon: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>' },
+    comunicacio:{ label: 'ComunicaciÃ³',         icon: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>' },
+    qualitat:   { label: 'Qualitat',            icon: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' },
+    finances:   { label: 'Finances',            icon: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>' },
+    expedients: { label: "Doc. d'Expedients",   icon: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>' },
+    altres:     { label: 'Altres',              icon: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>' },
+};
+
+const FMT_ICONS = {
+    pdf:   { icon: '<svg width="16" height="16" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/></svg>', badge: 'badge-pdf',  label: 'PDF'   },
+    docx:  { icon: '<svg width="16" height="16" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>', badge: 'badge-docx', label: 'Word'  },
+    doc:   { icon: '<svg width="16" height="16" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>', badge: 'badge-docx', label: 'Word'  },
+    xlsx:  { icon: '<svg width="16" height="16" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/></svg>', badge: 'badge-xlsx', label: 'Excel' },
+    xls:   { icon: '<svg width="16" height="16" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/></svg>', badge: 'badge-xlsx', label: 'Excel' },
+    csv:   { icon: '<svg width="16" height="16" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/></svg>', badge: 'badge-xlsx', label: 'CSV'   },
+    png:   { icon: '<svg width="16" height="16" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>', badge: 'badge-img',  label: 'PNG'   },
+    jpg:   { icon: '<svg width="16" height="16" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>', badge: 'badge-img',  label: 'JPEG'  },
+    jpeg:  { icon: '<svg width="16" height="16" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>', badge: 'badge-img',  label: 'JPEG'  },
+    gif:   { icon: '<svg width="16" height="16" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>', badge: 'badge-img',  label: 'GIF'   },
+    webp:  { icon: '<svg width="16" height="16" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>', badge: 'badge-img',  label: 'WEBP'  },
+};
+
+function getExt(nom) { return (nom || '').split('.').pop().toLowerCase(); }
+function getFmtGroup(ext) {
+    if (['pdf'].includes(ext)) return 'pdf';
+    if (['doc','docx'].includes(ext)) return 'docx';
+    if (['xls','xlsx','csv'].includes(ext)) return 'xlsx';
+    if (['png','jpg','jpeg','gif','webp'].includes(ext)) return 'img';
+    return 'altres';
+}
+function fmtSize(bytes) {
+    if (!bytes) return 'â€”';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+    return (bytes/1024/1024).toFixed(2) + ' MB';
+}
+function totalSize(docs) {
+    const b = docs.reduce((s, d) => s + (d.mida || 0), 0);
+    if (b < 1024*1024) return (b/1024).toFixed(0) + ' KB';
+    return (b/1024/1024).toFixed(1) + ' MB';
+}
+function escHtml(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// â”€â”€ Load â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+async function loadDocs() {
+    try {
+        const snap = await getDocs(query(collection(db, 'biblioteca_docs'), orderBy('createdAt', 'desc')));
+        _allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderFolders();
+        applyFilters();
+        updateStats();
+    } catch(e) {
+        document.getElementById('docs-container').innerHTML =
+            `<div class="empty-state"><h3>Error carregant documents</h3><p>${escHtml(e.message)}</p></div>`;
+    }
+}
+
+// â”€â”€ Folders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function renderFolders() {
+    const sidebar = document.getElementById('folder-sidebar');
+    const counts  = {};
+    _allDocs.forEach(d => { counts[d.categoria] = (counts[d.categoria]||0)+1; });
+    const total = _allDocs.length;
+
+    let html = `<div class="folder-sidebar-title">Carpetes</div>`;
+    html += `<div class="folder-item ${_activeFolder==='tots'?'active':''}" onclick="setFolder('tots')">
+        <span class="folder-icon">${CATS.tots.icon}</span> Tots els documents
+        <span class="folder-count">${total}</span>
+    </div>`;
+    html += `<div class="folder-divider"></div>`;
+
+    Object.entries(CATS).forEach(([key, c]) => {
+        if (key === 'tots') return;
+        const n = counts[key] || 0;
+        html += `<div class="folder-item ${_activeFolder===key?'active':''}" onclick="setFolder('${key}')">
+            <span class="folder-icon">${c.icon}</span> ${c.label}
+            <span class="folder-count">${n}</span>
+        </div>`;
+    });
+
+    sidebar.innerHTML = html;
+}
+
+window.setFolder = function(folder) {
+    _activeFolder = folder;
+    renderFolders();
+    applyFilters();
+};
+
+// â”€â”€ Filters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+window.filterFmt = function(el, fmt) {
+    _activeFmt = fmt;
+    document.querySelectorAll('.format-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    applyFilters();
+};
+
+window.applyFilters = function() {
+    const q = document.getElementById('search-input').value.trim().toLowerCase();
+    const sort = document.getElementById('sort-sel').value;
+
+    let docs = [..._allDocs];
+
+    // Folder filter
+    if (_activeFolder !== 'tots') docs = docs.filter(d => d.categoria === _activeFolder);
+
+    // Format filter
+    if (_activeFmt !== 'tots') docs = docs.filter(d => getFmtGroup(getExt(d.nomFitxer)) === _activeFmt);
+
+    // Search
+    if (q) docs = docs.filter(d =>
+        (d.nom||'').toLowerCase().includes(q) ||
+        (d.descripcio||'').toLowerCase().includes(q) ||
+        (d.vinculatExpedient||'').toLowerCase().includes(q) ||
+        (d.tags||[]).some(t => t.toLowerCase().includes(q))
+    );
+
+    // Sort
+    if (sort === 'data_desc') docs.sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+    else if (sort === 'data_asc') docs.sort((a,b) => (a.createdAt?.seconds||0) - (b.createdAt?.seconds||0));
+    else if (sort === 'nom_asc') docs.sort((a,b) => (a.nom||'').localeCompare(b.nom||''));
+    else if (sort === 'nom_desc') docs.sort((a,b) => (b.nom||'').localeCompare(a.nom||''));
+    else if (sort === 'mida_desc') docs.sort((a,b) => (b.mida||0) - (a.mida||0));
+
+    renderDocs(docs);
+};
+
+// â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function renderDocs(docs) {
+    const container = document.getElementById('docs-container');
+    if (!docs.length) {
+        container.innerHTML = `<div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h3l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+            <h3>Sense documents</h3>
+            <p>Puja el primer document amb el botÃ³ <strong>Pujar document</strong>.</p>
+        </div>`;
+        return;
+    }
+    if (_activeView === 'grid') renderGrid(docs, container);
+    else renderList(docs, container);
+}
+
+function renderGrid(docs, container) {
+    container.innerHTML = `<div class="docs-grid">${docs.map(docCard).join('')}</div>`;
+}
+
+function renderList(docs, container) {
+    container.innerHTML = `<div class="docs-list">${docs.map(docRow).join('')}</div>`;
+}
+
+function docCard(d) {
+    const ext   = getExt(d.nomFitxer);
+    const fmt   = FMT_ICONS[ext] || { icon: '<svg width="16" height="16" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>', badge: 'badge-other', label: ext.toUpperCase() };
+    const cat   = CATS[d.categoria] || CATS.altres;
+    const date  = d.createdAt?.toDate?.()?.toLocaleDateString('ca-ES') || 'â€”';
+    const linked = d.vinculatExpedient ? `<span class="badge badge-exp">Exp: ${escHtml(d.vinculatExpedient)}</span>` : '';
+    const tags  = (d.tags||[]).slice(0,2).map(t => `<span class="badge badge-other">${escHtml(t)}</span>`).join('');
+    return `
+    <div class="doc-card">
+        <div class="doc-actions">
+            <button class="doc-action-btn" onclick="event.stopPropagation();previewDoc('${d.id}')">Veure</button>
+            <button class="doc-action-btn" onclick="event.stopPropagation();openEdit('${d.id}')">Editar</button>
+            <a class="doc-action-btn" href="${escHtml(d.downloadURL||'#')}" download="${escHtml(d.nomFitxer)}" target="_blank" onclick="event.stopPropagation()">Baixar</a>
+            <button class="doc-action-btn del" onclick="event.stopPropagation();openDelete('${d.id}','${escHtml(d.nom)}')">Eliminar</button>
+        </div>
+        <div class="doc-fmt-icon" style="background:${fmtBg(ext)}">${fmt.icon}</div>
+        <div class="doc-name" title="${escHtml(d.nom)}">${escHtml(d.nom)}</div>
+        <div class="doc-meta">${cat.icon} ${cat.label} Â· ${date}</div>
+        <div class="doc-meta">${fmtSize(d.mida)}</div>
+        <div class="doc-badges">
+            <span class="badge ${fmt.badge}">${fmt.label}</span>
+            ${linked}${tags}
+        </div>
+    </div>`;
+}
+
+function docRow(d) {
+    const ext   = getExt(d.nomFitxer);
+    const fmt   = FMT_ICONS[ext] || { icon: '<svg width="16" height="16" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>', badge: 'badge-other', label: ext.toUpperCase()||'?' };
+    const cat   = CATS[d.categoria] || CATS.altres;
+    const date  = d.createdAt?.toDate?.()?.toLocaleDateString('ca-ES') || 'â€”';
+    return `
+    <div class="doc-row">
+        <div class="row-icon">${fmt.icon}</div>
+        <div>
+            <div class="row-name">${escHtml(d.nom)}</div>
+            <div class="row-cat">${cat.icon} ${cat.label}${d.vinculatExpedient ? ' Â· Exp: '+escHtml(d.vinculatExpedient) : ''}</div>
+        </div>
+        <span class="badge ${fmt.badge}" style="margin-left:8px;">${fmt.label}</span>
+        <div class="row-size">${fmtSize(d.mida)}</div>
+        <div class="row-date">${date}</div>
+        <div class="row-actions">
+            <button class="btn btn-ghost btn-sm" onclick="previewDoc('${d.id}')" title="Veure"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            <button class="btn btn-ghost btn-sm" onclick="openEdit('${d.id}')" title="Editar"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <a class="btn btn-ghost btn-sm" href="${escHtml(d.downloadURL||'#')}" download="${escHtml(d.nomFitxer)}" target="_blank" title="Descarregar"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>
+            <button class="btn btn-ghost btn-sm" onclick="openDelete('${d.id}','${escHtml(d.nom)}')" style="color:#dc2626;" title="Eliminar"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+        </div>
+    </div>`;
+}
+
+function fmtBg(ext) {
+    if (ext === 'pdf') return '#fee2e2';
+    if (['doc','docx'].includes(ext)) return '#dbeafe';
+    if (['xls','xlsx','csv'].includes(ext)) return '#dcfce7';
+    if (['png','jpg','jpeg','gif','webp'].includes(ext)) return '#f5f3ff';
+    return '#f1f5f9';
+}
+
+// â”€â”€ Stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function updateStats() {
+    document.getElementById('st-total').textContent = _allDocs.length;
+    document.getElementById('st-size').textContent  = totalSize(_allDocs);
+    document.getElementById('st-gen').textContent   = _allDocs.filter(d => !d.vinculatExpedient).length;
+    document.getElementById('st-exp').textContent   = _allDocs.filter(d => d.vinculatExpedient).length;
+}
+
+// â”€â”€ View toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+window.setView = function(v) {
+    _activeView = v;
+    document.getElementById('btn-grid').classList.toggle('active', v==='grid');
+    document.getElementById('btn-list').classList.toggle('active', v==='list');
+    applyFilters();
+};
+
+// â”€â”€ Upload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+window.openUpload = function() {
+    resetUploadForm();
+    document.getElementById('modal-upload').classList.add('open');
+};
+window.closeUpload = function() {
+    document.getElementById('modal-upload').classList.remove('open');
+};
+
+window.bibHandleDrop = function(e) {
+    e.preventDefault();
+    document.getElementById('bib-upload-zone').classList.remove('drag-over');
+    const file = e.dataTransfer?.files[0];
+    if (file) bibHandleFile(file);
+};
+window.bibHandleFile = function(file) {
+    if (!file) return;
+    if (file.size > 20 * 1024 * 1024) { alert('Fitxer massa gran. MÃ xim 20 MB.'); return; }
+    _selFile = file;
+    document.getElementById('bib-drop-label').textContent = file.name;
+    if (!document.getElementById('bib-nom').value) {
+        document.getElementById('bib-nom').value = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+    }
+    document.getElementById('bib-btn-upload').disabled = false;
+};
+
+window.bibUpload = async function() {
+    if (!_selFile) return;
+    const nom         = document.getElementById('bib-nom').value.trim();
+    const cat         = document.getElementById('bib-cat').value;
+    const desc        = document.getElementById('bib-desc').value.trim();
+    const visibilitat = document.getElementById('bib-visibilitat').value;
+    const expedient   = document.getElementById('bib-expedient').value.trim();
+    const tagsRaw     = document.getElementById('bib-tags').value.trim();
+    const tags        = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+    if (!nom || !cat) { alert('Nom i carpeta sÃ³n obligatoris.'); return; }
+
+    const btn = document.getElementById('bib-btn-upload');
+    btn.disabled = true;
+    showBibProgress(true, 0, 'Pujant fitxer...');
+
+    try {
+        const ts = Date.now();
+        const storageRef = ref(storage, `biblioteca/${cat}/${ts}_${_selFile.name}`);
+        const task = uploadBytesResumable(storageRef, _selFile);
+
+        const downloadURL = await new Promise((resolve, reject) => {
+            task.on('state_changed',
+                s => showBibProgress(true, Math.round(s.bytesTransferred/s.totalBytes*100), `Pujant... ${Math.round(s.bytesTransferred/s.totalBytes*100)}%`),
+                reject,
+                async () => resolve(await getDownloadURL(task.snapshot.ref))
+            );
+        });
+
+        showBibProgress(true, 95, 'Desant metadades...');
+
+        const docRef = await addDoc(collection(db, 'biblioteca_docs'), {
+            nom, categoria: cat, descripcio: desc, visibilitat, tags,
+            vinculatExpedient: expedient || null,
+            nomFitxer: _selFile.name,
+            storagePath: `biblioteca/${cat}/${ts}_${_selFile.name}`,
+            downloadURL,
+            mida: _selFile.size,
+            createdAt: serverTimestamp(),
+            createdBy: auth.currentUser?.email || ''
+        });
+
+        showBibProgress(true, 100, 'Completat!');
+        _allDocs.unshift({ id: docRef.id, nom, categoria: cat, descripcio: desc, visibilitat, tags, vinculatExpedient: expedient||null, nomFitxer: _selFile.name, downloadURL, mida: _selFile.size });
+        renderFolders();
+        applyFilters();
+        updateStats();
+        setTimeout(() => closeUpload(), 900);
+
+    } catch(e) {
+        alert('Error pujant: ' + e.message);
+        showBibProgress(false, 0, '');
+    }
+    btn.disabled = false;
+};
+
+function showBibProgress(show, pct, label) {
+    document.getElementById('bib-progress-wrap').style.display = show ? 'block' : 'none';
+    document.getElementById('bib-progress-fill').style.width = pct + '%';
+    document.getElementById('bib-progress-label').textContent = label;
+}
+
+function resetUploadForm() {
+    _selFile = null;
+    document.getElementById('bib-file-input').value = '';
+    document.getElementById('bib-drop-label').textContent = 'Arrossega el fitxer aquÃ­ o fes clic';
+    ['bib-nom','bib-desc','bib-expedient','bib-tags'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('bib-cat').value = '';
+    document.getElementById('bib-visibilitat').value = 'tots';
+    document.getElementById('bib-btn-upload').disabled = true;
+    showBibProgress(false, 0, '');
+}
+
+// â”€â”€ Edit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+window.openEdit = function(id) {
+    const d = _allDocs.find(x => x.id === id);
+    if (!d) return;
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-nom').value = d.nom || '';
+    document.getElementById('edit-cat').value = d.categoria || '';
+    document.getElementById('edit-visibilitat').value = d.visibilitat || 'tots';
+    document.getElementById('edit-desc').value = d.descripcio || '';
+    document.getElementById('edit-expedient').value = d.vinculatExpedient || '';
+    document.getElementById('edit-tags').value = (d.tags||[]).join(', ');
+    document.getElementById('modal-edit').classList.add('open');
+};
+window.closeEdit = function() { document.getElementById('modal-edit').classList.remove('open'); };
+
+window.saveEdit = async function() {
+    const id  = document.getElementById('edit-id').value;
+    const nom = document.getElementById('edit-nom').value.trim();
+    const cat = document.getElementById('edit-cat').value;
+    if (!nom) { alert('El nom Ã©s obligatori.'); return; }
+    const btn = document.getElementById('edit-save-btn');
+    btn.disabled = true;
+    const tagsRaw = document.getElementById('edit-tags').value.trim();
+    const tags    = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+    try {
+        await updateDoc(doc(db, 'biblioteca_docs', id), {
+            nom, categoria: cat,
+            visibilitat: document.getElementById('edit-visibilitat').value,
+            descripcio: document.getElementById('edit-desc').value.trim(),
+            vinculatExpedient: document.getElementById('edit-expedient').value.trim() || null,
+            tags, updatedAt: serverTimestamp()
+        });
+        const idx = _allDocs.findIndex(x => x.id === id);
+        if (idx > -1) Object.assign(_allDocs[idx], { nom, categoria: cat, tags, visibilitat: document.getElementById('edit-visibilitat').value });
+        renderFolders();
+        applyFilters();
+        closeEdit();
+    } catch(e) { alert('Error: ' + e.message); }
+    btn.disabled = false;
+};
+
+// â”€â”€ Delete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+window.openDelete = function(id, nom) {
+    document.getElementById('del-id').value = id;
+    document.getElementById('del-msg').textContent = `Segur que vols eliminar "${nom}"? S'esborrarÃ  el fitxer i les metadades permanentment.`;
+    document.getElementById('modal-delete').classList.add('open');
+};
+window.confirmDelete = async function() {
+    const id  = document.getElementById('del-id').value;
+    const doc_ = _allDocs.find(x => x.id === id);
+    const btn  = document.getElementById('del-confirm-btn');
+    btn.disabled = true;
+    try {
+        if (doc_?.storagePath) { try { await deleteObject(ref(storage, doc_.storagePath)); } catch {} }
+        await deleteDoc(doc(db, 'biblioteca_docs', id));
+        _allDocs = _allDocs.filter(x => x.id !== id);
+        renderFolders();
+        applyFilters();
+        updateStats();
+        document.getElementById('modal-delete').classList.remove('open');
+    } catch(e) { alert('Error eliminant: ' + e.message); }
+    btn.disabled = false;
+};
+
+// â”€â”€ Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+window.previewDoc = function(id) {
+    const d   = _allDocs.find(x => x.id === id);
+    if (!d || !d.downloadURL) return;
+    const ext = getExt(d.nomFitxer);
+    const fmt = FMT_ICONS[ext] || { icon: '<svg width="16" height="16" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' };
+    document.getElementById('preview-icon').textContent = fmt.icon;
+    document.getElementById('preview-name').textContent = d.nom;
+    document.getElementById('preview-download').href = d.downloadURL;
+    document.getElementById('preview-download').download = d.nomFitxer;
+
+    const body = document.getElementById('preview-body');
+    if (ext === 'pdf') {
+        body.innerHTML = `<iframe src="${d.downloadURL}" title="${escHtml(d.nom)}"></iframe>`;
+    } else if (['png','jpg','jpeg','gif','webp'].includes(ext)) {
+        body.innerHTML = `<img src="${escHtml(d.downloadURL)}" alt="${escHtml(d.nom)}">`;
+    } else {
+        body.innerHTML = `<div class="preview-no-support">
+            <div style="font-size:3rem;margin-bottom:12px;">${fmt.icon}</div>
+            <p style="font-size:1rem;font-weight:700;color:#1e293b;">${escHtml(d.nom)}</p>
+            <p style="color:#64748b;margin-bottom:18px;">No es pot previsualitzar aquest format (${ext.toUpperCase()}) al navegador.</p>
+            <a href="${escHtml(d.downloadURL)}" download="${escHtml(d.nomFitxer)}" class="btn btn-primary" style="display:inline-flex;">
+                â¬‡ Descarregar fitxer
+            </a>
+        </div>`;
+    }
+    document.getElementById('modal-preview').classList.add('open');
+};
+
+// â”€â”€ Close on overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+['modal-upload','modal-edit','modal-delete','modal-preview'].forEach(id => {
+    document.getElementById(id).addEventListener('click', e => {
+        if (e.target.id === id) document.getElementById(id).classList.remove('open');
+    });
+});
+</script>
+
+<script src="../security-check.js"></script>
+<script type="module">await window.checkModuleAccess('NexeAdmin');</script>
+<script src="nexeadmin-sidebar.js"></script>
+</body>
+</html>
+

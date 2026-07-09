@@ -1,0 +1,182 @@
+/* =========================================
+   1. VARIABLES Y BASE
+   ========================================= */
+:root {
+    --primary-blue: #2563eb;
+    --bg-light: #f8fafc;
+    --white: #ffffff;
+    --border-color: #e2e8f0;
+    --sidebar-width: 280px; 
+    --sidebar-collapsed-width: 70px;
+    --topbar-height: 60px;
+}
+
+/* =========================================
+   3. CONTENIDO PRINCIPAL (FIX DEFINITIVO)
+   ========================================= */
+.main-content {
+    margin-top: var(--topbar-height);
+    /* Usamos margin-left dinámico que hereda del estado de la sidebar */
+    margin-left: var(--sidebar-width);
+    
+    flex-grow: 1; 
+    width: auto; 
+    min-width: 0; /* Evita que el contenido desborde el flex */
+    
+    padding: 40px; 
+    box-sizing: border-box;
+    /* Cambiamos min-height para que el footer no se solape */
+    min-height: calc(100vh - var(--topbar-height) - 50px);
+    background-color: var(--bg-light);
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    transition: all 0.3s ease;
+}
+
+/* Ajuste cuando la sidebar se colapsa */
+body.collapsed .main-content {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+/* =========================================
+   4. CONTENEDORES DE PÁGINA (EL SECRETO DEL 100%)
+   ========================================= */
+
+/* Contenedores estándar (Bienvenida, Perfil, etc.) */
+.welcome-section, 
+.profile-header, 
+.admin-container {
+    width: 100%;
+    max-width: 1000px; /* Ancho elegante para lectura */
+    background: var(--white);
+    box-sizing: border-box;
+    margin-bottom: 30px;
+}
+
+/* Contenedores de datos (Tablas de Expedientes, Familias, etc.) */
+.table-container {
+    width: 100%;
+    max-width: 1400px; /* Permitimos que las tablas se expandan mucho más */
+    background: var(--white);
+    box-sizing: border-box;
+    margin-bottom: 60px; /* Espacio extra para que no tape el footer */
+}
+
+.welcome-section {
+    padding: 60px 40px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* =========================================
+   6. FOOTER (COMPATIBLE CON SIDEBAR JS)
+   ========================================= */
+.main-footer {
+    /* IMPORTANTE: Si usas fixed en JS, aquí debe ser fixed o quitar estas reglas */
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    z-index: 10000;
+    
+    /* El ancho debe ser el total menos la sidebar */
+    left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+    
+    height: 50px;
+    background: var(--white);
+    padding: 0 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--border-color);
+    box-sizing: border-box;
+    color: #64748b;
+    font-size: 0.85rem;
+    
+    transition: all 0.3s ease;
+}
+
+body.collapsed .main-footer {
+    left: var(--sidebar-collapsed-width);
+    width: calc(100% - var(--sidebar-collapsed-width));
+}
+
+/* =========================================
+   6B. MODALES GLOBALES FULLSCREEN
+   ========================================= */
+.modal,
+.modal-overlay,
+.modal-shell {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 30000 !important;
+    align-items: center;
+    justify-content: center;
+    padding: 14px !important;
+    overflow-y: auto !important;
+    background: rgba(15, 23, 42, 0.58) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    box-sizing: border-box;
+}
+
+.modal-content,
+.modal-card,
+.modal-box,
+.modal-small {
+    width: min(96vw, 1280px) !important;
+    max-width: 1280px !important;
+    max-height: 94vh !important;
+    height: auto;
+    min-height: min(78vh, 680px);
+    overflow-y: auto !important;
+    border-radius: 24px !important;
+    box-shadow: 0 30px 80px -18px rgba(0,0,0,0.45) !important;
+    box-sizing: border-box;
+}
+
+.ui-svg-icon {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+    color: currentColor;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Ajuste de la firma para que nunca se amontone */
+.footer-signature {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    flex-shrink: 0; /* Impide que la firma se encoja más que el texto */
+}
+
+/* =========================================
+   7. RESPONSIVE (MÓVIL)
+   ========================================= */
+@media (max-width: 1024px) {
+    .main-content, .main-footer {
+        margin-left: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+    }
+    .main-content {
+        padding: 20px;
+    }
+    .footer-signature span:first-child {
+        display: none; /* Esconde "desarrollado con amor" en pantallas muy pequeñas */
+    }
+}

@@ -1,0 +1,1123 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" type="image/svg+xml" href="../img/nexeadmin-icon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../variables.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; margin: 0; display: flex; min-height: 100vh; }
+        .main-content { padding: 36px 48px; flex: 1; }
+        @media (max-width: 768px) { .main-content { padding: 20px 16px; } }
+
+        h1 { color: #1e293b; font-size: 1.4rem; margin: 0 0 4px; display: flex; align-items: center; gap: 10px; }
+        .subtitle { color: #64748b; font-size: 0.88rem; margin: 0 0 28px; }
+
+        /* ── STATS ROW ──────────────────────────────────────────────── */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+        .stat-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; }
+        .stat-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: .5px; }
+        .stat-val { font-size: 1.6rem; font-weight: 800; color: #1e293b; margin-top: 4px; }
+        .stat-sub { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
+
+        /* ── MAIN GRID ──────────────────────────────────────────────── */
+        .page-grid { display: block; }
+
+        /* ── LIST TOOLBAR ───────────────────────────────────────────── */
+        .list-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; flex-wrap: wrap; }
+        .list-toolbar .cat-pills { margin-bottom: 0; }
+
+        /* ── UPLOAD MODAL ───────────────────────────────────────────── */
+        .upload-modal-box {
+            background: white; border-radius: 18px;
+            width: min(96vw, 620px); max-height: 92vh;
+            display: flex; flex-direction: column;
+            box-shadow: 0 24px 80px rgba(0,0,0,.25); overflow: hidden;
+        }
+        .upload-modal-header {
+            padding: 22px 28px 16px; border-bottom: 1.5px solid #e2e8f0; flex-shrink: 0;
+            display: flex; align-items: flex-start; justify-content: space-between;
+        }
+        .upload-modal-header h2 { margin: 0 0 2px; font-size: 1.05rem; color: #1e293b; }
+        .upload-modal-header p { margin: 0; font-size: .8rem; color: #64748b; }
+        .upload-modal-close {
+            background: #f1f5f9; border: none; border-radius: 8px; padding: 6px 10px;
+            cursor: pointer; font-size: 1.1rem; line-height: 1; color: #64748b;
+            flex-shrink: 0; margin-left: 12px;
+        }
+        .upload-modal-close:hover { background: #e2e8f0; }
+        .upload-modal-body { padding: 22px 28px; overflow-y: auto; }
+        .upload-modal-footer {
+            padding: 14px 28px; border-top: 1.5px solid #e2e8f0; flex-shrink: 0;
+            display: flex; gap: 10px; justify-content: flex-end; align-items: center;
+        }
+
+        /* ── CARDS ──────────────────────────────────────────────────── */
+        .card { background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; }
+        .card-title { font-size: 0.88rem; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: .5px; margin: 0 0 18px; display: flex; align-items: center; gap: 8px; }
+
+        /* ── UPLOAD ZONE ────────────────────────────────────────────── */
+        .upload-zone {
+            border: 2px dashed #cbd5e1; border-radius: 12px; padding: 36px 24px;
+            text-align: center; cursor: pointer; transition: .2s; background: #f8fafc;
+        }
+        .upload-zone:hover, .upload-zone.drag-over { border-color: #3b82f6; background: #eff6ff; }
+        .upload-zone svg { width: 40px; height: 40px; stroke: #94a3b8; margin-bottom: 12px; }
+        .upload-zone p { margin: 6px 0; color: #475569; font-size: .88rem; }
+        .upload-zone small { color: #94a3b8; font-size: .78rem; }
+        #file-input { display: none; }
+
+        /* ── FORM FIELDS ────────────────────────────────────────────── */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
+        .form-row.full { grid-template-columns: 1fr; }
+        .fg { display: flex; flex-direction: column; gap: 5px; }
+        .fg label { font-size: .75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .fg input, .fg select, .fg textarea {
+            padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px;
+            font-size: .88rem; font-family: inherit; outline: none; transition: border-color .15s;
+        }
+        .fg input:focus, .fg select:focus, .fg textarea:focus { border-color: #3b82f6; }
+        .fg textarea { resize: vertical; min-height: 70px; }
+
+        /* ── BUTTONS ────────────────────────────────────────────────── */
+        .btn { padding: 10px 20px; border: none; border-radius: 9px; font-weight: 700; font-size: .88rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-family: inherit; transition: .15s; }
+        .btn-primary { background: #1e293b; color: white; }
+        .btn-primary:hover:not(:disabled) { background: #0f172a; }
+        .btn-blue { background: #3b82f6; color: white; }
+        .btn-blue:hover:not(:disabled) { background: #2563eb; }
+        .btn-red { background: #fee2e2; color: #dc2626; }
+        .btn-red:hover { background: #fecaca; }
+        .btn-ghost { background: #f1f5f9; color: #475569; }
+        .btn-ghost:hover { background: #e2e8f0; }
+        .btn:disabled { opacity: .5; cursor: not-allowed; }
+        .btn-sm { padding: 6px 12px; font-size: .78rem; border-radius: 7px; }
+
+        /* ── PROGRESS ───────────────────────────────────────────────── */
+        .progress-wrap { margin-top: 14px; display: none; }
+        .progress-bar { height: 6px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #3b82f6; border-radius: 99px; transition: width .2s; }
+        .progress-label { font-size: .75rem; color: #64748b; margin-top: 5px; }
+
+        /* ── TEMPLATE LIST ──────────────────────────────────────────── */
+        .tpl-list { display: flex; flex-direction: column; gap: 10px; }
+        .tpl-card {
+            border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px 16px;
+            background: white; transition: .15s;
+        }
+        .tpl-card:hover { border-color: #94a3b8; }
+        .tpl-card.assigned { border-color: #3b82f6; background: #f0f7ff; }
+        .tpl-header { display: flex; align-items: flex-start; gap: 12px; }
+        .tpl-icon { 
+            width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; 
+            justify-content: center; flex-shrink: 0; font-size: 1.2rem;
+        }
+        .tpl-icon-word { background: #dbeafe; }
+        .tpl-meta { flex: 1; min-width: 0; }
+        .tpl-name { font-weight: 700; color: #1e293b; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tpl-desc { font-size: .78rem; color: #64748b; margin-top: 2px; }
+        .tpl-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 20px; font-size: .72rem; font-weight: 700; }
+        .badge-cat { background: #f0fdf4; color: #16a34a; }
+        .badge-sub { background: #eff6ff; color: #2563eb; }
+        .badge-new { background: #fef9c3; color: #92400e; }
+        .tpl-actions { display: flex; gap: 6px; margin-top: 10px; }
+
+        /* ── VARIABLE CHIPS ─────────────────────────────────────────── */
+        .var-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .var-chip {
+            background: #1e293b; color: #e2e8f0; font-family: monospace;
+            font-size: .72rem; padding: 3px 9px; border-radius: 6px; cursor: pointer;
+            user-select: none; transition: .1s;
+        }
+        .var-chip:hover { background: #3b82f6; color: white; }
+        .var-copy-note { font-size: .75rem; color: #94a3b8; margin-top: 6px; }
+
+        /* ── CATEGORY SELECTOR ──────────────────────────────────────── */
+        .cat-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+        .cat-pill { padding: 5px 14px; border-radius: 20px; border: 1.5px solid #e2e8f0; font-size: .78rem; font-weight: 600; cursor: pointer; transition: .15s; background: white; color: #475569; }
+        .cat-pill.active { border-color: #1e293b; background: #1e293b; color: white; }
+
+        /* ── ASSIGN MODAL ───────────────────────────────────────────── */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: white; border-radius: 16px; padding: 28px; max-width: 540px; width: 95%; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+        .modal-title { font-size: 1.05rem; font-weight: 800; color: #1e293b; margin: 0 0 6px; }
+        .modal-sub { font-size: .85rem; color: #64748b; margin: 0 0 20px; }
+
+        /* ── EMPTY STATE ────────────────────────────────────────────── */
+        .empty-state { text-align: center; padding: 48px 20px; color: #94a3b8; }
+        .empty-state svg { width: 52px; height: 52px; stroke: #cbd5e1; margin-bottom: 12px; }
+        .empty-state h3 { color: #64748b; margin: 0 0 6px; font-size: 1rem; }
+        .empty-state p { font-size: .85rem; margin: 0; }
+
+        /* ── LOG ────────────────────────────────────────────────────── */
+        .log-box { background: #0f172a; color: #94a3b8; font-family: monospace; font-size: .78rem; border-radius: 10px; padding: 12px 16px; min-height: 60px; max-height: 180px; overflow-y: auto; margin-top: 12px; white-space: pre-wrap; display: none; }
+        .log-ok { color: #4ade80; }
+        .log-err { color: #f87171; }
+        .log-info { color: #60a5fa; }
+
+        /* ── MAPPING MODAL ──────────────────────────────────────────── */
+        .map-modal-box {
+            background: white; border-radius: 18px; width: min(96vw, 1020px);
+            max-height: 92vh; display: flex; flex-direction: column;
+            box-shadow: 0 24px 80px rgba(0,0,0,.25);
+        }
+        .map-header {
+            padding: 22px 28px 0; flex-shrink: 0;
+            border-bottom: 1.5px solid #e2e8f0; padding-bottom: 16px;
+        }
+        .map-header h2 { margin: 0 0 2px; font-size: 1.1rem; color: #1e293b; }
+        .map-header p { margin: 0; font-size: .82rem; color: #64748b; }
+        .map-body {
+            display: grid; grid-template-columns: 260px 1fr; flex: 1;
+            overflow: hidden; min-height: 0;
+        }
+        /* left panel — draggable source */
+        .map-sources {
+            border-right: 1.5px solid #e2e8f0; padding: 18px 16px;
+            overflow-y: auto; background: #f8fafc;
+        }
+        .map-source-group { margin-bottom: 16px; }
+        .map-source-group-label {
+            font-size: .68rem; font-weight: 800; text-transform: uppercase;
+            color: #94a3b8; letter-spacing: .6px; margin-bottom: 6px;
+        }
+        .map-chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: #1e293b; color: #e2e8f0;
+            font-family: monospace; font-size: .72rem;
+            padding: 4px 10px; border-radius: 7px; margin: 3px;
+            cursor: grab; user-select: none; transition: .1s;
+            border: 2px solid transparent;
+        }
+        .map-chip:hover { background: #3b82f6; color: white; }
+        .map-chip.dragging { opacity: .45; transform: scale(.95); }
+        .map-chip .chip-drag-icon { opacity: .5; font-size: .8rem; }
+
+        /* right panel — droppable slots */
+        .map-slots { padding: 20px 24px; overflow-y: auto; }
+        .map-slot-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+            margin-bottom: 10px; align-items: center;
+        }
+        .map-slot-label {
+            font-size: .8rem; font-weight: 700; color: #475569;
+            display: flex; align-items: center; gap: 7px;
+        }
+        .map-slot-label span.hint {
+            font-size: .68rem; font-weight: 400; color: #94a3b8;
+        }
+        .map-drop-zone {
+            min-height: 36px; border: 2px dashed #cbd5e1; border-radius: 9px;
+            padding: 5px 10px; display: flex; align-items: center;
+            font-size: .78rem; color: #94a3b8; transition: .15s;
+            background: white; position: relative;
+        }
+        .map-drop-zone.drag-active { border-color: #3b82f6; background: #eff6ff; color: #3b82f6; }
+        .map-drop-zone.filled { border-style: solid; border-color: #10b981; background: #f0fdf4; color: #064e3b; }
+        .map-drop-zone .filled-chip {
+            background: #10b981; color: white; font-family: monospace;
+            font-size: .72rem; padding: 3px 9px; border-radius: 6px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .map-drop-zone .filled-chip button {
+            background: none; border: none; cursor: pointer; color: rgba(255,255,255,.8);
+            padding: 0; line-height: 1; font-size: 1rem;
+        }
+        .map-drop-zone .filled-chip button:hover { color: white; }
+        .map-slot-divider {
+            grid-column: span 2; font-size: .68rem; font-weight: 800;
+            text-transform: uppercase; color: #94a3b8; letter-spacing: .6px;
+            border-top: 1px solid #f1f5f9; padding-top: 14px; margin-top: 4px;
+        }
+        .map-add-slot {
+            display: flex; gap: 8px; align-items: center; margin-top: 14px;
+        }
+        .map-add-slot input {
+            flex: 1; padding: 7px 12px; border: 1.5px solid #e2e8f0;
+            border-radius: 8px; font-size: .82rem; font-family: inherit; outline: none;
+        }
+        .map-add-slot input:focus { border-color: #3b82f6; }
+        .map-badge-mapped { background: #dcfce7; color: #16a34a; }
+        .map-footer {
+            padding: 16px 28px; border-top: 1.5px solid #e2e8f0;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-shrink: 0;
+        }
+        .map-footer-info { font-size: .78rem; color: #64748b; }
+    </style>
+</head>
+<body>
+<aside class="admin-sidebar"></aside>
+<main class="main-content">
+
+    <h1>
+        <svg width="22" height="22" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        </svg>
+        Plantilles de Documents
+    </h1>
+    <p class="subtitle">Puja les teves plantilles Word (.docx) personalitzades i assigna-les a cada tipus de document.</p>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">Total plantilles</div>
+            <div class="stat-val" id="stat-total">—</div>
+            <div class="stat-sub">pujades a la BD</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Assignades</div>
+            <div class="stat-val" id="stat-assigned">—</div>
+            <div class="stat-sub">en ús actiu</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Pendents</div>
+            <div class="stat-val" id="stat-pending">—</div>
+            <div class="stat-sub">sense assignació</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Última pujada</div>
+            <div class="stat-val" style="font-size:1rem;" id="stat-last">—</div>
+            <div class="stat-sub">data darrera plantilla</div>
+        </div>
+    </div>
+
+    <div class="page-grid">
+
+        <!-- Toolbar: filters + button -->
+        <div class="list-toolbar">
+            <div class="cat-pills" id="cat-pills" style="margin-bottom:0;">
+                <button class="cat-pill active" data-cat="tots" onclick="filterCat(this,'tots')">Totes</button>
+                <button class="cat-pill" data-cat="informe" onclick="filterCat(this,'informe')">Informes</button>
+                <button class="cat-pill" data-cat="certificat" onclick="filterCat(this,'certificat')">Certificats</button>
+                <button class="cat-pill" data-cat="derivacio" onclick="filterCat(this,'derivacio')">Derivacions</button>
+                <button class="cat-pill" data-cat="acord" onclick="filterCat(this,'acord')">Acords</button>
+                <button class="cat-pill" data-cat="carta" onclick="filterCat(this,'carta')">Cartes</button>
+                <button class="cat-pill" data-cat="altre" onclick="filterCat(this,'altre')">Altres</button>
+            </div>
+            <button class="btn btn-primary" onclick="openUploadModal()">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Nova plantilla
+            </button>
+        </div>
+
+        <div id="tpl-list" class="tpl-list">
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <h3>Encara no hi ha plantilles</h3>
+                <p>Fes clic a <strong>Nova plantilla</strong> per pujar el teu primer document Word.</p>
+            </div>
+        </div>
+
+    </div><!-- /page-grid -->
+
+</main>
+
+<!-- Upload modal -->
+<div class="modal-overlay" id="modal-upload">
+    <div class="upload-modal-box">
+        <div class="upload-modal-header">
+            <div>
+                <h2>Nova plantilla</h2>
+                <p>Puja un document Word (.docx) i omple les dades de la plantilla.</p>
+            </div>
+            <button class="upload-modal-close" onclick="closeUploadModal()">✕</button>
+        </div>
+        <div class="upload-modal-body">
+            <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
+                 ondragover="event.preventDefault();this.classList.add('drag-over')"
+                 ondragleave="this.classList.remove('drag-over')"
+                 ondrop="handleDrop(event)">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                    <line x1="12" y1="11" x2="12" y2="17"/><polyline points="9 14 12 11 15 14"/>
+                </svg>
+                <p id="drop-label">Arrossega el fitxer aquí o fes clic</p>
+                <small>Format: .docx · Mida màxima: 10 MB</small>
+            </div>
+            <input type="file" id="file-input" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onchange="handleFileSelect(this)">
+
+            <div class="form-row" style="margin-top:18px;">
+                <div class="fg">
+                    <label>Nom de la plantilla *</label>
+                    <input type="text" id="inp-nom" placeholder="Ex: Informe Social Mensual">
+                </div>
+                <div class="fg">
+                    <label>Categoria *</label>
+                    <select id="inp-cat">
+                        <option value="">— Selecciona —</option>
+                        <option value="informe">Informe</option>
+                        <option value="certificat">Certificat</option>
+                        <option value="derivacio">Derivació</option>
+                        <option value="acord">Acord / Compromís</option>
+                        <option value="carta">Carta / Comunicació</option>
+                        <option value="altre">Altre</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row full" style="margin-top:12px;">
+                <div class="fg">
+                    <label>Descripció</label>
+                    <textarea id="inp-desc" placeholder="Per a quins casos s'utilitza aquesta plantilla..."></textarea>
+                </div>
+            </div>
+            <div class="form-row" style="margin-top:12px;">
+                <div class="fg">
+                    <label>Assignar a tipus de document</label>
+                    <select id="inp-tipus">
+                        <option value="">— Sense assignació —</option>
+                        <option value="informe_social">Informe Social</option>
+                        <option value="informe_psicosocial">Informe Psicosocial</option>
+                        <option value="informe_seguiment">Informe de Seguiment</option>
+                        <option value="certificat_serveis">Certificat de Serveis</option>
+                        <option value="derivacio_interna">Derivació Interna</option>
+                        <option value="derivacio_externa">Derivació Externa</option>
+                        <option value="acord_compromis">Acord de Compromís</option>
+                        <option value="carta_comunicacio">Carta / Comunicació</option>
+                        <option value="acta_reunio">Acta de Reunió</option>
+                    </select>
+                </div>
+                <div class="fg">
+                    <label>Any de vigència</label>
+                    <input type="number" id="inp-any" placeholder="2026" min="2020" max="2099" value="2026">
+                </div>
+            </div>
+
+            <div class="progress-wrap" id="progress-wrap">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+                <div class="progress-label" id="progress-label">Pujant...</div>
+            </div>
+            <div class="log-box" id="upload-log"></div>
+        </div>
+        <div class="upload-modal-footer">
+            <button class="btn btn-ghost" onclick="closeUploadModal()">Cancel·lar</button>
+            <button class="btn btn-ghost" onclick="resetForm()">Netejar</button>
+            <button class="btn btn-primary" id="btn-upload" onclick="uploadTemplate()" disabled>
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Pujar plantilla
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Assign / Edit modal -->
+<div class="modal-overlay" id="modal-assign">
+    <div class="modal-box">
+        <div class="modal-title" id="modal-title">Editar plantilla</div>
+        <p class="modal-sub">Modifica les metadades i l'assignació d'aquesta plantilla.</p>
+        <input type="hidden" id="modal-id">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="fg" style="grid-column:span 2;">
+                <label>Nom de la plantilla</label>
+                <input type="text" id="modal-nom">
+            </div>
+            <div class="fg">
+                <label>Categoria</label>
+                <select id="modal-cat">
+                    <option value="informe">Informe</option>
+                    <option value="certificat">Certificat</option>
+                    <option value="derivacio">Derivació</option>
+                    <option value="acord">Acord / Compromís</option>
+                    <option value="carta">Carta / Comunicació</option>
+                    <option value="altre">Altre</option>
+                </select>
+            </div>
+            <div class="fg">
+                <label>Any de vigència</label>
+                <input type="number" id="modal-any" min="2020" max="2099">
+            </div>
+            <div class="fg" style="grid-column:span 2;">
+                <label>Assignar a tipus de document</label>
+                <select id="modal-tipus">
+                    <option value="">— Sense assignació —</option>
+                    <option value="informe_social">Informe Social</option>
+                    <option value="informe_psicosocial">Informe Psicosocial</option>
+                    <option value="informe_seguiment">Informe de Seguiment</option>
+                    <option value="certificat_serveis">Certificat de Serveis</option>
+                    <option value="derivacio_interna">Derivació Interna</option>
+                    <option value="derivacio_externa">Derivació Externa</option>
+                    <option value="acord_compromis">Acord de Compromís</option>
+                    <option value="carta_comunicacio">Carta / Comunicació</option>
+                    <option value="acta_reunio">Acta de Reunió</option>
+                </select>
+            </div>
+            <div class="fg" style="grid-column:span 2;">
+                <label>Descripció</label>
+                <textarea id="modal-desc" rows="3"></textarea>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+            <button class="btn btn-ghost" onclick="closeModal()">Cancel·lar</button>
+            <button class="btn btn-primary" onclick="saveEdit()">Desar canvis</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete confirm modal -->
+<div class="modal-overlay" id="modal-delete">
+    <div class="modal-box" style="max-width:420px;text-align:center;">
+        <div style="font-size:2.2rem;margin-bottom:10px;">ðŸ—‘ï¸</div>
+        <div class="modal-title">Eliminar plantilla</div>
+        <p class="modal-sub" id="del-msg">Segur que vols eliminar aquesta plantilla? S'esborrarà el fitxer i les metadades. Acció irreversible.</p>
+        <input type="hidden" id="del-id">
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;">
+            <button class="btn btn-ghost" onclick="document.getElementById('modal-delete').classList.remove('open')">Cancel·lar</button>
+            <button class="btn btn-red" id="btn-confirm-del" onclick="confirmDelete()">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Mapping modal -->
+<div class="modal-overlay" id="modal-mapping">
+    <div class="map-modal-box">
+        <div class="map-header">
+            <h2 id="map-title">Configura el mapeig de camps</h2>
+            <p>Arrossega les variables de l'esquerra i solta-les al camp corresponent del document.</p>
+        </div>
+        <div class="map-body">
+            <!-- LEFT: draggable variable chips -->
+            <div class="map-sources" id="map-sources">
+                <!-- rendered by JS -->
+            </div>
+            <!-- RIGHT: droppable slots -->
+            <div class="map-slots" id="map-slots">
+                <!-- rendered by JS -->
+            </div>
+        </div>
+        <div class="map-footer">
+            <span class="map-footer-info" id="map-footer-info">—</span>
+            <div style="display:flex;gap:10px;">
+                <button class="btn btn-ghost" onclick="closeMapping()">Cancel·lar</button>
+                <button class="btn btn-primary" id="btn-save-mapping" onclick="saveMapping()">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Desar mapeig
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- docxtemplater + pizzip (client-side .docx generation) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://unpkg.com/docxtemplater@3.44.0/build/docxtemplater.js"></script>
+
+<script type="module">
+import { db, auth } from '../firebase-config.js';
+import { storage } from '../firebase-config.js';
+import {
+    collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import {
+    ref, uploadBytesResumable, getDownloadURL, deleteObject
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+// ── Auth guard ──────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, user => {
+    if (!user) { window.location.href = '../index.html'; return; }
+    const role = localStorage.getItem('userRole') || '';
+    if (!['admin','superadmin'].includes(role)) {
+        document.querySelector('.main-content').innerHTML = `
+            <div style="padding:60px;text-align:center;color:#ef4444;">
+                Accés restringit a administradors.
+            </div>`;
+        return;
+    }
+    loadTemplates();
+});
+
+// ── State ───────────────────────────────────────────────────────────────────
+let _allTemplates = [];
+let _selectedFile = null;
+let _activeCat = 'tots';
+
+// ── Load ────────────────────────────────────────────────────────────────────
+async function loadTemplates() {
+    try {
+        const snap = await getDocs(query(collection(db, 'plantilles'), orderBy('createdAt', 'desc')));
+        _allTemplates = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderTemplates();
+        updateStats();
+    } catch(e) {
+        logMsg('Error carregant plantilles: ' + e.message, 'err');
+    }
+}
+
+function updateStats() {
+    document.getElementById('stat-total').textContent = _allTemplates.length;
+    const assigned = _allTemplates.filter(t => t.tipusDocument).length;
+    document.getElementById('stat-assigned').textContent = assigned;
+    document.getElementById('stat-pending').textContent = _allTemplates.length - assigned;
+    if (_allTemplates.length) {
+        const d = _allTemplates[0].createdAt?.toDate?.();
+        document.getElementById('stat-last').textContent = d ? d.toLocaleDateString('ca-ES') : '—';
+    }
+}
+
+// ── Render ──────────────────────────────────────────────────────────────────
+function renderTemplates() {
+    const list = document.getElementById('tpl-list');
+    const filtered = _activeCat === 'tots'
+        ? _allTemplates
+        : _allTemplates.filter(t => t.categoria === _activeCat);
+
+    if (!filtered.length) {
+        list.innerHTML = `
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <h3>Sense plantilles</h3>
+                <p>${_activeCat !== 'tots' ? 'No hi ha plantilles en aquesta categoria.' : 'Puja el teu primer document Word.'}</p>
+            </div>`;
+        return;
+    }
+
+    const CAT_LABELS = { informe:'Informe', certificat:'Certificat', derivacio:'Derivació', acord:'Acord', carta:'Carta', altre:'Altre' };
+    const DOC_LABELS = {
+        informe_social:'Informe Social', informe_psicosocial:'Informe Psicosocial',
+        informe_seguiment:'Informe de Seguiment', certificat_serveis:'Certificat de Serveis',
+        derivacio_interna:'Derivació Interna', derivacio_externa:'Derivació Externa',
+        acord_compromis:'Acord de Compromís', carta_comunicacio:'Carta / Comunicació',
+        acta_reunio:'Acta de Reunió'
+    };
+
+    list.innerHTML = filtered.map(t => `
+        <div class="tpl-card ${t.tipusDocument ? 'assigned' : ''}" data-id="${t.id}">
+            <div class="tpl-header">
+                <div class="tpl-icon tpl-icon-word">ðŸ“„</div>
+                <div class="tpl-meta">
+                    <div class="tpl-name">${escHtml(t.nom)}</div>
+                    <div class="tpl-desc">${escHtml(t.descripcio || '—')}</div>
+                </div>
+                <div style="font-size:.78rem;color:#94a3b8;flex-shrink:0;">${t.any || ''}</div>
+            </div>
+            <div class="tpl-badges">
+                ${t.categoria ? `<span class="badge badge-cat">${CAT_LABELS[t.categoria] || t.categoria}</span>` : ''}
+                ${t.tipusDocument ? `<span class="badge badge-sub">▶ ${DOC_LABELS[t.tipusDocument] || t.tipusDocument}</span>` : '<span class="badge" style="background:#f1f5f9;color:#94a3b8;">Sense assignació</span>'}
+                ${t.nomFitxer ? `<span class="badge" style="background:#f8fafc;color:#64748b;font-family:monospace;">${escHtml(t.nomFitxer)}</span>` : ''}
+            </div>
+            <div class="tpl-actions">
+                <button class="btn btn-ghost btn-sm" onclick="openEdit('${t.id}')">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Editar
+                </button>
+                <button class="btn btn-blue btn-sm" onclick="openMapping('${t.id}')">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+                    ${t.mapeig && Object.keys(t.mapeig||{}).length ? '<span style="background:#10b981;color:white;border-radius:4px;padding:1px 5px;font-size:.65rem;">' + Object.keys(t.mapeig).length + '</span> ' : ''}Mapeig
+                </button>
+                ${t.downloadURL ? `<a class="btn btn-blue btn-sm" href="${t.downloadURL}" download="${escHtml(t.nomFitxer||'plantilla.docx')}" target="_blank">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Descarregar
+                </a>` : ''}
+                <button class="btn btn-red btn-sm" onclick="openDelete('${t.id}','${escHtml(t.nom)}')">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ── Upload ──────────────────────────────────────────────────────────────────
+window.handleFileSelect = function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    setFile(file);
+};
+
+window.handleDrop = function(e) {
+    e.preventDefault();
+    document.getElementById('upload-zone').classList.remove('drag-over');
+    const file = e.dataTransfer?.files[0];
+    if (file && (file.name.endsWith('.docx') || file.type.includes('wordprocessingml'))) {
+        setFile(file);
+    } else {
+        alert('Només s\'accepten fitxers .docx');
+    }
+};
+
+function setFile(file) {
+    if (file.size > 10 * 1024 * 1024) { alert('Fitxer massa gran. Màxim 10 MB.'); return; }
+    _selectedFile = file;
+    document.getElementById('drop-label').textContent = '✓ ' + file.name;
+    if (!document.getElementById('inp-nom').value) {
+        document.getElementById('inp-nom').value = file.name.replace(/\.docx$/i, '').replace(/[-_]/g, ' ');
+    }
+    document.getElementById('btn-upload').disabled = false;
+}
+
+window.uploadTemplate = async function() {
+    if (!_selectedFile) return;
+    const nom  = document.getElementById('inp-nom').value.trim();
+    const cat  = document.getElementById('inp-cat').value;
+    const desc = document.getElementById('inp-desc').value.trim();
+    const tipus = document.getElementById('inp-tipus').value;
+    const any  = document.getElementById('inp-any').value;
+
+    if (!nom || !cat) { alert('Nom i categoria són obligatoris.'); return; }
+
+    const btn = document.getElementById('btn-upload');
+    btn.disabled = true;
+    showProgress(true, 0, 'Pujant fitxer...');
+    showLog(true);
+    logMsg('Iniciant pujada: ' + _selectedFile.name, 'info');
+
+    try {
+        // 1. Upload to Storage
+        const timestamp = Date.now();
+        const storageRef = ref(storage, `plantilles/${timestamp}_${_selectedFile.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, _selectedFile);
+
+        const downloadURL = await new Promise((resolve, reject) => {
+            uploadTask.on('state_changed',
+                snapshot => {
+                    const pct = Math.round(snapshot.bytesTransferred / snapshot.totalBytes * 100);
+                    showProgress(true, pct, `Pujant... ${pct}%`);
+                },
+                reject,
+                async () => {
+                    const url = await getDownloadURL(uploadTask.snapshot.ref);
+                    resolve(url);
+                }
+            );
+        });
+
+        logMsg('Fitxer pujat a Storage ✓', 'ok');
+        showProgress(true, 90, 'Desant metadades...');
+
+        // 2. Save metadata to Firestore
+        const docRef = await addDoc(collection(db, 'plantilles'), {
+            nom, categoria: cat, descripcio: desc,
+            tipusDocument: tipus || null,
+            any: any ? parseInt(any) : new Date().getFullYear(),
+            nomFitxer: _selectedFile.name,
+            storagePath: `plantilles/${timestamp}_${_selectedFile.name}`,
+            downloadURL,
+            mida: _selectedFile.size,
+            createdAt: serverTimestamp(),
+            createdBy: localStorage.getItem('userEmail') || auth.currentUser?.email || ''
+        });
+
+        logMsg('Metadades desades a Firestore ✓', 'ok');
+        showProgress(true, 100, 'Completat!');
+
+        _allTemplates.unshift({ id: docRef.id, nom, categoria: cat, descripcio: desc, tipusDocument: tipus || null, any: parseInt(any), nomFitxer: _selectedFile.name, downloadURL });
+        renderTemplates();
+        updateStats();
+        logMsg(`Plantilla "${nom}" creada correctament.`, 'ok');
+        setTimeout(() => closeUploadModal(), 1200);
+
+    } catch(e) {
+        logMsg('ERROR: ' + e.message, 'err');
+        showProgress(false, 0, '');
+    }
+    btn.disabled = false;
+};
+
+// ── Edit modal ──────────────────────────────────────────────────────────────
+window.openEdit = function(id) {
+    const t = _allTemplates.find(x => x.id === id);
+    if (!t) return;
+    document.getElementById('modal-id').value = id;
+    document.getElementById('modal-nom').value = t.nom;
+    document.getElementById('modal-cat').value = t.categoria || '';
+    document.getElementById('modal-any').value = t.any || '';
+    document.getElementById('modal-tipus').value = t.tipusDocument || '';
+    document.getElementById('modal-desc').value = t.descripcio || '';
+    document.getElementById('modal-assign').classList.add('open');
+};
+
+window.closeModal = function() {
+    document.getElementById('modal-assign').classList.remove('open');
+};
+
+window.saveEdit = async function() {
+    const id    = document.getElementById('modal-id').value;
+    const nom   = document.getElementById('modal-nom').value.trim();
+    const cat   = document.getElementById('modal-cat').value;
+    const any   = document.getElementById('modal-any').value;
+    const tipus = document.getElementById('modal-tipus').value;
+    const desc  = document.getElementById('modal-desc').value.trim();
+
+    if (!nom) { alert('El nom és obligatori.'); return; }
+    const btn = document.querySelector('#modal-assign .btn-primary');
+    btn.disabled = true;
+    try {
+        await updateDoc(doc(db, 'plantilles', id), {
+            nom, categoria: cat, any: any ? parseInt(any) : null,
+            tipusDocument: tipus || null, descripcio: desc,
+            updatedAt: serverTimestamp()
+        });
+        const idx = _allTemplates.findIndex(x => x.id === id);
+        if (idx > -1) Object.assign(_allTemplates[idx], { nom, categoria: cat, any: parseInt(any), tipusDocument: tipus || null, descripcio: desc });
+        renderTemplates();
+        updateStats();
+        closeModal();
+    } catch(e) {
+        alert('Error desant: ' + e.message);
+    }
+    btn.disabled = false;
+};
+
+// ── Delete ──────────────────────────────────────────────────────────────────
+window.openDelete = function(id, nom) {
+    document.getElementById('del-id').value = id;
+    document.getElementById('del-msg').textContent = `Segur que vols eliminar la plantilla "${nom}"? S'esborrarà el fitxer i les metadades. Acció irreversible.`;
+    document.getElementById('modal-delete').classList.add('open');
+};
+
+window.confirmDelete = async function() {
+    const id = document.getElementById('del-id').value;
+    const t = _allTemplates.find(x => x.id === id);
+    const btn = document.getElementById('btn-confirm-del');
+    btn.disabled = true;
+    try {
+        // Delete from Storage
+        if (t?.storagePath) {
+            try { await deleteObject(ref(storage, t.storagePath)); } catch {}
+        }
+        // Delete Firestore doc
+        await deleteDoc(doc(db, 'plantilles', id));
+        _allTemplates = _allTemplates.filter(x => x.id !== id);
+        renderTemplates();
+        updateStats();
+        document.getElementById('modal-delete').classList.remove('open');
+    } catch(e) {
+        alert('Error eliminant: ' + e.message);
+    }
+    btn.disabled = false;
+};
+
+// ── Filter ──────────────────────────────────────────────────────────────────
+window.filterCat = function(el, cat) {
+    _activeCat = cat;
+    document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    renderTemplates();
+};
+
+// ── Variables copy ──────────────────────────────────────────────────────────
+window.copyVar = function(el) {
+    const text = el.textContent.trim();
+    navigator.clipboard.writeText(text).then(() => {
+        el.style.background = '#10b981';
+        setTimeout(() => { el.style.background = ''; }, 1200);
+    });
+};
+
+// ── Reset form ──────────────────────────────────────────────────────────────
+window.resetForm = function() {
+    _selectedFile = null;
+    document.getElementById('file-input').value = '';
+    document.getElementById('drop-label').textContent = 'Arrossega el fitxer aquí o fes clic';
+    document.getElementById('inp-nom').value = '';
+    document.getElementById('inp-cat').value = '';
+    document.getElementById('inp-desc').value = '';
+    document.getElementById('inp-tipus').value = '';
+    document.getElementById('inp-any').value = new Date().getFullYear();
+    document.getElementById('btn-upload').disabled = true;
+    showProgress(false, 0, '');
+};
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showProgress(show, pct, label) {
+    const wrap = document.getElementById('progress-wrap');
+    wrap.style.display = show ? 'block' : 'none';
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-label').textContent = label;
+}
+
+function showLog(show) {
+    document.getElementById('upload-log').style.display = show ? 'block' : 'none';
+}
+
+function logMsg(msg, cls) {
+    const el = document.getElementById('upload-log');
+    el.style.display = 'block';
+    const span = document.createElement('span');
+    span.className = cls ? 'log-' + cls : '';
+    span.textContent = msg + '\n';
+    el.appendChild(span);
+    el.scrollTop = el.scrollHeight;
+}
+
+// Close modals on overlay click
+['modal-assign','modal-delete','modal-mapping','modal-upload'].forEach(id => {
+    document.getElementById(id).addEventListener('click', e => {
+        if (e.target.id === id) document.getElementById(id).classList.remove('open');
+    });
+});
+
+// ── Upload modal open/close ─────────────────────────────────────────────────
+window.openUploadModal = function() {
+    resetForm();
+    document.getElementById('modal-upload').classList.add('open');
+};
+window.closeUploadModal = function() {
+    document.getElementById('modal-upload').classList.remove('open');
+};
+
+// ── DRAG-AND-DROP MAPPING ───────────────────────────────────────────────────
+
+const MAP_SOURCES = [
+    {
+        group: 'Persona / Expedient',
+        vars: [
+            { key: 'nom_complet',     label: 'Nom complet' },
+            { key: 'nom',             label: 'Nom' },
+            { key: 'cognoms',         label: 'Cognoms' },
+            { key: 'dni',             label: 'DNI / NIE' },
+            { key: 'data_naixement',  label: 'Data de naixement' },
+            { key: 'edat',            label: 'Edat' },
+            { key: 'telefon',         label: 'Telèfon' },
+            { key: 'domicili',        label: 'Domicili' },
+            { key: 'num_expedient',   label: 'Nº expedient' },
+            { key: 'programa',        label: 'Programa' },
+            { key: 'situacio_laboral',label: 'Situació laboral' },
+            { key: 'estudis',         label: 'Estudis' },
+            { key: 'nacionalitat',    label: 'Nacionalitat' },
+        ]
+    },
+    {
+        group: 'Document',
+        vars: [
+            { key: 'data_document',   label: 'Data del document' },
+            { key: 'any',             label: 'Any' },
+            { key: 'tecnic',          label: 'Tècnic/a responsable' },
+            { key: 'rol_tecnic',      label: 'Rol del tècnic/a' },
+            { key: 'departament',     label: 'Departament' },
+        ]
+    },
+    {
+        group: 'Entitat',
+        vars: [
+            { key: 'nom_entitat',     label: 'Nom de l\'entitat' },
+            { key: 'cif_entitat',     label: 'CIF entitat' },
+            { key: 'adreca_entitat',  label: 'Adreça entitat' },
+            { key: 'tel_entitat',     label: 'Tel. entitat' },
+            { key: 'email_entitat',   label: 'Email entitat' },
+        ]
+    }
+];
+
+const DEFAULT_SLOTS = [
+    { section: 'Identificació de la persona', slots: [
+        { id: 'slot_nom_complet',    label: 'Nom complet',       hint: 'Nom i cognoms' },
+        { id: 'slot_dni',            label: 'DNI / NIE',         hint: 'Document d\'identitat' },
+        { id: 'slot_data_naix',      label: 'Data de naixement', hint: '' },
+        { id: 'slot_telefon',        label: 'Telèfon',           hint: '' },
+        { id: 'slot_domicili',       label: 'Domicili',          hint: 'Adreça completa' },
+        { id: 'slot_expedient',      label: 'Nº expedient',      hint: '' },
+    ]},
+    { section: 'Document', slots: [
+        { id: 'slot_data_doc',       label: 'Data del document',  hint: 'Format dd/mm/aaaa' },
+        { id: 'slot_tecnic',         label: 'Tècnic/a responsable', hint: '' },
+        { id: 'slot_rol',            label: 'Rol del tècnic/a',   hint: '' },
+        { id: 'slot_departament',    label: 'Departament',        hint: '' },
+    ]},
+    { section: 'Entitat', slots: [
+        { id: 'slot_entitat',        label: 'Nom de l\'entitat',  hint: '' },
+        { id: 'slot_cif',            label: 'CIF entitat',        hint: '' },
+        { id: 'slot_adreca_entitat', label: 'Adreça entitat',     hint: '' },
+    ]}
+];
+
+let _mapTplId    = null;
+let _mapMapping  = {};   // { slotId: variableKey }
+let _mapCustom   = [];   // [ { id, label } ]
+let _dragKey     = null;
+
+window.openMapping = function(id) {
+    const t = _allTemplates.find(x => x.id === id);
+    if (!t) return;
+    _mapTplId   = id;
+    _mapMapping = { ...(t.mapeig || {}) };
+    _mapCustom  = [...(t.mapeiCustomSlots || [])];
+    document.getElementById('map-title').textContent = `Mapeig de camps — ${t.nom}`;
+    renderMapSources();
+    renderMapSlots();
+    updateMapFooter();
+    document.getElementById('modal-mapping').classList.add('open');
+};
+
+window.closeMapping = function() {
+    document.getElementById('modal-mapping').classList.remove('open');
+};
+
+function renderMapSources() {
+    const el = document.getElementById('map-sources');
+    el.innerHTML = `<div style="font-size:.75rem;font-weight:800;color:#1e293b;margin-bottom:12px;">VARIABLES DISPONIBLES</div>`;
+    MAP_SOURCES.forEach(grp => {
+        const g = document.createElement('div');
+        g.className = 'map-source-group';
+        g.innerHTML = `<div class="map-source-group-label">${grp.group}</div>`;
+        grp.vars.forEach(v => {
+            const chip = document.createElement('span');
+            chip.className = 'map-chip';
+            chip.draggable = true;
+            chip.dataset.varkey = v.key;
+            chip.innerHTML = `<span class="chip-drag-icon">⠿</span>${escHtml(v.label)}<span style="font-family:monospace;font-size:.65rem;opacity:.55;margin-left:4px;">{{${v.key}}}</span>`;
+            chip.title = `{{${v.key}}}`;
+            chip.addEventListener('dragstart', e => {
+                _dragKey = v.key;
+                chip.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'copy';
+                e.dataTransfer.setData('text/plain', v.key);
+            });
+            chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
+            g.appendChild(chip);
+        });
+        el.appendChild(g);
+    });
+}
+
+function renderMapSlots() {
+    const el = document.getElementById('map-slots');
+    el.innerHTML = '';
+
+    const allSections = [...DEFAULT_SLOTS];
+    if (_mapCustom.length) {
+        allSections.push({ section: 'Camps personalitzats', slots: _mapCustom });
+    }
+
+    allSections.forEach(sec => {
+        const div = document.createElement('div');
+        const divider = document.createElement('div');
+        divider.className = 'map-slot-divider';
+        divider.textContent = sec.section;
+        div.appendChild(divider);
+
+        sec.slots.forEach(slot => {
+            const row = document.createElement('div');
+            row.className = 'map-slot-row';
+
+            const labelEl = document.createElement('div');
+            labelEl.className = 'map-slot-label';
+            labelEl.innerHTML = `${escHtml(slot.label)}${slot.hint ? `<span class="hint">${escHtml(slot.hint)}</span>` : ''}`;
+
+            const zone = document.createElement('div');
+            zone.className = 'map-drop-zone' + (_mapMapping[slot.id] ? ' filled' : '');
+            zone.dataset.slotid = slot.id;
+            renderSlotContent(zone, slot.id);
+
+            zone.addEventListener('dragover', e => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+                zone.classList.add('drag-active');
+            });
+            zone.addEventListener('dragleave', () => zone.classList.remove('drag-active'));
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                zone.classList.remove('drag-active');
+                const key = e.dataTransfer.getData('text/plain') || _dragKey;
+                if (!key) return;
+                _mapMapping[slot.id] = key;
+                zone.classList.add('filled');
+                renderSlotContent(zone, slot.id);
+                updateMapFooter();
+            });
+
+            row.appendChild(labelEl);
+            row.appendChild(zone);
+            div.appendChild(row);
+        });
+        el.appendChild(div);
+    });
+
+    // Add custom slot form
+    const addDiv = document.createElement('div');
+    addDiv.className = 'map-add-slot';
+    addDiv.innerHTML = `
+        <input type="text" id="new-slot-input" placeholder="Nom del camp personalitzat..." maxlength="60">
+        <button class="btn btn-ghost btn-sm" onclick="addCustomSlot()">+ Afegir</button>
+    `;
+    el.appendChild(addDiv);
+}
+
+function renderSlotContent(zone, slotId) {
+    const key = _mapMapping[slotId];
+    if (key) {
+        zone.classList.add('filled');
+        const varLabel = _varLabelByKey(key);
+        zone.innerHTML = `<div class="filled-chip">${escHtml(varLabel)}<span style="font-family:monospace;font-size:.65rem;opacity:.7;margin-left:5px;">{{${escHtml(key)}}}</span><button onclick="clearSlot('${slotId}')" title="Eliminar">×</button></div>`;
+    } else {
+        zone.classList.remove('filled');
+        zone.innerHTML = `<span style="font-size:.75rem;">Solta la variable aquí…</span>`;
+    }
+}
+
+window.clearSlot = function(slotId) {
+    delete _mapMapping[slotId];
+    const zone = document.querySelector(`.map-drop-zone[data-slotid="${slotId}"]`);
+    if (zone) renderSlotContent(zone, slotId);
+    updateMapFooter();
+};
+
+window.addCustomSlot = function() {
+    const inp = document.getElementById('new-slot-input');
+    const label = inp.value.trim();
+    if (!label) return;
+    const id = 'custom_' + Date.now();
+    _mapCustom.push({ id, label });
+    inp.value = '';
+    renderMapSlots();
+    updateMapFooter();
+};
+
+function _varLabelByKey(key) {
+    for (const grp of MAP_SOURCES) {
+        const v = grp.vars.find(x => x.key === key);
+        if (v) return v.label;
+    }
+    return key;
+}
+
+function updateMapFooter() {
+    const count = Object.keys(_mapMapping).length;
+    document.getElementById('map-footer-info').textContent =
+        count ? `${count} camp${count !== 1 ? 's' : ''} mapejat${count !== 1 ? 's' : ''}` : 'Cap camp mapejat encara';
+}
+
+window.saveMapping = async function() {
+    if (!_mapTplId) return;
+    const btn = document.getElementById('btn-save-mapping');
+    btn.disabled = true;
+    try {
+        await updateDoc(doc(db, 'plantilles', _mapTplId), {
+            mapeig: _mapMapping,
+            mapeiCustomSlots: _mapCustom,
+            updatedAt: serverTimestamp()
+        });
+        const idx = _allTemplates.findIndex(x => x.id === _mapTplId);
+        if (idx > -1) {
+            _allTemplates[idx].mapeig = { ..._mapMapping };
+            _allTemplates[idx].mapeiCustomSlots = [..._mapCustom];
+        }
+        renderTemplates();
+        closeMapping();
+    } catch(e) {
+        alert('Error desant el mapeig: ' + e.message);
+    }
+    btn.disabled = false;
+};
+
+</script>
+
+<script src="../security-check.js"></script>
+<script type="module">await window.checkModuleAccess('NexeAdmin');</script>
+<script src="nexeadmin-sidebar.js"></script>
+</main>
+</body>
+</html>
+

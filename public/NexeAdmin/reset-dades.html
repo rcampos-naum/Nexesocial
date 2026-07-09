@@ -1,0 +1,834 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="icon" type="image/svg+xml" href="../img/nexeadmin-icon.svg">
+<link rel="stylesheet" href="../variables.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Inter', sans-serif; background: #f1f5f9; margin: 0; display: flex; min-height: 100vh; }
+  .main-content { padding: 40px 50px; flex: 1; }
+  .container { max-width: 900px; }
+  @media (max-width: 768px) { .main-content { padding: 20px 16px !important; } }
+  h1 { color: #1e293b; font-size: 1.4rem; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+  .subtitle { color: #64748b; font-size: 0.88rem; margin-bottom: 28px; }
+  .warning-box { background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 18px 20px; margin-bottom: 28px; }
+  .warning-box h3 { color: #b91c1c; margin: 0 0 8px; font-size: 0.95rem; }
+  .warning-box p { color: #7f1d1d; font-size: 0.84rem; margin: 0; line-height: 1.5; }
+  .collections-grid { margin-bottom: 24px; }
+  .col-item { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: border-color .15s; }
+  .col-item:hover { border-color: #94a3b8; }
+  .col-item input[type=checkbox] { width: 16px; height: 16px; accent-color: #ef4444; flex-shrink: 0; }
+  .col-item .col-name { font-size: .88rem; font-weight: 600; color: #1e293b; }
+  .col-item .col-desc { font-size: .74rem; color: #94a3b8; }
+  .col-item.protected { background: #f8fafc; cursor: default; opacity: .6; }
+  .btn-reset { background: #ef4444; color: white; border: none; border-radius: 10px; padding: 12px 28px; font-size: .92rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .btn-reset:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-seed { background: #0ea5e9; color: white; border: none; border-radius: 10px; padding: 12px 28px; font-size: .92rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .btn-seed:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-sel { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 14px; font-size: .8rem; cursor: pointer; margin-right: 8px; }
+  #log { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; min-height: 80px; font-family: monospace; font-size: .8rem; color: #374151; white-space: pre-wrap; max-height: 300px; overflow-y: auto; display: none; margin-top: 16px; }
+  .progress { margin-top: 16px; display: none; }
+  .progress-bar { height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #ef4444; border-radius: 99px; transition: width .2s; width: 0; }
+  .progress-label { font-size: .78rem; color: #64748b; margin-top: 6px; }
+  .done-box { background: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 14px 18px; font-size: .88rem; color: #166534; display: none; margin-top: 16px; }
+</style>
+</head>
+<body>
+<aside class="admin-sidebar"></aside>
+<main class="main-content">
+<div class="container">
+  <h1>
+    <svg width="22" height="22" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+    Reset de Dades de Prova
+  </h1>
+  <p class="subtitle">Eina d'administració per buidar col·leccions de Firestore. Ús exclusiu per a entorns de proves.</p>
+
+  <div class="warning-box">
+    <h3 style="display:flex; align-items:center; gap:7px;"><svg style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Acció irreversible</h3>
+    <p>Tots els documents de les col·leccions seleccionades seran eliminats permanentment. Les col·leccions de <strong>Treballadors</strong> (usuarios) i <strong>Departaments</strong> (departamentos) estan protegides i NO s'eliminaran.</p>
+  </div>
+
+  <div style="margin-bottom:12px;">
+    <button class="btn-sel" onclick="selectAll(true)">Seleccionar tot</button>
+    <button class="btn-sel" onclick="selectAll(false)">Desseleccionar tot</button>
+  </div>
+
+  <div class="collections-grid" id="col-grid">
+    <!-- Populated by JS -->
+  </div>
+
+  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+    <button class="btn-reset" id="btn-reset" onclick="startReset()" disabled>
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+      Eliminar col·leccions seleccionades
+    </button>
+    <button class="btn-seed" id="btn-seed" onclick="generarDadesProva()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/></svg>
+      Generar Dades de Prova
+    </button>
+    <span id="sel-count" style="font-size:.82rem;color:#64748b;"></span>
+  </div>
+
+  <div class="progress" id="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="progress-label" id="progress-label">Inicialitzant...</div>
+  </div>
+  <div id="log"></div>
+  <div class="done-box" id="done-box"></div>
+</div>
+
+<script type="module">
+import { db, auth } from '../firebase-config.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import {
+    collection, getDocs, deleteDoc, doc, addDoc, updateDoc, setDoc, serverTimestamp, Timestamp
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// localStorage keys linked to each Firestore collection
+const LS_MAP = {
+    'actividades':          ['nexesocial_activities'],
+    'grupos':               ['nexesocial_groups'],
+    'beneficiarios_grupos': [],
+    'expedientes':          ['nexesocial_expedients','nexe_expedients'],
+    'familias':             ['nexesocial_families','nexe_families'],
+    'agenda':               [],
+    'solicituds':           [],
+    'asistencia':           [],
+    'seguimientos':         [],
+    'room_reservations':    [],
+    'cpi_familias':         [],
+    'cpi_pressupost':       [],
+    'autoritzacions_edat':  [],
+    'donants':              [],
+    'donacions':            [],
+    'proveidors':           [],
+};
+
+// MODULE COLORS
+const MODULE_META = {
+    nexesocial: { label: 'NexeSocial', color: '#3b82f6', bg: '#eff6ff' },
+    nexepsy:    { label: 'NexePsy',    color: '#8b5cf6', bg: '#f5f3ff' },
+    nexeaudit:  { label: 'NexeAudit',  color: '#f59e0b', bg: '#fffbeb' },
+    nexemant:   { label: 'Manteniment RMT', color: '#10b981', bg: '#f0fdf4' },
+};
+
+// Collections to allow reset (never includes usuarios / departamentos)
+const COLLECTIONS = [
+    // --- NexeSocial ---
+    { id: 'grupos',              label: 'Grups',               desc: 'Grups de totes les activitats',       module: 'nexesocial' },
+    { id: 'actividades',         label: 'Activitats',          desc: 'Activitats dels departaments',        module: 'nexesocial' },
+    { id: 'beneficiarios_grupos',label: 'Inscripcions',        desc: 'Participants inscrits a grups',       module: 'nexesocial' },
+    { id: 'seguimientos',        label: 'Seguiments',          desc: 'Registres de seguiment',              module: 'nexesocial' },
+    { id: 'expedientes',         label: 'Expedients',          desc: 'Expedients de famílies',              module: 'nexesocial' },
+    { id: 'familias',            label: 'Famílies',            desc: 'Fitxes de famílies',                  module: 'nexesocial' },
+    { id: 'agenda',              label: 'Agenda',              desc: 'Cites i reunions',                    module: 'nexesocial' },
+    { id: 'agenda_slots',        label: 'Franges disponibles', desc: 'Huecos de cita generats pel planificador', module: 'nexesocial' },
+    { id: 'solicituds',          label: 'Sol·licituds',        desc: 'Sol·licituds de cita',                module: 'nexesocial' },
+    { id: 'docs_centre_dia',     label: 'Documents Centre Dia',desc: 'Documents generats del Centre de Dia', module: 'nexesocial' },
+    { id: 'cd_form_definitions', label: 'Plantilles CD',       desc: 'Plantilles de formularis del Centre de Dia', module: 'nexesocial' },
+    { id: 'citas',               label: 'Cites (legacy)',      desc: 'Col·lecció legacy de cites',          module: 'nexesocial' },
+    { id: 'asistencia',          label: 'Assistència',         desc: "Registres d'assistència",             module: 'nexesocial' },
+    { id: 'cpi_familias',        label: 'CPI Famílies',        desc: 'Dades CaixaProinfancia',              module: 'nexesocial' },
+    { id: 'cpi_pressupost',      label: 'CPI Pressupost',      desc: 'Pressupost CaixaProinfancia',         module: 'nexesocial' },
+    { id: 'autoritzacions_edat', label: 'Autoritzacions edat', desc: "Sol·licituds d'excepció d'edat",      module: 'nexesocial' },
+    { id: 'room_reservations',   label: 'Reserves de sales',   desc: 'Reserves de sales i reunions',       module: 'nexesocial' },
+    { id: 'seguiments_nexepsy',  label: 'Seguiments Psy (legacy)', desc: 'Col·lecció legacy de sessions',  module: 'nexesocial' },
+    { id: 'personal_documentos', label: 'Documents del Personal', desc: 'Documents laborals dels treballadors', module: 'nexesocial' },
+    { id: 'empleados',           label: 'Personal',            desc: 'Fitxes de personal i treballadors', module: 'nexesocial' },
+    { id: 'subvenciones',        label: 'Subvencions',         desc: 'Subvencions i ajudes',               module: 'nexesocial' },
+    { id: 'facturas',            label: 'Factures',            desc: 'Factures de proveïdors',             module: 'nexesocial' },
+    { id: 'documentos',          label: 'Documents',           desc: 'Gestió documental',                  module: 'nexesocial' },
+    { id: 'donants',             label: 'Donants / Socis',     desc: 'Sòcies, donants i membres de l\'entitat', module: 'nexesocial' },
+    { id: 'donacions',           label: 'Donacions',           desc: 'Registre de donacions i quotes',      module: 'nexesocial' },
+    { id: 'proveidors',          label: 'Proveïdors',          desc: 'Directori de proveïdors i contractes', module: 'nexesocial' },
+    // --- NexePsy ---
+    { id: 'nexepsy/pacientes/pacientes',              label: 'Pacients',           desc: 'Fitxes de pacients (NexePsy)',        module: 'nexepsy' },
+    { id: 'nexepsy/intervenciones/intervenciones',    label: 'Intervencions',      desc: 'Intervencions psicològiques',         module: 'nexepsy' },
+    { id: 'nexepsy/derivacions/solicituds',           label: 'Derivacions',        desc: 'Sol·licituds de derivació',           module: 'nexepsy' },
+    { id: 'nexepsy/reportes/reportes',                label: 'Informes NexePsy',   desc: 'Informes psicosocials',               module: 'nexepsy' },
+    { id: 'nexepsy/auditoria/logs',                   label: 'Auditoria NexePsy',  desc: 'Registre d\'auditoria',               module: 'nexepsy' },
+    // --- NexeAudit ---
+    { id: 'nexeaudit/planesAuditoria/planes',         label: 'Plans d\'auditoria', desc: 'Plans i programes d\'auditoria',      module: 'nexeaudit' },
+    { id: 'nexeaudit/riesgos/registro',               label: 'Riscos',             desc: 'Registre de riscos identificats',     module: 'nexeaudit' },
+    { id: 'nexeaudit/controles/control',              label: 'Controls',           desc: 'Controls i mesures de control',       module: 'nexeaudit' },
+    { id: 'nexeaudit/accionesCorrectivas/acciones',   label: 'Accions correctives', desc: 'Accions correctores i millores',     module: 'nexeaudit' },
+    { id: 'nexeaudit/auditoria/logs',                 label: 'Auditoria NexeAudit', desc: "Registre d'auditoria NexeAudit",     module: 'nexeaudit' },
+    // --- NexeManteniment RMT ---
+    { id: 'rmt_sales',     label: 'Sales (RMT)',     desc: 'Sales i ubicacions del sistema RMT',  module: 'nexemant' },
+    { id: 'rmt_actius',    label: 'Actius (RMT)',    desc: 'Inventari d\'actius i equipaments',   module: 'nexemant' },
+    { id: 'rmt_preventiu', label: 'Preventiu (RMT)', desc: 'Registres de manteniment preventiu',  module: 'nexemant' },
+    { id: 'rmt_correctiu', label: 'Correctiu (RMT)', desc: 'Incidències i manteniment correctiu', module: 'nexemant' },
+];
+
+const PROTECTED = ['usuarios','departamentos','roles','config'];
+
+onAuthStateChanged(auth, async user => {
+    if (!user) {
+        document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#ef4444;font-size:1rem;">Has d\'estar autenticat per accedir a aquesta eina.</div>';
+        return;
+    }
+
+    // Prefer Auth runtime data; localStorage can be stale during session bootstrap.
+    try {
+        if (window.Auth && typeof window.Auth.initialize === 'function') {
+            await window.Auth.initialize();
+        }
+    } catch (e) {
+        console.warn('Auth initialization warning in reset-dades:', e);
+    }
+
+    const roleFromAuth = (window.Auth?.userRole || window.Auth?.getRole?.() || '').toLowerCase();
+    const roleFromStorage = (localStorage.getItem('userRole') || '').toLowerCase();
+    const role = roleFromAuth || roleFromStorage;
+
+    const authPerms = window.Auth?.userPermissions || {};
+    let matrixPerms = {};
+    try {
+        matrixPerms = JSON.parse(localStorage.getItem('userMatrixPerms') || '{}');
+    } catch {
+        matrixPerms = {};
+    }
+
+    const hasAdminAccess = ['admin','superadmin'].includes(role)
+        || (authPerms.admin && authPerms.admin !== 'none')
+        || matrixPerms.configSistema === true
+        || matrixPerms.altaBaixaTreballadors === true;
+
+    if (!hasAdminAccess) {
+        document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#ef4444;font-size:1rem;">Accés restringit a administradors.</div>';
+        return;
+    }
+    renderGrid();
+});
+
+function renderGrid() {
+    const grid = document.getElementById('col-grid');
+    const modules = ['nexesocial', 'nexepsy', 'nexeaudit', 'nexemant'];
+    let html = '';
+
+    for (const mod of modules) {
+        const cols = COLLECTIONS.filter(c => c.module === mod);
+        const meta = MODULE_META[mod];
+        html += `
+        <div class="module-section" data-module="${mod}" style="margin-bottom:18px;">
+            <div class="module-header" style="display:flex;align-items:center;gap:10px;padding:6px 0 8px;">
+                <span style="background:${meta.bg};color:${meta.color};border:1px solid ${meta.color}40;border-radius:6px;padding:3px 10px;font-size:.72rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;">${meta.label}</span>
+                <button type="button" onclick="selectModule('${mod}',true)" style="font-size:.75rem;color:${meta.color};background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:5px;font-weight:600;">Tots</button>
+                <button type="button" onclick="selectModule('${mod}',false)" style="font-size:.75rem;color:#94a3b8;background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:5px;font-weight:600;">Cap</button>
+            </div>
+            <div class="col-grid-inner" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">
+                ${cols.map(c => `
+                <label class="col-item" onclick="event.stopPropagation()">
+                    <input type="checkbox" value="${c.id}" onchange="updateCount()">
+                    <div>
+                        <div class="col-name">${c.label}</div>
+                        <div class="col-desc" style="font-size:.72rem;color:#94a3b8;">${c.id}</div>
+                    </div>
+                </label>`).join('')}
+                ${mod === 'nexesocial' ? PROTECTED.map(p => `
+                <div class="col-item protected">
+                    <div>
+                        <div class="col-name" style="color:#059669;">&#128274; ${p}</div>
+                        <div class="col-desc">Protegit — no s'elimina</div>
+                    </div>
+                </div>`).join('') : ''}
+            </div>
+        </div>`;
+    }
+
+    grid.innerHTML = html;
+    updateCount();
+}
+
+window.selectAll = function(v) {
+    document.querySelectorAll('#col-grid input[type=checkbox]').forEach(cb => cb.checked = v);
+    updateCount();
+};
+
+window.selectModule = function(mod, v) {
+    document.querySelectorAll(`#col-grid .module-section[data-module="${mod}"] input[type=checkbox]`).forEach(cb => cb.checked = v);
+    updateCount();
+};
+
+window.updateCount = function() {
+    const selected = [...document.querySelectorAll('#col-grid input:checked')].length;
+    document.getElementById('sel-count').textContent = selected ? `${selected} col·leccions seleccionades` : '';
+    document.getElementById('btn-reset').disabled = selected === 0;
+};
+
+function log(msg) {
+    const el = document.getElementById('log');
+    el.style.display = 'block';
+    el.textContent += msg + '\n';
+    el.scrollTop = el.scrollHeight;
+}
+
+function setProgress(pct, label) {
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-label').textContent = label;
+}
+
+window.startReset = async function() {
+    const selected = [...document.querySelectorAll('#col-grid input:checked')].map(cb => cb.value);
+    if (!selected.length) return;
+
+    const confirmed = confirm(`Estàs segur que vols eliminar TOTS els documents de:\n\n${selected.join('\n')}\n\nAquesta acció és IRREVERSIBLE.`);
+    if (!confirmed) return;
+
+    document.getElementById('btn-reset').disabled = true;
+    document.getElementById('progress-wrap').style.display = 'block';
+    document.getElementById('done-box').style.display = 'none';
+    document.getElementById('log').textContent = '';
+
+    let totalDeleted = 0;
+    for (let i = 0; i < selected.length; i++) {
+        const colId = selected[i];
+        setProgress(Math.round((i / selected.length) * 100), `Eliminant ${colId}...`);
+        log(`[${colId}] carregant documents...`);
+        try {
+            const snap = await getDocs(collection(db, colId));
+            log(`[${colId}] ${snap.size} documents trobats.`);
+            let deleted = 0;
+            for (const d of snap.docs) {
+                await deleteDoc(doc(db, colId, d.id));
+                deleted++;
+                totalDeleted++;
+                if (deleted % 20 === 0) log(`  ... ${deleted}/${snap.size} eliminats`);
+            }
+            log(`[${colId}] OK — ${deleted} documents eliminats.`);
+        } catch(e) {
+            log(`[${colId}] ERROR: ${e.message}`);
+        }
+    }
+
+    setProgress(100, 'Completat!');
+
+    // Also clear related localStorage keys
+    let lsCleared = 0;
+    for (const colId of selected) {
+        const keys = LS_MAP[colId] || [];
+        for (const k of keys) {
+            if (localStorage.getItem(k) !== null) {
+                localStorage.removeItem(k);
+                log(`[localStorage] eliminat: ${k}`);
+                lsCleared++;
+            }
+        }
+    }
+    if (lsCleared) log(`[localStorage] ${lsCleared} entrades eliminades.`);
+
+    const doneBox = document.getElementById('done-box');
+    doneBox.style.display = 'block';
+    doneBox.textContent = `Reset completat. ${totalDeleted} documents de Firestore eliminats + ${lsCleared} entrades de localStorage netejades.`;
+    document.getElementById('btn-reset').disabled = false;
+    updateCount();
+};
+
+/* ===================== GENERAR DADES DE PROVA ===================== */
+window.generarDadesProva = async function() {
+    const confirmed = confirm('Això afegirà dades de demostració a TOTES les col·leccions (famílies, expedients, grups, agenda, NexePsy, NexeAudit, RMT, subvencions, facturas...).\n\nContinuar?');
+    if (!confirmed) return;
+    const btn = document.getElementById('btn-seed');
+    btn.disabled = true; btn.innerHTML = 'Generant...';
+    document.getElementById('log').textContent = '';
+    document.getElementById('log').style.display = 'block';
+    document.getElementById('done-box').style.display = 'none';
+
+    function ts(daysAgo) { const d=new Date(); d.setDate(d.getDate()-(daysAgo||0)); return Timestamp.fromDate(d); }
+    function fts(days)   { const d=new Date(); d.setDate(d.getDate()+days); return Timestamp.fromDate(d); }
+    function isoDate(daysAgo) { const d=new Date(); d.setDate(d.getDate()-(daysAgo||0)); return d.toISOString().slice(0,10); }
+    function futureDate(days) { const d=new Date(); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); }
+    function dateStr(y,m,d){ return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+
+    const added = { total:0, cols:{} };
+    async function ins(col, data) {
+        const ref = await addDoc(collection(db, col), data);
+        added.total++; added.cols[col]=(added.cols[col]||0)+1;
+        return ref.id;
+    }
+
+    try {
+        /* ============================================================
+           1. EXPEDIENTS (col·lecció: expedientes)
+           ============================================================ */
+        log('1/9 Generant expedients i famílies...');
+        const expData = [
+            { numero:'UA2026-001', nom:'Miguel', cognoms:'García Martínez', dni:'12345678A', mobil:'934120001', data_naix:'1978-03-15', genere:'Masculí', estudis:'Secundaria', situacio_laboral:'Desempleat', situ_adm:'Regular', bretxa:'No', ingressos:'600', origen:'Espanya', alergies:'No', dependencia:'No', grau:'', municipio:'Barcelona', programa:'Atenció Bàsica' },
+            { numero:'UA2026-002', nom:'Ana',    cognoms:'López Sánchez',   dni:'23456789B', mobil:'934120002', data_naix:'1982-07-22', genere:'Femení', estudis:'Universitaris', situacio_laboral:'Actiu', situ_adm:'Regular', bretxa:'No', ingressos:'1400', origen:'Espanya', alergies:'Sí - Polen', dependencia:'No', grau:'', municipio:'Barcelona', programa:'Inserció Laboral' },
+            { numero:'UA2026-003', nom:'Carlos', cognoms:'Fernández Torres',dni:'34567890C', mobil:'934120003', data_naix:'1969-11-08', genere:'Masculí', estudis:'Primaria', situacio_laboral:'Desempleat', situ_adm:'Regular', bretxa:'No', ingressos:'420', origen:'Llatinoamèrica', alergies:'No', dependencia:'Sí', grau:'Grau II', municipio:'L\'Hospitalet', programa:'Atenció Bàsica' },
+            { numero:'UA2026-004', nom:'Maria',  cognoms:'Pérez Ramos',     dni:'45678901D', mobil:'934120004', data_naix:'1990-05-30', genere:'Femení', estudis:'Formació Professional', situacio_laboral:'Actiu', situ_adm:'Regular', bretxa:'No', ingressos:'1200', origen:'Espanya', alergies:'No', dependencia:'No', grau:'', municipio:'Barcelona', programa:'Orientació Familiar' },
+            { numero:'UA2026-005', nom:'Josep',  cognoms:'González Vila',   dni:'56789012E', mobil:'934120005', data_naix:'1965-09-12', genere:'Masculí', estudis:'Secundaria', situacio_laboral:'Jubilat', situ_adm:'Regular', bretxa:'No', ingressos:'900', origen:'Espanya', alergies:'Sí - Fruits secs', dependencia:'Sí', grau:'Grau I', municipio:'Badalona', programa:'Atenció Bàsica' },
+            { numero:'UA2026-006', nom:'Laura',  cognoms:'Martín Rubio',    dni:'67890123F', mobil:'934120006', data_naix:'1995-01-17', genere:'Femení', estudis:'Universitaris', situacio_laboral:'Actiu', situ_adm:'Regular', bretxa:'No', ingressos:'1600', origen:'Espanya', alergies:'No', dependencia:'No', grau:'', municipio:'Barcelona', programa:'Inserció Laboral' },
+            { numero:'UA2026-007', nom:'Ahmed',  cognoms:'Rodríguez Jiménez',dni:'78901234G', mobil:'934120007', data_naix:'1988-06-25', genere:'Masculí', estudis:'Secundaria', situacio_laboral:'Desempleat', situ_adm:'En tràmits', bretxa:'Sí', ingressos:'0', origen:'Magreb', alergies:'No', dependencia:'No', grau:'', municipio:'Barcelona', programa:'Inclusió Social' },
+            { numero:'UA2026-008', nom:'Fatima', cognoms:'Sánchez Moreno',  dni:'89012345H', mobil:'934120008', data_naix:'1975-12-03', genere:'Femení', estudis:'Sense estudis', situacio_laboral:'Desempleat', situ_adm:'Irregular', bretxa:'Sí', ingressos:'0', origen:'Àfrica Subsahariana', alergies:'No', dependencia:'No', grau:'', municipio:'Barcelona', programa:'Atenció Bàsica' },
+        ];
+        const expIds = {};
+        for (const e of expData) {
+            const id = await ins('expedientes', {
+                numero_expediente: e.numero, estat:'Actiu', fecha_apertura: ts(Math.floor(Math.random()*300)+30),
+                dades_personals: { nom:e.nom, cognoms:e.cognoms, dni:e.dni, mobil:e.mobil, data_naixement:e.data_naix, genere:e.genere, nacionalitat:e.origen },
+                salut: { te_alergies:e.alergies !== 'No' ? 'Sí' : 'No', alergies_detall:{ amb:[], med:[], ali:[] }, dependencia:e.dependencia, grau:e.grau, tda:'No', tdha:'No', observacions:'' },
+                socio_laboral: { estudis:e.estudis, situacio_laboral:e.situacio_laboral, situ_adm:e.situ_adm, bretxa:e.bretxa, ingressos:e.ingressos, origen:e.origen },
+                habitatge: { domicili:'', context:'', unitat_familiar:'' },
+                programa: e.programa, municipio: e.municipio,
+            });
+            expIds[e.numero] = { id, nom:`${e.nom} ${e.cognoms}`, numero:e.numero };
+        }
+        log(`  + ${expData.length} expedients creats`);
+
+        /* ============================================================
+           2. FAMÍLIES (col·lecció: familias)
+           ============================================================ */
+        const famData = [
+            { cognoms:'García Martínez', membres:[expIds['UA2026-001'].id] },
+            { cognoms:'López Sánchez',   membres:[expIds['UA2026-002'].id] },
+            { cognoms:'Fernández Torres',membres:[expIds['UA2026-003'].id] },
+            { cognoms:'Pérez Ramos',     membres:[expIds['UA2026-004'].id] },
+            { cognoms:'González Vila',   membres:[expIds['UA2026-005'].id] },
+            { cognoms:'Martín Rubio',    membres:[expIds['UA2026-006'].id] },
+            { cognoms:'Rodríguez Jiménez',membres:[expIds['UA2026-007'].id] },
+            { cognoms:'Sánchez Moreno',  membres:[expIds['UA2026-008'].id] },
+        ];
+        const famIds = [];
+        for (const f of famData) {
+            const id = await ins('familias', { cognoms_referencia:f.cognoms, membres:f.membres, estat:'Activa', createdAt:ts(Math.floor(Math.random()*300)+30) });
+            famIds.push(id);
+        }
+        log(`  + ${famData.length} famílies creades`);
+
+        /* ============================================================
+           3. DEPARTAMENTS — constants internes (NO s'escriuen a Firestore)
+           Departaments, config, usuaris i rols s'exclouen de les dades de prova.
+           ============================================================ */
+        log('2/9 Generant activitats i grups...');
+
+        // IDs de departament de referència (usats per vincular activitats/grups)
+        const DEPTS = {
+            SSOCC: { id:'dept-ssocc', name:'Serveis Socials Comunitaris', area:'Atenció Social', manager:'Maria Gómez Roca', code:'SSOCC', frequency:'Mensual', status:'Actiu' },
+            INF:   { id:'dept-inf',   name:'Infància i Adolescència',      area:'Atenció Social', manager:'Laura Vidal Puig',  code:'INF',   frequency:'Mensual', status:'Actiu' },
+            INS:   { id:'dept-ins',   name:'Inserció Sociolaboral',         area:'Inclusió',       manager:'Pere Soler Mas',    code:'INS',   frequency:'Trimestral', status:'Actiu' },
+            IC:    { id:'dept-ic',    name:'Intervenció Comunitària',       area:'Inclusió',       manager:'Marta Roca Ferrer', code:'IC',    frequency:'Trimestral', status:'Actiu' },
+            PSY:   { id:'dept-psy',   name:'Atenció Psicosocial (NexePsy)', area:'Clínica',        manager:'Jordi Puigdomènech Sala', code:'PSY', frequency:'Mensual', status:'Actiu' },
+        };
+        const deptsArray = Object.values(DEPTS);
+
+        /* ============================================================
+           3c. ACTIVITATS & GRUPS (Firestore)
+           ============================================================ */
+        const actsData = [
+            { nom:'Espai Familiar Matinal',        dept:'Serveis Socials Comunitaris', deptKey:'SSOCC', edatMin:0,  edatMax:12, temporaliz:'Trimestral', inici:'2026-01-15', fi:'2026-06-30', desc:'Activitats familiars matinals per a la primera infància i les seves famílies.' },
+            { nom:'Taller Habilitats Parentals',   dept:'Serveis Socials Comunitaris', deptKey:'SSOCC', edatMin:18, edatMax:65, temporaliz:'Trimestral', inici:'2026-01-20', fi:'2026-06-20', desc:'Formació grupal en competències parentals i criança positiva.' },
+            { nom:'Esplai Escolar',                dept:'Infància i Adolescència',     deptKey:'INF',   edatMin:6,  edatMax:14, temporaliz:'Mensual',    inici:'2026-01-10', fi:'2026-06-15', desc:'Activitats extraescolars de lleure educatiu i acompanyament.' },
+            { nom:'Orientació i Formació Laboral', dept:'Inserció Sociolaboral',        deptKey:'INS',   edatMin:16, edatMax:65, temporaliz:'Trimestral', inici:'2026-02-01', fi:'2026-07-31', desc:'Orientació laboral i formació per a la inserció al mercat de treball.' },
+            { nom:'Grup Suport Adolescents',       dept:'Infància i Adolescència',     deptKey:'INF',   edatMin:12, edatMax:18, temporaliz:'Mensual',    inici:'2026-01-15', fi:'2026-06-30', desc:'Grup de suport socioemocional i habilitats socials per a adolescents.' },
+        ];
+        const actIds = [];
+        for (const a of actsData) {
+            const deptId = DEPTS[a.deptKey].id;
+            const id = await ins('actividades', {
+                // Format programes-gestio-page.js
+                id:'',  // serà substituït
+                codigo: a.deptKey + '_' + a.nom.replace(/[^A-Z0-9]/gi,'').toUpperCase().slice(0,8),
+                nombre:a.nom, departamentoId:deptId, departamentoNombre:a.dept,
+                edadMinima:a.edatMin, edadMaxima:a.edatMax,
+                temporalizacion:a.temporaliz, fechaInicio:a.inici, fechaFin:a.fi,
+                descripcion:a.desc, estado:'Activo', linkedGroupIds:[], participantIds:[],
+                createdAt:ts(180)
+            });
+            // Actualitzem l'id al doc mateix per coherència
+            await updateDoc(doc(db,'actividades',id), { id });
+            actIds.push({ id, ...a, deptId });
+        }
+        log(`  + ${actsData.length} activitats creades`);
+
+        const grupsData = [
+            { nom:'G-EF-01 Família i Primera Infància', actIdx:0, resp:'Maria Gómez Roca',       capacitat:12, expNums:['UA2026-001','UA2026-002','UA2026-003'] },
+            { nom:'G-HP-01 Habilitats Parentals Grup A',actIdx:1, resp:'Jordi Puigdomènech Sala', capacitat:10, expNums:['UA2026-004','UA2026-005'] },
+            { nom:'G-ES-01 Esplai Escolar Matí',        actIdx:2, resp:'Laura Vidal Puig',        capacitat:20, expNums:['UA2026-003','UA2026-004','UA2026-007'] },
+            { nom:'G-IL-01 Orientació i Formació Lab.',  actIdx:3, resp:'Pere Soler Mas',          capacitat:15, expNums:['UA2026-002','UA2026-006','UA2026-007'] },
+            { nom:'G-SA-01 Suport Adolescents',         actIdx:4, resp:'Marta Roca Ferrer',        capacitat:8,  expNums:['UA2026-007','UA2026-008'] },
+        ];
+        const grupIds = [];
+        for (let i=0; i<grupsData.length; i++) {
+            const g = grupsData[i]; const a = actIds[g.actIdx];
+            const idGrupo = `GRP-${String(i+1).padStart(3,'0')}`;
+            const benIds = g.expNums.map(n => expIds[n].id);
+            const id = await ins('grupos', {
+                idGrupo, nombre:g.nom, actividadId:a.id, actividadNombre:a.nom,
+                departamentoId:a.deptId, departamentoNombre:a.dept,
+                responsableNombre:g.resp, capacidad:g.capacitat,
+                beneficiarios: benIds,  // array d'IDs com espera l'app
+                estado:'Activo', createdAt:ts(120)
+            });
+            grupIds.push({ id, ...g, idGrupo, benIds, actId:a.id });
+        }
+        log(`  + ${grupsData.length} grups creats`);
+
+        // Crear beneficiarios_grupos (inscripcions individuals)
+        for (const g of grupIds) {
+            for (const expId of g.benIds) {
+                // Busca nom del beneficiari
+                const expEntry = Object.values(expIds).find(e => e.id === expId);
+                const nomBen = expEntry ? expEntry.nom : expId;
+                // Cerca l'edat aproximada de l'expedient
+                const edat = 12; // genèric per als dades de prova
+                await ins('beneficiarios_grupos', {
+                    grupoId:g.id, grupoNombre:g.nom, actividadId:g.actId,
+                    beneficiarioId:expId, beneficiarioNombre:nomBen,
+                    edad:edat, estado:'Correcto',
+                    departamentoNombre:actsData[g.actIdx].dept,
+                    fechaAgregado:ts(60)
+                });
+            }
+        }
+        log(`  + beneficiarios_grupos creats`);
+
+        // Actualitzar activitats Firestore amb linkedGroupIds i participantIds
+        for (let ai=0; ai<actIds.length; ai++) {
+            const a = actIds[ai];
+            const linkedGroups = grupIds.filter(g => g.actIdx === ai).map(g => g.id);
+            const allParticipants = [...new Set(grupIds.filter(g => g.actIdx === ai).flatMap(g => g.benIds))];
+            await updateDoc(doc(db,'actividades',a.id), { linkedGroupIds:linkedGroups, participantIds:allParticipants });
+        }
+        log(`  + ${actsData.length} activitats, ${grupsData.length} grups creats a Firestore`);
+
+        /* ============================================================
+           4. ASSISTÈNCIA (col·lecció: asistencia)
+           ============================================================ */
+        log('3/9 Generant registres d\'assistència...');
+        let totalAsistencia = 0;
+        for (const g of grupIds) {
+            for (let session=0; session<4; session++) {
+                const daysAgo = (session+1)*7;
+                for (const benId of g.benIds) {
+                    const expEntry = Object.values(expIds).find(e => e.id === benId);
+                    const nomBen = expEntry ? expEntry.nom : benId;
+                    await ins('asistencia', {
+                        grupoId:g.id, grupoNombre:g.nom,
+                        beneficiarioId:benId, beneficiarioNombre:nomBen,
+                        data:isoDate(daysAgo), sessio:session+1,
+                        present: Math.random()>0.2, justificada:false,
+                        createdAt:ts(daysAgo)
+                    });
+                    totalAsistencia++;
+                }
+            }
+        }
+        log(`  + ${totalAsistencia} registres d'assistència creats`);
+
+        /* ============================================================
+           5. AGENDA / CITES (col·lecció: agenda)
+           ============================================================ */
+        log('4/9 Generant agenda i cites...');
+        const citesData = [
+            { tipus:'CITA', exp:expIds['UA2026-001'], dept:'CD', hora:'09:30', sala:'Sala 1', motiu:'Primera visita. Valoració de necessitats bàsiques i situació familiar.', estat:'finalitzada', daysAgo:14, tecnic:'Maria Gómez', localizador:'CD001' },
+            { tipus:'CITA', exp:expIds['UA2026-002'], dept:'OL', hora:'11:00', sala:'Sala 3', motiu:'Orientació laboral. Revisió de currículum i cerca d\'ocupació activa.', estat:'finalitzada', daysAgo:7, tecnic:'Pere Soler', localizador:'OL001' },
+            { tipus:'CITA', exp:expIds['UA2026-003'], dept:'CD', hora:'10:00', sala:'Sala 2', motiu:'Seguiment mensual. Avaluació de la situació de dependència i recursos assignats.', estat:'finalitzada', daysAgo:5, tecnic:'Maria Gómez', localizador:'CD002' },
+            { tipus:'CITA', exp:expIds['UA2026-004'], dept:'IC', hora:'12:30', sala:'Sala 4', motiu:'Intervenció comunitària. Derivació a programa d\'habitatge.', estat:'confirmat', daysAgo:-1, tecnic:'Jordi Puigdomènech', localizador:'IC001' },
+            { tipus:'CITA', exp:expIds['UA2026-005'], dept:'CD', hora:'09:00', sala:'Sala 1', motiu:'Valoració situació socioeconòmica. Gestió ajudes d\'urgència.', estat:'confirmat', daysAgo:-2, tecnic:'Laura Vidal', localizador:'CD003' },
+            { tipus:'CITA', exp:expIds['UA2026-007'], dept:'IC', hora:'16:00', sala:'Sala 2', motiu:'Assessorament en tràmits d\'estrangeria i regularització documental.', estat:'pendent', daysAgo:-3, tecnic:'Marta Roca', localizador:'IC002' },
+            { tipus:'CITA', exp:expIds['UA2026-008'], dept:'CD', hora:'10:30', sala:'Sala 1', motiu:'Acollida. Primera atenció i diagnòstic de necessitats immediates.', estat:'pendent', daysAgo:-5, tecnic:'Maria Gómez', localizador:'CD004' },
+        ];
+        for (const c of citesData) {
+            await ins('agenda', {
+                tipus:c.tipus, expedientId:c.exp.id, expedientNom:c.exp.nom,
+                expedientNumero:c.exp.numero, departament:c.dept, hora:c.hora, sala:c.sala,
+                motiu:c.motiu, estat:c.estat, tecnic:c.tecnic, localizador:c.localizador,
+                data: c.daysAgo < 0 ? futureDate(-c.daysAgo) : isoDate(c.daysAgo),
+                createdAt:ts(Math.max(c.daysAgo,0)+1), tecnics:[c.tecnic]
+            });
+        }
+        const reunionsData = [
+            { titol:'Coordinació Serveis Socials Municipals', hora:'10:00', sala:'Sala de Reunions A', externs:'Serveis Socials Ajuntament', estat:'finalitzada', daysAgo:10 },
+            { titol:'Reunió Seguiment Programa CPI',          hora:'11:30', sala:'Sala de Reunions B', externs:'CaixaProinfàncies',           estat:'finalitzada', daysAgo:5  },
+            { titol:'Planificació Trimestral Equip Tècnic',   hora:'09:00', sala:'Sala Gran',          externs:'',                           estat:'confirmat',   daysAgo:-3 },
+            { titol:'Supervisió casos actius',                hora:'15:00', sala:'Sala de Reunions A', externs:'',                           estat:'pendent',     daysAgo:-7 },
+        ];
+        for (const r of reunionsData) {
+            await ins('agenda', {
+                tipus:'REUNIO', titol:r.titol, hora:r.hora, sala:r.sala, externs:r.externs,
+                estat:r.estat, data:isoDate(r.daysAgo<0?0:r.daysAgo),
+                createdAt:ts(Math.max(r.daysAgo,0)+1), tecnics:['Maria Gómez','Pere Soler']
+            });
+        }
+        log(`  + ${citesData.length} cites + ${reunionsData.length} reunions creades`);
+
+        /* ============================================================
+           6. SOL·LICITUDS (col·lecció: solicituds)
+           ============================================================ */
+        log('5/9 Generant sol·licituds...');
+        const solsData = [
+            { exp:expIds['UA2026-006'], nom:'Laura Martín Rubio',       telefon:'934120006', motiu:'Necessito orientació sobre ajudes per a habitatge. La meva situació és urgent.', dept:'IC', estat:'pendent', daysAgo:2 },
+            { exp:expIds['UA2026-007'], nom:'Ahmed Rodríguez Jiménez',  telefon:'934120007', motiu:'Consulta sobre tràmits regularització. No entenc els formularis.', dept:'IC', estat:'assignada', daysAgo:4 },
+            { exp:expIds['UA2026-008'], nom:'Fatima Sánchez Moreno',    telefon:'934120008', motiu:'Primera visita. Acabo d\'arribar a Barcelona i necessito ajuda.', dept:'CD', estat:'pendent', daysAgo:1 },
+            { exp:expIds['UA2026-005'], nom:'Josep González Vila',      telefon:'934120005', motiu:'Renovació targeta acreditació. Vull saber si tinc dret a ajuda transport.', dept:'CD', estat:'atesa', daysAgo:6 },
+            { exp:expIds['UA2026-001'], nom:'Miguel García Martínez',   telefon:'934120001', motiu:'Seguiment econòmic urgent. Problemes per pagar el lloguer aquest mes.', dept:'CD', estat:'pendent', daysAgo:1 },
+        ];
+        for (const s of solsData) {
+            await ins('solicituds', {
+                expedientId:s.exp.id, expedientNom:s.nom, telefon:s.telefon,
+                motiu:s.motiu, departament:s.dept, estat:s.estat,
+                createdAt:ts(s.daysAgo), dataSolicitud:isoDate(s.daysAgo)
+            });
+        }
+        log(`  + ${solsData.length} sol·licituds creades`);
+
+        /* ============================================================
+           7. SUBVENCIONS & FACTURAS
+           ============================================================ */
+        log('6/9 Generant subvencions i factures...');
+        const subvData = [
+            { nombre:'Servei d\'Atenció Integral Social (SAIS) 2026', organismo:'Generalitat de Catalunya - DASER', importeSolicitado:85000, importeConcedido:72000, estado:'En ejecución', fechaCierre:futureDate(180), notas:'Cofinançament al 85%. Justificació semestral.' },
+            { nombre:'Programa Inserció Laboral Col·lectius Vulnerables', organismo:'Diputació de Barcelona', importeSolicitado:42000, importeConcedido:38000, estado:'En ejecución', fechaCierre:futureDate(120), notas:'Programa anual. Indicadors: 25 insercions.' },
+            { nombre:'Fons Europeu Inclusió Social 2025-2026', organismo:'Unió Europea - FSE+', importeSolicitado:120000, importeConcedido:0, estado:'Presentada', fechaCierre:futureDate(30), notas:'Pendent resolució. Prevista concessió Q2.' },
+            { nombre:'Ajuntament Barcelona - Serveis Socials Bàsics', organismo:'Ajuntament de Barcelona', importeSolicitado:55000, importeConcedido:55000, estado:'Justificada', fechaCierre:isoDate(30), notas:'Justificada satisfactòriament. Tancada.' },
+        ];
+        const subvIds = [];
+        for (const s of subvData) {
+            const id = await ins('subvenciones', { ...s, fechaCreacion:ts(300), tasaExito: s.importeConcedido ? Math.round(s.importeConcedido/s.importeSolicitado*100) : 0 });
+            subvIds.push({ id, ...s });
+        }
+        log(`  + ${subvData.length} subvencions creades`);
+
+        const facturasData = [
+            { proveedor:'ExtinSeg SL',          cif:'B12345001', numFactura:'FS-2026-0012', concepte:'Revisió anual extintors i lluminàries emergència', baseImponible:980, iva:21, subvencionId:subvIds[0].id, subvencionNombre:subvIds[0].nombre, estado:'Pagada', daysAgo:25 },
+            { proveedor:'ClimaTec SL',           cif:'B12345002', numFactura:'CT-2026-0034', concepte:'Manteniment semestral climatitzadors',              baseImponible:1450, iva:21, subvencionId:subvIds[0].id, subvencionNombre:subvIds[0].nombre, estado:'Pagada', daysAgo:18 },
+            { proveedor:'Serveis Elevadors SA',  cif:'A23456001', numFactura:'SEL-2026-221', concepte:'Revisió trimestral ascensor - ITV vigent',          baseImponible:620, iva:21, subvencionId:subvIds[0].id, subvencionNombre:subvIds[0].nombre, estado:'Pagada', daysAgo:12 },
+            { proveedor:'Impressions BCN SL',    cif:'B34567001', numFactura:'IMP-2026-088', concepte:'Material oficina i fullets informatius Q1',         baseImponible:340, iva:21, subvencionId:subvIds[1].id, subvencionNombre:subvIds[1].nombre, estado:'Pendent', daysAgo:5 },
+            { proveedor:'Formació i Treball SCP', cif:'F45678001',numFactura:'FT-2026-015',  concepte:'Taller orientació laboral - 12 sessions',           baseImponible:2800, iva:21, subvencionId:subvIds[1].id, subvencionNombre:subvIds[1].nombre, estado:'Comptabilitzada', daysAgo:30 },
+            { proveedor:'Serveis Generals NX SL',cif:'B56789001', numFactura:'SG-2026-101', concepte:'Material fungible i neteja - Gener/Febrer',          baseImponible:520, iva:21, subvencionId:null, subvencionNombre:null, estado:'Pagada', daysAgo:35 },
+            { proveedor:'ElecNorm SL',           cif:'B67890001', numFactura:'EN-2026-043', concepte:'Revisió anual quadre elèctric general',              baseImponible:780, iva:21, subvencionId:null, subvencionNombre:null, estado:'Pendent', daysAgo:3 },
+        ];
+        for (const f of facturasData) {
+            const iva = f.baseImponible * f.iva / 100;
+            await ins('facturas', { proveedor:f.proveedor, cif:f.cif, numFactura:f.numFactura, concepte:f.concepte,
+                baseImponible:f.baseImponible, importeIVA:Math.round(iva*100)/100, importeTotal:Math.round((f.baseImponible+iva)*100)/100,
+                subvencionId:f.subvencionId||'', subvencionNombre:f.subvencionNombre||'',
+                estado:f.estado, formaPago:'Transferència', fechaFactura:isoDate(f.daysAgo), fechaCreacion:ts(f.daysAgo) });
+        }
+        log(`  + ${facturasData.length} factures creades`);
+
+        /* ============================================================
+           7b. DOCUMENTS D'ENTITAT (empleados exclosos de dades de prova)
+           ============================================================ */
+        const docsData = [
+            { nom:'Pla d\'Empresa 2026', tipus:'estrategic', desc:'Pla estratègic anual de l\'entitat per al 2026', estat:'Vigent', venc:futureDate(300) },
+            { nom:'Política de Protecció de Dades RGPD', tipus:'legal', desc:'Política interna de tractament de dades personals', estat:'Vigent', venc:futureDate(180) },
+            { nom:'Protocol d\'Actuació en Violència de Gènere', tipus:'protocol', desc:'Protocol d\'actuació davant situacions de VG', estat:'Vigent', venc:futureDate(365) },
+            { nom:'Memòria d\'Activitats 2025', tipus:'memoria', desc:'Memòria anual d\'activitats i resultats 2025', estat:'Arxivat', venc:null },
+            { nom:'Conveni Col·lectiu Acció Social 2024-2026', tipus:'laboral', desc:'Conveni col·lectiu de referència per al personal', estat:'Vigent', venc:futureDate(400) },
+        ];
+        for (const d of docsData) {
+            await ins('documentos', { nombre:d.nom, tipo:d.tipus, descripcion:d.desc, estado:d.estat, fechaSubida:ts(90), fechaVencimiento:d.venc ? Timestamp.fromDate(new Date(d.venc)) : null, subidoPor:'Anna Benet Torres', createdAt:ts(90) });
+        }
+        log(`  + ${docsData.length} documents creats`);
+
+        /* ============================================================
+           8. NEXEPSY — Pacients, Intervencions, Sessions
+           ============================================================ */
+        log('7/9 Generant dades NexePsy...');
+        const psyPacients = [
+            { nom:'Carlos', cognoms:'García López',     dni:'12345678A', telefon:'934220001', naix:'1990-04-10', genere:'masculino', expedientId:expIds['UA2026-001'].id, notas:'Derivat des de Serveis Socials per símptomes d\'ansietat.' },
+            { nom:'Ana',    cognoms:'Martínez Fernández',dni:'23456789B',telefon:'934220002', naix:'1985-08-15', genere:'femenino',  expedientId:expIds['UA2026-002'].id, notas:'Automedicació ansiolítics. Situació laboral precària.' },
+            { nom:'Omar',   cognoms:'Benali Chaib',     dni:'34567890C', telefon:'934220003', naix:'1995-01-20', genere:'masculino', expedientId:expIds['UA2026-007'].id, notas:'Estrès acculturatiu. Primer episodi de depressió lleu.' },
+            { nom:'Sofia',  cognoms:'Pérez Nogales',    dni:'45678901D', telefon:'934220004', naix:'2002-06-05', genere:'femenino',  expedientId:expIds['UA2026-004'].id, notas:'Adolescent. Conflictivitat familiar i baixa autoestima.' },
+        ];
+        const psyPIds = [];
+        for (const p of psyPacients) {
+            const id = await ins('nexepsy/pacientes/pacientes', {
+                nombre:p.nom, apellidos:p.cognoms, dni:p.dni, telefono:p.telefon,
+                fechaNacimiento:Timestamp.fromDate(new Date(p.naix)), genero:p.genere,
+                expedienteId:p.expedientId, activo:true,
+                intervencionesActivas:1, intervencionesFinalizadas:0,
+                notas:p.notas, fechaRegistro:ts(90)
+            });
+            psyPIds.push({ id, ...p });
+        }
+        log(`  + ${psyPacients.length} pacients NexePsy creats`);
+
+        const diagnos = ['Trastorno de Ansiedad Generalizada (F41.1)','Episodio Depresivo Moderado (F32.1)','Estrés Aculturativo (Z60.3)','Baja Autoestima y Conflictividad Familiar (Z73.5)'];
+        const teraps  = ['Dra. Rosa Martínez','Dr. Pau Ferrer','Dra. Núria Sala','Dr. Marc Bosch'];
+        const metodol = [['TCC','Mindfulness'],['TCC','Técnicas de Relajación'],['Psicoeducación','Apoyo Social'],['Terapia Sistémica','Técnicas Motivacionales']];
+        for (let i=0; i<psyPIds.length; i++) {
+            const p = psyPIds[i];
+            const intId = await ins('nexepsy/intervenciones/intervenciones', {
+                pacienteId:p.id, pacienteNombre:`${p.nom} ${p.cognoms}`, expedienteId:p.expedientId,
+                diagnostico:diagnos[i], terapeutaNombre:teraps[i], metodologias:metodol[i],
+                sesionesPlaneadas:12, sesionesRealizadas:i+2, estado:'activa',
+                objetivos:['Reducción de sintomatología','Adquisición de estrategias de afrontamiento'],
+                notasTerapeuta:`Evolución ${i<2?'positiva':'satisfactoria'}. Cumplimiento de objetivos terapéuticos.`,
+                fechaCreacion:ts(i*15+30), fechaProximaSesion:fts(i*3+3)
+            });
+            // Sessions as flat collection to avoid subcollection path issues
+            for (let s=0; s<(i+2); s++) {
+                const temas = ['Evaluación inicial y alianza terapéutica','Psicoeducación e identificación de patrones','Entrenamiento en habilidades de afrontamiento','Consolidación y prevención de recaídas'];
+                await ins('nexepsy_sessions', {
+                    intervencionId:intId, pacienteId:p.id, pacienteNombre:`${p.nom} ${p.cognoms}`,
+                    terapeutaNombre:teraps[i], numeroSesion:s+1, duracion:50,
+                    tema:temas[s % temas.length],
+                    contenido:`Se ha trabajado la sesión ${s+1} con el paciente. Buena adherencia al tratamiento.`,
+                    estado:'completada', asistencia:'presente', participacion:'alta',
+                    tareas:[`Práctica de técnicas en casa ${s+1} veces/día`],
+                    fechaSesion:ts((i+2-s)*7), fechaRegistro:ts((i+2-s)*7-1)
+                });
+            }
+        }
+        log(`  + ${psyPIds.length} intervencions + ${psyPIds.reduce((a,_,i)=>a+i+2,0)} sessions NexePsy creades`);
+
+        /* ============================================================
+           9. NEXEAUDIT — Plans, Riscos, Controls, Accions Correctives
+           ============================================================ */
+        log('8/9 Generant dades NexeAudit...');
+        const auditPlans = [
+            { nom:'Auditoria Interna Q1 2026 — RRHH i Processos', area:'Recursos Humans', estat:'en_progres', inici:ts(30), fi:fts(15), objectius:['Verificar compliment ISO 9001:2015 Clàusula 7','Avaluar eficàcia controls RR.HH.'], hallazgosOberts:2, hallazgosTancats:1 },
+            { nom:'Auditoria Protecció de Dades RGPD 2026',       area:'Tecnologia i Dades', estat:'planificat', inici:fts(20), fi:fts(50), objectius:['Revisar compliment RGPD','Auditoria de tractaments de dades personals'], hallazgosOberts:0, hallazgosTancats:0 },
+        ];
+        const auditIds = [];
+        for (const a of auditPlans) {
+            const id = await ins('nexeaudit/planesAuditoria/planes', { nombre:a.nom, areaAuditada:a.area, estado:a.estat, fechaInicio:a.inici, fechaFin:a.fi, objetivos:a.objectius, hallazgosAbiertos:a.hallazgosOberts, hallazgosCerrados:a.hallazgosTancats, criterios:['ISO 9001:2015','Legislació laboral espanyola'], alcance:'Total', fechaCreación:ts(45) });
+            auditIds.push(id);
+        }
+        const riscos = [
+            { desc:'Incumplimiento RGPD por falta de formación del personal', categoria:'Legal', probabilitat:'media', impacte:'alta', nivell:'alto', estrategia:'mitigación', estat:'activo', mesures:['Formación RGPD obligatoria para todo el personal','Auditoría de tratamientos trimestral','Designación DPO interno'] },
+            { desc:'Pérdida de financiación de subvenciones clave por errores de justificación', categoria:'Financiero', probabilitat:'baja', impacte:'alta', nivell:'alto', estrategia:'mitigación', estat:'activo', mesures:['Procedimiento de control documental','Formación justificación subvenciones','Revisión interna previa a presentación'] },
+            { desc:'Alta rotación de personal técnico con pérdida de conocimiento', categoria:'Recursos Humanos', probabilitat:'media', impacte:'media', nivell:'medio', estrategia:'mitigación', estat:'activo', mesures:['Plan de sucesión','Documentación de procesos clave','Política de retención de talento'] },
+        ];
+        for (const r of riscos) {
+            await ins('nexeaudit/riesgos/registro', { descripcion:r.desc, categoria:r.categoria, probabilidad:r.probabilitat, impacto:r.impacte, nivel:r.nivell, estrategiaControl:r.estrategia, estado:r.estat, medidasControl:r.mesures, fechaIdentificación:ts(60), ultimaActualización:ts(15) });
+        }
+        const controls = [
+            { nom:'Control mensual de nóminas', desc:'Verificación mensual de la exactitud de nóminas vs. gastos reales', tipus:'preventivo', freq:'mensual', resultat:'conforme' },
+            { nom:'Revisión documentación expedientes', desc:'Control quincenal de completitud de los expedientes abiertos', tipus:'detectivo', freq:'quincenal', resultat:'conforme' },
+            { nom:'Copias de seguridad de sistemas', desc:'Backup diario automático de todos los sistemas de información', tipus:'correctivo', freq:'diario', resultat:'conforme' },
+        ];
+        for (const c of controls) {
+            await ins('nexeaudit/controles/control', { nombre:c.nom, descripcion:c.desc, tipoControl:c.tipus, frecuenciaVerificación:c.freq, responsable:'Equip TIC', criterioAceptacion:'100% de conformidad', estado:'activo', ultimaVerificación:ts(5), resultadoÚltima:c.resultat, fechaImplementación:ts(180) });
+        }
+        const accions = [
+            { desc:'Implementar plan de formación RGPD para todo el personal', causa:'Falta de marco normativo interno de protección de datos', responsable:'Coordinació', pct:65, estat:'en_progreso', obertura:ts(45), venciment:fts(30) },
+            { desc:'Revisar y actualizar todos los consentimientos informados de las familias', causa:'Cambio de normativa RGPD - Nueva versión de formularios', responsable:'Treball Social', pct:100, estat:'cerrada', obertura:ts(60), venciment:fts(-5) },
+        ];
+        for (const a of accions) {
+            await ins('nexeaudit/accionesCorrectivas/acciones', { descripción:a.desc, causaRaíz:a.causa, responsableImplementación:a.responsable, porcentajeAvance:a.pct, estado:a.estat, fechaApertura:a.obertura, fechaVencimiento:a.venciment, fechaCreación:ts(60) });
+        }
+        log(`  + ${auditPlans.length} plans + ${riscos.length} riscos + ${controls.length} controls + ${accions.length} accions NexeAudit creats`);
+
+        /* ============================================================
+           10. RMT — Manteniment
+           ============================================================ */
+        log('9/9 Generant dades RMT...');
+        const salaIds = {};
+        const sales = [
+            { nom:'Planta Baixa',   descripcio:'Recepció i accés principal' },
+            { nom:'Primera Planta', descripcio:'Oficines i sales de reunions' },
+            { nom:'Segona Planta',  descripcio:'Serveis i atenció a famílies' },
+            { nom:'Soterrani',      descripcio:'Aparcament i instal·lacions' },
+        ];
+        for (const s of sales) {
+            const id = await ins('rmt_sales', { ...s, createdAt:ts(90) });
+            salaIds[s.nom] = id;
+        }
+        const activuIds = {};
+        const actius = [
+            { codi:'EXT-001', nom:'Extintor PB Entrada',     tipusEquip:'extintor',      salaId:salaIds['Planta Baixa'],   ubicacio:'Costat porta entrada',    tipusMant:'anual',     proximMant:futureDate(45), actiu:true },
+            { codi:'EXT-002', nom:'Extintor PB Corredor',    tipusEquip:'extintor',      salaId:salaIds['Planta Baixa'],   ubicacio:'Corredor central PB',     tipusMant:'anual',     proximMant:futureDate(12), actiu:true },
+            { codi:'EXT-003', nom:'Extintor 1a Planta',      tipusEquip:'extintor',      salaId:salaIds['Primera Planta'],ubicacio:'Passadís nord',           tipusMant:'anual',     proximMant:isoDate(5),     actiu:true },
+            { codi:'LLE-001', nom:'Llum Emergència PB',      tipusEquip:'lluminaria',    salaId:salaIds['Planta Baixa'],   ubicacio:'Sortida emergència',      tipusMant:'anual',     proximMant:futureDate(90), actiu:true },
+            { codi:'LLE-002', nom:'Llum Emergència 1a',      tipusEquip:'lluminaria',    salaId:salaIds['Primera Planta'],ubicacio:'Escala principal',        tipusMant:'anual',     proximMant:isoDate(10),    actiu:true },
+            { codi:'CLI-001', nom:'Climatitzador Oficines',  tipusEquip:'climatitzador', salaId:salaIds['Primera Planta'],ubicacio:'Sala de treball principal',tipusMant:'semestral', proximMant:futureDate(30), actiu:true },
+            { codi:'CLI-002', nom:'Climatitzador Recepció',  tipusEquip:'climatitzador', salaId:salaIds['Planta Baixa'],   ubicacio:'Recepció',                tipusMant:'semestral', proximMant:isoDate(3),     actiu:true },
+            { codi:'ASC-001', nom:'Ascensor Principal',      tipusEquip:'ascensor',      salaId:salaIds['Planta Baixa'],   ubicacio:'Nucli central',           tipusMant:'trimestral',proximMant:futureDate(20), actiu:true },
+            { codi:'ELE-001', nom:'Quadre Elèctric General', tipusEquip:'electricitat',  salaId:salaIds['Soterrani'],      ubicacio:'Sala tècnica soterrani',  tipusMant:'anual',     proximMant:futureDate(60), actiu:true },
+        ];
+        for (const a of actius) {
+            const id = await ins('rmt_actius', { ...a, createdAt:ts(180) });
+            activuIds[a.codi] = { id, nom:a.nom, codi:a.codi };
+        }
+        const prevData = [
+            { activId:activuIds['EXT-001'].id, activCodi:'EXT-001', activNom:activuIds['EXT-001'].nom, tipusMant:'anual', tecnic:'Jordi Martínez', empresa:'ExtinSeg SL', numCert:'ES-2025-1234', observacions:'Extintor en bon estat. Pressió correcta.', estat:'OK', rmt:'R-MT.03-001', createdAt:ts(30) },
+            { activId:activuIds['EXT-002'].id, activCodi:'EXT-002', activNom:activuIds['EXT-002'].nom, tipusMant:'anual', tecnic:'Jordi Martínez', empresa:'ExtinSeg SL', numCert:'ES-2025-1235', observacions:'Revisat. Precinte en bon estat.', estat:'OK', rmt:'R-MT.03-002', createdAt:ts(30) },
+            { activId:activuIds['EXT-003'].id, activCodi:'EXT-003', activNom:activuIds['EXT-003'].nom, tipusMant:'anual', tecnic:'Jordi Martínez', empresa:'ExtinSeg SL', numCert:'ES-2025-1236', observacions:'Pendent recarregar agent extintor.', estat:'PENDENT', rmt:'R-MT.03-003', createdAt:ts(15) },
+            { activId:activuIds['CLI-001'].id, activCodi:'CLI-001', activNom:activuIds['CLI-001'].nom, tipusMant:'semestral', tecnic:'Anna Puig', empresa:'ClimaTec SL', numCert:'CT-2025-0089', observacions:'Neteja filtres realitzada. Gas refrigerant correcte.', estat:'OK', rmt:'R-MT.04-001', createdAt:ts(60) },
+            { activId:activuIds['CLI-002'].id, activCodi:'CLI-002', activNom:activuIds['CLI-002'].nom, tipusMant:'semestral', tecnic:'Anna Puig', empresa:'ClimaTec SL', numCert:'CT-2025-0090', observacions:'Neteja realitzada. Es recomana substitució de filtres.', estat:'OK', rmt:'R-MT.04-002', createdAt:ts(60) },
+            { activId:activuIds['ASC-001'].id, activCodi:'ASC-001', activNom:activuIds['ASC-001'].nom, tipusMant:'trimestral', tecnic:'Serveis Elevadors SA', empresa:'Serveis Elevadors SA', numCert:'SEL-2025-456', observacions:'Revisió trimestral. Tot en ordre. Certificat ITV vigent.', estat:'OK', rmt:'R-MT.04-003', createdAt:ts(20) },
+            { activId:activuIds['ELE-001'].id, activCodi:'ELE-001', activNom:activuIds['ELE-001'].nom, tipusMant:'anual', tecnic:'ElecNorm SL', empresa:'ElecNorm SL', numCert:'EN-2025-789', observacions:'Revisió anual quadre elèctric. Disjonctors en bon estat.', estat:'OK', rmt:'R-MT.04-004', createdAt:ts(45) },
+        ];
+        for (const p of prevData) { await ins('rmt_preventiu', p); }
+        const corrData = [
+            { activId:activuIds['CLI-002'].id, activCodi:'CLI-002', activNom:activuIds['CLI-002'].nom, codiInc:'INC-2026-001', desc:'Aire condicionat no refreda. Soroll inusual al compressor.', qui:'Maria Gómez', gravetat:'alta', estat:'Resolt', tecnic:'Anna Puig', resolucio:"Substituïda vàlvula d'expansió. Sistema operatiu.", dataSolventada:isoDate(5), createdAt:ts(20) },
+            { activId:activuIds['ASC-001'].id, activCodi:'ASC-001', activNom:activuIds['ASC-001'].nom, codiInc:'INC-2026-002', desc:"Ascensor s'atura entre plantes i fa soroll al tancar portes.", qui:'Recepció', gravetat:'alta', estat:'Resolt', tecnic:'Serveis Elevadors SA', resolucio:'Ajustat sensor de portes i lubricació de guies.', dataSolventada:isoDate(8), createdAt:ts(25) },
+            { activId:activuIds['EXT-003'].id, activCodi:'EXT-003', activNom:activuIds['EXT-003'].nom, codiInc:'INC-2026-003', desc:'Extintor EXT-003 presenta pèrdua de pressió al manòmetre.', qui:'Pere Soler', gravetat:'mitja', estat:'En Procés', tecnic:'Jordi Martínez', resolucio:'', createdAt:ts(10) },
+            { activId:activuIds['LLE-002'].id, activCodi:'LLE-002', activNom:activuIds['LLE-002'].nom, codiInc:'INC-2026-004', desc:"Llum d'emergència escala principal no s'encén en proves mensuals.", qui:'Laura Vidal', gravetat:'alta', estat:'Pendent', tecnic:'', resolucio:'', createdAt:ts(3) },
+            { activId:activuIds['CLI-001'].id, activCodi:'CLI-001', activNom:activuIds['CLI-001'].nom, codiInc:'INC-2026-005', desc:'Goteres del condensador del climatitzador de les oficines.', qui:'Marta Roca', gravetat:'mitja', estat:'Pendent', tecnic:'', resolucio:'', createdAt:ts(1) },
+        ];
+        for (const c of corrData) { await ins('rmt_correctiu', c); }
+        log(`  + ${sales.length} sales + ${actius.length} actius + ${prevData.length} preventiu + ${corrData.length} incidències RMT creats`);
+
+        /* ============================================================
+           9. DONANTS, DONACIONS I PROVEÏDORS
+           ============================================================ */
+        log('9/9 Generant donants, donacions i proveïdors...');
+        const donantsData = [
+            { nom:'Fundació La Caixa', tipus:'juridica', cif:'G08169815', email:'contacte@fundaciolacaixa.org', telefon:'932274747', quota:5000, estat:'Actiu', dataSoci: isoDate(365) },
+            { nom:'Ajuntament de Barcelona', tipus:'juridica', cif:'P0801900B', email:'social@bcn.cat', telefon:'010', quota:0, estat:'Actiu', dataSoci: isoDate(300) },
+            { nom:'Martí Puig Castelló', tipus:'fisica', cif:'12345678A', email:'marti.puig@gmail.com', telefon:'677001001', quota:120, estat:'Actiu', dataSoci: isoDate(200) },
+            { nom:'Rosa Vidal Ferrer', tipus:'fisica', cif:'23456789B', email:'rosa.vidal@hotmail.com', telefon:'677002002', quota:120, estat:'Actiu', dataSoci: isoDate(150) },
+            { nom:'Carles Bosch Esteve', tipus:'fisica', cif:'34567890C', email:'carles.bosch@gmail.com', telefon:'677003003', quota:60, estat:'Inactiu', dataSoci: isoDate(500) },
+            { nom:'Associació de Veïns Son Roca', tipus:'juridica', cif:'G12345001', email:'veins.sonroca@gmail.com', telefon:'971001001', quota:200, estat:'Actiu', dataSoci: isoDate(100) },
+        ];
+        const dontIds = {};
+        for (const d of donantsData) {
+            const id = await ins('donants', { nom:d.nom, tipusPersona:d.tipus, cif:d.cif, email:d.email, telefon:d.telefon, quotaAnual:d.quota, estat:d.estat, dataSoci:d.dataSoci, createdAt:ts(365) });
+            dontIds[d.nom] = id;
+        }
+        const donacionsData = [
+            { donantNom:'Fundació La Caixa', donantId:dontIds['Fundació La Caixa'], tipus:'subvencio', concepte:'Programa Inclusió Social 2026', import:5000, data:isoDate(30), metode:'Transferència', estat:'Cobrada' },
+            { donantNom:'Ajuntament de Barcelona', donantId:dontIds['Ajuntament de Barcelona'], tipus:'subvencio', concepte:'Conveni Serveis Socials Bàsics 2026', import:12000, data:isoDate(60), metode:'Transferència', estat:'Cobrada' },
+            { donantNom:'Martí Puig Castelló', donantId:dontIds['Martí Puig Castelló'], tipus:'quota', concepte:'Quota anual soci 2026', import:120, data:isoDate(10), metode:'Domiciliació', estat:'Cobrada' },
+            { donantNom:'Rosa Vidal Ferrer', donantId:dontIds['Rosa Vidal Ferrer'], tipus:'quota', concepte:'Quota anual sòcia 2026', import:120, data:isoDate(15), metode:'Domiciliació', estat:'Cobrada' },
+            { donantNom:'Associació de Veïns Son Roca', donantId:dontIds['Associació de Veïns Son Roca'], tipus:'donacio', concepte:'Donació campanya hivern 2025', import:200, data:isoDate(90), metode:'Transferència', estat:'Cobrada' },
+            { donantNom:'Fundació La Caixa', donantId:dontIds['Fundació La Caixa'], tipus:'subvencio', concepte:'Programa CaixaProInfància 2026', import:8500, data:futureDate(30), metode:'Transferència', estat:'Pendent' },
+        ];
+        for (const d of donacionsData) {
+            await ins('donacions', { donantNom:d.donantNom, donantId:d.donantId, tipus:d.tipus, concepte:d.concepte, import:d.import, data:d.data, metodePagament:d.metode, estat:d.estat, createdAt:ts(10) });
+        }
+        log(`  + ${donantsData.length} donants + ${donacionsData.length} donacions creats`);
+
+        const proveidorsData = [
+            { nom:'ExtinSeg SL', cif:'B12345001', activitat:'Prevenció i contra-incendis', contacte:'Jordi Martínez', email:'extinseg@extinseg.com', telefon:'934001001', web:'', estat:'Actiu', tipusContracte:'Anual', notes:'Revisió extintors i lluminàries. Contracte fins 31/12/2026.' },
+            { nom:'ClimaTec SL', cif:'B12345002', activitat:'Climatització i ventilació', contacte:'Anna Puig', email:'climatec@climatec.cat', telefon:'934002002', web:'', estat:'Actiu', tipusContracte:'Semestral', notes:'Manteniment climatitzadors. Propera visita: Octubre 2026.' },
+            { nom:'Serveis Elevadors SA', cif:'A23456001', activitat:'Manteniment ascensors', contacte:'Marc Sala', email:'elevadors@selevadors.es', telefon:'934003003', web:'www.selevadors.es', estat:'Actiu', tipusContracte:'Trimestral', notes:'ITV ascensor vigent fins Octubre 2026.' },
+            { nom:'Impressions BCN SL', cif:'B34567001', activitat:'Impremta i material gràfic', contacte:'Laia Cortés', email:'info@ibcn.cat', telefon:'934004004', web:'', estat:'Actiu', tipusContracte:'Puntual', notes:'Material oficina i fullets informatius.' },
+            { nom:'Formació i Treball SCP', cif:'F45678001', activitat:'Formació i orientació laboral', contacte:'Pere Bosch', email:'formacio@ft.coop', telefon:'934005005', web:'', estat:'Actiu', tipusContracte:'Anual', notes:'Tallers orientació laboral. 12 sessions anuals.' },
+            { nom:'Serveis Generals NX SL', cif:'B56789001', activitat:'Neteja i subministraments', contacte:'Carmen Ruiz', email:'nexsg@nexsg.com', telefon:'934006006', web:'', estat:'Actiu', tipusContracte:'Mensual', notes:'Material fungible i servei de neteja.' },
+            { nom:'ElecNorm SL', cif:'B67890001', activitat:'Instal·lacions elèctriques', contacte:'Toni García', email:'elecnorm@elecnorm.es', telefon:'934007007', web:'', estat:'Actiu', tipusContracte:'Anual', notes:'Revisió anual quadre elèctric. Propera revisió: Gener 2027.' },
+        ];
+        for (const p of proveidorsData) {
+            await ins('proveidors', { nom:p.nom, cif:p.cif, activitat:p.activitat, nomContacte:p.contacte, email:p.email, telefon:p.telefon, web:p.web, estat:p.estat, tipusContracte:p.tipusContracte, notes:p.notes, createdAt:ts(180) });
+        }
+        log(`  + ${proveidorsData.length} proveïdors creats`);
+
+        log('\n✓ Totes les dades de prova generades correctament!');
+        const doneBox = document.getElementById('done-box');
+        doneBox.style.display = 'block';
+        doneBox.innerHTML = `<strong>✓ Dades de prova generades!</strong> — ${added.total} documents creats a Firestore<br><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">${Object.entries(added.cols).map(([k,v])=>`<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:10px;font-size:.78rem;font-weight:700;">${k}: ${v}</span>`).join('')}</div>`;
+
+    } catch(e) {
+        log('ERROR: ' + e.message);
+        console.error(e);
+        alert('Error generant dades: ' + e.message);
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/></svg> Generar Dades de Prova';
+};
+</script>
+<script src="../security-check.js"></script>
+<script src="nexeadmin-sidebar.js"></script>
+</main>
+</body>
+</html>
+

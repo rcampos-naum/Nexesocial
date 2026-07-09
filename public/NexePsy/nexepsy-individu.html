@@ -1,0 +1,563 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" type="image/svg+xml" href="../img/NexePsy-icon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script type="module" src="../database.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --text-main: #1e293b; --text-muted: #64748b;
+            --bg: #f8fafc; --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: var(--text-main); font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; }
+        .main-content { flex-grow: 1; margin-left: 280px; padding: 40px 60px; max-width: calc(100% - 280px); }
+        body.collapsed .main-content { margin-left: 85px; max-width: calc(100% - 85px); }
+
+        /* HEADER */
+        .exp-header { background: white; border-radius: 24px; padding: 30px 35px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); }
+        .person-info { display: flex; align-items: center; gap: 22px; }
+        .avatar { width: 64px; height: 64px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 800; box-shadow: 0 8px 20px rgba(99,102,241,.35); flex-shrink: 0; }
+        .person-name { font-size: 1.5rem; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.02em; }
+        .person-meta { color: var(--text-muted); font-size: 0.85rem; }
+        .header-actions { display: flex; gap: 10px; }
+
+        /* BOTTONS */
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; border: none; cursor: pointer; transition: 0.2s; font-family: inherit; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 14px rgba(99,102,241,.3); }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-outline { background: white; color: var(--text-main); border: 1px solid var(--border); }
+        .btn-outline:hover { background: #f1f5f9; }
+        .btn-danger { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        .btn-danger:hover { background: #fecaca; }
+        .btn-success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+
+        /* GRID */
+        .content-grid { display: grid; grid-template-columns: 340px 1fr; gap: 24px; }
+
+        /* PANELLS */
+        .panel { background: white; border-radius: 20px; border: 1px solid var(--border); padding: 28px; margin-bottom: 24px; }
+        .panel-title { font-size: 0.7rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: .08em; margin: 0 0 18px; }
+        .info-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: var(--text-muted); font-weight: 500; }
+        .info-val { font-weight: 700; color: var(--text-main); text-align: right; max-width: 60%; }
+
+        /* BADGE */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
+        .badge-activa { background: #d1fae5; color: #065f46; }
+        .badge-tancada { background: #f1f5f9; color: #64748b; }
+        .badge-suspesa { background: #fef3c7; color: #92400e; }
+
+        /* INTERVENCIONS */
+        .interv-card { background: white; border-radius: 18px; border: 1px solid var(--border); padding: 24px; margin-bottom: 16px; transition: 0.2s; cursor: pointer; }
+        .interv-card:hover { border-color: var(--primary); box-shadow: 0 8px 20px rgba(99,102,241,.08); }
+        .interv-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .interv-diag { font-size: 1rem; font-weight: 800; color: var(--text-main); margin: 0; }
+        .interv-meta { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
+        .interv-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin: 12px 0; }
+        .interv-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid #f1f5f9; }
+        .sessions-pill { background: #ede9fe; color: #6d28d9; padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+
+        /* SESSIONS EXPANDIBLES */
+        .sessions-list { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #f1f5f9; }
+        .sessions-list.open { display: block; }
+        .session-item { display: flex; gap: 14px; padding: 12px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; font-size: 0.82rem; }
+        .session-date { font-weight: 700; color: var(--primary); min-width: 80px; }
+        .session-notes { color: var(--text-muted); line-height: 1.5; flex: 1; }
+
+        /* MODAL */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,.7); z-index: 20000; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: white; border-radius: 24px; padding: 36px; width: 95%; max-width: 640px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,.4); }
+        .modal-box h3 { margin: 0 0 22px; font-size: 1.2rem; font-weight: 800; }
+        .field { margin-bottom: 16px; }
+        .field label { display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+        .field input, .field select, .field textarea { width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 0.9rem; outline: none; transition: 0.2s; }
+        .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+        .field textarea { min-height: 100px; resize: vertical; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+
+        /* EMPTY STATE */
+        .empty-state { text-align: center; padding: 50px 20px; color: var(--text-muted); }
+        .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+        /* NOTA FAMÃLIA */
+        .familia-badge { display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; color: #1d4ed8; padding: 5px 12px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; cursor: pointer; border: none; text-decoration: none; transition: 0.2s; }
+        .familia-badge:hover { background: #dbeafe; }
+
+        /* TOAST */
+        .toast { position: fixed; bottom: 30px; right: 30px; background: #1e293b; color: white; padding: 14px 20px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; z-index: 99999; transform: translateY(80px); opacity: 0; transition: 0.3s; pointer-events: none; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.ok { background: #065f46; }
+        .toast.err { background: #b91c1c; }
+        .toast.warn { background: #92400e; }
+    </style>
+</head>
+<body>
+    <script type="module" src="../sidebar.js"></script>
+
+    <!-- Modal: Nova intervenciÃ³ -->
+    <div class="modal-overlay" id="modal-nova-interv">
+        <div class="modal-box">
+            <h3>Nova intervenciÃ³ psicosocial</h3>
+            <div class="field"><label>DiagnÃ²stic / Motiu d'atenciÃ³ *</label><input type="text" id="ni-diagnostic" placeholder="Ex: Ansietat, Suport familiar..."></div>
+            <div class="form-grid">
+                <div class="field"><label>Sessions planificades</label><input type="number" id="ni-sessions" value="6" min="1"></div>
+                <div class="field"><label>Tipus d'atenciÃ³</label>
+                    <select id="ni-tipus">
+                        <option value="individual">Individual</option>
+                        <option value="familiar">Familiar (registre individual)</option>
+                        <option value="grup">Grup</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field"><label>Objectius de la intervenciÃ³</label><textarea id="ni-objectius" placeholder="Descriu els objectius principals..."></textarea></div>
+            <div class="field"><label>Observacions inicials</label><textarea id="ni-notes" placeholder="Notes d'avaluaciÃ³ inicial, context..."></textarea></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modal-nova-interv')">CancelÂ·lar</button>
+                <button class="btn btn-primary" onclick="saveNovaInterv()">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Crear intervenciÃ³
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Nova sessiÃ³ -->
+    <div class="modal-overlay" id="modal-nova-sessio">
+        <div class="modal-box">
+            <h3>Registrar sessiÃ³</h3>
+            <input type="hidden" id="ns-interv-id">
+            <div class="form-grid">
+                <div class="field"><label>Data de la sessiÃ³ *</label><input type="date" id="ns-data"></div>
+                <div class="field"><label>Durada (minuts)</label><input type="number" id="ns-durada" value="50"></div>
+            </div>
+            <div class="field"><label>Modalitat</label>
+                <select id="ns-modalitat">
+                    <option value="presencial">Presencial</option>
+                    <option value="telematica">TelemÃ tica</option>
+                    <option value="domicili">Domicili</option>
+                </select>
+            </div>
+            <div class="field"><label>Notes de sessiÃ³ (confidencial)</label><textarea id="ns-notes" placeholder="Resum de la sessiÃ³, evoluciÃ³, temes tractats..."></textarea></div>
+            <div class="field"><label>ValoraciÃ³ de l'evoluciÃ³ (1-10)</label><input type="range" id="ns-evolucio" min="1" max="10" value="5" oninput="document.getElementById('ns-evo-val').textContent=this.value"><span id="ns-evo-val" style="font-weight:700;color:var(--primary);">5</span></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modal-nova-sessio')">CancelÂ·lar</button>
+                <button class="btn btn-primary" onclick="saveSessio()">Desar sessiÃ³</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <!-- Header persona -->
+        <div class="exp-header">
+            <div class="person-info">
+                <div class="avatar" id="avatar-initials">?</div>
+                <div>
+                    <div class="person-name" id="person-nom">Carregant...</div>
+                    <div class="person-meta" id="person-meta"></div>
+                    <div style="margin-top:8px;" id="familia-link"></div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-outline" onclick="history.back()">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                    Tornar
+                </button>
+                <button class="btn btn-primary" id="btn-nova-interv" onclick="openNovaInterv()">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Nova intervenciÃ³
+                </button>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <!-- Columna esquerra: resum -->
+            <div>
+                <div class="panel">
+                    <div class="panel-title">Resum psicosocial</div>
+                    <div id="resum-panel">
+                        <div class="info-row"><span class="info-label">Intervencions actives</span><span class="info-val" id="cnt-actives">â€”</span></div>
+                        <div class="info-row"><span class="info-label">Total intervencions</span><span class="info-val" id="cnt-total">â€”</span></div>
+                        <div class="info-row"><span class="info-label">Sessions realitzades</span><span class="info-val" id="cnt-sessions">â€”</span></div>
+                        <div class="info-row"><span class="info-label">Terapeuta/es</span><span class="info-val" id="cnt-terapeutas">â€”</span></div>
+                        <div class="info-row"><span class="info-label">Ãšltima actualitzaciÃ³</span><span class="info-val" id="cnt-ultima">â€”</span></div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-title">Dades del beneficiari</div>
+                    <div id="dades-panel">
+                        <div class="info-row"><span class="info-label">ID</span><span class="info-val" id="dat-id">â€”</span></div>
+                        <div class="info-row"><span class="info-label">Data naix.</span><span class="info-val" id="dat-naix">â€”</span></div>
+                        <div class="info-row"><span class="info-label">Edat</span><span class="info-val" id="dat-edat">â€”</span></div>
+                        <div class="info-row"><span class="info-label">FamÃ­lia</span><span class="info-val" id="dat-familia">â€”</span></div>
+                        <div class="info-row"><span class="info-label">Activitat/grup</span><span class="info-val" id="dat-activitat">â€”</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna dreta: intervencions -->
+            <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                    <h2 style="margin:0;font-size:1.1rem;font-weight:800;">Intervencions psicosocials</h2>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-outline" id="btn-filtre-actives" onclick="filterIntervencions('activa')" style="font-size:.78rem;">Actives</button>
+                        <button class="btn btn-outline" id="btn-filtre-totes" onclick="filterIntervencions('totes')" style="font-size:.78rem;">Totes</button>
+                    </div>
+                </div>
+                <div id="intervencions-list">
+                    <div class="empty-state"><div class="empty-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><p>Carregant intervencions...</p></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast" id="psy-toast"></div>
+
+    <script type="module">
+        import { db } from '../firebase-config.js';
+        import {
+            collection, doc, getDoc, getDocs, addDoc, updateDoc, runTransaction, query, where, orderBy, Timestamp, serverTimestamp
+        } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+        import { ExpedientPsyDB, SesionesDB } from './nexepsy-db.js';
+
+        await window.checkModuleAccess('NexePsy');
+
+        const params = new URLSearchParams(location.search);
+        const beneficiariId = params.get('id');
+        const familiaId = params.get('familiaId') || '';
+
+        if (!beneficiariId) { location.href = '../gestio-beneficiaris.html'; }
+
+        let person = null;
+        let intervencions = [];
+        let filtreActual = 'activa';
+
+        // â”€â”€ Utilitats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+        function $i(id) { return document.getElementById(id); }
+        function toast(msg, tone = 'ok') {
+            const el = $i('psy-toast');
+            el.textContent = msg; el.className = `toast show ${tone}`;
+            clearTimeout(window._psyToast);
+            window._psyToast = setTimeout(() => el.className = 'toast', 2800);
+        }
+        function formatDate(ts) {
+            if (!ts) return 'â€”';
+            const d = ts.toDate ? ts.toDate() : new Date(ts);
+            return d.toLocaleDateString('ca-ES', { day:'2-digit', month:'short', year:'numeric' });
+        }
+        function calcEdat(dob) {
+            if (!dob) return 'â€”';
+            const d = new Date(dob);
+            const age = Math.floor((Date.now() - d) / (365.25 * 24 * 3600 * 1000));
+            return `${age} anys`;
+        }
+
+        // â”€â”€ CÃ rrega inicial â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        async function init() {
+            // Intentar carregar des de BBDD local (database.js)
+            await new Promise(r => {
+                let tries = 0;
+                const t = setInterval(() => {
+                    if (window.BBDD?.expedients || tries++ > 30) { clearInterval(t); r(); }
+                }, 120);
+            });
+
+            const exp = window.BBDD?.expedients?.find(e => e.id === beneficiariId);
+            if (exp) {
+                person = exp;
+                renderHeader(exp);
+                fillDades(exp);
+            } else {
+                // Intentar Firestore
+                try {
+                    const snap = await getDoc(doc(db, 'beneficiarios', beneficiariId));
+                    if (snap.exists()) { person = { id: snap.id, ...snap.data() }; renderHeader(person); fillDades(person); }
+                    else { $i('person-nom').textContent = `ID: ${beneficiariId}`; }
+                } catch { $i('person-nom').textContent = `ID: ${beneficiariId}`; }
+            }
+
+            await loadIntervencions();
+        }
+
+        function renderHeader(p) {
+            const nom = `${p.nom || p.nombre || ''} ${p.cognoms || p.apellidos || ''}`.trim() || beneficiariId;
+            $i('avatar-initials').textContent = nom.charAt(0).toUpperCase();
+            $i('person-nom').textContent = nom;
+            $i('person-meta').textContent = `ID: ${p.id}${p.dni ? ' Â· DNI: ' + p.dni : ''}`;
+            document.title = `NexePsy â€” ${nom}`;
+
+            const fId = p.familia_id || p.familiaId || familiaId;
+            if (fId) {
+                $i('familia-link').innerHTML = `<a class="familia-badge" href="../familia-perfil.html?id=${esc(fId)}">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                    Veure expedient familiar
+                </a>`;
+            }
+        }
+
+        function fillDades(p) {
+            $i('dat-id').textContent = p.id;
+            $i('dat-naix').textContent = p.data_naix || p.fechaNacimiento || 'â€”';
+            $i('dat-edat').textContent = calcEdat(p.data_naix || p.fechaNacimiento);
+            const fId = p.familia_id || p.familiaId || familiaId;
+            $i('dat-familia').textContent = fId || 'â€”';
+            $i('dat-activitat').textContent = p.activitat || p.actividad || 'â€”';
+        }
+
+        async function loadIntervencions() {
+            try {
+                intervencions = await ExpedientPsyDB.obtenerPorBeneficiari(beneficiariId);
+                renderIntervencions();
+                updateResum();
+            } catch(e) {
+                console.error(e);
+                $i('intervencions-list').innerHTML = '<div class="empty-state"><p style="color:#ef4444;">Error carregant intervencions.</p></div>';
+            }
+        }
+
+        function filterIntervencions(filtre) {
+            filtreActual = filtre;
+            $i('btn-filtre-actives').style.background = filtre === 'activa' ? '#ede9fe' : '';
+            $i('btn-filtre-actives').style.color = filtre === 'activa' ? '#4f46e5' : '';
+            $i('btn-filtre-totes').style.background = filtre === 'totes' ? '#ede9fe' : '';
+            $i('btn-filtre-totes').style.color = filtre === 'totes' ? '#4f46e5' : '';
+            renderIntervencions();
+        }
+        window.filterIntervencions = filterIntervencions;
+
+        function renderIntervencions() {
+            const list = $i('intervencions-list');
+            const filtered = filtreActual === 'totes' ? intervencions : intervencions.filter(i => i.estado === 'activa');
+            if (!filtered.length) {
+                list.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><p>${filtreActual === 'activa' ? 'Sense intervencions actives.' : 'Sense intervencions registrades.'}</p></div>`;
+                return;
+            }
+            list.innerHTML = filtered.map(interv => `
+                <div class="interv-card" onclick="toggleSessions('${esc(interv.id)}')">
+                    <div class="interv-header">
+                        <div>
+                            <p class="interv-diag">${esc(interv.diagnÃ³stico || interv.diagnostic || 'â€”')}</p>
+                            <div class="interv-meta">
+                                ${interv.numExpedient ? `<span style="background:#ede9fe;color:#4f46e5;padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:800;margin-right:8px;">${esc(interv.numExpedient)}</span>` : ''}
+                                Terapeuta: ${esc(interv.terapeutaNombre || 'â€”')} Â·
+                                Inici: ${formatDate(interv.fechaCreacion)}
+                                ${interv.tipusAtencio ? ' Â· ' + esc(interv.tipusAtencio) : ''}
+                            </div>
+                        </div>
+                        <span class="badge badge-${esc(interv.estado || 'activa')}">${esc(interv.estado || 'activa')}</span>
+                    </div>
+                    ${interv.descripciÃ³n || interv.objectius ? `<div class="interv-desc">${esc(interv.objectius || interv.descripciÃ³n || '')}</div>` : ''}
+                    <div class="interv-footer">
+                        <span class="sessions-pill">${interv.sesionesRealizadas || 0} / ${interv.sesionesPlaneadas || 'â€”'} sessions</span>
+                        <div style="display:flex;gap:8px;" onclick="event.stopPropagation()">
+                            <button class="btn btn-success" style="font-size:.75rem;padding:7px 14px;" onclick="openNovaSessio('${esc(interv.id)}')">+ SessiÃ³</button>
+                            ${interv.estado === 'activa' ? `<button class="btn btn-danger" style="font-size:.75rem;padding:7px 14px;" onclick="tancarInterv('${esc(interv.id)}')">Tancar</button>` : ''}
+                        </div>
+                    </div>
+                    <div class="sessions-list" id="sessions-${esc(interv.id)}">
+                        <div style="font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;">Sessions registrades</div>
+                        <div id="sessions-inner-${esc(interv.id)}"><em style="color:var(--text-muted);font-size:.8rem;">Clica per carregar sessions...</em></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Toggle sessions per intervenciÃ³
+        const loadedSessions = {};
+        window.toggleSessions = async function(intervId) {
+            const el = $i(`sessions-${intervId}`);
+            if (!el) return;
+            el.classList.toggle('open');
+            if (el.classList.contains('open') && !loadedSessions[intervId]) {
+                loadedSessions[intervId] = true;
+                try {
+                    const sessions = await SesionesDB.listarPorIntervenciÃ³n(intervId);
+                    const inner = $i(`sessions-inner-${intervId}`);
+                    if (!sessions.length) {
+                        inner.innerHTML = '<em style="color:var(--text-muted);font-size:.8rem;">Sense sessions registrades.</em>';
+                    } else {
+                        inner.innerHTML = sessions.map(s => `
+                            <div class="session-item">
+                                <span class="session-date">${formatDate(s.fechaSesiÃ³n)}</span>
+                                <div class="session-notes">
+                                    <strong>${esc(s.modalitat || s.modalidad || 'Presencial')}</strong>${s.durada || s.duracion ? ` Â· ${s.durada || s.duracion} min` : ''}
+                                    ${s.notas ? '<br>' + esc(s.notas) : ''}
+                                    ${s.evolucio ? `<br><span style="color:var(--primary);font-size:.75rem;">EvoluciÃ³: ${s.evolucio}/10</span>` : ''}
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                } catch(e) { console.error(e); }
+            }
+        };
+
+        function updateResum() {
+            const actives = intervencions.filter(i => i.estado === 'activa');
+            const totalSess = intervencions.reduce((s, i) => s + (i.sesionesRealizadas || 0), 0);
+            const terapeutas = [...new Set(intervencions.map(i => i.terapeutaNombre).filter(Boolean))];
+            const darreres = intervencions.map(i => i.ultimaActualizacion?.toDate?.() || null).filter(Boolean).sort((a,b) => b - a);
+
+            $i('cnt-actives').textContent = actives.length;
+            $i('cnt-total').textContent = intervencions.length;
+            $i('cnt-sessions').textContent = totalSess;
+            $i('cnt-terapeutas').textContent = terapeutas.join(', ') || 'â€”';
+            $i('cnt-ultima').textContent = darreres.length ? darreres[0].toLocaleDateString('ca-ES') : 'â€”';
+        }
+
+        // â”€â”€ Modal nova intervenciÃ³ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        window.openNovaInterv = function() {
+            $i('ni-diagnostic').value = '';
+            $i('ni-sessions').value = 6;
+            $i('ni-tipus').value = 'individual';
+            $i('ni-objectius').value = '';
+            $i('ni-notes').value = '';
+            $i('modal-nova-interv').classList.add('open');
+        };
+
+        window.saveNovaInterv = async function() {
+            const diagnostic = $i('ni-diagnostic').value.trim();
+            if (!diagnostic) { toast('El diagnÃ²stic Ã©s obligatori', 'err'); return; }
+            try {
+                const nom = person ? `${person.nom || person.nombre || ''} ${person.cognoms || person.apellidos || ''}`.trim() : beneficiariId;
+                const result = await addDoc(collection(db, 'nexepsy/intervenciones/intervenciones'), {
+                    beneficiariId,
+                    familiaId: person?.familia_id || person?.familiaId || familiaId || '',
+                    pacienteId: beneficiariId,
+                    pacienteNombre: nom,
+                    diagnÃ³stico: diagnostic,
+                    tipusAtencio: $i('ni-tipus').value,
+                    objectius: $i('ni-objectius').value.trim(),
+                    descripciÃ³n: $i('ni-notes').value.trim(),
+                    sesionesPlaneadas: parseInt($i('ni-sessions').value) || 6,
+                    sesionesRealizadas: 0,
+                    estado: 'activa',
+                    fechaCreacion: serverTimestamp(),
+                    ultimaActualizacion: serverTimestamp()
+                });
+                // Generar nÃºmero d'expedient via transacciÃ³
+                const counterRef = doc(db, 'nexepsy/config/contadors', 'expedients');
+                let numExpedient;
+                await runTransaction(db, async (tx) => {
+                    const snap = await tx.get(counterRef);
+                    const next = snap.exists() ? (snap.data().ultim || 0) + 1 : 1;
+                    numExpedient = `PS${new Date().getFullYear()}-${String(next).padStart(3,'0')}`;
+                    tx.set(counterRef, { ultim: next }, { merge: true });
+                });
+                await updateDoc(doc(db, 'nexepsy/intervenciones/intervenciones', result.id), { numExpedient });
+                closeModal('modal-nova-interv');
+                toast(`IntervenciÃ³ creada â€” ${numExpedient}`, 'ok');
+                await loadIntervencions();
+            } catch(e) { console.error(e); toast('Error en crear la intervenciÃ³', 'err'); }
+        };
+
+        // â”€â”€ Modal nova sessiÃ³ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        window.openNovaSessio = function(intervId) {
+            $i('ns-interv-id').value = intervId;
+            $i('ns-data').value = new Date().toISOString().split('T')[0];
+            $i('ns-durada').value = 50;
+            $i('ns-modalitat').value = 'presencial';
+            $i('ns-notes').value = '';
+            $i('ns-evolucio').value = 5;
+            $i('ns-evo-val').textContent = '5';
+            $i('modal-nova-sessio').classList.add('open');
+        };
+
+        window.saveSessio = async function() {
+            const intervId = $i('ns-interv-id').value;
+            const data = $i('ns-data').value;
+            if (!data) { toast('La data Ã©s obligatoria', 'err'); return; }
+            try {
+                await addDoc(collection(db, `nexepsy/intervenciones/${intervId}/sesiones`), {
+                    fechaSesiÃ³n: Timestamp.fromDate(new Date(data)),
+                    fechaRegistro: serverTimestamp(),
+                    modalitat: $i('ns-modalitat').value,
+                    durada: parseInt($i('ns-durada').value) || 50,
+                    notas: $i('ns-notes').value.trim(),
+                    evolucio: parseInt($i('ns-evolucio').value),
+                    estado: 'completada'
+                });
+                // Incrementar comptador de sessions
+                const interv = intervencions.find(i => i.id === intervId);
+                if (interv) {
+                    await updateDoc(doc(db, 'nexepsy/intervenciones/intervenciones', intervId), {
+                        sesionesRealizadas: (interv.sesionesRealizadas || 0) + 1,
+                        ultimaActualizacion: serverTimestamp()
+                    });
+                }
+                closeModal('modal-nova-sessio');
+                toast('SessiÃ³ registrada', 'ok');
+                delete loadedSessions[intervId];
+                await loadIntervencions();
+            } catch(e) { console.error(e); toast('Error en desar la sessiÃ³', 'err'); }
+        };
+
+        // â”€â”€ Tancar intervenciÃ³ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        window.tancarInterv = async function(intervId) {
+            if (!confirm('Tancar aquesta intervenciÃ³?')) return;
+            try {
+                await updateDoc(doc(db, 'nexepsy/intervenciones/intervenciones', intervId), {
+                    estado: 'tancada',
+                    dataTancament: serverTimestamp(),
+                    ultimaActualizacion: serverTimestamp()
+                });
+                toast('IntervenciÃ³ tancada', 'ok');
+                await loadIntervencions();
+            } catch(e) { toast('Error', 'err'); }
+        };
+
+        window.closeModal = function(id) { $i(id)?.classList.remove('open'); };
+
+        // Tancar filtres per defecte
+        filterIntervencions('activa');
+        init();
+    </script>
+
+    <script type="module">
+        // Notificacions de derivaciÃ³ per a l'usuari actual
+        import { db, auth } from '../firebase-config.js';
+        import { collection, getDocs, query, where, updateDoc, doc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+        async function checkNotificacions() {
+            const user = auth.currentUser;
+            if (!user) return;
+            try {
+                const snap = await getDocs(query(
+                    collection(db, 'nexepsy_notificacions'),
+                    where('destinatari_uid','==', user.uid),
+                    where('llegida','==', false)
+                ));
+                snap.docs.forEach(async (d) => {
+                    const data = d.data();
+                    const isRebutjada = data.tipus === 'derivacio_rebutjada';
+                    const banner = document.createElement('div');
+                    banner.style.cssText = `position:fixed;top:20px;right:20px;z-index:9999;background:${isRebutjada ? '#fef2f2' : '#f0fdf4'};border:1.5px solid ${isRebutjada ? '#fca5a5' : '#86efac'};border-radius:14px;padding:16px 20px;max-width:380px;box-shadow:0 8px 24px rgba(0,0,0,.12);font-family:'Inter',sans-serif;`;
+                    banner.innerHTML = `
+                        <div style="display:flex;align-items:center;gap:8px;font-weight:800;font-size:.9rem;color:${isRebutjada ? '#b91c1c' : '#166534'};margin-bottom:6px;">
+                            ${isRebutjada
+                                ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> DerivaciÃ³ rebutjada'
+                                : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> DerivaciÃ³ acceptada'}
+                        </div>
+                        <div style="font-size:.83rem;color:#475569;line-height:1.5;">${data.text || ''}</div>
+                        <button onclick="this.parentElement.remove()" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:#94a3b8;">Ã—</button>`;
+                    document.body.appendChild(banner);
+                    setTimeout(() => banner.remove(), 9000);
+                    await updateDoc(doc(db, 'nexepsy_notificacions', d.id), { llegida: true });
+                });
+            } catch(e) { /* no crÃ­tic */ }
+        }
+        checkNotificacions();
+    </script>
+</body>
+</html>
+
+
+

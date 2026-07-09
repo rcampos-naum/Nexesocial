@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Gestió d'Usuaris</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+.main-content { padding: 20px; box-sizing: border-box; }
+        
+        .admin-section { padding: 30px; background: white; border-radius: 20px; border: 1px solid #e2e8f0; margin-top: 20px; }
+        .nexe-table { width: 100%; border-collapse: collapse; }
+        .nexe-table th { text-align: left; padding: 12px; color: #64748b; font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
+        .nexe-table td { padding: 15px 12px; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
+
+        /* Estilos del Modal compatibles con usuarios-logic.js */
+        .modal-nexe { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(15, 23, 42, 0.5); 
+            z-index: 20000; 
+            align-items: center; justify-content: center; 
+        }
+        .modal-nexe-content { background: white; padding: 30px; border-radius: 20px; width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        
+        .btn-nexe { background: #1e293b; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <script>
+        window.location.replace('NexeAdmin/admin-personal.html');
+    </script>
+    <script type="module" src="sidebar.js"></script>
+
+    <main class="main-content">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 10px;">
+            <h3 style="margin:0; color: #1e293b;">🔐 Administració de Permisos</h3>
+            <button class="btn-nexe" onclick="openModal()">+ Alta Nou Usuari</button>
+        </div>
+
+        <section class="admin-section">
+            <table class="nexe-table">
+                <thead>
+                    <tr>
+                        <th>Empleat</th>
+                        <th>Rol Funcional</th>
+                        <th>NexePsy</th>
+                        <th>NexeAudit</th>
+                        <th>NexeAdmin</th>
+                        <th style="text-align: right;">Accions</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody"></tbody>
+            </table>
+        </section>
+    </main>
+
+    <div id="userModal" class="modal-nexe">
+        <div class="modal-nexe-content">
+            <h3 id="modalTitle">Configuració d'Accés</h3>
+            <form id="userForm">
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; font-size:0.8rem; font-weight:bold; color:#475569;">Nom Complet</label>
+                    <input type="text" id="userName" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px; box-sizing:border-box;" required>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; font-size:0.8rem; font-weight:bold; color:#475569;">Correu Electrònic</label>
+                    <input type="email" id="userEmail" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px; box-sizing:border-box;" required>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; font-size:0.8rem; font-weight:bold; color:#475569;">Contrasenya</label>
+                    <input type="password" id="userPass" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px; box-sizing:border-box;">
+                    <small id="userPassHint" style="color:#64748b; font-size:0.72rem;">Obligatòria en alta. En edició, deixa-la buida per mantenir la contrasenya actual.</small>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; font-size:0.8rem; font-weight:bold; color:#475569;">Rol Funcional</label>
+                    <select id="userFuncRole" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px; box-sizing:border-box;">
+                        <option value="">Cap (usuari bàsic)</option>
+                        <option value="tecnic_projectes">Tècnic/a de Projectes</option>
+                        <option value="coordinador">Coordinador/a</option>
+                        <option value="administracio">Administració</option>
+                        <option value="direccio">Direcció</option>
+                        <option value="admin_sistema">Administrador/a del Sistema</option>
+                    </select>
+                    <small style="color:#64748b; font-size:0.72rem;">El rol funcional determina l'accés al Dashboard d'Impacte i estadístiques.</small>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <div>
+                        <label style="font-size:0.7rem; font-weight:bold; color:#64748b;">NexePsy</label>
+                        <select id="p_psy" style="width:100%; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
+                            <option value="none">Cap</option>
+                            <option value="read">Lectura</option>
+                            <option value="all">Total</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.7rem; font-weight:bold; color:#64748b;">NexeAudit</label>
+                        <select id="p_audit" style="width:100%; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
+                            <option value="none">Cap</option>
+                            <option value="read">Lectura</option>
+                            <option value="all">Total</option>
+                        </select>
+                    </div>
+                    <div style="grid-column: span 2;">
+                        <label style="font-size:0.7rem; font-weight:bold; color:#64748b;">Admin Global</label>
+                        <select id="p_admin" style="width:100%; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
+                            <option value="none">No</option>
+                            <option value="all">Sí (Accés Total)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Scope: program/department assignments -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; font-size:0.8rem; font-weight:bold; color:#475569; margin-bottom:6px;">Àmbit d'Actuació (Programes)</label>
+                    <div id="scopeCheckboxes" style="max-height:130px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; padding:8px 10px; display:grid; gap:5px;">
+                        <span style="color:#94a3b8; font-size:0.8rem;">Carregant programes...</span>
+                    </div>
+                    <small style="color:#64748b; font-size:0.72rem;">Selecciona els programes/departaments als quals té accés aquest usuari.</small>
+                </div>
+
+                <!-- Extra permissions (exceptions) -->
+                <div style="margin-bottom: 20px;">
+                    <label style="display:block; font-size:0.8rem; font-weight:bold; color:#475569; margin-bottom:6px;">Permisos Addicionals (Excepcions)</label>
+                    <div style="border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; display:grid; gap:7px;">
+                        <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:#334155; cursor:pointer;">
+                            <input type="checkbox" id="ep_facturacio" style="accent-color:#2563eb; width:15px; height:15px;">
+                            Pot veure dades de facturació
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:#334155; cursor:pointer;">
+                            <input type="checkbox" id="ep_validar_voluntaris" style="accent-color:#2563eb; width:15px; height:15px;">
+                            Pot validar hores de voluntaris
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:#334155; cursor:pointer;">
+                            <input type="checkbox" id="ep_informes_globals" style="accent-color:#2563eb; width:15px; height:15px;">
+                            Pot veure informes globals
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:#334155; cursor:pointer;">
+                            <input type="checkbox" id="ep_gestio_personal" style="accent-color:#2563eb; width:15px; height:15px;">
+                            Pot gestionar personal (alta/baixa)
+                        </label>
+                    </div>
+                    <small style="color:#64748b; font-size:0.72rem;">Excepcions individuals que amplien o restringeixen els permisos del seu rol.</small>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" onclick="closeModal()" style="flex:1; background:#f1f5f9; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:600;">Enrere</button>
+                    <button type="submit" class="btn-nexe" style="flex:2; background:#22c55e;">Guardar Canvis</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="usuarios-logic.js"></script>
+</body>
+</html>

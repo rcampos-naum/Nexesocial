@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexeSocial - Dades Totals</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        .main-content { padding: 30px; }
+
+        /* ── Access denied ── */
+        .access-denied-wrap {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; min-height: 60vh; text-align: center;
+            gap: 16px;
+        }
+        .access-denied-icon {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: #fee2e2; display: flex; align-items: center; justify-content: center;
+        }
+        .access-denied-icon svg { color: #ef4444; }
+
+        /* ── Filter bar ── */
+        .filter-bar-dash {
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+            background: white; border: 1px solid #e2e8f0; border-radius: 14px;
+            padding: 14px 20px; margin-bottom: 24px;
+        }
+        .filter-bar-dash select {
+            padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px;
+            font-size: 0.9rem; color: #1e293b; background: #f8fafc;
+            cursor: pointer; min-width: 180px;
+        }
+        .filter-bar-dash select:focus { outline: none; border-color: #2563eb; }
+        .filter-info-badge {
+            font-size: 0.8rem; color: #64748b; background: #f1f5f9;
+            padding: 6px 12px; border-radius: 20px; white-space: nowrap;
+        }
+        .filter-info-badge strong { color: #2563eb; }
+        .btn-clear-filter {
+            padding: 8px 14px; background: #f1f5f9; border: none; border-radius: 8px;
+            color: #475569; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: 0.2s; margin-left: auto;
+        }
+        .btn-clear-filter:hover { background: #e2e8f0; }
+        .access-scope-badge {
+            font-size: 0.75rem; font-weight: 700; padding: 5px 10px; border-radius: 20px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .access-scope-badge.full { background: #dcfce7; color: #16a34a; }
+        .access-scope-badge.restricted { background: #fef3c7; color: #d97706; }
+
+        /* ── Header ── */
+        .btn-export {
+            background: #10b981; color: white; border: none;
+            padding: 12px 24px; border-radius: 8px; cursor: pointer;
+            font-weight: 600; display: flex; align-items: center; gap: 10px;
+            transition: 0.3s;
+        }
+        .btn-export:hover { background: #059669; transform: translateY(-1px); }
+        .gender-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px; margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white; padding: 20px; border-radius: 12px;
+            border: 1px solid #e2e8f0; text-align: center;
+        }
+        .stat-label { color: #64748b; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; }
+        .stat-number { font-size: 2.2rem; font-weight: 800; margin: 5px 0; }
+        .charts-container {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px; margin-top: 30px;
+        }
+        .chart-box {
+            background: white; border-radius: 15px; border: 1px solid #e2e8f0;
+            padding: 25px; display: flex; flex-direction: column; align-items: center;
+        }
+        .section-title { font-size: 1.1rem; color: #1e293b; font-weight: 700; margin-bottom: 20px; width: 100%; }
+        canvas { max-width: 250px !important; max-height: 250px !important; }
+        .header-flex { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+
+        /* ── Loading ── */
+        #page-loading {
+            display: flex; align-items: center; gap: 12px;
+            color: #64748b; padding: 60px 0; justify-content: center; font-size: 1rem;
+        }
+        .spinner {
+            width: 24px; height: 24px; border: 3px solid #e2e8f0;
+            border-top-color: #2563eb; border-radius: 50%; animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <script type="module" src="sidebar.js"></script>
+
+    <main class="main-content">
+        <!-- Loading -->
+        <div id="page-loading"><div class="spinner"></div> Carregant dades i verificant permisos...</div>
+
+        <!-- Access denied -->
+        <div id="access-denied" style="display:none;">
+            <div class="access-denied-wrap">
+                <div class="access-denied-icon">
+                    <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                    </svg>
+                </div>
+                <h2 style="margin:0; color:#1e293b;">Accés no autoritzat</h2>
+                <p style="color:#64748b; max-width:400px;">No teniu permisos per accedir al Dashboard d'Impacte. Si creus que és un error, contacta amb l'administrador.</p>
+                <button onclick="window.location.href='home.html'" style="background:#2563eb; color:white; border:none; padding:12px 24px; border-radius:8px; cursor:pointer; font-weight:600;">Tornar a l'inici</button>
+            </div>
+        </div>
+
+        <!-- Main dashboard (hidden until loaded) -->
+        <div id="main-dash" style="display:none;">
+            <div class="header-flex">
+                <div>
+                    <h1 style="margin:0;">Dashboard d'Impacte</h1>
+                    <p style="color:#64748b; margin:5px 0 0 0;">Resum estadístic per a memòries oficials</p>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
+                    <button onclick="exportSummaryToExcel()" class="btn-export">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        Exportar Resum (.xlsx)
+                    </button>
+                    <button onclick="exportFullToExcel()" class="btn-export" style="background:#1d4ed8;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                        Descargar Excel completo (.xlsx)
+                    </button>
+                    <div style="text-align:right;">
+                        <span class="stat-label">Edat Mitjana</span>
+                        <div id="avg-total" style="font-size:1.2rem; font-weight:700; color:#2563eb;">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter bar -->
+            <div class="filter-bar-dash">
+                <span id="access-scope-badge" class="access-scope-badge"></span>
+                <select id="sel-programa" onchange="onProgramaChange()">
+                    <option value="ALL">Tots els programes</option>
+                </select>
+                <select id="sel-periode" onchange="applyFilter()">
+                    <option value="ALL">Periode: tots</option>
+                </select>
+                <select id="sel-activitat" onchange="applyFilter()">
+                    <option value="ALL">Totes les activitats</option>
+                </select>
+                <span id="filter-info-badge" class="filter-info-badge">Carregant...</span>
+                <button class="btn-clear-filter" onclick="resetFilter()">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    Netejar filtres
+                </button>
+            </div>
+
+            <!-- Stat cards -->
+            <div class="gender-grid">
+                <div class="stat-card" style="border-top:4px solid #2563eb;"><span class="stat-label">Homes</span><div id="count-homes" class="stat-number" style="color:#2563eb;">0</div></div>
+                <div class="stat-card" style="border-top:4px solid #db2777;"><span class="stat-label">Dones</span><div id="count-dones" class="stat-number" style="color:#db2777;">0</div></div>
+                <div class="stat-card" style="border-top:4px solid #8b5cf6;"><span class="stat-label">No Binari</span><div id="count-nobinari" class="stat-number" style="color:#8b5cf6;">0</div></div>
+                <div class="stat-card" style="border-top:4px solid #64748b;"><span class="stat-label">Altres / NC</span><div id="count-altres-gen" class="stat-number" style="color:#64748b;">0</div></div>
+            </div>
+            <div class="gender-grid">
+                <div class="stat-card" style="border-top:4px solid #10b981;"><span class="stat-label">Regularitzats</span><div id="count-regular" class="stat-number" style="color:#10b981;">0</div></div>
+                <div class="stat-card" style="border-top:4px solid #f59e0b;"><span class="stat-label">Irregulars</span><div id="count-irregular" class="stat-number" style="color:#f59e0b;">0</div></div>
+                <div class="stat-card" style="border-top:4px solid #06b6d4;"><span class="stat-label">Sol·licitants Asil</span><div id="count-asil" class="stat-number" style="color:#06b6d4;">0</div></div>
+                <div class="stat-card" style="border-top:4px solid #64748b;"><span class="stat-label">Altres Situacions</span><div id="count-altres-situ" class="stat-number" style="color:#64748b;">0</div></div>
+            </div>
+            <div class="gender-grid" style="margin-bottom:30px;">
+                <div class="stat-card" style="border-top:4px solid #4f46e5;"><span class="stat-label">En Atur</span><div id="count-atur" class="stat-number" style="color:#4f46e5;">0</div></div>
+                <div class="stat-card" style="border-top:4px solid #059669;"><span class="stat-label">Treball Actiu</span><div id="count-treball" class="stat-number" style="color:#059669;">0</div></div>
+                <div class="stat-card" style="border-top:4px solid #ea580c;"><span class="stat-label">Sense Ingressos</span><div id="count-sense-ingressos" class="stat-number" style="color:#ea580c;">0</div></div>
+                <div class="stat-card" style="border-top:4px solid #9333ea;"><span class="stat-label">RGC / IMV / Ajudes</span><div id="count-ajudes" class="stat-number" style="color:#9333ea;">0</div></div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-box"><div class="section-title">Nacionalitat</div><canvas id="chartNac"></canvas></div>
+                <div class="chart-box"><div class="section-title">Rangs d'Edat</div><canvas id="chartEdat"></canvas></div>
+                <div class="chart-box"><div class="section-title">Tipus d'Habitatge</div><canvas id="chartHab"></canvas></div>
+                <div class="chart-box"><div class="section-title">Unitat Convivencial</div><canvas id="chartFam"></canvas></div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { db } from "./firebase-config.js";
+        import { collection, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        // ─── ACCESS ROLES ────────────────────────────────────────────
+        const FULL_ACCESS_ROLES = ['admin_sistema', 'direccio', 'administracio', 'tecnic_projectes'];
+        const COORD_ROLE = 'coordinador';
+
+        // ─── STATE ───────────────────────────────────────────────────
+        let allExpedients = [];
+        let allGrupos     = [];
+        let allBenefGrupos = [];
+        let allActivitats  = [];
+        let allDepartments = [];
+        let allPrograms    = []; // [{ id, name }]
+
+        let accessLevel   = null;  // 'full' | 'coordinator' | 'denied'
+        let allowedDeptIds = null; // null = unrestricted, [] = none, [...] = restricted
+
+        let activeProg = 'ALL';
+        let activePeriode = 'ALL';
+        let activeActiv = 'ALL';
+        let charts = {};
+
+        let statsGenere = {}, statsNac = {}, statsRangs = {}, statsHab = {};
+        let statsFam = {}, statsSitu = {}, statsIngressos = {}, statsLab = {};
+
+        // ─── AUTH CHECK ──────────────────────────────────────────────
+        async function checkAccess() {
+            try {
+                // Keep access check responsive: bounded wait for Auth bootstrap.
+                if (window.Auth && !window.Auth.isReady && typeof window.Auth.initialize === 'function') {
+                    await Promise.race([
+                        window.Auth.initialize(),
+                        new Promise(resolve => setTimeout(resolve, 600))
+                    ]);
+                }
+            } catch(e) {}
+
+            const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+            const userRole  = localStorage.getItem('userRole') || 'user';
+            const userPerms = JSON.parse(localStorage.getItem('userPermissions') || '{}');
+
+            const hasFullAccess =
+                userRole === 'admin' ||
+                userRoles.some(r => FULL_ACCESS_ROLES.includes(r)) ||
+                (userPerms.admin && userPerms.admin !== 'none');
+
+            const isCoord = userRoles.includes(COORD_ROLE);
+
+            if (hasFullAccess) {
+                accessLevel = 'full';
+                allowedDeptIds = null;
+            } else if (isCoord) {
+                accessLevel = 'coordinator';
+                await resolveCoordinatorDepts();
+            } else {
+                accessLevel = 'denied';
+            }
+        }
+
+        async function resolveCoordinatorDepts() {
+            try {
+                const uid = window.Auth?.getUser()?.uid;
+                let q;
+                if (uid) {
+                    q = query(collection(db, 'grupos'), where('responsableId', '==', uid));
+                } else {
+                    // Fallback: match by email stored in grupo
+                    const email = localStorage.getItem('userEmail') || '';
+                    q = query(collection(db, 'grupos'), where('responsableEmail', '==', email));
+                }
+                const snap = await getDocs(q);
+                const ids = [...new Set(snap.docs.map(d => d.data().departamentoId).filter(Boolean))];
+                allowedDeptIds = ids;
+            } catch(e) {
+                console.warn('resolveCoordinatorDepts error:', e);
+                allowedDeptIds = [];
+            }
+        }
+
+        // ─── REAL-TIME LOAD ──────────────────────────────────────────
+        // Tracks how many collections have received their first snapshot
+        let _rtReady = 0;
+        const _RT_TOTAL = 5;
+        let _rtInitialized = false;
+        const _unsubRT = [];
+
+        function normalizePeriodsFromDept(dept) {
+            const fromDoc = Array.isArray(dept.periods) ? dept.periods.filter(Boolean) : [];
+            if (fromDoc.length) {
+                return fromDoc.map((p, idx) => ({
+                    id: String(p.id || `period-${idx + 1}`),
+                    label: p.label || `Periode ${idx + 1}`,
+                    startDate: p.startDate || p.fechaInicio || '',
+                    endDate: p.endDate || p.fechaFin || '',
+                    status: p.status || 'active'
+                }));
+            }
+            const startDate = dept.startDate || dept.fechaInicio || '';
+            const endDate = dept.endDate || dept.fechaFin || '';
+            if (startDate || endDate) {
+                return [{ id: 'period-current', label: 'Periode actual', startDate, endDate, status: 'active' }];
+            }
+            return [];
+        }
+
+        function getProgramMetaById(id) {
+            return allPrograms.find(p => p.id === id) || null;
+        }
+
+        function groupMatchesSelectedPeriode(g) {
+            if (activeProg === 'ALL' || activePeriode === 'ALL') return true;
+            const prog = getProgramMetaById(activeProg);
+            if (!prog) return true;
+            const gid = String(g.periodId || g.periodoId || g.vigenciaId || '');
+            if (gid) return gid === activePeriode;
+            // Legacy groups without period tag belong to active period only
+            return activePeriode === String(prog.activePeriodId || '');
+        }
+
+        function _rebuildPrograms() {
+            const byId = new Map();
+
+            allDepartments.forEach(d => {
+                const id = d.id;
+                if (!id) return;
+                byId.set(id, {
+                    id,
+                    name: d.nombre || d.name || id,
+                    periods: normalizePeriodsFromDept(d),
+                    activePeriodId: d.activePeriodId || normalizePeriodsFromDept(d)[0]?.id || ''
+                });
+            });
+
+            allGrupos.forEach(g => {
+                const id = g.departamentoId;
+                if (!id) return;
+                if (!byId.has(id)) {
+                    byId.set(id, {
+                        id,
+                        name: g.departamentoNombre || id,
+                        periods: [],
+                        activePeriodId: ''
+                    });
+                }
+            });
+
+            allPrograms = [...byId.values()].sort((a, b) => String(a.name).localeCompare(String(b.name), 'ca'));
+        }
+
+        function _onRTUpdate() {
+            _rebuildPrograms();
+            if (!_rtInitialized) return; // still waiting for initial load
+            // Re-apply current filter and re-render dashboard
+            buildFilterUI();
+            applyFilter();
+        }
+
+        function setupRealtimeListeners() {
+            _unsubRT.push(onSnapshot(collection(db, 'expedientes'), snap => {
+                allExpedients = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                    .filter(e => e.estat !== 'Baixa' && e.estat !== 'Inactiu');
+                _rtReady = Math.min(_rtReady + 1, _RT_TOTAL);
+                _onRTUpdate();
+            }, err => console.warn('[dades-totals] expedientes:', err)));
+
+            _unsubRT.push(onSnapshot(collection(db, 'grupos'), snap => {
+                allGrupos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                _rtReady = Math.min(_rtReady + 1, _RT_TOTAL);
+                _onRTUpdate();
+            }, err => console.warn('[dades-totals] grupos:', err)));
+
+            _unsubRT.push(onSnapshot(collection(db, 'beneficiarios_grupos'), snap => {
+                allBenefGrupos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                _rtReady = Math.min(_rtReady + 1, _RT_TOTAL);
+                _onRTUpdate();
+            }, err => console.warn('[dades-totals] beneficiarios_grupos:', err)));
+
+            _unsubRT.push(onSnapshot(query(collection(db, 'actividades'), where('estado', '==', 'Activo')), snap => {
+                allActivitats = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                _rtReady = Math.min(_rtReady + 1, _RT_TOTAL);
+                _onRTUpdate();
+            }, err => console.warn('[dades-totals] actividades:', err)));
+
+            _unsubRT.push(onSnapshot(collection(db, 'departamentos'), snap => {
+                allDepartments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                _rtReady = Math.min(_rtReady + 1, _RT_TOTAL);
+                _onRTUpdate();
+            }, err => console.warn('[dades-totals] departamentos:', err)));
+
+            window.addEventListener('beforeunload', () => _unsubRT.forEach(u => u()));
+        }
+
+        function shouldEnableRealtime() {
+            return accessLevel === 'full';
+        }
+
+        // Keep loadAllData as a one-time fetch used only during initialization
+        async function loadAllData() {
+            const [expSnap, gruposSnap, benefSnap, activSnap, deptSnap] = await Promise.all([
+                getDocs(collection(db, 'expedientes')),
+                getDocs(collection(db, 'grupos')),
+                getDocs(collection(db, 'beneficiarios_grupos')),
+                getDocs(query(collection(db, 'actividades'), where('estado', '==', 'Activo'))),
+                getDocs(collection(db, 'departamentos'))
+            ]);
+
+            allExpedients  = expSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+                .filter(e => e.estat !== 'Baixa' && e.estat !== 'Inactiu');
+            allGrupos      = gruposSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            allBenefGrupos = benefSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            allActivitats  = activSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            allDepartments = deptSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            _rebuildPrograms();
+        }
+
+        // ─── FILTER LOGIC ────────────────────────────────────────────
+        // Returns Set of allowed expedient IDs, or null = all
+        function getAllowedByDepts(deptIds) {
+            const grupoIds = allGrupos.filter(g => deptIds.includes(g.departamentoId)).map(g => g.id);
+            return new Set(allBenefGrupos.filter(bg => grupoIds.includes(bg.grupoId)).map(bg => bg.beneficiarioId));
+        }
+
+        function getFilteredExpedients() {
+            let baseIds = null; // null = all active expedients
+
+            // Coordinator restriction always applies first
+            if (allowedDeptIds !== null) {
+                baseIds = getAllowedByDepts(allowedDeptIds);
+            }
+
+            // Program/activity filter on top
+            if (activeProg !== 'ALL' || activeActiv !== 'ALL') {
+                let grupoIds;
+                if (activeActiv !== 'ALL') {
+                    grupoIds = allGrupos
+                        .filter(g => activeActiv === '__noactivitat__' ? !g.actividadId : g.actividadId === activeActiv)
+                        .filter(g => activeProg === 'ALL' || g.departamentoId === activeProg)
+                        .filter(groupMatchesSelectedPeriode)
+                        .map(g => g.id);
+                } else {
+                    grupoIds = allGrupos
+                        .filter(g => g.departamentoId === activeProg)
+                        .filter(groupMatchesSelectedPeriode)
+                        .map(g => g.id);
+                }
+                const filterIds = new Set(allBenefGrupos.filter(bg => grupoIds.includes(bg.grupoId)).map(bg => bg.beneficiarioId));
+                // Intersect with base restriction
+                if (baseIds !== null) {
+                    return allExpedients.filter(e => filterIds.has(e.id) && baseIds.has(e.id));
+                }
+                return allExpedients.filter(e => filterIds.has(e.id));
+            }
+
+            // If only period is selected (with program), apply it too
+            if (activeProg !== 'ALL' && activePeriode !== 'ALL') {
+                const grupoIds = allGrupos
+                    .filter(g => g.departamentoId === activeProg)
+                    .filter(groupMatchesSelectedPeriode)
+                    .map(g => g.id);
+                const filterIds = new Set(allBenefGrupos.filter(bg => grupoIds.includes(bg.grupoId)).map(bg => bg.beneficiarioId));
+                if (baseIds !== null) return allExpedients.filter(e => baseIds.has(e.id) && filterIds.has(e.id));
+                return allExpedients.filter(e => filterIds.has(e.id));
+            }
+
+            if (baseIds !== null) {
+                return allExpedients.filter(e => baseIds.has(e.id));
+            }
+            return allExpedients;
+        }
+
+        // ─── FILTER UI ───────────────────────────────────────────────
+        function buildFilterUI() {
+            const progSel  = document.getElementById('sel-programa');
+            const perSel   = document.getElementById('sel-periode');
+            const activSel = document.getElementById('sel-activitat');
+
+            // Programs — respect coordinator restriction
+            const visiblePrograms = allowedDeptIds !== null
+                ? allPrograms.filter(p => allowedDeptIds.includes(p.id))
+                : allPrograms;
+
+            const prevProg = activeProg;
+            progSel.innerHTML = '<option value="ALL">Tots els programes</option>';
+            visiblePrograms.forEach(p => {
+                progSel.insertAdjacentHTML('beforeend', `<option value="${p.id}">${p.name}</option>`);
+            });
+
+            if (prevProg !== 'ALL' && visiblePrograms.some(p => p.id === prevProg)) {
+                activeProg = prevProg;
+                progSel.value = prevProg;
+            }
+
+            // If coordinator has exactly 1 dept, auto-select it
+            if (accessLevel === 'coordinator' && visiblePrograms.length === 1) {
+                activeProg = visiblePrograms[0].id;
+                progSel.value = activeProg;
+                updatePeriodeDropdown();
+                updateActivityDropdown();
+            } else {
+                updatePeriodeDropdown();
+            }
+
+            // Access badge
+            const badge = document.getElementById('access-scope-badge');
+            if (accessLevel === 'full') {
+                badge.className = 'access-scope-badge full';
+                badge.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Accés total';
+            } else {
+                badge.className = 'access-scope-badge restricted';
+                badge.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Vista restringida';
+            }
+        }
+
+        window.onProgramaChange = function() {
+            activeProg = document.getElementById('sel-programa').value;
+            activePeriode = 'ALL';
+            activeActiv = 'ALL';
+            updatePeriodeDropdown();
+            updateActivityDropdown();
+            applyFilter();
+        };
+
+        function updatePeriodeDropdown() {
+            const sel = document.getElementById('sel-periode');
+            sel.innerHTML = '<option value="ALL">Periode: tots</option>';
+
+            if (activeProg === 'ALL') {
+                activePeriode = 'ALL';
+                return;
+            }
+
+            const prog = getProgramMetaById(activeProg);
+            const periods = Array.isArray(prog?.periods) ? prog.periods : [];
+            periods.forEach(p => {
+                const datePart = (p.startDate || p.endDate) ? ` (${p.startDate || '-'} - ${p.endDate || '-'})` : '';
+                sel.insertAdjacentHTML('beforeend', `<option value="${p.id}">${p.label}${datePart}</option>`);
+            });
+
+            if (periods.length) {
+                activePeriode = String(prog?.activePeriodId || periods[0].id);
+                sel.value = activePeriode;
+            } else {
+                activePeriode = 'ALL';
+                sel.value = 'ALL';
+            }
+        }
+
+        function updateActivityDropdown() {
+            const sel = document.getElementById('sel-activitat');
+            const prev = activeActiv;
+            sel.innerHTML = '<option value="ALL">Totes les activitats</option>';
+
+            if (activeProg === 'ALL') {
+                activeActiv = 'ALL';
+                return;
+            }
+
+            const actividadIds = [...new Set(
+                allGrupos
+                    .filter(g => g.departamentoId === activeProg)
+                    .filter(groupMatchesSelectedPeriode)
+                    .map(g => g.actividadId)
+                    .filter(Boolean)
+            )];
+            const visibleActivitats = allActivitats.filter(a => actividadIds.includes(a.id));
+
+            // Also include groups that don't have an activitat but belong to the dept (show "Sense activitat")
+            const grupsWithoutActivitat = allGrupos.filter(g => g.departamentoId === activeProg && !g.actividadId).filter(groupMatchesSelectedPeriode);
+            if (grupsWithoutActivitat.length > 0) {
+                sel.insertAdjacentHTML('beforeend', '<option value="__noactivitat__">Sense activitat assignada</option>');
+            }
+
+            visibleActivitats.forEach(a => {
+                sel.insertAdjacentHTML('beforeend', `<option value="${a.id}">${a.nombre}</option>`);
+            });
+
+            if (prev && [...sel.options].some(o => o.value === prev)) {
+                sel.value = prev;
+                activeActiv = prev;
+            } else {
+                sel.value = 'ALL';
+                activeActiv = 'ALL';
+            }
+        }
+
+        window.applyFilter = function() {
+            activePeriode = document.getElementById('sel-periode').value;
+            if (activeProg !== 'ALL') updateActivityDropdown();
+            activeActiv = document.getElementById('sel-activitat').value;
+            const filtered = getFilteredExpedients();
+            renderDashboard(filtered);
+            updateFilterBadge(filtered.length);
+        };
+
+        window.resetFilter = function() {
+            activeProg = 'ALL';
+            activePeriode = 'ALL';
+            activeActiv = 'ALL';
+            document.getElementById('sel-programa').value = 'ALL';
+            document.getElementById('sel-periode').innerHTML = '<option value="ALL">Periode: tots</option>';
+            document.getElementById('sel-activitat').innerHTML = '<option value="ALL">Totes les activitats</option>';
+            // If coordinator, re-apply their restriction
+            if (accessLevel === 'coordinator' && allPrograms.filter(p => allowedDeptIds.includes(p.id)).length === 1) {
+                activeProg = allPrograms.filter(p => allowedDeptIds.includes(p.id))[0].id;
+                document.getElementById('sel-programa').value = activeProg;
+                updatePeriodeDropdown();
+                updateActivityDropdown();
+            }
+            const filtered = getFilteredExpedients();
+            renderDashboard(filtered);
+            updateFilterBadge(filtered.length);
+        };
+
+        function updateFilterBadge(count) {
+            const prog = document.getElementById('sel-programa');
+            const per = document.getElementById('sel-periode');
+            const activ = document.getElementById('sel-activitat');
+            const progName = prog.options[prog.selectedIndex]?.text;
+            const perName = per.options[per.selectedIndex]?.text;
+            const activName = activ.options[activ.selectedIndex]?.text;
+            let label = `<strong>${count}</strong> persones`;
+            if (activeProg !== 'ALL') label += ` · ${progName}`;
+            if (activePeriode !== 'ALL') label += ` · ${perName}`;
+            if (activeActiv !== 'ALL') label += ` · ${activName}`;
+            document.getElementById('filter-info-badge').innerHTML = label;
+        }
+
+        // ─── STATS + CHARTS ──────────────────────────────────────────
+        function calcularEdat(dataStr) {
+            if (!dataStr || dataStr === "-") return null;
+            try {
+                let parts = dataStr.split(/[-/]/);
+                let naix = parts[0].length === 4
+                    ? new Date(parts[0], parts[1] - 1, parts[2])
+                    : new Date(parts[2], parts[1] - 1, parts[0]);
+                const avui = new Date();
+                let edat = avui.getFullYear() - naix.getFullYear();
+                if (avui.getMonth() < naix.getMonth() || (avui.getMonth() === naix.getMonth() && avui.getDate() < naix.getDate())) edat--;
+                return isNaN(edat) ? null : edat;
+            } catch(e) { return null; }
+        }
+
+        function renderDashboard(actius) {
+            statsGenere = {}; statsNac = {}; statsRangs = {}; statsHab = {};
+            statsFam = {}; statsSitu = {}; statsIngressos = {}; statsLab = {};
+            statsRangs = { "Menors (<18)": 0, "Joves (18-30)": 0, "Adults (31-64)": 0, "Sèniors (+65)": 0 };
+            let sumaEdat = 0, countEdat = 0;
+
+            actius.forEach(u => {
+                const dp  = u.dades_personals || {};
+                const sl  = u.socio_laboral  || {};
+                const hab = u.habitatge      || {};
+
+                const g = (dp.genere || u.genere || "NC").toUpperCase();
+                statsGenere[g] = (statsGenere[g] || 0) + 1;
+
+                const situ = u.situ_adm || u.situacio_administrativa || sl.situ_adm || "NC";
+                statsSitu[situ] = (statsSitu[situ] || 0) + 1;
+
+                const lab = sl.situacio_laboral || sl.laboral || u.laboral || "NC";
+                statsLab[lab] = (statsLab[lab] || 0) + 1;
+
+                const ing = u.ingressos || sl.ingressos || "NC";
+                statsIngressos[ing] = (statsIngressos[ing] || 0) + 1;
+
+                const nac = dp.nacionalitat || sl.origen || u.nacionalitat || "NC";
+                statsNac[nac] = (statsNac[nac] || 0) + 1;
+
+                const tipHab = hab.context || hab.tipus || u.tipus_hab || "NC";
+                statsHab[tipHab] = (statsHab[tipHab] || 0) + 1;
+
+                const fam = u.familia || u.unitat_familiar || hab.unitat_familiar || "NC";
+                statsFam[fam] = (statsFam[fam] || 0) + 1;
+
+                const e = calcularEdat(dp.data_naixement || u.naixement);
+                if (e !== null) {
+                    sumaEdat += e; countEdat++;
+                    if (e < 18)       statsRangs["Menors (<18)"]++;
+                    else if (e <= 30) statsRangs["Joves (18-30)"]++;
+                    else if (e <= 64) statsRangs["Adults (31-64)"]++;
+                    else              statsRangs["Sèniors (+65)"]++;
+                }
+            });
+
+            // Cards
+            document.getElementById('count-homes').innerText         = statsGenere["HOME"] || 0;
+            document.getElementById('count-dones').innerText         = statsGenere["DONA"] || 0;
+            document.getElementById('count-nobinari').innerText      = statsGenere["NO BINARI"] || statsGenere["NO_BINARI"] || 0;
+            document.getElementById('count-altres-gen').innerText    = (statsGenere["ALTRES"] || 0) + (statsGenere["NC"] || 0);
+            document.getElementById('count-regular').innerText       = statsSitu["Regularitzada"] || 0;
+            document.getElementById('count-irregular').innerText     = statsSitu["Irregular"] || 0;
+            document.getElementById('count-asil').innerText          = statsSitu["Sol·licitant Asil"] || 0;
+            document.getElementById('count-altres-situ').innerText   = (statsSitu["Comunitària"] || 0) + (statsSitu["Altres"] || 0);
+            document.getElementById('count-atur').innerText          = statsLab["Aturat/da"] || 0;
+            document.getElementById('count-treball').innerText       = statsLab["Treball actiu"] || 0;
+            document.getElementById('count-sense-ingressos').innerText = statsIngressos["Sense Ingressos"] || 0;
+            document.getElementById('count-ajudes').innerText        = (statsIngressos["RGC / IMV"] || 0) + (statsIngressos["Ajudes puntuals"] || 0);
+            document.getElementById('avg-total').innerText           = countEdat > 0 ? (sumaEdat / countEdat).toFixed(1) + " anys" : "-";
+
+            // Charts — destroy first
+            ['chartNac','chartEdat','chartHab','chartFam'].forEach(id => {
+                if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+            });
+
+            const colors = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#94a3b8','#f97316','#84cc16'];
+            const mkConfig = (data) => ({
+                type: 'doughnut',
+                data: { labels: Object.keys(data), datasets: [{ data: Object.values(data), backgroundColor: colors }] },
+                options: { plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
+            });
+
+            if (Object.keys(statsNac).length)  charts.chartNac  = new Chart(document.getElementById('chartNac'),  mkConfig(statsNac));
+            if (Object.keys(statsRangs).length) charts.chartEdat = new Chart(document.getElementById('chartEdat'), mkConfig(statsRangs));
+            if (Object.keys(statsHab).length)   charts.chartHab  = new Chart(document.getElementById('chartHab'),  mkConfig(statsHab));
+            if (Object.keys(statsFam).length)   charts.chartFam  = new Chart(document.getElementById('chartFam'),  mkConfig(statsFam));
+        }
+
+        // ─── EXPORT ──────────────────────────────────────────────────
+        window.exportSummaryToExcel = function() {
+            const ent = (() => {
+                try {
+                    const raw = JSON.parse(localStorage.getItem('nexe_config_entitat') || '{}');
+                    return {
+                        nom: raw.nom || 'NexeSocial',
+                        cif: raw.cif || '',
+                        telefon: raw.telefon || '',
+                        email: raw.email || '',
+                        adreca: raw.adreca || ''
+                    };
+                } catch {
+                    return { nom: 'NexeSocial', cif: '', telefon: '', email: '', adreca: '' };
+                }
+            })();
+
+            const prog  = document.getElementById('sel-programa');
+            const per   = document.getElementById('sel-periode');
+            const activ = document.getElementById('sel-activitat');
+            const progName  = prog.options[prog.selectedIndex]?.text  || 'Tots';
+            const perName   = per.options[per.selectedIndex]?.text   || 'Tots';
+            const activName = activ.options[activ.selectedIndex]?.text || 'Totes';
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet([
+                { A: `${ent.nom.toUpperCase()}` },
+                { A: [ent.cif, ent.telefon, ent.email].filter(Boolean).join(' · ') },
+                { A: `${ent.adreca || ''}` },
+                { A: "" },
+                { A: `RESUM ESTADÍSTIC ${ent.nom.toUpperCase()} ${new Date().getFullYear()}` },
+                { A: `Programa: ${progName}  |  Periode: ${perName}  |  Activitat: ${activName}` }
+            ], { skipHeader: true });
+            const addSection = (title, obj) => {
+                const rows = Object.keys(obj).map(k => ({ Concepte: k, Total: obj[k] }));
+                XLSX.utils.sheet_add_json(ws, [{ A: "" }], { skipHeader: true, origin: -1 });
+                XLSX.utils.sheet_add_json(ws, [{ A: title }], { skipHeader: true, origin: -1 });
+                XLSX.utils.sheet_add_json(ws, rows, { origin: -1 });
+            };
+            addSection("GÈNERE", statsGenere);
+            addSection("SITUACIÓ ADMINISTRATIVA", statsSitu);
+            addSection("SITUACIÓ LABORAL", statsLab);
+            addSection("INGRESSOS", statsIngressos);
+            addSection("NACIONALITAT", statsNac);
+            addSection("EDATS", statsRangs);
+            addSection("HABITATGE", statsHab);
+            addSection("UNITAT FAMILIAR", statsFam);
+            XLSX.utils.book_append_sheet(wb, ws, "Resum");
+            const suffix = activeProg !== 'ALL' ? `_${progName.replace(/\s/g,'_')}` : '';
+            XLSX.writeFile(wb, `Resum_Nexe_${new Date().getFullYear()}${suffix}.xlsx`);
+        };
+
+        window.exportFullToExcel = function() {
+            const filtered = getFilteredExpedients();
+            const wb = XLSX.utils.book_new();
+
+            const addSheet = (name, obj) => {
+                const rows = Object.keys(obj || {}).map(k => ({ Concepte: k, Total: obj[k] }));
+                const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{ Concepte: 'Sense dades', Total: 0 }]);
+                XLSX.utils.book_append_sheet(wb, ws, name.slice(0, 31));
+            };
+
+            const rawRows = filtered.map((u) => {
+                const dp = u.dades_personals || {};
+                const sl = u.socio_laboral || {};
+                const hab = u.habitatge || {};
+                return {
+                    Expedient: u.numero_expediente || u.id || '',
+                    Nom: [dp.nom || u.nombre || '', dp.cognoms || ''].join(' ').trim(),
+                    Genere: dp.genere || u.genere || '',
+                    DataNaixement: dp.data_naixement || u.naixement || '',
+                    Nacionalitat: dp.nacionalitat || sl.origen || '',
+                    SituacioAdministrativa: u.situ_adm || u.situacio_administrativa || sl.situ_adm || '',
+                    SituacioLaboral: sl.situacio_laboral || sl.laboral || u.laboral || '',
+                    Ingressos: u.ingressos || sl.ingressos || '',
+                    Habitatge: hab.context || hab.tipus || u.tipus_hab || '',
+                    UnitatFamiliar: u.familia || u.unitat_familiar || hab.unitat_familiar || ''
+                };
+            });
+
+            addSheet('Genere', statsGenere);
+            addSheet('SituacioAdmin', statsSitu);
+            addSheet('SituacioLaboral', statsLab);
+            addSheet('Ingressos', statsIngressos);
+            addSheet('Nacionalitat', statsNac);
+            addSheet('Edats', statsRangs);
+            addSheet('Habitatge', statsHab);
+            addSheet('UnitatFamiliar', statsFam);
+
+            const wsRaw = XLSX.utils.json_to_sheet(rawRows.length ? rawRows : [{ Info: 'Sense registres per al filtre actual' }]);
+            XLSX.utils.book_append_sheet(wb, wsRaw, 'DadesCompletes');
+
+            const d = new Date();
+            const stamp = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+            XLSX.writeFile(wb, `Nexe_Impacte_Complet_${stamp}.xlsx`);
+        };
+
+        // ─── INIT ────────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await checkAccess();
+
+                if (accessLevel === 'denied') {
+                    document.getElementById('page-loading').style.display = 'none';
+                    document.getElementById('access-denied').style.display = 'block';
+                    return;
+                }
+
+                await loadAllData();
+                buildFilterUI();
+
+                const filtered = getFilteredExpedients();
+                renderDashboard(filtered);
+                updateFilterBadge(filtered.length);
+
+                document.getElementById('page-loading').style.display = 'none';
+                // Start real-time listeners only for full-access profiles.
+                if (shouldEnableRealtime()) {
+                    _rtInitialized = true;
+                    setupRealtimeListeners();
+                }
+                document.getElementById('main-dash').style.display    = 'block';
+
+            } catch(err) {
+                console.error("Error:", err);
+                document.getElementById('page-loading').innerHTML =
+                    `<div style="color:#b91c1c;">Error carregant dades: ${err.message}</div>`;
+            }
+        });
+    </script>
+</body>
+</html>

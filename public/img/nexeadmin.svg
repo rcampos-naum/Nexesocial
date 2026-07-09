@@ -1,0 +1,15 @@
+<svg width="450" height="120" viewBox="0 0 450 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="20" y="30" width="25" height="60" rx="4" fill="#0F172A"/>
+  <path d="M45 30L75 90" stroke="#2563EB" stroke-width="12" stroke-linecap="round"/>
+  <rect x="75" y="30" width="25" height="60" rx="4" fill="#2563EB"/>
+  
+  <text x="120" y="65" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="42" font-weight="700" letter-spacing="-1">
+    <tspan fill="#0F172A">Nexe</tspan><tspan fill="#2563EB">Admin</tspan>
+  </text>
+  
+  <text x="122" y="92" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="400" fill="#64748B" letter-spacing="1.5">
+    SUIT DE ADMINISTRACIÓN
+  </text>
+  
+  <rect x="122" y="102" width="40" height="3" rx="1.5" fill="#2563EB" opacity="0.3"/>
+</svg>

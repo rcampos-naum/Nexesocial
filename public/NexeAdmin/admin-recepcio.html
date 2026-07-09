@@ -1,0 +1,1044 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" type="image/svg+xml" href="../img/nexeadmin-icon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0f172a; --accent: #3b82f6; --success: #10b981;
+            --warning: #f59e0b; --danger: #ef4444; --text-main: #1e293b;
+            --text-muted: #64748b; --bg-body: #f8fafc; --border: #e2e8f0;
+        }
+        body { margin: 0; background: var(--bg-body); color: var(--text-main); font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; }
+
+        .content-wrapper { padding: 40px 50px; }
+
+        .page-header { margin-bottom: 32px; }
+        .page-header h1 { margin: 0 0 4px; font-weight: 800; font-size: 1.6rem; color: var(--primary); }
+        .page-header p  { margin: 0; color: var(--text-muted); font-size: 0.88rem; }
+
+        /* Tabs */
+        .tab-bar { display: flex; gap: 6px; margin-bottom: 24px; background: white; border: 1px solid var(--border); border-radius: 14px; padding: 6px; width: fit-content; }
+        .tab-btn { padding: 9px 20px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; color: var(--text-muted); background: transparent; transition: all .15s; display: flex; align-items: center; gap: 8px; }
+        .tab-btn.active { background: var(--primary); color: white; }
+        .tab-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; flex-shrink: 0; }
+
+        /* Search card */
+        .card { background: white; border-radius: 16px; border: 1px solid var(--border); padding: 28px; box-shadow: 0 4px 12px rgba(0,0,0,.05); margin-bottom: 24px; }
+        .card-title { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin: 0 0 18px; }
+
+        .search-row { display: flex; gap: 10px; align-items: flex-end; }
+        .search-field { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .search-field label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+        .search-field input {
+            padding: 11px 16px; border: 1.5px solid var(--border); border-radius: 10px;
+            font-size: 0.95rem; font-family: inherit; outline: none; color: var(--text-main);
+            transition: border-color .15s; background: white;
+        }
+        .search-field input:focus { border-color: var(--accent); }
+        #f-loc { font-family: 'Courier New', monospace; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+        #f-loc::placeholder { font-weight: 400; letter-spacing: 0.04em; text-transform: none; }
+
+        .btn-search {
+            padding: 11px 24px; background: var(--primary); color: white; border: none; border-radius: 10px;
+            font-weight: 800; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px;
+            transition: background .15s; white-space: nowrap; align-self: flex-end;
+        }
+        .btn-search:hover { background: #1e293b; }
+        .btn-search svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+
+        /* QR section */
+        .qr-section { border-top: 1px solid #f1f5f9; margin-top: 22px; padding-top: 22px; }
+        .qr-section-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin: 0 0 12px; }
+        .btn-camera { padding: 9px 16px; background: #f8fafc; color: #334155; border: 1.5px solid var(--border); border-radius: 9px; font-weight: 700; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all .15s; }
+        .btn-camera svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; }
+        .btn-camera:hover { background: #f1f5f9; }
+        .qr-video-wrap { position: relative; border-radius: 12px; overflow: hidden; background: #0f172a; margin-top: 12px; }
+        #qr-video { width: 100%; max-height: 260px; object-fit: cover; display: block; }
+        #qr-canvas-scan { display: none; }
+        .qr-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+        .qr-frame { width: 150px; height: 150px; border: 3px solid rgba(255,255,255,.7); border-radius: 12px; box-shadow: 0 0 0 9999px rgba(0,0,0,.35); }
+
+        /* States */
+        .alert-box { padding: 14px 18px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; margin-bottom: 16px; display: none; }
+        .alert-error { background: #fef2f2; border: 1.5px solid #fecaca; color: #b91c1c; }
+        .loading-row { padding: 28px; text-align: center; color: var(--text-muted); font-size: 0.85rem; display: none; }
+
+        /* Result */
+        #result-box { display: none; }
+        .result-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 22px; }
+        .result-avatar { width: 50px; height: 50px; border-radius: 14px; background: #eff6ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .result-avatar svg { width: 26px; height: 26px; fill: none; stroke: #3b82f6; stroke-width: 2; }
+        .result-name { font-size: 1.3rem; font-weight: 900; color: var(--primary); margin: 0 0 4px; }
+        .result-loc  { font-family: 'Courier New', monospace; font-size: 0.82rem; color: var(--text-muted); margin: 0; letter-spacing: 0.1em; }
+
+        .result-badge { display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; margin-left: auto; flex-shrink: 0; }
+
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+        .info-field { display: flex; flex-direction: column; gap: 3px; }
+        .info-label { font-size: 0.67rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.08em; }
+        .info-value { font-size: 0.95rem; font-weight: 700; color: var(--text-main); }
+        .info-full   { grid-column: 1 / -1; }
+
+        /* Arrive button */
+        .btn-arrive {
+            width: 100%; padding: 15px; background: linear-gradient(135deg, #16a34a, #15803d);
+            color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 900; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: all .15s; box-shadow: 0 4px 14px rgba(22,163,74,.3);
+        }
+        .btn-arrive svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+        .btn-arrive:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(22,163,74,.4); }
+        .btn-arrive:disabled { background: #94a3b8; box-shadow: none; cursor: default; transform: none; }
+
+        .arrived-banner { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: linear-gradient(135deg,#f0fdf4,#dcfce7); border: 2px solid #16a34a; border-radius: 12px; }
+        .arrived-banner svg { width: 32px; height: 32px; fill: none; stroke: #16a34a; stroke-width: 2.5; flex-shrink: 0; }
+        .arrived-title { font-size: 1rem; font-weight: 900; color: #166534; margin: 0 0 2px; }
+        .arrived-sub   { font-size: 0.82rem; color: #166534; margin: 0; opacity: .8; }
+
+        /* Name search list */
+        #name-results-list { display: flex; flex-direction: column; gap: 0; }
+        .agenda-row {
+            display: flex; align-items: center; padding: 14px 18px; border-bottom: 1px solid #f8fafc;
+            cursor: pointer; transition: background .12s; gap: 16px;
+        }
+        .agenda-row:last-child { border-bottom: none; }
+        .agenda-row:hover { background: #f8fafc; }
+        .row-time { font-weight: 800; color: var(--accent); min-width: 60px; font-size: 0.9rem; }
+        .row-info { flex: 1; }
+        .row-name  { font-weight: 700; font-size: 0.92rem; color: var(--text-main); }
+        .row-meta  { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+        .row-badge { font-size: 0.67rem; font-weight: 800; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; flex-shrink: 0; }
+
+        /* Toast */
+        #toast-rec { position: fixed; bottom: 24px; right: 24px; z-index: 40000; padding: 12px 18px; border-radius: 12px; color: white; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateY(8px); transition: all .3s; pointer-events: none; }
+
+        /* Beneficiari Autocomplete */
+        .ac-wrap { position: relative; }
+        .ac-list { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: white; border: 1.5px solid var(--accent); border-radius: 10px; max-height: 220px; overflow-y: auto; z-index: 500; box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+        .ac-list.open { display: block; }
+        .ac-item { padding: 10px 14px; cursor: pointer; font-size: 0.87rem; color: var(--text-main); border-bottom: 1px solid #f8fafc; transition: background .1s; }
+        .ac-item:last-child { border-bottom: none; }
+        .ac-item:hover { background: #f0f9ff; }
+        .ac-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+    <script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"></script>
+    <style>
+        @media print {
+            body > *:not(main), .admin-sidebar, .page-header, .tab-bar, #panel-loc, #panel-nom { display: none !important; }
+            #card-print-qr { page-break-inside: avoid; border: none !important; box-shadow: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="admin-sidebar"></aside>
+
+    <main class="content-wrapper">
+        <div class="page-header">
+            <h1>Recepcio</h1>
+            <p>Registre d'arribades i consulta de cites</p>
+        </div>
+
+        <!-- Printable check-in QR card -->
+        <div id="card-print-qr" style="display:flex;align-items:center;gap:24px;background:white;border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:24px;max-width:520px;">
+            <canvas id="checkin-qr-canvas" style="border-radius:10px;flex-shrink:0;"></canvas>
+            <div style="flex:1;">
+                <div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;margin-bottom:4px;">QR Check-in per al passadis</div>
+                <div style="font-size:0.9rem;font-weight:700;color:#1e293b;margin-bottom:2px;">https://nexesocial-bc6c4.web.app/check-in.html</div>
+                <div style="font-size:0.8rem;color:#64748b;line-height:1.4;margin-bottom:14px;">Els usuaris escanegen aquest QR i confirmen la seva arribada des del mobil.</div>
+                <button onclick="window.print()" style="background:#0f172a;color:white;border:none;border-radius:10px;padding:9px 18px;font-size:0.83rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    Imprimir QR
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabs + SolÂ·licitud button -->
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+            <div class="tab-bar" style="margin-bottom:0;">
+                <button class="tab-btn active" id="tab-loc" onclick="_switchTab('loc')">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 20h3"></path></svg>
+                    Per Localizador / QR
+                </button>
+                <button class="tab-btn" id="tab-nom" onclick="_switchTab('nom')">
+                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    Per Nom
+                </button>
+            </div>
+            <button onclick="_openSolModal()" style="padding:9px 18px;background:#3b82f6;color:white;border:none;border-radius:10px;font-weight:800;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap;flex-shrink:0;">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Nova SolÂ·licitud
+            </button>
+        </div>
+
+        <!-- TAB: Localizador -->
+        <div id="panel-loc">
+            <div class="card">
+                <p class="card-title">Cercar per codi de cita</p>
+                <div class="search-row">
+                    <div class="search-field">
+                        <label>Localizador</label>
+                        <input type="text" id="f-loc" placeholder="Ex: NX26ABCD12" maxlength="10" autocomplete="off"
+                            oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter') _buscarLoc()">
+                    </div>
+                    <button class="btn-search" onclick="_buscarLoc()">
+                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        Cercar
+                    </button>
+                </div>
+
+                <!-- QR scanner -->
+                <div class="qr-section">
+                    <p class="qr-section-label">O escaneja el QR</p>
+                    <button class="btn-camera" id="btn-cam" onclick="_toggleCamera()">
+                        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                        Obrir camara
+                    </button>
+                    <div id="cam-wrap" style="display:none;max-width:500px;">
+                        <div class="qr-video-wrap">
+                            <video id="qr-video" autoplay muted playsinline></video>
+                            <div class="qr-overlay"><div class="qr-frame"></div></div>
+                        </div>
+                        <canvas id="qr-canvas-scan"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div class="loading-row" id="spinner-loc">
+                <svg style="animation:spin 1s linear infinite;width:22px;height:22px;fill:none;stroke:#3b82f6;stroke-width:2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity=".2"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+                <span style="display:block;margin-top:8px;">Cercant...</span>
+            </div>
+            <div class="alert-box alert-error" id="err-loc"></div>
+
+            <!-- Result -->
+            <div class="card" id="result-box">
+                <p class="card-title">Detall de la cita</p>
+                <div class="result-header">
+                    <div class="result-avatar">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    </div>
+                    <div style="flex:1;">
+                        <p class="result-name" id="res-nom">â€”</p>
+                        <p class="result-loc"  id="res-loc">â€”</p>
+                    </div>
+                    <span class="result-badge" id="res-badge">â€”</span>
+                </div>
+                <div class="info-grid">
+                    <div class="info-field"><span class="info-label">Hora</span><span class="info-value" id="res-hora">â€”</span></div>
+                    <div class="info-field"><span class="info-label">Sala</span><span class="info-value" id="res-sala">â€”</span></div>
+                    <div class="info-field"><span class="info-label">Data</span><span class="info-value" id="res-data">â€”</span></div>
+                    <div class="info-field"><span class="info-label">Estat</span><span class="info-value" id="res-estat">â€”</span></div>
+                    <div class="info-field info-full"><span class="info-label">Motiu</span><span class="info-value" id="res-motiu">â€”</span></div>
+                    <div class="info-field info-full"><span class="info-label">Tecnics assignats</span><span class="info-value" id="res-tecnic">â€”</span></div>
+                </div>
+                <div id="arrive-action">
+                    <button class="btn-arrive" id="btn-arrive" onclick="_marcarArribat()">
+                        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Ha Arribat
+                    </button>
+                </div>
+                <div class="arrived-banner" id="arrived-banner" style="display:none;">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <div>
+                        <p class="arrived-title">Arribada registrada!</p>
+                        <p class="arrived-sub" id="arrived-time">â€”</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: Nom -->
+        <div id="panel-nom" style="display:none;">
+            <div class="card">
+                <p class="card-title">Cercar cites del dia per nom</p>
+                <div class="search-row">
+                    <div class="search-field">
+                        <label>Nom del beneficiari</label>
+                        <input type="text" id="f-nom" placeholder="Ex: Joan Garcia..." autocomplete="off"
+                            onkeydown="if(event.key==='Enter') _buscarNom()">
+                    </div>
+                    <div class="search-field" style="max-width:160px;">
+                        <label>Data</label>
+                        <input type="date" id="f-data-nom">
+                    </div>
+                    <button class="btn-search" onclick="_buscarNom()">
+                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        Cercar
+                    </button>
+                </div>
+                <p style="font-size:0.78rem;color:#94a3b8;margin:14px 0 0;">Carrega les cites del dia seleccionat i filtra per nom (la desencriptaciÃ³ es fa localment).</p>
+            </div>
+
+            <div class="loading-row" id="spinner-nom">
+                <svg style="animation:spin 1s linear infinite;width:22px;height:22px;fill:none;stroke:#3b82f6;stroke-width:2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity=".2"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+                <span style="display:block;margin-top:8px;">Desencriptant i filtrant...</span>
+            </div>
+            <div class="alert-box alert-error" id="err-nom"></div>
+
+            <div class="card" id="name-results-box" style="display:none;">
+                <p class="card-title" id="name-results-title">Resultats</p>
+                <div id="name-results-list"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- SolÂ·licitud Modal -->
+    <div id="modal-sol" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);backdrop-filter:blur(8px);z-index:30000;align-items:center;justify-content:center;padding:20px;" onclick="if(event.target===this)_closeSolModal()">
+        <div style="background:white;border-radius:20px;padding:28px 32px;width:100%;max-width:560px;box-shadow:0 24px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+                <div>
+                    <h2 style="margin:0;font-size:1.1rem;font-weight:900;color:#0f172a;">Nova SolÂ·licitud de Cita</h2>
+                    <p style="margin:4px 0 0;color:#64748b;font-size:0.82rem;">Registra una solÂ·licitud d'atenciÃ³ per a un professional</p>
+                </div>
+                <button onclick="_closeSolModal()" style="background:#f1f5f9;border:none;border-radius:10px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="16" height="16" fill="none" stroke="#64748b" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <div class="alert-box alert-error" id="err-sol"></div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div class="search-field ac-wrap" style="grid-column:1/-1;">
+                    <label>Nom del beneficiari / persona</label>
+                    <input type="text" id="sol-nom" placeholder="Cerca per nom o expedient... (o escriu lliurement)" autocomplete="off">
+                    <div id="sol-ben-dropdown" class="ac-list"></div>
+                    <input type="hidden" id="sol-expedient-id">
+                </div>
+                <div class="search-field">
+                    <label>TelÃ¨fon (opcional)</label>
+                    <input type="tel" id="sol-tel" placeholder="+34 600 000 000">
+                </div>
+                <div class="search-field">
+                    <label>Prioritat</label>
+                    <select id="sol-prioritat" style="padding:11px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:0.95rem;font-family:inherit;outline:none;color:var(--text-main);transition:border-color .15s;">
+                        <option value="normal">Normal</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+                <div class="search-field" style="grid-column:1/-1;">
+                    <label>Departament</label>
+                    <select id="sol-dept" onchange="_carregarTecnics()" style="padding:11px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:0.95rem;font-family:inherit;outline:none;color:var(--text-main);transition:border-color .15s;">
+                        <option value="">Carregant departaments...</option>
+                    </select>
+                </div>
+                <div class="search-field" style="grid-column:1/-1;">
+                    <label>TÃ¨cnic / Professional (opcional)</label>
+                    <select id="sol-tecnic" onchange="_loadTecnicSlots()" style="padding:11px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:0.95rem;font-family:inherit;outline:none;color:var(--text-main);transition:border-color .15s;">
+                        <option value="">-- Sense assignar (ho gestionarÃ  el departament) --</option>
+                    </select>
+                </div>
+                <div class="search-field" id="sol-slot-box" style="grid-column:1/-1;display:none;">
+                    <label>Disponibilitat del professional</label>
+                    <div id="sol-slot-help" style="font-size:0.8rem;color:#64748b;margin-bottom:8px;"></div>
+                    <select id="sol-action-mode" onchange="_onSolicitudActionModeChange()" style="padding:11px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:0.92rem;font-family:inherit;outline:none;color:var(--text-main);transition:border-color .15s;margin-bottom:8px;">
+                        <option value="pending">Enviar a pendents</option>
+                        <option value="direct">Reservar cita en un hueco disponible</option>
+                    </select>
+                    <select id="sol-slot-select" style="display:none;padding:11px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:0.92rem;font-family:inherit;outline:none;color:var(--text-main);transition:border-color .15s;">
+                        <option value="">Selecciona franja disponible...</option>
+                    </select>
+                </div>
+                <div class="search-field" style="grid-column:1/-1;">
+                    <label>Motiu de la cita (opcional)</label>
+                    <textarea id="sol-motiu" rows="3" placeholder="Indica el motiu o necessitat..." style="padding:11px 16px;border:1.5px solid var(--border);border-radius:10px;font-size:0.95rem;font-family:inherit;outline:none;color:var(--text-main);resize:vertical;width:100%;box-sizing:border-box;"></textarea>
+                </div>
+            </div>
+
+            <div id="sol-success" style="display:none;margin-top:14px;padding:14px 18px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #16a34a;border-radius:12px;align-items:center;gap:12px;">
+                <svg width="24" height="24" fill="none" stroke="#16a34a" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <div style="font-weight:800;color:#166534;font-size:0.9rem;">SolÂ·licitud creada! El professional rebrÃ  la notificaciÃ³.</div>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:18px;">
+                <button class="btn-search" id="btn-sol-submit" onclick="_crearSolicitud()" style="flex:1;justify-content:center;">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Crear solÂ·licitud
+                </button>
+                <button onclick="_closeSolModal()" style="padding:11px 18px;background:#f1f5f9;border:none;border-radius:10px;font-weight:700;font-size:0.85rem;cursor:pointer;color:#64748b;">Tancar</button>
+            </div>
+            <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f1f5f9;">
+                <a href="admin-solicituds.html" style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:#f8fafc;border:1.5px solid var(--border);border-radius:9px;text-decoration:none;color:var(--text-main);font-weight:700;font-size:0.82rem;">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                    Veure totes les solÂ·licituds pendents
+                </a>
+            </div>
+        </div>
+    </div>
+    <div id="toast-rec"></div>
+
+    <script src="./nexeadmin-sidebar.js"></script>
+    <script src="../security-check.js"></script>
+    <script type="module">await window.checkModuleAccess('NexeAdmin');</script>
+    <script type="module">
+        import '../auth-manager.js';
+        import { db } from '../firebase-config.js';
+        import {
+            collection, query, where, getDocs, updateDoc, addDoc, doc, serverTimestamp
+        } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+        import { waitForCrypto } from '../vault-init.js';
+        import { decryptField } from '../crypto-utils.js';
+
+        const ESTAT_LBL = { pendent:'Pendent', confirmat:'Confirmat', 'en-curs':'En Curs', finalitzada:'Finalitzada', cancellada:'CancelÂ·lada', arribat:'Ha Arribat' };
+        const ESTAT_CLR = { pendent:'#f59e0b', confirmat:'#3b82f6', 'en-curs':'#8b5cf6', finalitzada:'#10b981', cancellada:'#ef4444', arribat:'#16a34a' };
+
+        async function dec(enc) {
+            if (!enc) return '';
+            try { return await decryptField(enc); } catch { return ''; }
+        }
+        function toDateStr(d) {
+            return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        }
+
+        // Generate printable check-in QR without external QR JS dependency
+        window.addEventListener('DOMContentLoaded', () => {
+            const target = document.getElementById('checkin-qr-canvas');
+            if (!target) return;
+            const checkinUrl = 'https://nexesocial-bc6c4.web.app/check-in.html';
+            const img = document.createElement('img');
+            img.id = 'checkin-qr-canvas';
+            img.width = 110;
+            img.height = 110;
+            img.alt = 'QR check-in';
+            img.style.borderRadius = '10px';
+            img.style.flexShrink = '0';
+            img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(checkinUrl);
+            target.replaceWith(img);
+        });
+
+        // Set default date to today
+        document.getElementById('f-data-nom').value = toDateStr(new Date());
+
+        // Pre-fill from URL ?loc=XXX
+        const urlLoc = new URLSearchParams(location.search).get('loc');
+        if (urlLoc) {
+            document.getElementById('f-loc').value = urlLoc.toUpperCase();
+            setTimeout(() => window._buscarLoc(), 500);
+        }
+
+        // â”€â”€â”€ Tab switching â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        window._switchTab = function(tab) {
+            document.getElementById('panel-loc').style.display = tab === 'loc' ? '' : 'none';
+            document.getElementById('panel-nom').style.display = tab === 'nom' ? '' : 'none';
+            document.getElementById('tab-loc').classList.toggle('active', tab === 'loc');
+            document.getElementById('tab-nom').classList.toggle('active', tab === 'nom');
+        };
+
+        window._openSolModal = function() {
+            _loadSolDepts();
+            document.getElementById('modal-sol').style.display = 'flex';
+        };
+        window._closeSolModal = function() {
+            document.getElementById('modal-sol').style.display = 'none';
+        };
+
+        // â”€â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        function showToast(msg, ok) {
+            const t = document.getElementById('toast-rec');
+            const icon = ok
+                ? '<svg style="width:18px;height:18px;fill:white;flex-shrink:0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>'
+                : '<svg style="width:18px;height:18px;fill:white;flex-shrink:0" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
+            t.innerHTML = icon + '<span>' + msg + '</span>';
+            t.style.background = ok ? '#10b981' : '#ef4444';
+            t.style.opacity = '1'; t.style.transform = 'translateY(0)'; t.style.pointerEvents = 'auto';
+            clearTimeout(t._tmr);
+            t._tmr = setTimeout(() => { t.style.opacity='0'; t.style.transform='translateY(8px)'; t.style.pointerEvents='none'; }, 3500);
+        }
+
+        // â”€â”€â”€ Search by localizador â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        let _curDocId = null;
+        let _curEstat = null;
+
+        window._buscarLoc = async function() {
+            const loc = document.getElementById('f-loc').value.trim().toUpperCase();
+            if (!loc) { _setErr('err-loc', 'Introdueix un localizador per cercar.'); return; }
+            _setErr('err-loc', '');
+            document.getElementById('result-box').style.display = 'none';
+            _spin('spinner-loc', true);
+            try {
+                await waitForCrypto();
+                const snap = await getDocs(query(collection(db,'agenda'), where('localizador','==',loc)));
+                _spin('spinner-loc', false);
+                if (snap.empty) { _setErr('err-loc', 'No s\'ha trobat cap cita amb el localizador ' + loc + '.'); return; }
+                await _showResult(snap.docs[0]);
+                document.getElementById('result-box').style.display = 'block';
+            } catch(e) {
+                _spin('spinner-loc', false);
+                _setErr('err-loc', 'Error en la cerca: ' + (e.message || e.code || 'error desconegut'));
+                console.error(e);
+            }
+        };
+
+        async function _showResult(docSnap) {
+            const raw = docSnap.data();
+            _curDocId = docSnap.id;
+            _curEstat = raw.estat || 'pendent';
+
+            const nom   = await dec(raw.nomBeneficiari) || raw.titol || 'Entrada sense nom';
+            const motiu = await dec(raw.motiu);
+            const tecs  = (raw.tecnicsConvidats || []).map(t => t.nom || t.id).join(', ') || 'â€”';
+
+            document.getElementById('res-nom').textContent    = nom;
+            document.getElementById('res-loc').textContent    = raw.localizador || 'â€”';
+            document.getElementById('res-hora').textContent   = raw.hora || 'â€”';
+            document.getElementById('res-sala').textContent   = raw.sala || 'â€”';
+            document.getElementById('res-data').textContent   = raw.data || 'â€”';
+            document.getElementById('res-estat').textContent  = ESTAT_LBL[_curEstat] || _curEstat;
+            document.getElementById('res-motiu').textContent  = motiu || 'â€”';
+            document.getElementById('res-tecnic').textContent = tecs;
+
+            const col = ESTAT_CLR[_curEstat] || '#64748b';
+            const badge = document.getElementById('res-badge');
+            badge.textContent = ESTAT_LBL[_curEstat] || _curEstat;
+            badge.style.background = col + '22'; badge.style.color = col;
+
+            const done = _curEstat === 'arribat' || _curEstat === 'en-curs' || _curEstat === 'finalitzada';
+            document.getElementById('arrive-action').style.display   = done ? 'none' : 'block';
+            document.getElementById('arrived-banner').style.display  = done ? 'flex' : 'none';
+            if (done && raw.arrivedAt) {
+                const ts = raw.arrivedAt.toDate ? raw.arrivedAt.toDate() : new Date(raw.arrivedAt.seconds * 1000);
+                document.getElementById('arrived-time').textContent = 'Registrat a les ' + ts.toLocaleTimeString('ca-ES', {hour:'2-digit',minute:'2-digit'});
+            } else if (done) {
+                document.getElementById('arrived-time').textContent = 'Arribada ja registrada';
+            }
+        }
+
+        window._marcarArribat = async function() {
+            if (!_curDocId) return;
+            const btn = document.getElementById('btn-arrive');
+            btn.disabled = true;
+            btn.innerHTML = '<svg style="animation:spin 1s linear infinite;width:18px;height:18px;fill:none;stroke:white;stroke-width:2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity=".2"/><path d="M12 2a10 10 0 0 1 10 10"/></svg> Registrant...';
+            try {
+                await updateDoc(doc(db,'agenda',_curDocId), { estat:'arribat', arrivedAt:serverTimestamp(), updatedAt:serverTimestamp() });
+                _curEstat = 'arribat';
+                document.getElementById('res-estat').textContent = 'Ha Arribat';
+                const col = ESTAT_CLR['arribat'];
+                document.getElementById('res-badge').style.background = col + '22';
+                document.getElementById('res-badge').style.color = col;
+                document.getElementById('res-badge').textContent = 'Ha Arribat';
+                document.getElementById('arrive-action').style.display = 'none';
+                document.getElementById('arrived-banner').style.display = 'flex';
+                document.getElementById('arrived-time').textContent = 'Registrat a les ' + new Date().toLocaleTimeString('ca-ES', {hour:'2-digit',minute:'2-digit'});
+                showToast('Arribada registrada correctament', true);
+            } catch(e) {
+                btn.disabled = false;
+                btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Ha Arribat';
+                showToast('Error en registrar: ' + (e.message || e.code), false);
+                console.error(e);
+            }
+        };
+
+        // â”€â”€â”€ Search by name â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        window._buscarNom = async function() {
+            const nomQuery = document.getElementById('f-nom').value.trim().toLowerCase();
+            const dataVal  = document.getElementById('f-data-nom').value;
+            if (!nomQuery) { _setErr('err-nom', 'Introdueix un nom per cercar.'); return; }
+            if (!dataVal)  { _setErr('err-nom', 'Selecciona una data.'); return; }
+            _setErr('err-nom', '');
+            document.getElementById('name-results-box').style.display = 'none';
+            _spin('spinner-nom', true);
+            try {
+                await waitForCrypto();
+                // Load all CITA entries for the selected date (CITEs have nomBeneficiari)
+                const snap = await getDocs(query(
+                    collection(db,'agenda'),
+                    where('data','==', dataVal),
+                    where('tipus','==','CITA')
+                ));
+                _spin('spinner-nom', false);
+                const matched = [];
+                for (const d of snap.docs) {
+                    const raw = d.data();
+                    const nom = await dec(raw.nomBeneficiari);
+                    if (nom.toLowerCase().includes(nomQuery)) {
+                        matched.push({ id: d.id, raw, nom, motiu: await dec(raw.motiu) });
+                    }
+                }
+                _renderNameResults(matched, dataVal, nomQuery);
+            } catch(e) {
+                _spin('spinner-nom', false);
+                _setErr('err-nom', 'Error en la cerca: ' + (e.message || e.code || 'error'));
+                console.error(e);
+            }
+        };
+
+        function _renderNameResults(items, dataVal, query) {
+            const box   = document.getElementById('name-results-box');
+            const list  = document.getElementById('name-results-list');
+            const title = document.getElementById('name-results-title');
+            title.textContent = items.length + ' resultat' + (items.length !== 1 ? 's' : '') + ' per "' + query + '" el ' + dataVal;
+            if (!items.length) {
+                list.innerHTML = '<div style="padding:28px;text-align:center;color:#94a3b8;font-size:0.85rem;">Cap cita trobada per aquest nom en la data seleccionada.</div>';
+                box.style.display = 'block';
+                return;
+            }
+            items.sort((a,b) => (a.raw.hora||'').localeCompare(b.raw.hora||''));
+            list.innerHTML = items.map(item => {
+                const estat = item.raw.estat || 'pendent';
+                const col   = ESTAT_CLR[estat] || '#64748b';
+                const lbl   = ESTAT_LBL[estat] || estat;
+                const sala  = item.raw.sala ? ' Â· ' + item.raw.sala : '';
+                const loc   = item.raw.localizador ? '<span style="font-family:monospace;font-size:0.7rem;color:#94a3b8;letter-spacing:0.08em;margin-left:8px;">' + item.raw.localizador + '</span>' : '';
+                return '<div class="agenda-row" onclick="_selectRow(\'' + item.id + '\')">' +
+                    '<span class="row-time">' + (item.raw.hora || '--') + '</span>' +
+                    '<div class="row-info">' +
+                    '<div class="row-name">' + item.nom + loc + '</div>' +
+                    '<div class="row-meta">' + (item.motiu ? item.motiu.substring(0,60) : '') + sala + '</div>' +
+                    '</div>' +
+                    '<span class="row-badge" style="background:' + col + '22;color:' + col + ';">' + lbl + '</span>' +
+                    '</div>';
+            }).join('');
+            box.style.display = 'block';
+        }
+
+        // When user clicks a name result, switch to localizador tab and load it
+        const _rowCache = {};
+        window._selectRow = function(docId) {
+            // Find the item from results
+            const allRows = document.querySelectorAll('.agenda-row');
+            // We need to search by localizador or just display result directly
+            // Switch to loc tab and show result from cached snapshot
+            _switchTab('loc');
+            // Re-fetch by docId is complex without caching; instead re-load all docs and find
+            _loadAndShowById(docId);
+        };
+
+        async function _loadAndShowById(docId) {
+            _spin('spinner-loc', true);
+            document.getElementById('result-box').style.display = 'none';
+            _setErr('err-loc', '');
+            try {
+                await waitForCrypto();
+                const { getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+                const snap = await getDoc(doc(db,'agenda',docId));
+                _spin('spinner-loc', false);
+                if (!snap.exists()) { _setErr('err-loc', 'No s\'ha trobat la cita.'); return; }
+                document.getElementById('f-loc').value = snap.data().localizador || '';
+                await _showResult(snap);
+                document.getElementById('result-box').style.display = 'block';
+            } catch(e) {
+                _spin('spinner-loc', false);
+                _setErr('err-loc', 'Error: ' + (e.message || e.code));
+            }
+        }
+
+        // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        function _setErr(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg; el.style.display = msg ? 'block' : 'none';
+        }
+        function _spin(id, on) {
+            document.getElementById(id).style.display = on ? 'block' : 'none';
+        }
+
+        // â”€â”€â”€ SolÂ·licitud de cita â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+        let _tecnicsList = [];
+        let _solDepts = null;
+        let _expedients = null;
+        let _selExpId = null;
+        let _tecnicSlots = [];
+        let _usuarioUidByEmail = null;
+
+        function _normStr(v) {
+            return String(v || '').trim().toLowerCase();
+        }
+
+        async function _loadUsuariosIndex() {
+            if (_usuarioUidByEmail) return;
+            _usuarioUidByEmail = new Map();
+            try {
+                const snap = await getDocs(collection(db, 'usuarios'));
+                snap.forEach(d => {
+                    const data = d.data() || {};
+                    const uid = d.id;
+                    const emails = [data.email, data.correo, data.mail].filter(Boolean);
+                    emails.forEach(e => _usuarioUidByEmail.set(_normStr(e), uid));
+                });
+            } catch (e) {
+                console.warn('No s\'ha pogut indexar usuarios:', e);
+            }
+        }
+
+        function _slotDateTime(slot) {
+            const [y,m,d] = String(slot.data || '').split('-').map(Number);
+            const [hh,mm] = String(slot.hora || '').split(':').map(Number);
+            return new Date(y || 1970, (m || 1) - 1, d || 1, hh || 0, mm || 0, 0, 0);
+        }
+        function _formatSlotLabel(slot) {
+            const dt = _slotDateTime(slot);
+            const day = dt.toLocaleDateString('ca-ES', { weekday: 'short', day: '2-digit', month: '2-digit' });
+            return `${day} Â· ${slot.hora}${slot.minuts ? ' Â· ' + slot.minuts + ' min' : ''}`;
+        }
+        async function _generarLocalizadorDept(dept) {
+            const prefix = dept || 'GE';
+            try {
+                const snap = await getDocs(query(
+                    collection(db, 'agenda'),
+                    where('localizador', '>=', prefix),
+                    where('localizador', '<=', prefix + '\uf8ff')
+                ));
+                let maxNum = 0;
+                snap.forEach(d => {
+                    const loc = String(d.data().localizador || '');
+                    if (!loc.startsWith(prefix)) return;
+                    const n = parseInt(loc.slice(prefix.length), 10);
+                    if (!Number.isNaN(n) && n > maxNum) maxNum = n;
+                });
+                return prefix + String(maxNum + 1).padStart(3, '0');
+            } catch (_) {
+                return prefix + String(Math.floor(Math.random() * 900) + 100);
+            }
+        }
+
+        function _refreshSlotUi() {
+            const box = document.getElementById('sol-slot-box');
+            const help = document.getElementById('sol-slot-help');
+            const mode = document.getElementById('sol-action-mode');
+            const sel = document.getElementById('sol-slot-select');
+            if (!_tecnicSlots.length) {
+                box.style.display = '';
+                help.textContent = 'Aquest professional no tÃ© franjes lliures. La peticiÃ³ es crearÃ  com a pendent.';
+                mode.value = 'pending';
+                mode.disabled = true;
+                sel.style.display = 'none';
+                sel.innerHTML = '<option value="">Sense franges disponibles</option>';
+                return;
+            }
+            box.style.display = '';
+            help.textContent = `S'han trobat ${_tecnicSlots.length} franjes disponibles.`;
+            mode.disabled = false;
+            sel.innerHTML = '<option value="">Selecciona franja disponible...</option>' +
+                _tecnicSlots.map(s => `<option value="${s.id}">${_formatSlotLabel(s)}</option>`).join('');
+            window._onSolicitudActionModeChange();
+        }
+
+        window._onSolicitudActionModeChange = function() {
+            const mode = document.getElementById('sol-action-mode').value;
+            const sel = document.getElementById('sol-slot-select');
+            sel.style.display = mode === 'direct' ? '' : 'none';
+        };
+
+        async function _loadSolDepts() {
+            if (_solDepts !== null) { _carregarTecnics(); return; }
+            const sel = document.getElementById('sol-dept');
+            sel.innerHTML = '<option value="">Carregant...</option>';
+            try {
+                const snap = await getDocs(query(collection(db, 'departamentos'), where('estado', '==', 'Activo')));
+                _solDepts = [];
+                snap.forEach(d => {
+                    const data = d.data();
+                    _solDepts.push({ id: d.id, codigo: data.codigo || d.id.slice(0,4).toUpperCase(), nombre: data.nombre || d.id });
+                });
+                _solDepts.sort((a,b) => a.nombre.localeCompare(b.nombre));
+            } catch(e) { console.warn('Error carregant departaments:', e); _solDepts = []; }
+            sel.innerHTML = _solDepts.length
+                ? _solDepts.map(d => `<option value="${d.codigo}">${d.nombre}</option>`).join('')
+                : '<option value="GE">General</option>';
+            _carregarTecnics();
+        }
+
+        async function _loadExpedients() {
+            if (_expedients !== null) return;
+            const snap = await getDocs(collection(db, 'expedientes'));
+            const arr = [];
+            for (const d of snap.docs) {
+                const raw = d.data();
+                let dp = {};
+                try { dp = JSON.parse(await dec(raw.dades_personals)); } catch {}
+                arr.push({ id: d.id, nom: dp.nom||'', cognoms: dp.cognoms||'', exp: raw.numero_expediente||'' });
+            }
+            _expedients = arr;
+        }
+
+        window._carregarTecnics = async function() {
+            const dept = document.getElementById('sol-dept').value;
+            const deptObj = (_solDepts || []).find(d => d.codigo === dept);
+            const deptDocId = deptObj?.id;
+            const sel = document.getElementById('sol-tecnic');
+            sel.innerHTML = '<option value="">-- Carregant... --</option>';
+            try {
+                await _loadUsuariosIndex();
+                const empQuery = deptDocId
+                    ? query(collection(db, 'empleados'), where('estado', '==', 'Activo'), where('departamentoIds', 'array-contains', deptDocId))
+                    : query(collection(db, 'empleados'), where('estado', '==', 'Activo'));
+                const snap = await getDocs(empQuery);
+                _tecnicsList = [];
+                snap.forEach(d => {
+                    const data = d.data();
+                    if (!data.nombre) return;
+                    const byField = data.uid || data.userId || data.usuarioId || data.firebaseUid || data.authUid || '';
+                    const byEmail = _usuarioUidByEmail.get(_normStr(data.email || data.correo || data.mail || '')) || '';
+                    const uid = byField || byEmail || d.id;
+                    const aliases = [...new Set([uid, d.id, byField, byEmail].filter(Boolean).map(String))];
+                    _tecnicsList.push({ id: uid, nom: data.nombre, dept: data.departamentoNombre || '', empleadoId: d.id, aliases });
+                });
+                _tecnicsList.sort((a,b) => a.nom.localeCompare(b.nom));
+                sel.innerHTML = '<option value="">-- Sense assignar (ho gestionarÃ  el departament) --</option>' +
+                    _tecnicsList.map(t => `<option value="${t.id}">${t.nom}${t.dept ? ' Â· ' + t.dept : ''}</option>`).join('');
+            } catch(e) {
+                sel.innerHTML = '<option value="">-- No s\'han pogut carregar --</option>';
+                console.warn(e);
+            }
+            _tecnicSlots = [];
+            document.getElementById('sol-slot-box').style.display = 'none';
+        };
+
+        window._loadTecnicSlots = async function() {
+            const tecId = document.getElementById('sol-tecnic').value;
+            _tecnicSlots = [];
+            if (!tecId) {
+                const box = document.getElementById('sol-slot-box');
+                const help = document.getElementById('sol-slot-help');
+                const mode = document.getElementById('sol-action-mode');
+                const sel = document.getElementById('sol-slot-select');
+                box.style.display = '';
+                help.textContent = 'Sense professional assignat: la solÂ·licitud anirÃ  al departament perquÃ¨ la gestionin.';
+                mode.value = 'pending';
+                mode.disabled = true;
+                sel.style.display = 'none';
+                sel.innerHTML = '<option value="">Selecciona franja disponible...</option>';
+                return;
+            }
+            const now = new Date();
+            try {
+                const tec = _tecnicsList.find(t => t.id === tecId);
+                const aliases = new Set((tec?.aliases || [tecId]).map(String));
+                const snap = await getDocs(query(collection(db, 'agenda_slots'), where('estat', '==', 'free')));
+                snap.forEach(d => {
+                    const raw = d.data() || {};
+                    const slotTechIds = [raw.tecnicId, raw.tecnicUid, raw.tecnicID, raw.usuarioId]
+                        .filter(Boolean)
+                        .map(v => String(v));
+                    if (!slotTechIds.some(id => aliases.has(id))) return;
+                    const slot = { id: d.id, ...raw };
+                    if (_slotDateTime(slot).getTime() >= now.getTime() - 60000) _tecnicSlots.push(slot);
+                });
+                _tecnicSlots.sort((a, b) => _slotDateTime(a) - _slotDateTime(b));
+            } catch (e) {
+                console.warn('No s\'ha pogut carregar disponibilitat:', e);
+            }
+            _refreshSlotUi();
+        };
+
+        window._crearSolicitud = async function() {
+            const nom    = document.getElementById('sol-nom').value.trim();
+            const tel    = document.getElementById('sol-tel').value.trim();
+            const motiu  = document.getElementById('sol-motiu').value.trim();
+            const dept   = document.getElementById('sol-dept').value;
+            const prio   = document.getElementById('sol-prioritat').value;
+            const tecId  = document.getElementById('sol-tecnic').value;
+            const tecNom = tecId ? (_tecnicsList.find(t => t.id === tecId)?.nom || '') : '';
+            const actionMode = document.getElementById('sol-action-mode').value;
+            const slotId = document.getElementById('sol-slot-select').value;
+
+            if (!nom) { _setErr('err-sol', 'El nom del beneficiari Ã©s obligatori.'); return; }
+            if (actionMode === 'direct' && !tecId) { _setErr('err-sol', 'Per reservar cita directa has de seleccionar un professional.'); return; }
+            if (actionMode === 'direct' && !slotId) { _setErr('err-sol', 'Selecciona una franja disponible.'); return; }
+            _setErr('err-sol', '');
+
+            const btn = document.getElementById('btn-sol-submit');
+            btn.disabled = true;
+            btn.innerHTML = '<svg style="animation:spin 1s linear infinite;width:16px;height:16px;fill:none;stroke:white;stroke-width:2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity=".25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg> Creant...';
+
+            try {
+                await waitForCrypto();
+                const { encryptField } = await import('../crypto-utils.js');
+                const deptSel = document.getElementById('sol-dept');
+                const deptNom = deptSel.options[deptSel.selectedIndex]?.text || dept;
+                const expedientId = document.getElementById('sol-expedient-id').value.trim() || null;
+                if (actionMode === 'direct') {
+                    const slot = _tecnicSlots.find(s => s.id === slotId);
+                    if (!slot) throw new Error('La franja seleccionada ja no estÃ  disponible.');
+                    const localizador = await _generarLocalizadorDept(dept);
+                    await addDoc(collection(db, 'agenda'), {
+                        tipus: 'CITA',
+                        data: slot.data,
+                        hora: slot.hora,
+                        sala: slot.sala || null,
+                        estat: 'confirmat',
+                        localizador,
+                        departament: dept,
+                        expedientId,
+                        nomBeneficiari: await encryptField(nom),
+                        telefon: tel ? await encryptField(tel) : null,
+                        motiu: motiu ? await encryptField(motiu) : null,
+                        tecnicId: tecId,
+                        tecnicNom: tecNom,
+                        tecnicsConvidats: [{ id: tecId, nom: tecNom }],
+                        tecnicsIds: [tecId],
+                        slotId: slot.id,
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp()
+                    });
+                    await updateDoc(doc(db, 'agenda_slots', slot.id), {
+                        estat: 'occupied',
+                        updatedAt: serverTimestamp()
+                    });
+                } else {
+                    // Pending request can be assigned to one worker or to whole department queue
+                    const tecnicsIds = tecId ? [tecId] : _tecnicsList.map(t => t.id);
+                    await addDoc(collection(db, 'solicituds'), {
+                        nomBeneficiari: await encryptField(nom),
+                        telefon:  tel  ? await encryptField(tel)   : null,
+                        motiu:    motiu? await encryptField(motiu)  : null,
+                        departament:    dept,
+                        departamentNom: deptNom,
+                        tecnicId:  tecId || null,
+                        tecnicNom: tecNom || null,
+                        expedientId: expedientId,
+                        tecnicsIds: tecnicsIds,
+                        prioritat: prio,
+                        estat:     'pendent',
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp()
+                    });
+                }
+                btn.disabled = false;
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Crear solÂ·licitud';
+                const succ = document.getElementById('sol-success');
+                succ.style.display = 'flex';
+                setTimeout(() => { succ.style.display = 'none'; _resetSolicitudForm(); _closeSolModal(); }, 3000);
+                showToast(actionMode === 'direct' ? 'Cita reservada correctament' : 'SolÂ·licitud creada correctament', true);
+            } catch(e) {
+                btn.disabled = false;
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Crear solÂ·licitud';
+                _setErr('err-sol', 'Error: ' + (e.message || e.code || 'error desconegut'));
+                console.error(e);
+            }
+        };
+
+        window._resetSolicitudForm = function() {
+            document.getElementById('sol-nom').value = '';
+            document.getElementById('sol-tel').value = '';
+            document.getElementById('sol-motiu').value = '';
+            document.getElementById('sol-prioritat').value = 'normal';
+            document.getElementById('sol-expedient-id').value = '';
+            document.getElementById('sol-ben-dropdown').classList.remove('open');
+            _selExpId = null;
+            _tecnicSlots = [];
+            if (document.getElementById('sol-dept').options.length > 0)
+                document.getElementById('sol-dept').selectedIndex = 0;
+            document.getElementById('sol-success').style.display = 'none';
+            _setErr('err-sol', '');
+            _carregarTecnics();
+            document.getElementById('sol-slot-box').style.display = 'none';
+        };
+
+        // â”€â”€â”€ Beneficiari autocomplete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        const _solNomInput = document.getElementById('sol-nom');
+        const _solBenDd    = document.getElementById('sol-ben-dropdown');
+
+        _solNomInput.addEventListener('focus', async () => {
+            if (_expedients !== null) return;
+            _solNomInput.placeholder = 'Carregant expedients...';
+            _solNomInput.disabled = true;
+            try {
+                await waitForCrypto();
+                await _loadExpedients();
+            } catch(e) { console.warn('Error carregant expedients:', e); }
+            _solNomInput.disabled = false;
+            _solNomInput.placeholder = 'Cerca per nom o expedient... (o escriu lliurement)';
+            _solNomInput.focus();
+        });
+
+        _solNomInput.addEventListener('input', () => {
+            _selExpId = null;
+            document.getElementById('sol-expedient-id').value = '';
+            const q = _solNomInput.value.trim().toLowerCase();
+            if (!q || !_expedients || q.length < 2) { _solBenDd.classList.remove('open'); return; }
+            const hits = _expedients.filter(e =>
+                (e.nom + ' ' + e.cognoms + ' ' + e.exp).toLowerCase().includes(q)
+            ).slice(0, 8);
+            if (!hits.length) { _solBenDd.classList.remove('open'); return; }
+            _solBenDd.innerHTML = hits.map(e => {
+                const fullNom = (e.nom + ' ' + e.cognoms).trim() || e.exp;
+                return `<div class="ac-item" data-id="${e.id}" data-nom="${fullNom.replace(/"/g,'&quot;')}">
+                    <strong>${e.nom}</strong> ${e.cognoms}
+                    ${e.exp ? `<div class="ac-sub">Exp: ${e.exp}</div>` : ''}
+                </div>`;
+            }).join('');
+            _solBenDd.classList.add('open');
+            _solBenDd.querySelectorAll('.ac-item').forEach(el => {
+                el.addEventListener('mousedown', ev => {
+                    ev.preventDefault();
+                    _selExpId = el.dataset.id;
+                    _solNomInput.value = el.dataset.nom;
+                    document.getElementById('sol-expedient-id').value = _selExpId;
+                    _solBenDd.classList.remove('open');
+                });
+            });
+        });
+
+        _solNomInput.addEventListener('blur', () => {
+            setTimeout(() => _solBenDd.classList.remove('open'), 150);
+        });
+
+        // â”€â”€â”€ QR Camera scanner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        let _camStream = null, _scanLoop = null, _scanning = false;
+
+        window._toggleCamera = async function() {
+            if (_scanning) { _stopCamera(); return; }
+            _scanning = true;
+            const btn = document.getElementById('btn-cam');
+            btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Tancar camara';
+            document.getElementById('cam-wrap').style.display = 'block';
+            try {
+                _camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                const video = document.getElementById('qr-video');
+                video.srcObject = _camStream; video.play();
+                _scanLoop = requestAnimationFrame(_scanFrame);
+            } catch(e) {
+                _stopCamera();
+                _setErr('err-loc', 'No s\'ha pogut accedir a la camara: ' + (e.message || 'permis denegat'));
+            }
+        };
+
+        function _stopCamera() {
+            _scanning = false;
+            if (_camStream) { _camStream.getTracks().forEach(t => t.stop()); _camStream = null; }
+            if (_scanLoop)  { cancelAnimationFrame(_scanLoop); _scanLoop = null; }
+            const btn = document.getElementById('btn-cam');
+            btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Obrir camara';
+            document.getElementById('cam-wrap').style.display = 'none';
+        }
+
+        function _scanFrame() {
+            if (!_scanning) return;
+            const video = document.getElementById('qr-video');
+            const canvas = document.getElementById('qr-canvas-scan');
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                if (typeof jsQR !== 'undefined') {
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+                    if (code && code.data) {
+                        // Extract localizador from full URL or raw code
+                        let data = code.data.trim();
+                        const urlMatch = data.match(/[?&]loc=([A-Z0-9]+)/i);
+                        if (urlMatch) data = urlMatch[1].toUpperCase();
+                        else data = data.toUpperCase();
+                        if (/^(NX\d{2}[A-Z0-9]{6}|[A-Z]{2}\d{3,})$/.test(data)) {
+                            _stopCamera();
+                            document.getElementById('f-loc').value = data;
+                            showToast('QR detectat: ' + data, true);
+                            window._buscarLoc();
+                            return;
+                        }
+                    }
+                }
+            }
+            _scanLoop = requestAnimationFrame(_scanFrame);
+        }
+    </script>
+</body>
+</html>
+

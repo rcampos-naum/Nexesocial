@@ -1,0 +1,507 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexeSocial - Departament</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        :root { --dept-color: #2563eb; }
+        .dept-hero { background: var(--dept-color); color: white; border-radius: 16px; padding: 26px 32px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; }
+        .dept-hero h1 { margin: 0 0 4px; font-size: 1.55rem; }
+        .dept-hero p  { margin: 0; opacity: .82; font-size: .88rem; }
+        .hero-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .period-picker { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.26); border-radius: 999px; padding: 7px 10px; font-size: .78rem; font-weight: 700; }
+        .period-picker select { border: 1px solid rgba(255,255,255,.28); border-radius: 999px; padding: 5px 10px; background: rgba(15,23,42,.35); color: #fff; font-size: .78rem; font-weight: 700; min-width: 170px; }
+        .period-picker select option { color: #0f172a; background: #fff; }
+        .period-banner { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; font-size: .82rem; }
+        .period-banner.warn { background: #fff7ed; border-color: #fdba74; color: #9a3412; }
+        .kpi-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 22px; }
+        .kpi-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 22px; flex: 1 1 130px; min-width: 110px; }
+        .kpi-val { font-size: 2rem; font-weight: 800; color: #1e293b; line-height: 1; }
+        .kpi-lbl { font-size: .72rem; color: #64748b; margin-top: 3px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+        .tab-bar { display: flex; gap: 4px; border-bottom: 2px solid #e2e8f0; margin-bottom: 22px; }
+        .tab-btn { background: none; border: none; padding: 10px 18px; cursor: pointer; font-size: .88rem; font-weight: 600; color: #64748b; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .2s; font-family: inherit; border-radius: 8px 8px 0 0; }
+        .tab-btn.active { color: var(--dept-color); border-bottom-color: var(--dept-color); }
+        .tab-btn:hover:not(.active) { color: #1e293b; background: #f8fafc; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+        .field { display: flex; flex-direction: column; gap: 5px; }
+        .field label { font-size: .78rem; font-weight: 700; color: #64748b; }
+        .field input, .field select, .field textarea { padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: .9rem; font-family: inherit; box-sizing: border-box; width: 100%; }
+        .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--dept-color); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+        .field textarea { min-height: 80px; resize: vertical; }
+        .cycle-options { display: grid; gap: 8px; }
+        .cycle-option { display: flex; align-items: center; gap: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 11px; font-size: .84rem; color: #334155; }
+        .cycle-option input { margin: 0; }
+        .cycle-option input[type='radio'] { width: auto; flex: 0 0 auto; }
+        .cycle-option strong { color: #0f172a; font-size: .83rem; }
+        .period-state { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; padding: 4px 11px; font-size: .74rem; font-weight: 800; border: 1px solid transparent; }
+        .period-state.active { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .period-state.closed { background: #e2e8f0; color: #334155; border-color: #cbd5e1; }
+        .period-history { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+        .period-history li { display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid #e2e8f0; background: #fff; border-radius: 8px; padding: 8px 10px; font-size: .82rem; color: #334155; }
+        .period-history li small { color: #64748b; }
+        .period-history a { color: #2563eb; text-decoration: none; font-weight: 700; font-size: .78rem; }
+        .period-history a:hover { text-decoration: underline; }
+        .config-actions { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .search-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+        .search-row input { padding: 9px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: .88rem; font-family: inherit; flex: 1; min-width: 200px; }
+        .inscrit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+        .inscrit-card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+        .inscrit-avatar { width: 36px; height: 36px; border-radius: 50%; background: #eff6ff; color: var(--dept-color); font-weight: 800; font-size: .9rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .inscrit-name { font-weight: 600; font-size: .88rem; }
+        .inscrit-meta { font-size: .76rem; color: #64748b; }
+        .btn-remove { margin-left: auto; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 4px 9px; border-radius: 6px; font-size: .72rem; font-weight: 700; cursor: pointer; font-family: inherit; flex-shrink: 0; }
+        .add-panel { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 18px; }
+        .add-panel h4 { margin: 0 0 12px; font-size: .85rem; color: #1e293b; }
+        .result-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; border-radius: 8px; background: white; border: 1px solid #e2e8f0; margin-bottom: 6px; font-size: .85rem; }
+        .result-item:hover { background: #f0f7ff; }
+        .act-list { display: flex; flex-direction: column; gap: 14px; }
+        .act-item { background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+        .act-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; gap: 12px; }
+        .act-header:hover { background: #f8fafc; }
+        .act-title { font-weight: 700; font-size: .95rem; color: #1e293b; }
+        .act-badge-row { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+        .act-badge { font-size: .72rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+        .badge-blue  { background: #dbeafe; color: #1d4ed8; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-amber { background: #fef3c7; color: #92400e; }
+        .act-toggle-icon { width: 20px; height: 20px; fill: none; stroke: #94a3b8; stroke-width: 2.5; transition: transform .25s; flex-shrink: 0; }
+        .act-item.open .act-toggle-icon { transform: rotate(90deg); }
+        .act-body { display: none; border-top: 1px solid #f1f5f9; padding: 16px 20px; }
+        .act-item.open .act-body { display: block; }
+        .act-body-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+        .act-body-toolbar h4 { margin: 0; font-size: .82rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+        .group-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; }
+        .group-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+        .group-name { font-weight: 700; font-size: .9rem; color: #1e293b; }
+        .group-meta { font-size: .78rem; color: #64748b; margin: 4px 0 10px; }
+        .group-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        #group-panel { position: fixed; top: 60px; right: 0; width: 520px; max-width: 95vw; height: calc(100vh - 60px); background: white; border-left: 1px solid #e2e8f0; box-shadow: -8px 0 30px rgba(0,0,0,.1); z-index: 20000; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .3s cubic-bezier(.4,0,.2,1); }
+        #group-panel.open { transform: translateX(0); }
+        .panel-header { padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: flex-start; gap: 12px; flex-shrink: 0; background: #fafbfc; }
+        .panel-header h3 { margin: 0; font-size: 1rem; font-weight: 800; color: #1e293b; }
+        .panel-header .panel-sub { font-size: .78rem; color: #64748b; margin-top: 2px; }
+        .btn-close-panel { margin-left: auto; background: #f1f5f9; border: none; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: .8rem; font-weight: 700; color: #64748b; font-family: inherit; white-space: nowrap; }
+        .panel-tabs { display: flex; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; padding: 0 16px; }
+        .panel-tab { background: none; border: none; padding: 10px 14px; cursor: pointer; font-size: .82rem; font-weight: 600; color: #64748b; border-bottom: 2px solid transparent; margin-bottom: -1px; font-family: inherit; transition: all .2s; }
+        .panel-tab.active { color: var(--dept-color); border-bottom-color: var(--dept-color); }
+        .panel-body { flex: 1; overflow-y: auto; padding: 18px; }
+        .panel-tab-panel { display: none; }
+        .panel-tab-panel.active { display: block; }
+        .att-controls { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 14px; }
+        .att-controls .field { min-width: 160px; }
+        .att-table { width: 100%; border-collapse: collapse; }
+        .att-table th { padding: 10px 12px; text-align: left; font-size: .72rem; font-weight: 700; color: #64748b; background: #f8fafc; text-transform: uppercase; letter-spacing: .4px; }
+        .att-table td { padding: 10px 12px; border-top: 1px solid #f1f5f9; font-size: .85rem; }
+        .att-select { padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-family: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; }
+        .att-quick-btns { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+        .seg-list-item { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; }
+        .seg-list-item-title { font-weight: 700; font-size: .87rem; }
+        .seg-list-item-meta { font-size: .76rem; color: #64748b; margin-top: 3px; }
+        .seg-pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; background: #eff6ff; color: #2563eb; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.55); backdrop-filter: blur(8px); z-index: 30000; align-items: center; justify-content: center; padding: 14px; }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: white; border-radius: 20px; padding: 26px; width: min(96vw, 520px); max-height: 90vh; overflow-y: auto; box-shadow: 0 30px 80px -18px rgba(0,0,0,.4); }
+        .modal-box h3 { margin: 0 0 18px; font-size: 1.05rem; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+        .btn-primary { background: var(--dept-color); color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: .88rem; font-family: inherit; transition: opacity .2s; }
+        .btn-primary:hover { opacity: .85; }
+        .btn-sec { background: white; border: 1px solid #e2e8f0; color: #1e293b; padding: 9px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: .85rem; font-family: inherit; }
+        .btn-sec:hover { background: #f8fafc; }
+        .btn-sm { padding: 6px 12px !important; font-size: .78rem !important; }
+        .btn-cancel { background: #f1f5f9; color: #64748b; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: inherit; }
+        .id-pill { background: #f1f5f9; color: #475569; padding: 3px 8px; border-radius: 5px; font-family: monospace; font-size: .72rem; font-weight: 700; }
+        .empty-box { padding: 32px 16px; text-align: center; color: #94a3b8; border: 2px dashed #e2e8f0; border-radius: 12px; }
+        .empty-box svg { width: 36px; height: 36px; margin-bottom: 10px; stroke: #cbd5e1; fill: none; stroke-width: 1.5; display: block; margin-inline: auto; }
+        .empty-box p { margin: 0; font-size: .88rem; }
+        .loading-msg { text-align: center; padding: 60px 20px; color: #94a3b8; font-size: .9rem; }
+        .dept-toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%) translateY(12px); background: #1e293b; color: white; padding: 10px 20px; border-radius: 8px; font-size: .85rem; z-index: 50000; opacity: 0; transition: all .25s; pointer-events: none; white-space: nowrap; }
+        .dept-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .dept-toast.ok { background: #059669; }
+        .dept-toast.err { background: #dc2626; }
+        .dept-toast.warn { background: #d97706; }
+        #panel-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 19999; }
+        #panel-backdrop.open { display: block; }
+        .coord-wrap { display: grid; gap: 16px; }
+        .coord-head { background: linear-gradient(115deg, #0f2f63 0%, #1e5cb3 60%, #2a80d7 100%); color: white; border-radius: 14px; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .coord-head h3 { margin: 0; font-size: 1rem; letter-spacing: .4px; text-transform: uppercase; }
+        .coord-users { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.24); border-radius: 999px; padding: 7px 12px; font-size: .8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+        .coord-section { background: white; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
+        .coord-section-title { padding: 12px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-weight: 800; font-size: .82rem; letter-spacing: .4px; text-transform: uppercase; color: #1e293b; display: flex; align-items: center; gap: 8px; }
+        .coord-group-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 14px 16px; border-bottom: 1px solid #f1f5f9; align-items: center; }
+        .coord-group-row:last-child { border-bottom: none; }
+        .coord-group-name { font-weight: 800; font-size: .92rem; color: #1e293b; }
+        .coord-lines { margin-top: 5px; display: grid; gap: 4px; }
+        .coord-line { font-size: .8rem; color: #475569; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .pill-ok, .pill-warn, .pill-soft { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 3px 8px; font-size: .72rem; font-weight: 800; }
+        .pill-ok { background: #dcfce7; color: #166534; }
+        .pill-warn { background: #fee2e2; color: #b91c1c; }
+        .pill-soft { background: #e0e7ff; color: #3730a3; }
+        .coord-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+        .btn-reforc { background: #0f172a; color: white; border: none; border-radius: 8px; padding: 8px 12px; font-size: .76rem; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-reforc:hover { opacity: .9; }
+        .floating-box { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 14px; padding: 14px 16px; }
+        .floating-head { font-size: .82rem; font-weight: 800; color: #9a3412; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
+        .floating-list { display: grid; gap: 8px; }
+        .floating-item { background: white; border: 1px solid #fdba74; border-radius: 9px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .floating-item strong { font-size: .84rem; color: #7c2d12; }
+        .floating-item span { display: block; font-size: .76rem; color: #9a3412; margin-top: 2px; }
+        .notif-box { background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px; }
+        .notif-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .notif-title { font-size: .9rem; font-weight: 800; color: #1e293b; display: inline-flex; align-items: center; gap: 7px; }
+        .notif-badge { background: #dbeafe; color: #1d4ed8; border-radius: 999px; padding: 3px 9px; font-size: .72rem; font-weight: 800; }
+        .notif-item { border: 1px solid #dbeafe; border-radius: 10px; background: #eff6ff; padding: 10px 12px; margin-bottom: 8px; }
+        .notif-item h4 { margin: 0 0 4px; font-size: .82rem; color: #1e40af; }
+        .notif-item p { margin: 0; color: #1e3a8a; font-size: .78rem; line-height: 1.45; }
+        .notif-actions { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-inline { background: white; border: 1px solid #bfdbfe; color: #1e40af; border-radius: 7px; padding: 6px 10px; font-size: .74rem; font-weight: 700; cursor: pointer; }
+        .btn-inline:hover { background: #f8fafc; }
+        .assign-mode-row { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+        .reforc-mode-option { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .84rem; color: #334155; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 9px 10px; }
+        .reforc-mode-option input[type='radio'] { margin: 0; flex-shrink: 0; }
+        .reforc-mode-label { font-weight: 600; }
+        .reforc-date-wrap { display: inline-flex; align-items: center; gap: 8px; margin-left: 8px; }
+        .reforc-date-wrap input[type='date'] { margin: 0; width: 210px; max-width: 100%; }
+        @media (max-width: 900px) {
+            .coord-group-row { grid-template-columns: 1fr; }
+            .coord-actions { justify-content: flex-start; }
+            .period-picker { width: 100%; justify-content: space-between; }
+            .period-picker select { min-width: 0; width: 100%; }
+        }
+        @media (max-width: 640px) {
+            .reforc-mode-option { align-items: flex-start; }
+            .reforc-date-wrap { margin-left: 0; width: 100%; }
+            .reforc-date-wrap input[type='date'] { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<script type="module" src="sidebar.js"></script>
+<main id="main-content">
+    <div id="dept-loading" class="loading-msg">Carregant departament…</div>
+    <div id="dept-notfound" style="display:none;">
+        <div class="empty-box" style="margin-top:60px; max-width:460px; margin-inline: auto;">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <p><strong>Departament no trobat</strong><br>Comprova el parametre <code>?dept=</code> o <a href="programes-gestio.html">torna als programes</a>.</p>
+        </div>
+    </div>
+    <div id="dept-content" style="display:none;">
+        <div class="dept-hero" id="dept-hero">
+            <div><h1 id="dept-title">Departament</h1><p id="dept-subtitle"></p></div>
+            <div class="hero-actions">
+                <div class="period-picker">
+                    <span>Periode:</span>
+                    <select id="period-selector"></select>
+                </div>
+                <a href="programes-gestio.html" class="btn-sec btn-sm" style="text-decoration:none; display:inline-flex; align-items:center;">&#8592; Tots els programes</a>
+            </div>
+        </div>
+        <div id="period-banner" class="period-banner">Estàs veient el periode actual.</div>
+        <div class="kpi-row">
+            <div class="kpi-card"><div class="kpi-val" id="kpi-act">-</div><div class="kpi-lbl">Activitats</div></div>
+            <div class="kpi-card"><div class="kpi-val" id="kpi-grp">-</div><div class="kpi-lbl">Grups</div></div>
+            <div class="kpi-card"><div class="kpi-val" id="kpi-ins">-</div><div class="kpi-lbl">Inscrits</div></div>
+            <div class="kpi-card"><div class="kpi-val" id="kpi-seg">-</div><div class="kpi-lbl">Seguiments</div></div>
+        </div>
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="config">Configuracio</button>
+            <button class="tab-btn" data-tab="coordinacio">Coordinacio</button>
+            <button class="tab-btn" data-tab="inscrits">Inscrits</button>
+            <button class="tab-btn" data-tab="activitats">Activitats</button>
+        </div>
+        <!-- TAB: Configuracio -->
+        <div class="tab-panel active" id="tab-config">
+            <div style="background:white; border:1px solid #e2e8f0; border-radius:14px; padding:24px; width:100%;">
+                <!-- Info gestionada des de NexeAdmin (read-only) -->
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 18px; margin-bottom:22px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                        <span style="font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#64748b;">Dades gestionades des de NexeAdmin</span>
+                        <a href="NexeAdmin/admin-personal.html" target="_blank" style="font-size:.72rem; color:#2563eb; text-decoration:none; font-weight:600;">&#8599; Editar</a>
+                    </div>
+                    <div class="config-grid" style="gap:12px;">
+                        <div class="field"><label>Nom del departament</label><input type="text" id="cfg-name" readonly style="background:#f1f5f9;color:#475569;cursor:default;"></div>
+                        <div class="field"><label>Responsable</label><input type="text" id="cfg-manager" readonly style="background:#f1f5f9;color:#475569;cursor:default;"></div>
+                        <div class="field"><label>Area</label><input type="text" id="cfg-area" readonly style="background:#f1f5f9;color:#475569;cursor:default;"></div>
+                        <div class="field"><label>Codi</label><input type="text" id="cfg-code" readonly style="background:#f1f5f9;color:#475569;cursor:default;font-family:monospace;"></div>
+                    </div>
+                </div>
+                <!-- Configuracio programatica (editable) -->
+                <h3 style="margin:0 0 16px; font-size:.95rem;">Configuracio del periode</h3>
+                <div class="config-grid">
+                    <div class="field" style="grid-column:1/-1"><label>Tipus de cicle</label>
+                        <div class="cycle-options">
+                            <label class="cycle-option"><input type="radio" name="cfg-period-type" value="natural"><span><strong>Any natural</strong> (gen-des)</span></label>
+                            <label class="cycle-option"><input type="radio" name="cfg-period-type" value="escolar"><span><strong>Curs escolar</strong> (set-jun)</span></label>
+                            <label class="cycle-option"><input type="radio" name="cfg-period-type" value="custom"><span><strong>Conveni/Subvencio</strong> (duracio variable)</span></label>
+                            <label class="cycle-option"><input type="radio" name="cfg-period-type" value="campaign"><span><strong>Campanya curta</strong> (setmanes o mesos)</span></label>
+                        </div>
+                    </div>
+                    <div class="field"><label>Data d'inici</label><input type="date" id="cfg-start"></div>
+                    <div class="field"><label>Data de fi</label><input type="date" id="cfg-end"></div>
+                    <div class="field"><label>Estat</label><div id="cfg-status-pill" class="period-state active">ACTIU</div></div>
+                    <div class="field" style="grid-column:1/-1"><label>Historic de periodes</label><ul id="cfg-period-history" class="period-history"></ul></div>
+                    <div class="field" style="grid-column:1/-1"><label>Notes internes</label><textarea id="cfg-notes"></textarea></div>
+                </div>
+                <div class="config-actions">
+                    <button class="btn-sec" onclick="window._dept.resetConfig()">Cancel.lar</button>
+                    <button class="btn-sec" onclick="window._dept.startNewPeriod()">Iniciar nou periode</button>
+                    <button class="btn-primary" onclick="window._dept.saveConfig()">Guardar configuracio</button>
+                </div>
+            </div>
+        </div>
+        <!-- TAB: Coordinacio -->
+        <div class="tab-panel" id="tab-coordinacio">
+            <div class="coord-wrap">
+                <div class="coord-head">
+                    <h3>PANEL DE COORDINACIO: <span id="coord-dept-name">Departament</span></h3>
+                    <div class="coord-users">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        Usuaris actius: <span id="coord-active-users">0</span>
+                    </div>
+                </div>
+
+                <div id="coord-board"></div>
+
+                <div class="floating-box">
+                    <div class="floating-head">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+                        Gestio de personal flotant (sense grup avui)
+                    </div>
+                    <div id="coord-floating-list" class="floating-list"></div>
+                </div>
+
+                <div class="notif-box">
+                    <div class="notif-head">
+                        <div class="notif-title">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                            MI PANEL (avisos de reforc)
+                        </div>
+                        <span id="coord-my-notif-count" class="notif-badge" style="display:none;">0 noves</span>
+                    </div>
+                    <div id="coord-my-notifs"></div>
+                </div>
+            </div>
+        </div>
+        <!-- TAB: Inscrits -->
+        <div class="tab-panel" id="tab-inscrits">
+            <div class="add-panel">
+                <h4>Afegir participant al departament</h4>
+                <div class="search-row"><input type="search" id="ben-search" placeholder="Cercar per nom o expedient..." oninput="window._dept.searchBeneficiaris()"></div>
+                <div id="ben-results" style="max-height:200px; overflow-y:auto;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                <h4 style="margin:0; font-size:.82rem; text-transform:uppercase; letter-spacing:.4px; color:#64748b; font-weight:700;">Participants inscrits</h4>
+                <span id="inscrit-count" style="font-size:.82rem; color:#64748b;"></span>
+            </div>
+            <div id="inscrits-grid" class="inscrit-grid"></div>
+        </div>
+        <!-- TAB: Activitats -->
+        <div class="tab-panel" id="tab-activitats">
+            <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+                <button class="btn-primary btn-sm" onclick="window._dept.openActModal()">+ Nova activitat</button>
+            </div>
+            <div id="act-list" class="act-list"></div>
+        </div>
+    </div>
+</main>
+
+<!-- Right panel: group management -->
+<div id="panel-backdrop" onclick="window._dept.closeGroupPanel()"></div>
+<div id="group-panel">
+    <div class="panel-header">
+        <div><h3 id="panel-group-name">Grup</h3><div class="panel-sub" id="panel-group-sub"></div></div>
+        <button class="btn-close-panel" onclick="window._dept.closeGroupPanel()">x Tancar</button>
+    </div>
+    <div class="panel-tabs">
+        <button class="panel-tab active" data-ptab="p-inscrits">Inscrits</button>
+        <button class="panel-tab" data-ptab="p-assistencia">Assistencia</button>
+        <button class="panel-tab" data-ptab="p-seguiments">Seguiments</button>
+    </div>
+    <div class="panel-body">
+        <div class="panel-tab-panel active" id="p-inscrits">
+            <div class="add-panel">
+                <h4>Afegir participant al grup</h4>
+                <div class="search-row"><input type="search" id="grp-ben-search" placeholder="Cercar dels inscrits al dept..." oninput="window._dept.searchGroupBen()"></div>
+                <div id="grp-ben-results" style="max-height:180px; overflow-y:auto;"></div>
+            </div>
+            <h4 style="margin:0 0 12px; font-size:.82rem; text-transform:uppercase; letter-spacing:.4px; color:#64748b; font-weight:700;">Participants al grup</h4>
+            <div id="group-inscrits-list"></div>
+        </div>
+        <div class="panel-tab-panel" id="p-assistencia">
+            <div class="att-controls">
+                <div class="field"><label>Data</label><input type="date" id="att-date"></div>
+                <button class="btn-sec btn-sm" onclick="window._dept.loadAttendance()" style="margin-top:20px;">Carregar</button>
+            </div>
+            <div class="att-quick-btns">
+                <button class="btn-sec btn-sm" onclick="window._dept.markAll('P')">Tots present</button>
+                <button class="btn-sec btn-sm" onclick="window._dept.markAll('F')">Tots absent</button>
+                <button class="btn-sec btn-sm" onclick="window._dept.markAll('FJ')">Tots justificat</button>
+            </div>
+            <table class="att-table">
+                <thead><tr><th>Participant</th><th>Estat</th></tr></thead>
+                <tbody id="att-tbody"></tbody>
+            </table>
+            <div style="margin-top:14px;"><button class="btn-primary btn-sm" onclick="window._dept.saveAttendance()">Guardar assistencia</button></div>
+        </div>
+        <div class="panel-tab-panel" id="p-seguiments">
+            <div id="seg-view">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                    <h4 style="margin:0; font-size:.82rem; text-transform:uppercase; letter-spacing:.4px; color:#64748b;">Seguiments</h4>
+                    <button class="btn-primary btn-sm" onclick="window._dept.showSegForm()">+ Nou</button>
+                </div>
+                <div id="seg-list"></div>
+            </div>
+            <div id="seg-form-view" style="display:none;">
+                <button class="btn-sec btn-sm" style="margin-bottom:14px;" onclick="window._dept.hideSegForm()">&#8592; Tornar</button>
+                <h4 style="margin:0 0 12px; font-size:.9rem;">Nou seguiment</h4>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+                    <div class="field"><label>Tipus</label>
+                        <select id="seg-type">
+                            <option value="seguiment-grupal">Seguiment grupal</option>
+                            <option value="seguiment-individual">Seguiment individual</option>
+                            <option value="avaluacio">Avaluacio</option>
+                            <option value="incidencia">Incidencia</option>
+                            <option value="informe">Informe</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>Participant (si es individual)</label>
+                        <select id="seg-participant"><option value="">- Tot el grup -</option></select>
+                    </div>
+                </div>
+                <div class="field" style="margin-bottom:12px;"><label>Titol</label><input type="text" id="seg-title"></div>
+                <div class="field" style="margin-bottom:12px;"><label>Data</label><input type="date" id="seg-date"></div>
+                <div class="field" style="margin-bottom:12px;"><label>Contingut / observacions</label><textarea id="seg-content" style="min-height:120px;"></textarea></div>
+                <div class="field" style="margin-bottom:16px;">
+                    <label>Valoracio (1-10): <span id="seg-rating-val" style="font-weight:700; color:var(--dept-color);">5</span></label>
+                    <input type="range" id="seg-rating" min="1" max="10" value="5" oninput="document.getElementById('seg-rating-val').textContent=this.value">
+                </div>
+                <button class="btn-primary" onclick="window._dept.saveFollowup()">Guardar seguiment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Nova/Edita activitat -->
+<div class="modal-overlay" id="act-modal">
+    <div class="modal-box">
+        <h3 id="act-modal-title">Nova activitat</h3>
+        <input type="hidden" id="act-id">
+        <div class="config-grid">
+            <div class="field" style="grid-column:1/-1"><label>Nom *</label><input type="text" id="act-name"></div>
+            <div class="field" style="grid-column:1/-1"><label>Codi d'expedient *</label><input type="text" id="act-code" placeholder="PIC-PICSRO25"><small id="act-code-hint" style="display:block;margin-top:6px;color:#64748b;font-size:.78rem;">Format recomanat: CÒDI_CENTRE + ANY. Es validarà que no existeixi ja.</small></div>
+            <div class="field"><label>Edat minima</label><input type="number" id="act-age-min" value="0"></div>
+            <div class="field"><label>Edat maxima</label><input type="number" id="act-age-max" value="99"></div>
+            <div class="field"><label>Data inici</label><input type="date" id="act-start"></div>
+            <div class="field"><label>Data fi</label><input type="date" id="act-end"></div>
+            <div class="field"><label>Temporalitzacio</label>
+                <select id="act-temp">
+                    <option value="Mensual">Mensual</option>
+                    <option value="Trimestral" selected>Trimestral</option>
+                    <option value="Semestral">Semestral</option>
+                    <option value="Anual">Anual</option>
+                    <option value="Puntual">Puntual</option>
+                </select>
+            </div>
+            <div class="field"><label>Eix tematic</label><input type="text" id="act-theme" placeholder="Infancia, salut, ocupacio..."></div>
+            <div class="field"><label>Necessitats logistiques</label><input type="text" id="act-logistics" placeholder="Material, sala, transport..."></div>
+            <div class="field" style="grid-column:1/-1"><label>Coorganitzacio activa</label><textarea id="act-coorg" placeholder="Entitats/professionals implicats i rol"></textarea></div>
+            <div class="field" style="grid-column:1/-1"><label>Observacions</label><textarea id="act-notes"></textarea></div>
+            <div class="field" style="grid-column:1/-1"><label>Responsables <span style="font-weight:400;color:#94a3b8;font-size:.82rem;">(un o més)</span></label>
+                <div id="act-resp-list" style="max-height:160px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;padding:8px;display:flex;flex-wrap:wrap;gap:6px;background:#f8fafc;"><span style="color:#94a3b8;font-size:.8rem;">Carregant personal...</span></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="window._dept.closeActModal()">Cancel.lar</button>
+            <button class="btn-primary" onclick="window._dept.saveActivity()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Nou grup -->
+<div class="modal-overlay" id="grp-modal">
+    <div class="modal-box">
+        <h3>Nou grup</h3>
+        <input type="hidden" id="grp-act-id">
+        <div class="field" style="margin-bottom:12px;"><label>Nom del grup *</label><input type="text" id="grp-name"></div>
+        <div class="field" style="margin-bottom:12px;"><label>Responsables <span style="font-weight:400;color:#94a3b8;font-size:.82rem;">(un o més)</span></label>
+            <div id="grp-resp-list" style="max-height:160px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;padding:8px;display:flex;flex-wrap:wrap;gap:6px;background:#f8fafc;"><span style="color:#94a3b8;font-size:.8rem;">Carregant personal...</span></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="window._dept.closeGrpModal()">Cancel.lar</button>
+            <button class="btn-primary" onclick="window._dept.saveGroup()">Crear grup</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Sol·licitar excepcio d'edat -->
+<div class="modal-overlay" id="age-exc-modal">
+    <div class="modal-box">
+        <h3 style="margin:0 0 16px;display:flex;align-items:center;gap:10px;">
+            <svg width="20" height="20" fill="none" stroke="#d97706" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Sol·licitud d'excepció d'edat
+        </h3>
+        <div id="age-exc-warning" style="background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:12px;margin-bottom:16px;font-size:.85rem;color:#92400e;line-height:1.5;"></div>
+        <div class="field" style="margin-bottom:16px;">
+            <label>Motiu de la sol·licitud *</label>
+            <textarea id="age-exc-motiu" style="min-height:100px;" placeholder="Explica el motiu pel qual aquest participant hauria de ser admès fora del rang d'edat de l'activitat..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="window._dept.closeAgeExcModal()">Cancel·lar</button>
+            <button class="btn-primary" onclick="window._dept.submitAgeException()">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                Enviar a direcció
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Assignar reforc -->
+<div class="modal-overlay" id="reforc-modal" onclick="if(event.target===this)window._dept.closeReforcModal()">
+    <div class="modal-box">
+        <h3 id="reforc-modal-title" style="display:flex;align-items:center;gap:8px;">
+            <svg width="18" height="18" fill="none" stroke="#1d4ed8" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+            Assignar personal de reforc
+        </h3>
+        <div class="field" style="margin-bottom:10px;">
+            <label>1. Seleccionar persona disponible</label>
+            <select id="reforc-person" class="field-select"></select>
+        </div>
+
+        <div class="field" style="margin-bottom:10px;">
+            <label>2. Duracio del reforc</label>
+            <div class="assign-mode-row">
+                <label class="reforc-mode-option">
+                    <input type="radio" name="reforc-mode" value="today" checked>
+                    <span class="reforc-mode-label">Nomes avui</span>
+                </label>
+                <label class="reforc-mode-option">
+                    <input type="radio" name="reforc-mode" value="until">
+                    <span class="reforc-mode-label">Fins data especifica</span>
+                    <span class="reforc-date-wrap"><input type="date" id="reforc-until-date"></span>
+                </label>
+                <label class="reforc-mode-option">
+                    <input type="radio" name="reforc-mode" value="indef">
+                    <span class="reforc-mode-label">Indefinit (fins fi de baixa)</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="field" style="margin-bottom:12px;">
+            <label><input type="checkbox" id="reforc-notify" checked style="margin-right:6px;"> 3. Notificar al treballador amb avís intern</label>
+        </div>
+
+        <div id="reforc-err" style="display:none;color:#dc2626;font-size:.82rem;"></div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="window._dept.closeReforcModal()">Cancel.lar</button>
+            <button class="btn-primary" id="btn-reforc-confirm" onclick="window._dept.confirmReforcAssignacio()">Confirmar assignacio</button>
+        </div>
+    </div>
+</div>
+
+<div class="dept-toast" id="dept-toast"></div>
+<script type="module" src="departament-page.js"></script>
+</body>
+</html>

@@ -1,0 +1,660 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" type="image/svg+xml" href="../img/nexeadmin-icon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f8fafc; color: #1e293b; font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; }
+        .main-content { flex-grow: 1; padding: 40px 50px; }
+
+        /* PAGE HEADER */
+        .page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+        .page-header h1 { margin: 0; font-size: 1.5rem; font-weight: 800; }
+        .page-header p { margin: 4px 0 0; color: #64748b; font-size: 0.9rem; }
+
+        /* KPIs */
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+        .kpi-card { background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 20px; text-align: center; }
+        .kpi-val { font-size: 2.2rem; font-weight: 800; line-height: 1; }
+        .kpi-lbl { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: #64748b; margin-top: 5px; letter-spacing: .5px; }
+        .kpi-card.danger .kpi-val { color: #ef4444; }
+        .kpi-card.warn .kpi-val { color: #f59e0b; }
+        .kpi-card.ok .kpi-val { color: #10b981; }
+        .kpi-card.neutral .kpi-val { color: #64748b; }
+
+        /* ALERTS */
+        .alerts-section { margin-bottom: 24px; }
+        .alerts-header { font-size: 0.78rem; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 8px; letter-spacing: .5px; }
+        .alert-item { display: flex; align-items: center; gap: 12px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; }
+        .alert-item.red { border-color: #fca5a5; background: #fff5f5; }
+        .alert-item.orange { border-color: #fde68a; background: #fffbeb; }
+        .alert-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .red .alert-dot { background: #ef4444; }
+        .orange .alert-dot { background: #f59e0b; }
+
+        /* FILTERS */
+        .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+        .filter-btn { padding: 7px 14px; border-radius: 8px; border: 1px solid #e2e8f0; background: white; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: #64748b; transition: 0.15s; }
+        .filter-btn.active { background: #0f172a; color: white; border-color: #0f172a; }
+        .search-input { flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.88rem; font-family: inherit; }
+        .search-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .worker-filter { min-width: 180px; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.88rem; font-family: inherit; background: white; }
+        .worker-filter:focus { outline: none; border-color: #3b82f6; }
+
+        /* TABLE */
+        .content-card { background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8fafc; text-align: left; padding: 12px 15px; font-size: 0.68rem; text-transform: uppercase; color: #64748b; border-bottom: 1px solid #e2e8f0; letter-spacing: .5px; }
+        td { padding: 13px 15px; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr.row-expired { background: #fff5f5; }
+        tr.row-soon { background: #fffcf0; }
+
+        /* BADGES */
+        .badge { display: inline-block; padding: 3px 9px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; white-space: nowrap; }
+        .badge-expired { background: #fee2e2; color: #991b1b; }
+        .badge-soon30 { background: #fee2e2; color: #991b1b; }
+        .badge-soon90 { background: #fef3c7; color: #92400e; }
+        .badge-valid { background: #dcfce7; color: #166534; }
+        .badge-permanent { background: #f1f5f9; color: #475569; }
+
+        /* WORKER AVATAR */
+        .worker-chip { display: inline-flex; align-items: center; gap: 7px; }
+        .worker-avatar { width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; display: inline-flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 800; color: #475569; flex-shrink: 0; }
+
+        /* PROGRESS BAR */
+        .days-bar { height: 4px; border-radius: 4px; background: #e2e8f0; overflow: hidden; margin-top: 4px; }
+        .days-bar-fill { height: 100%; border-radius: 4px; }
+
+        /* BUTTONS */
+        .btn { padding: 9px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; font-size: 0.85rem; font-family: inherit; transition: 0.15s; }
+        .btn-primary { background: #0f172a; color: white; }
+        .btn-primary:hover { background: #1e293b; }
+        .btn-secondary { background: white; border: 1px solid #e2e8f0; color: #1e293b; }
+        .btn-secondary:hover { background: #f8fafc; }
+        .btn-danger { background: #fee2e2; color: #991b1b; border: none; }
+        .btn-sm { padding: 5px 10px; font-size: 0.75rem; border-radius: 6px; }
+        .btn-icon { background: none; border: none; cursor: pointer; padding: 5px; border-radius: 6px; color: #64748b; }
+        .btn-icon:hover { background: #f1f5f9; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(6px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: white; padding: 36px; border-radius: 20px; width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; box-shadow: 0 25px 60px rgba(0,0,0,0.18); }
+        .modal-box h2 { margin: 0 0 24px; font-size: 1.15rem; font-weight: 800; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label { display: block; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 5px; letter-spacing: .5px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 9px 11px; border: 1px solid #e2e8f0; border-radius: 8px;
+            font-size: 0.9rem; font-family: inherit; background: white;
+        }
+        .form-group textarea { resize: vertical; min-height: 70px; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+
+        /* CADUCA TOGGLE */
+        .caduca-toggle { display: flex; gap: 0; border-radius: 9px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .caduca-opt { flex: 1; text-align: center; padding: 9px 0; font-size: 0.84rem; font-weight: 700; cursor: pointer; background: white; color: #64748b; border: none; transition: 0.15s; }
+        .caduca-opt.active-si { background: #fee2e2; color: #991b1b; }
+        .caduca-opt.active-no { background: #dcfce7; color: #166534; }
+
+        /* DATE FIELD (hidden until needed) */
+        #fecha-wrap { display: none; }
+
+        /* EMPTY STATE */
+        .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; }
+        .empty-state svg { margin-bottom: 14px; }
+
+        /* TOAST */
+        .toast { position: fixed; bottom: 24px; right: 24px; background: #0f172a; color: white; padding: 13px 20px; border-radius: 12px; font-size: 0.88rem; font-weight: 600; z-index: 9999; display: none; box-shadow: 0 8px 30px rgba(0,0,0,0.18); }
+        .toast.ok { background: #059669; }
+        .toast.err { background: #dc2626; }
+
+        @media (max-width: 900px) {
+            .kpi-grid { grid-template-columns: 1fr 1fr; }
+            .main-content { padding: 20px 16px; }
+        }
+        @media (max-width: 600px) {
+            .kpi-grid { grid-template-columns: 1fr 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            table { font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+<aside class="admin-sidebar"></aside>
+<main class="main-content">
+
+    <div class="page-header">
+        <div>
+            <h1>Documents del Personal</h1>
+            <p>GestiÃ³ de documentaciÃ³ laboral dels treballadors â€” contractes, certificats, titulacions i caducitats</p>
+        </div>
+        <button class="btn btn-primary" onclick="obrirModal()">
+            <svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;vertical-align:middle;margin-right:6px;" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nou Document
+        </button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+        <div class="kpi-card neutral">
+            <div class="kpi-val" id="kpi-total">â€”</div>
+            <div class="kpi-lbl">Total Documents</div>
+        </div>
+        <div class="kpi-card danger">
+            <div class="kpi-val" id="kpi-expired">â€”</div>
+            <div class="kpi-lbl">Caducats</div>
+        </div>
+        <div class="kpi-card warn">
+            <div class="kpi-val" id="kpi-soon">â€”</div>
+            <div class="kpi-lbl">Propers a vÃ¨ncer</div>
+        </div>
+        <div class="kpi-card ok">
+            <div class="kpi-val" id="kpi-permanent">â€”</div>
+            <div class="kpi-lbl">Permanents / Vigents</div>
+        </div>
+    </div>
+
+    <!-- ALERTS -->
+    <div class="alerts-section" id="alerts-section" style="display:none;">
+        <div class="alerts-header">âš  Alertes de caducitat</div>
+        <div id="alerts-list"></div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filter-bar">
+        <input class="search-input" type="search" id="searchDoc" placeholder="Cercar per nom, treballador, document..." oninput="renderTable()">
+        <select class="worker-filter" id="workerFilter" onchange="renderTable()">
+            <option value="">Tots els treballadors</option>
+        </select>
+        <button class="filter-btn active" id="btn-all"   onclick="setFilter('tots',this)">Tots</button>
+        <button class="filter-btn"        id="btn-exp"   onclick="setFilter('caducat',this)">Caducats</button>
+        <button class="filter-btn"        id="btn-soon"  onclick="setFilter('propers',this)">Propers</button>
+        <button class="filter-btn"        id="btn-perm"  onclick="setFilter('permanent',this)">Permanents</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="content-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Document</th>
+                    <th>Treballador</th>
+                    <th>Tipus</th>
+                    <th>Alta</th>
+                    <th>Caducitat</th>
+                    <th>Estat</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="tbody-docs">
+                <tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">Carregant...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalDoc">
+    <div class="modal-box">
+        <h2 id="modal-title">Nou Document</h2>
+
+        <div class="form-group">
+            <label>Treballador *</label>
+            <select id="doc-worker" required>
+                <option value="">Selecciona un treballador...</option>
+            </select>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Nom del document *</label>
+                <input type="text" id="doc-nom" placeholder="ex. Contrato indefinido, TitulaciÃ³ CFGM..." required>
+            </div>
+            <div class="form-group">
+                <label>Tipus de document</label>
+                <select id="doc-tipus">
+                    <option value="">â€” Selecciona â€”</option>
+                    <option value="Contracte">Contracte</option>
+                    <option value="TitulaciÃ³">TitulaciÃ³ / Certificat</option>
+                    <option value="FormaciÃ³">FormaciÃ³ obligatÃ²ria</option>
+                    <option value="PrevenciÃ³">PrevenciÃ³ de riscos</option>
+                    <option value="MÃ©dic">Reconeixement mÃ¨dic</option>
+                    <option value="Antecedents">Certificat d'antecedents</option>
+                    <option value="Identitat">DocumentaciÃ³ d'identitat</option>
+                    <option value="HabilitaciÃ³">HabilitaciÃ³ professional</option>
+                    <option value="PermÃ­s">PermÃ­s / LlicÃ¨ncia</option>
+                    <option value="Altre">Altre</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>El document caduca?</label>
+            <div class="caduca-toggle" id="caducaToggle">
+                <button type="button" class="caduca-opt active-si" id="caduca-si" onclick="setCaduca(true)">SÃ­, caduca</button>
+                <button type="button" class="caduca-opt" id="caduca-no" onclick="setCaduca(false)">No caduca (permanent)</button>
+            </div>
+        </div>
+
+        <div id="fecha-wrap">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Data de caducitat *</label>
+                    <input type="date" id="doc-caducitat">
+                </div>
+                <div class="form-group">
+                    <label>AvÃ­s anticipaciÃ³</label>
+                    <select id="doc-avis">
+                        <option value="30">30 dies abans</option>
+                        <option value="60" selected>60 dies abans</option>
+                        <option value="90">90 dies abans</option>
+                        <option value="180">6 mesos abans</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Notes / Observacions</label>
+            <textarea id="doc-notes" placeholder="NÃºmero de document, expedient, observacions..."></textarea>
+        </div>
+
+        <input type="hidden" id="edit-doc-id">
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+            <button class="btn btn-secondary" onclick="tancarModal()">CancelÂ·lar</button>
+            <button class="btn btn-primary" id="btn-save" onclick="guardarDocument()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+    import { db } from '../firebase-config.js';
+    import {
+        collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy, query, onSnapshot
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    const COL = 'personal_documentos';
+    let allDocs    = [];
+    let allWorkers = [];   // { uid, name }
+    let activeFilter = 'tots';
+    let isCaduca   = true; // default to yes
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+    function diffDays(ts) {
+        if (!ts) return null;
+        const dt = ts.toDate ? ts.toDate() : new Date(ts);
+        return Math.round((dt - Date.now()) / 86400000);
+    }
+
+    function fmtDate(ts) {
+        if (!ts) return 'â€”';
+        const d = ts.toDate ? ts.toDate() : new Date(ts);
+        return d.toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    function initials(name) {
+        return (name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    }
+
+    function docStatus(d) {
+        if (!d.caduca) return 'permanent';
+        const days = diffDays(d.fechaCaducidad);
+        if (days === null) return 'permanent';
+        if (days < 0)  return 'caducat';
+        if (days <= 90) return 'propers';
+        return 'vigent';
+    }
+
+    function badgeHtml(d) {
+        if (!d.caduca) return `<span class="badge badge-permanent">Permanent</span>`;
+        const days = diffDays(d.fechaCaducidad);
+        if (days === null) return `<span class="badge badge-permanent">Sense data</span>`;
+        if (days < 0)   return `<span class="badge badge-expired">Caducat (${Math.abs(days)}d)</span>`;
+        if (days <= 30) return `<span class="badge badge-soon30">VenÃ§ en ${days}d</span>`;
+        if (days <= 90) return `<span class="badge badge-soon90">VenÃ§ en ${days}d</span>`;
+        return `<span class="badge badge-valid">Vigent</span>`;
+    }
+
+    function rowCls(d) {
+        if (!d.caduca) return '';
+        const days = diffDays(d.fechaCaducidad);
+        if (days === null) return '';
+        if (days < 0 || days <= 30) return 'row-expired';
+        if (days <= 90) return 'row-soon';
+        return '';
+    }
+
+    function daysBar(d) {
+        if (!d.caduca) return '';
+        const days = diffDays(d.fechaCaducidad);
+        if (days === null) return '';
+        const pct  = Math.max(0, Math.min(100, (days / 365) * 100));
+        const color = days < 0 ? '#ef4444' : days <= 30 ? '#ef4444' : days <= 90 ? '#f59e0b' : '#10b981';
+        return `<div class="days-bar"><div class="days-bar-fill" style="width:${pct}%;background:${color};"></div></div>`;
+    }
+
+    function toast(msg, type = 'ok') {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.className = `toast ${type}`;
+        el.style.display = 'block';
+        setTimeout(() => { el.style.display = 'none'; }, 3200);
+    }
+
+    // -------------------------------------------------------------------------
+    // Load data
+    // -------------------------------------------------------------------------
+    async function loadWorkers() {
+        try {
+            const snap = await getDocs(collection(db, 'usuarios'));
+            allWorkers = snap.docs
+                .map(d => ({ uid: d.id, name: d.data().nombre || d.data().email || d.id }))
+                .sort((a, b) => a.name.localeCompare(b.name));
+        } catch (e) {
+            console.warn('No s\'han pogut carregar treballadors:', e);
+        }
+        populateWorkerSelects();
+    }
+
+    function populateWorkerSelects() {
+        const optsHtml = allWorkers.map(w =>
+            `<option value="${w.uid}" data-name="${w.name}">${w.name}</option>`
+        ).join('');
+
+        document.getElementById('doc-worker').innerHTML =
+            '<option value="">Selecciona un treballador...</option>' + optsHtml;
+
+        const wf = document.getElementById('workerFilter');
+        wf.innerHTML = '<option value="">Tots els treballadors</option>' + optsHtml;
+    }
+
+    let _unsubDocs = null;
+
+    async function loadDocs() {
+        if (_unsubDocs) _unsubDocs();
+        _unsubDocs = onSnapshot(
+            query(collection(db, COL), orderBy('dataAlta', 'desc')),
+            (snap) => {
+                allDocs = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+                updateKPIs();
+                renderTable();
+            },
+            (e) => { console.warn('[personal-docs]', e); allDocs = []; }
+        );
+    }
+    window.addEventListener('beforeunload', () => { if (_unsubDocs) _unsubDocs(); });
+
+    // -------------------------------------------------------------------------
+    // KPIs + alerts
+    // -------------------------------------------------------------------------
+    function updateKPIs() {
+        let expired = 0, soon = 0, permanent = 0;
+        allDocs.forEach(d => {
+            const s = docStatus(d);
+            if (s === 'caducat') expired++;
+            else if (s === 'propers') soon++;
+            else permanent++;
+        });
+        document.getElementById('kpi-total').textContent    = allDocs.length;
+        document.getElementById('kpi-expired').textContent  = expired;
+        document.getElementById('kpi-soon').textContent     = soon;
+        document.getElementById('kpi-permanent').textContent = permanent;
+
+        // Alerts
+        const urgent = allDocs.filter(d => d.caduca && diffDays(d.fechaCaducidad) !== null && diffDays(d.fechaCaducidad) <= 90)
+            .sort((a, b) => (diffDays(a.fechaCaducidad) ?? 0) - (diffDays(b.fechaCaducidad) ?? 0));
+
+        const sec = document.getElementById('alerts-section');
+        const lst = document.getElementById('alerts-list');
+        if (urgent.length) {
+            sec.style.display = '';
+            lst.innerHTML = urgent.slice(0, 6).map(d => {
+                const days = diffDays(d.fechaCaducidad);
+                const cls  = days < 0 || days <= 30 ? 'red' : 'orange';
+                const msg  = days < 0 ? `Caducat fa ${Math.abs(days)} dies` : `Caduca en ${days} dies (${fmtDate(d.fechaCaducidad)})`;
+                return `<div class="alert-item ${cls}">
+                    <div class="alert-dot"></div>
+                    <div style="flex:1;">
+                        <strong>${d.nomDocument || 'â€”'}</strong>
+                        <span style="color:#64748b;font-size:.83rem;margin-left:6px;">${d.workerName || ''}</span>
+                        <div style="font-size:0.78rem;color:#64748b;margin-top:2px;">${msg}</div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="editarDoc('${d._id}')">Renovar</button>
+                </div>`;
+            }).join('');
+        } else {
+            sec.style.display = 'none';
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Table render
+    // -------------------------------------------------------------------------
+    window.renderTable = function() {
+        const search = document.getElementById('searchDoc').value.toLowerCase();
+        const workerF = document.getElementById('workerFilter').value;
+
+        let filtered = allDocs.filter(d => {
+            const st = docStatus(d);
+            if (activeFilter === 'caducat'   && st !== 'caducat')   return false;
+            if (activeFilter === 'propers'   && st !== 'propers')   return false;
+            if (activeFilter === 'permanent' && st !== 'permanent' && st !== 'vigent') return false;
+            if (workerF && d.workerId !== workerF) return false;
+            if (search) {
+                const txt = ((d.nomDocument || '') + (d.workerName || '') + (d.tipusDocument || '') + (d.notes || '')).toLowerCase();
+                if (!txt.includes(search)) return false;
+            }
+            return true;
+        });
+
+        // Sort: expired first
+        filtered.sort((a, b) => {
+            const da = a.caduca ? (diffDays(a.fechaCaducidad) ?? 9999) : 99999;
+            const db2 = b.caduca ? (diffDays(b.fechaCaducidad) ?? 9999) : 99999;
+            return da - db2;
+        });
+
+        const tbody = document.getElementById('tbody-docs');
+        if (!filtered.length) {
+            tbody.innerHTML = `<tr><td colspan="7">
+                <div class="empty-state">
+                    <svg width="40" height="40" fill="none" stroke="#cbd5e1" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <div>Cap document trobat</div>
+                </div>
+            </td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(d => {
+            const ini = initials(d.workerName);
+            return `<tr class="${rowCls(d)}">
+                <td>
+                    <strong>${d.nomDocument || 'â€”'}</strong>
+                    ${d.notes ? `<div style="font-size:.76rem;color:#94a3b8;margin-top:2px;">${d.notes}</div>` : ''}
+                </td>
+                <td>
+                    <div class="worker-chip">
+                        <div class="worker-avatar">${ini}</div>
+                        <span>${d.workerName || 'â€”'}</span>
+                    </div>
+                </td>
+                <td>${d.tipusDocument ? `<span class="badge" style="background:#eff6ff;color:#1d4ed8;">${d.tipusDocument}</span>` : '<span style="color:#94a3b8;">â€”</span>'}</td>
+                <td style="color:#64748b;">${fmtDate(d.dataAlta)}</td>
+                <td>${d.caduca ? fmtDate(d.fechaCaducidad) + daysBar(d) : '<span style="color:#94a3b8;">Permanent</span>'}</td>
+                <td>${badgeHtml(d)}</td>
+                <td style="white-space:nowrap;">
+                    <button class="btn-icon" onclick="editarDoc('${d._id}')" title="Editar">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="btn-icon" onclick="eliminarDoc('${d._id}')" title="Eliminar" style="color:#ef4444;">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4h6v2"/></svg>
+                    </button>
+                </td>
+            </tr>`;
+        }).join('');
+    };
+
+    // -------------------------------------------------------------------------
+    // Filter buttons
+    // -------------------------------------------------------------------------
+    window.setFilter = function(f, btn) {
+        activeFilter = f;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderTable();
+    };
+
+    // -------------------------------------------------------------------------
+    // Modal open / close
+    // -------------------------------------------------------------------------
+    window.obrirModal = function(id) {
+        const modal = document.getElementById('modalDoc');
+        document.getElementById('edit-doc-id').value = id || '';
+        document.getElementById('modal-title').textContent = id ? 'Editar Document' : 'Nou Document';
+
+        if (!id) {
+            document.getElementById('doc-worker').value = '';
+            document.getElementById('doc-nom').value = '';
+            document.getElementById('doc-tipus').value = '';
+            document.getElementById('doc-caducitat').value = '';
+            document.getElementById('doc-avis').value = '60';
+            document.getElementById('doc-notes').value = '';
+            setCaduca(true);
+        }
+        modal.classList.add('open');
+        document.getElementById('doc-worker').focus();
+    };
+
+    window.tancarModal = function() {
+        document.getElementById('modalDoc').classList.remove('open');
+    };
+
+    // Close on backdrop click
+    document.getElementById('modalDoc').addEventListener('click', e => {
+        if (e.target === e.currentTarget) tancarModal();
+    });
+
+    // -------------------------------------------------------------------------
+    // Caduca toggle
+    // -------------------------------------------------------------------------
+    window.setCaduca = function(val) {
+        isCaduca = val;
+        document.getElementById('caduca-si').className = 'caduca-opt' + (val ? ' active-si' : '');
+        document.getElementById('caduca-no').className = 'caduca-opt' + (!val ? ' active-no' : '');
+        document.getElementById('fecha-wrap').style.display = val ? 'block' : 'none';
+    };
+
+    // -------------------------------------------------------------------------
+    // Save document
+    // -------------------------------------------------------------------------
+    window.guardarDocument = async function() {
+        const workerId  = document.getElementById('doc-worker').value.trim();
+        const nomDoc    = document.getElementById('doc-nom').value.trim();
+        const caducitat = document.getElementById('doc-caducitat').value;
+
+        if (!workerId) { toast('Selecciona un treballador', 'err'); return; }
+        if (!nomDoc)   { toast('El nom del document Ã©s obligatori', 'err'); return; }
+        if (isCaduca && !caducitat) { toast('Indica la data de caducitat', 'err'); return; }
+
+        const workerOpt = document.getElementById('doc-worker').options[document.getElementById('doc-worker').selectedIndex];
+        const workerName = workerOpt?.dataset?.name || workerOpt?.text || '';
+
+        const payload = {
+            workerId,
+            workerName,
+            nomDocument: nomDoc,
+            tipusDocument: document.getElementById('doc-tipus').value,
+            caduca: isCaduca,
+            fechaCaducidad: isCaduca && caducitat ? caducitat : null,
+            avisAntelacio: isCaduca ? parseInt(document.getElementById('doc-avis').value) : null,
+            notes: document.getElementById('doc-notes').value.trim(),
+        };
+
+        const editId = document.getElementById('edit-doc-id').value;
+        const btn = document.getElementById('btn-save');
+        btn.disabled = true; btn.textContent = 'Guardant...';
+
+        try {
+            if (editId) {
+                await updateDoc(doc(db, COL, editId), { ...payload, dataModificacio: serverTimestamp() });
+                toast('Document actualitzat âœ“');
+            } else {
+                payload.dataAlta = serverTimestamp();
+                await addDoc(collection(db, COL), payload);
+                toast('Document creat âœ“');
+            }
+            tancarModal();
+            await loadDocs();
+        } catch (e) {
+            console.error(e);
+            toast('Error en guardar: ' + e.message, 'err');
+        } finally {
+            btn.disabled = false; btn.textContent = 'Guardar';
+        }
+    };
+
+    // -------------------------------------------------------------------------
+    // Edit / Delete
+    // -------------------------------------------------------------------------
+    window.editarDoc = async function(id) {
+        const d = allDocs.find(x => x._id === id);
+        if (!d) return;
+        obrirModal(id);
+        document.getElementById('doc-worker').value  = d.workerId || '';
+        document.getElementById('doc-nom').value     = d.nomDocument || '';
+        document.getElementById('doc-tipus').value   = d.tipusDocument || '';
+        document.getElementById('doc-notes').value   = d.notes || '';
+        document.getElementById('doc-avis').value    = d.avisAntelacio || '60';
+        setCaduca(d.caduca !== false);
+        if (d.caduca && d.fechaCaducidad) {
+            const dt = d.fechaCaducidad?.toDate ? d.fechaCaducidad.toDate() : new Date(d.fechaCaducidad);
+            document.getElementById('doc-caducitat').value = dt.toISOString().slice(0, 10);
+        } else {
+            document.getElementById('doc-caducitat').value = '';
+        }
+    };
+
+    window.eliminarDoc = async function(id) {
+        const d = allDocs.find(x => x._id === id);
+        if (!confirm(`Eliminar el document "${d?.nomDocument}" de ${d?.workerName}?\nAquesta acciÃ³ Ã©s irreversible.`)) return;
+        try {
+            await deleteDoc(doc(db, COL, id));
+            toast('Document eliminat');
+            await loadDocs();
+        } catch (e) {
+            toast('Error en eliminar: ' + e.message, 'err');
+        }
+    };
+
+    // -------------------------------------------------------------------------
+    // Init
+    // -------------------------------------------------------------------------
+    async function init() {
+        await loadWorkers();
+        await loadDocs();
+    }
+
+    init();
+</script>
+<script src="../security-check.js"></script>
+<script type="module">await window.checkModuleAccess('NexeAdmin');</script>
+<script src="nexeadmin-sidebar.js"></script>
+</body>
+</html>
+

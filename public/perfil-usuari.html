@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Perfil d'Usuari</title>
+                        usuariActual.relacio_serveis = await cu.decryptField(raw.relacio_serveis || raw.socio_laboral) || {};
+                        usuariActual.situacio_psicosocial = await cu.decryptField(raw.situacio_psicosocial || raw.habitatge) || {};
+                        usuariActual.educacio_salut = await cu.decryptField(raw.educacio_salut || raw.salut) || {};
+                        usuariActual.socio_laboral = usuariActual.relacio_serveis;
+                        usuariActual.habitatge = usuariActual.situacio_psicosocial;
+                        usuariActual.salut = usuariActual.educacio_salut;
+        .profile-brand-hero {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 22px;
+            padding: 22px 26px;
+            border-radius: 18px;
+                    usuariActual.relacio_serveis = raw.relacio_serveis || raw.socio_laboral || {};
+                    usuariActual.situacio_psicosocial = raw.situacio_psicosocial || raw.habitatge || {};
+                    usuariActual.educacio_salut = raw.educacio_salut || raw.salut || {};
+                    usuariActual.socio_laboral = usuariActual.relacio_serveis;
+                    usuariActual.habitatge = usuariActual.situacio_psicosocial;
+                    usuariActual.salut = usuariActual.educacio_salut;
+        .profile-brand-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(255,255,255,0.22), transparent 34%), radial-gradient(circle at bottom left, rgba(255,255,255,0.14), transparent 28%);
+            pointer-events: none;
+        }
+        .profile-brand-hero-inner {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+        }
+        .profile-brand-main {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            min-width: 0;
+        }
+        .profile-brand-logo {
+            width: 160px;
+            max-width: 42vw;
+            filter: drop-shadow(0 8px 24px rgba(15, 23, 42, 0.24));
+        }
+        .profile-brand-copy h2 {
+            margin: 0 0 6px;
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+        }
+        .profile-brand-copy p {
+            margin: 0;
+            font-size: 0.92rem;
+            line-height: 1.45;
+        .acceptacio-card span { font-size: 0.9rem; color: #1e293b; font-weight: 500; line-height: 1.4; flex: 1; padding-right: 20px; }
+        .acceptacio-card input[type="checkbox"] { width: 22px; height: 22px; accent-color: #2563eb; cursor: pointer; flex-shrink: 0; }
+
+        .item-card { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 10px; }
+        .allergy-tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+        .allergy-card { background: #fef2f2; border: 1px solid #fee2e2; padding: 12px; border-radius: 10px; text-align: left; margin-bottom: 10px; }
+        .allergy-card h4 { margin: 0 0 5px 0; font-size: 0.75rem; color: #ef4444; text-transform: uppercase; letter-spacing: 0.5px; }
+        .search-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 10px; }
+        .results-list { max-height: 200px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; }
+        .result-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; }
+        .result-item:hover { background: #f1f5f9; }
+        .multi-select-box {
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            background: #fff;
+            padding: 12px;
+        }
+        .multi-select-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 8px 12px;
+            margin-top: 10px;
+        }
+        .multi-select-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 0.88rem;
+            color: #334155;
+        }
+        .selected-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-height: 28px;
+            margin-top: 8px;
+        }
+        .tag-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1d4ed8;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+        .conditional-box {
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px dashed #cbd5e1;
+            background: #f8fafc;
+            display: none;
+        }
+        .inline-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #334155;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import './sidebar.js';
+        import './auth-manager.js';
+        import './vault-init.js';
+    </script>
+
+    <!-- UI functions in a plain script so they always work regardless of module load status -->
+    <script>
+        function openTab(evt, name) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(name).classList.add('active');
+            if (evt && evt.currentTarget) evt.currentTarget.classList.add('active');
+        }
+        function toggleEdit() {
+            document.body.classList.toggle('is-editing');
+            const isEditing = document.body.classList.contains('is-editing');
+            document.getElementById('btnEdit').style.display = isEditing ? 'none' : 'inline-flex';
+            document.getElementById('btnSaveMain').style.display = isEditing ? 'inline-flex' : 'none';
+        }
+        function tancarModal() {
+            document.getElementById('customModal').style.display = 'none';
+            document.getElementById('modalTextarea').style.display = 'none';
+        }
+        function checkAlergies() {
+            var el = document.getElementById('in-te-alergies');
+            document.getElementById('group-detall-alergies').style.display = el && el.value === 'Sí' ? 'block' : 'none';
+        }
+        function checkDependencia() {
+            var el = document.getElementById('in-dependencia-medica');
+            document.getElementById('group-grau').style.display = el && el.value === 'Sí' ? 'block' : 'none';
+        }
+        function checkTancament() {
+            var el = document.getElementById('in-estat-expedient');
+            var group = document.getElementById('group-motiu-tancament');
+            if (!group) return;
+            group.style.display = el && el.value === 'tancat' ? 'block' : 'none';
+        }
+        function getCheckboxValues(groupName) {
+            return Array.from(document.querySelectorAll(`[data-multi-group="${groupName}"]:checked`)).map(function(el) { return el.value; });
+        }
+        function setCheckboxValues(groupName, values) {
+            const selected = Array.isArray(values) ? values : (values ? [values] : []);
+            document.querySelectorAll(`[data-multi-group="${groupName}"]`).forEach(function(el) {
+                el.checked = selected.includes(el.value);
+            });
+            syncMultiSelect(groupName);
+        }
+        function syncMultiSelect(groupName) {
+            const summary = document.getElementById(`val-${groupName}`);
+            if (!summary) return;
+            const values = getCheckboxValues(groupName);
+            summary.innerHTML = values.length
+                ? values.map(function(value) { return `<span class="tag-chip">${value}</span>`; }).join('')
+                : '<span style="color:#94a3b8;font-size:0.85rem;">Cap seleccionat</span>';
+        }
+        function toggleConditional(id, show) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = show ? 'block' : 'none';
+        }
+        function actualitzarEdat() {
+            const birth = document.getElementById('in-naixement');
+            const age = document.getElementById('in-edat');
+            if (!birth || !age) return;
+            if (!birth.value) {
+                age.value = '';
+                return;
+            }
+            const naix = new Date(birth.value);
+            const avui = new Date();
+            let edat = avui.getFullYear() - naix.getFullYear();
+            if (avui.getMonth() < naix.getMonth() || (avui.getMonth() === naix.getMonth() && avui.getDate() < naix.getDate())) edat--;
+            age.value = Number.isFinite(edat) && edat >= 0 ? edat : '';
+        }
+        function syncConditionalFields() {
+            const derivatAltres = document.getElementById('in-derivat-altres');
+            toggleConditional('box-derivat-altres', derivatAltres && derivatAltres.checked);
+
+            const labor = document.getElementById('in-situacio-laboral');
+            toggleConditional('box-situacio-laboral-detall', labor && labor.value === 'Altres');
+
+            const malaltiaTipus = document.getElementById('in-malaltia-tipus');
+            toggleConditional('box-malaltia-nom', !!(malaltiaTipus && malaltiaTipus.value));
+
+            const adiccio = document.getElementById('in-adiccio');
+            toggleConditional('box-adiccio-a-que', adiccio && adiccio.value === 'Sí');
+        }
+        var _SVG_OK  = '<svg style="width:18px;height:18px;fill:white;flex-shrink:0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+        var _SVG_ERR = '<svg style="width:18px;height:18px;fill:white;flex-shrink:0" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
+        function _showSaveToast(msg, ok) {
+            var t = document.getElementById('_saveToast');
+            if (!t) {
+                t = document.createElement('div');
+                t.id = '_saveToast';
+                t.style.cssText = 'position:fixed;bottom:28px;right:28px;z-index:40000;display:flex;align-items:center;gap:10px;padding:14px 20px;border-radius:12px;font-weight:600;font-size:0.92rem;box-shadow:0 8px 30px rgba(0,0,0,.22);transition:opacity .4s,transform .4s;max-width:360px;line-height:1.4;';
+                document.body.appendChild(t);
+            }
+            t.innerHTML = (ok ? _SVG_OK : _SVG_ERR) + '<span>' + msg + '</span>';
+            t.style.background = ok ? '#10b981' : '#ef4444';
+            t.style.color = 'white';
+            t.style.opacity = '1';
+            t.style.transform = 'translateY(0)';
+            clearTimeout(t._timer);
+            t._timer = setTimeout(function(){ t.style.opacity = '0'; t.style.transform = 'translateY(8px)'; }, 3200);
+        }
+        // confirmSave is fully self-contained in this plain script.
+        // It waits for window._nexeDB (set by firebase-config.js) and uses
+        // dynamic import for Firestore functions — no dependency on the module.
+        async function confirmSave() {
+            console.log('[confirmSave] Starting save...');
+            var db = window._nexeDB;
+            if (!db) { _showSaveToast('Firebase no disponible. Refresca la p\u00e0gina.', false); return; }
+            var params = new URLSearchParams(window.location.search);
+            var userId = params.get('id');
+            console.log('[confirmSave] userId:', userId);
+
+            // Import Firestore + encryption modules in parallel
+            var _mods = await Promise.all([
+                import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"),
+                import('./vault-init.js'),
+                import('./crypto-utils.js')
+            ]);
+            var fs = _mods[0], vi = _mods[1], cu = _mods[2];
+            console.log('[confirmSave] Modules imported');
+
+            // Ensure vault is unlocked (shows password modal if not yet entered this session)
+            await vi.waitForCrypto();
+            console.log('[confirmSave] Vault ready');
+
+            // Read current doc to preserve fields not in the form (numero_expediente, estat, etc.)
+            var currentData = {};
+            if (userId && userId !== 'nou') {
+                try {
+                    var snap = await fs.getDoc(fs.doc(db, "expedientes", userId));
+                    if (snap.exists()) currentData = snap.data();
+                    console.log('[confirmSave] Current data loaded:', currentData);
+                } catch(e) { console.warn('Could not pre-fetch doc:', e); }
+            }
+
+            // Build plain-text data sections, then encrypt each one
+            var _dp = {
+                nom: document.getElementById('in-nom').value,
+                cognoms: document.getElementById('in-cognoms').value,
+                cognom2: document.getElementById('in-cognom2').value,
+                tipus_document: document.getElementById('in-doc-tipus').value,
+                doc_numero: document.getElementById('in-doc-num').value,
+                data_naixement: document.getElementById('in-naixement').value,
+                edat: document.getElementById('in-edat').value,
+                genere: document.getElementById('in-genere').value,
+                email: document.getElementById('in-email').value,
+                telefon: document.getElementById('in-telefon').value,
+                adreca: document.getElementById('in-adreca').value,
+                barri_residencia: document.getElementById('in-barri').value,
+                distribucio_origen: document.getElementById('in-distribucio-origen').value,
+                minoria_etnica: document.getElementById('in-minoria-etnica').checked,
+                situacio_admin: document.getElementById('in-situacio-admin').value
+            };
+            var _rel = {
+                derivat_per: getCheckboxValues('derivat_per'),
+                derivat_per_altres: document.getElementById('in-derivat-per-altres').value,
+                expedient_obert_a: getCheckboxValues('expedient_obert_a'),
+                protocols_educacio: getCheckboxValues('protocols_educacio'),
+                professional_xarxa: document.getElementById('in-professional-xarxa').checked,
+                // compatibility aliases
+                estudis: document.getElementById('in-nivell-educatiu').value,
+                situacio_laboral: document.getElementById('in-situacio-laboral').value,
+                bretxa: document.getElementById('in-bretxa-digital').value,
+                origen: document.getElementById('in-distribucio-origen').value,
+                situ_adm: document.getElementById('in-situacio-admin').value,
+                ingressos: ''
+            };
+            var _ps = {
+                situacio_domicili: document.getElementById('in-situacio-domicili').value,
+                membres_unitat_familiar: document.getElementById('in-membres-unitat-familiar').value,
+                context_familiar: document.getElementById('in-context-familiar').value,
+                nombre_fills: document.getElementById('in-nombre-fills').value,
+                vulnerabilitat_greu: getCheckboxValues('vulnerabilitat_greu'),
+                bretxa_digital: document.getElementById('in-bretxa-digital').value,
+                participa_comunitaries: document.getElementById('in-participa-comunitaries').checked,
+                indicadors_risc: getCheckboxValues('indicadors_risc'),
+                // compatibility aliases
+                domicili: document.getElementById('in-situacio-domicili').value,
+                context: document.getElementById('in-context-familiar').value,
+                unitat_familiar: document.getElementById('in-membres-unitat-familiar').value
+            };
+            var _edu = {
+                nivell_educatiu: document.getElementById('in-nivell-educatiu').value,
+                centre_educatiu: document.getElementById('in-centre-educatiu').value,
+                situacio_escolar: document.getElementById('in-situacio-escolar').value,
+                situacio_laboral: document.getElementById('in-situacio-laboral').value,
+                situacio_laboral_detall: document.getElementById('in-situacio-laboral-detall').value,
+                discapacitat: document.getElementById('in-discapacitat').value,
+                dependencia: document.getElementById('in-dependencia').value,
+                malaltia_tipus: document.getElementById('in-malaltia-tipus').value,
+                malaltia_nom: document.getElementById('in-malaltia-nom').value,
+                adiccio: document.getElementById('in-adiccio').value,
+                adiccio_a_que: document.getElementById('in-adiccio-a-que').value,
+                te_alergies: document.getElementById('in-te-alergies').value,
+                alergies_detall: {
+                    amb: Array.from(document.getElementById('inputs-amb').querySelectorAll('input')).map(function(i){return i.value.trim();}).filter(function(v){return v;}),
+                    med: Array.from(document.getElementById('inputs-med').querySelectorAll('input')).map(function(i){return i.value.trim();}).filter(function(v){return v;}),
+                    ali: Array.from(document.getElementById('inputs-ali').querySelectorAll('input')).map(function(i){return i.value.trim();}).filter(function(v){return v;})
+                },
+                tda: document.getElementById('in-tda').value,
+                tdha: document.getElementById('in-tdha').value,
+                dependencia_medica: document.getElementById('in-dependencia-medica').value,
+                grau: document.getElementById('in-dependencia-medica').value === "Sí" ? document.getElementById('in-grau').value : "",
+                observacions: document.getElementById('in-observacions_mediques').value
+            };
+            console.log('[confirmSave] Plain data prepared:', {_dp, _rel, _ps, _edu});
+
+            // Encrypt sensitive sections (each section stored as a single encrypted blob)
+            var _enc = await Promise.all([
+                cu.encryptField(_dp),
+                cu.encryptField(_rel),
+                cu.encryptField(_ps),
+                cu.encryptField(_edu)
+            ]);
+            console.log('[confirmSave] Encrypted blobs:', _enc);
+
+            var data = {
+                estat: (window._usuariActual && window._usuariActual.estat) || currentData.estat || 'Actiu',
+                numero_expediente: (window._usuariActual && window._usuariActual.numero_expediente) || currentData.numero_expediente || null,
+                dades_personals: _enc[0],
+                relacio_serveis: _enc[1],
+                socio_laboral:   _enc[1],
+                situacio_psicosocial: _enc[2],
+                habitatge:       _enc[2],
+                educacio_salut:  _enc[3],
+                salut:           _enc[3]
+            };
+            console.log('[confirmSave] Final data to save:', data);
+            
+            var btn = document.getElementById('btnSaveMain');
+            var origText = btn ? btn.textContent : '';
+            if (btn) { btn.textContent = '\u23F3 Guardant...'; btn.disabled = true; }
+            try {
+                if (userId === 'nou') {
+                    var contadorRef = fs.doc(db, "metadata", "configuracion");
+                    var expedientsColl = fs.collection(db, "expedientes");
+                    await fs.runTransaction(db, async function(transaction) {
+                        var contadorDoc = await transaction.get(contadorRef);
+                        var numeroActual = contadorDoc.exists() ? (contadorDoc.data().ultimo_numero || 0) : 0;
+                        var nouNumero = numeroActual + 1;
+                        var anyActual = new Date().getFullYear();
+                        data.numero_expediente = "UA" + anyActual + "-" + String(nouNumero).padStart(3, '0');
+                        data.fecha_apertura = fs.serverTimestamp();
+                        transaction.set(contadorRef, { ultimo_numero: nouNumero }, { merge: true });
+                        var nouDocRef = fs.doc(expedientsColl);
+                        transaction.set(nouDocRef, data);
+                        userId = nouDocRef.id;
+                    });
+                    window.location.href = 'perfil-usuari.html?id=' + userId;
+                } else {
+                    await fs.updateDoc(fs.doc(db, "expedientes", userId), data);
+                    console.log('[confirmSave] Data saved successfully');
+                    _showSaveToast('Dades guardades correctament', true);
+                    if (window._reloadUserData) {
+                        setTimeout(function(){ window._reloadUserData(); }, 800);
+                    } else {
+                        setTimeout(function(){ location.reload(); }, 1200);
+                    }
+                }
+            } catch(e) {
+                console.error('[confirmSave] ERROR:', e);
+                if (btn) { btn.textContent = origText; btn.disabled = false; }
+                _showSaveToast('Error: ' + (e.code || e.message || 'Error al guardar'), false);
+            }
+        }
+    </script>
+
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="modalTitle">Títol</h3>
+            <div id="modalContent"></div>
+            <textarea id="modalTextarea" style="display:none; width:100%; height:150px; margin-top:15px; padding:12px; border:1px solid #ccc; border-radius:8px; font-family:inherit;"></textarea>
+            <p id="modalMsg" style="margin-top:15px; color:#64748b; font-size:0.9rem;"></p>
+            <div id="modalButtons" class="modal-buttons"></div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="profile-container">
+            <div class="profile-brand-hero">
+                <div class="profile-brand-hero-inner">
+                    <div class="profile-brand-main">
+                        <img src="img/NexeSocial-logo.png" alt="NexeSocial" class="profile-brand-logo">
+                        <div class="profile-brand-copy">
+                            <h2>Perfil d'Usuari</h2>
+                            <p>Fitxa centralitzada amb dades personals, seguiment, salut i derivacions dins la gestió interna.</p>
+                        </div>
+                    </div>
+                    <div class="profile-brand-meta">
+                        <span class="profile-brand-pill">Accés segur</span>
+                        <span class="profile-brand-pill">Seguiment integral</span>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <a href="expedient-detall.html" style="text-decoration: none; color: #64748b; font-weight: 600;">← Tornar al llistat</a>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-derivacio" onclick="obrirModalDerivacio()">
+                        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                        Derivació Psicològica
+                    </button>
+                    <button onclick="obrirHistorial360()" style="background:#6366f1;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:6px;">
+                        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+                        Historial 360°
+                    </button>
+                    <button onclick="canviarEstatExpedient()" style="background:#f1f5f9; color:#ef4444; border:1px solid #fee2e2; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">Canviar Estat</button>
+                    <button id="btnEdit" onclick="toggleEdit()" style="background:#2563eb; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">
+                        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Editar Fitxa
+                    </button>
+                    <button onclick="abrirParaFirmarPerfilUsuari()" style="background:#10b981; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">
+                        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 11h8M12 15h8M12 19h4"/></svg> Enviar a Firmar
+                    </button>
+                    <button id="btnSaveMain" onclick="confirmSave()" style="display:none; background:#10b981; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600; display:none; align-items:center; gap:6px;">
+                        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                        Guardar Canvis
+                    </button>
+                </div>
+            </div>
+
+            <div class="user-header-main">
+                <div style="display: flex; align-items: center; gap: 25px;">
+                    <div style="width: 80px; height: 80px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; color:#64748b">
+                        <svg class="icon-svg" style="width:45px; height:45px" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    </div>
+                    <div>
+                        <h1 style="margin: 0; font-size: 1.8rem; color: #1e293b;">
+                            <span id="header-nom-complet">Carregant...</span> 
+                            <span id="header-estat-pill" class="status-pill">Estat</span>
+                        </h1>
+                        <div style="display: flex; gap: 20px; margin-top: 8px; font-size: 0.9rem; color: #64748b;">
+                            <span>DNI: <strong id="header-dni">-</strong></span>
+                            <span>Mòbil: <strong id="header-mobil">-</strong></span>
+                            <span>Edat: <strong id="header-edat">-</strong></span>
+                        </div>
+                        <div id="header-medical-alert" class="medical-alert-header" onclick="showMedicalModal()" style="display:flex;align-items:center;gap:6px;">
+                            <svg style="width:16px;height:16px;fill:#b91c1c;flex-shrink:0;" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                            ALERTA MÈDICA ACTIVA
+                        </div>
+                        <div id="header-lacaixa-badge" style="display:none;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:6px 12px;border-radius:8px;margin-top:6px;font-size:0.8rem;font-weight:700;align-items:center;gap:6px;">
+                            <svg style="width:15px;height:15px;flex-shrink:0;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            Participant de La Caixa CPI
+                        </div>
+                    </div>
+                </div>
+                <div id="box-expedient" style="text-align: right;">
+                    <span class="label">Codi Expedient</span>
+                    <div id="header-expedient" style="color: #2563eb; font-size: 1.4rem; font-weight: 800;">···</div>
+                </div>
+            </div>
+
+            <div class="tab-menu">
+                <button class="tab-btn active" onclick="openTab(event, 'personals')">Dades Personals</button>
+                <button class="tab-btn" onclick="openTab(event, 'serveis')">Relació amb Serveis</button>
+                <button class="tab-btn" onclick="openTab(event, 'psicosocial')">Situació Psicosocial</button>
+                <button class="tab-btn" onclick="openTab(event, 'educacio')">Educació / Salut</button>
+                <button class="tab-btn" onclick="openTab(event, 'activitats')">Activitats</button>
+                <button class="tab-btn" onclick="openTab(event, 'seguiment')">Seguiment</button>
+            </div>
+
+            <div id="personals" class="tab-content active">
+                <div class="info-grid">
+                    <div class="data-group"><span class="label">Primer Llinatge</span><span class="value" id="val-cognoms">-</span><input type="text" id="in-cognoms" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Segon Llinatges</span><span class="value" id="val-cognom2">-</span><input type="text" id="in-cognom2" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Nom</span><span class="value" id="val-nom">-</span><input type="text" id="in-nom" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Tipus document</span><span class="value" id="val-doc-tipus">-</span>
+                        <select id="in-doc-tipus" class="edit-input">
+                            <option value="DNI">DNI</option>
+                            <option value="NIE">NIE</option>
+                            <option value="Passaport">Passaport</option>
+                        </select>
+                    </div>
+                    <div class="data-group"><span class="label">Casella número</span><span class="value" id="val-doc-num">-</span><input type="text" id="in-doc-num" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Data naixement</span><span class="value" id="val-naixement">-</span><input type="date" id="in-naixement" class="edit-input" onchange="actualitzarEdat()"></div>
+                    <div class="data-group"><span class="label">Edat</span><span class="value" id="val-edat">-</span><input type="number" id="in-edat" class="edit-input" readonly></div>
+                    <div class="data-group"><span class="label">Gènere</span><span class="value" id="val-genere">-</span>
+                        <select id="in-genere" class="edit-input">
+                            <option value="HOME">HOME</option>
+                            <option value="DONA">DONA</option>
+                            <option value="NO BINARI">NO BINARI</option>
+                        </select>
+                    </div>
+                    <div class="data-group"><span class="label">Email</span><span class="value" id="val-email">-</span><input type="email" id="in-email" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Telèfon</span><span class="value" id="val-telefon">-</span><input type="tel" id="in-telefon" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Adreça</span><span class="value" id="val-adreca">-</span><input type="text" id="in-adreca" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Barri de residència</span><span class="value" id="val-barri">-</span>
+                        <select id="in-barri" class="edit-input">
+                            <option value="Centre">Centre</option>
+                            <option value="Nord">Nord</option>
+                            <option value="Sud">Sud</option>
+                            <option value="Est">Est</option>
+                            <option value="Oest">Oest</option>
+                            <option value="Altres">Altres</option>
+                        </select>
+                    </div>
+                    <div class="data-group"><span class="label">Distribució per origen</span><span class="value" id="val-distribucio-origen">-</span>
+                        <select id="in-distribucio-origen" class="edit-input">
+                            <option value="Espanya">Espanya</option>
+                            <option value="Europa">Europa</option>
+                            <option value="Asia">Asia</option>
+                            <option value="Latinoamérica">Latinoamérica</option>
+                            <option value="Amèrica del Nord">Amèrica del Nord</option>
+                            <option value="Africa-Magreb">Africa-Magreb</option>
+                            <option value="Àfrica- Subsahara">Àfrica- Subsahara</option>
+                        </select>
+                    </div>
+                    <div class="data-group"><span class="label">Minoria ètnica</span><span class="value" id="val-minoria-etnica">-</span>
+                        <label class="inline-switch"><input type="checkbox" id="in-minoria-etnica" class="edit-input"> Sí</label>
+                    </div>
+                    <div class="data-group"><span class="label">Situació admin</span><span class="value" id="val-situacio-admin">-</span>
+                        <select id="in-situacio-admin" class="edit-input">
+                            <option value="NACIONALITAT ESPANYOLA">NACIONALITAT ESPANYOLA</option>
+                            <option value="PERMÍS TEMPORAL">PERMÍS TEMPORAL</option>
+                            <option value="PERMÍS DEFINITIU">PERMÍS DEFINITIU</option>
+                            <option value="EN PROCÉS DE REGULARITZACIÓ">EN PROCÉS DE REGULARITZACIÓ</option>
+                            <option value="SENSE PAPERS (NO COMPLEIX REQUISITS DE MOMENT)">SENSE PAPERS (NO COMPLEIX REQUISITS DE MOMENT)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="serveis" class="tab-content">
+                <div class="info-grid">
+                    <div class="data-group" style="grid-column: span 3;">
+                        <span class="label">Derivat per</span>
+                        <div id="val-derivat_per" class="selected-tags"></div>
+                        <div class="multi-select-box">
+                            <div class="multi-select-options">
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="derivat_per" value="CENTRE SALUT" onchange="syncMultiSelect('derivat_per'); syncConditionalFields()"> CENTRE SALUT</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="derivat_per" value="CENTRE EDUCATIU" onchange="syncMultiSelect('derivat_per'); syncConditionalFields()"> CENTRE EDUCATIU</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="derivat_per" value="CMSS" onchange="syncMultiSelect('derivat_per'); syncConditionalFields()"> CMSS</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="derivat_per" value="ENTITAT TERCER SECTOR" onchange="syncMultiSelect('derivat_per'); syncConditionalFields()"> ENTITAT TERCER SECTOR</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="derivat_per" value="IMAS- SERVEI PROTECCIÓ MENORS" onchange="syncMultiSelect('derivat_per'); syncConditionalFields()"> IMAS- SERVEI PROTECCIÓ MENORS</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="derivat_per" value="IMAS- SAIS" onchange="syncMultiSelect('derivat_per'); syncConditionalFields()"> IMAS- SAIS</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="derivat_per" value="CENTRES PROTECCIÓ" onchange="syncMultiSelect('derivat_per'); syncConditionalFields()"> CENTRES PROTECCIÓ</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="derivat_per" value="PROGRAMES D’EMACIPACIÓ (AUTONOMIA PERSONAL)" onchange="syncMultiSelect('derivat_per'); syncConditionalFields()"> PROGRAMES D’EMACIPACIÓ (AUTONOMIA PERSONAL)</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="derivat_per" value="D.G. FAMÍLIES" onchange="syncMultiSelect('derivat_per'); syncConditionalFields()"> D.G. FAMÍLIES</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="derivat_per" value="INFÀNCIA I JOVENTUT (MESURES JUDICIALS MENORS)" onchange="syncMultiSelect('derivat_per'); syncConditionalFields()"> INFÀNCIA I JOVENTUT (MESURES JUDICIALS MENORS)</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="derivat_per" value="ALTRES" id="in-derivat-altres" onchange="syncMultiSelect('derivat_per'); syncConditionalFields()"> ALTRES</label>
+                            </div>
+                            <div id="box-derivat-altres" class="conditional-box">
+                                <label for="in-derivat-per-altres">Nom del servei</label>
+                                <input type="text" id="in-derivat-per-altres" class="edit-input" style="display:block; margin-top:8px;" placeholder="Especifica el servei">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="data-group" style="grid-column: span 3;">
+                        <span class="label">Expedient obert a</span>
+                        <div id="val-expedient_obert_a" class="selected-tags"></div>
+                        <div class="multi-select-box">
+                            <div class="multi-select-options">
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="expedient_obert_a" value="SS SS" onchange="syncMultiSelect('expedient_obert_a')"> SS SS</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="expedient_obert_a" value="SPM" onchange="syncMultiSelect('expedient_obert_a')"> SPM</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="expedient_obert_a" value="Salut" onchange="syncMultiSelect('expedient_obert_a')"> Salut</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="expedient_obert_a" value="Juridic" onchange="syncMultiSelect('expedient_obert_a')"> Juridic</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="expedient_obert_a" value="Altres" onchange="syncMultiSelect('expedient_obert_a')"> Altres</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="data-group" style="grid-column: span 3;">
+                        <span class="label">Protocols d'educació</span>
+                        <div id="val-protocols_educacio" class="selected-tags"></div>
+                        <div class="multi-select-box">
+                            <div class="multi-select-options">
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="protocols_educacio" value="RUMI" onchange="syncMultiSelect('protocols_educacio')"> RUMI</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="protocols_educacio" value="SUICIDI/AUTOLÍTIQUES" onchange="syncMultiSelect('protocols_educacio')"> SUICIDI/AUTOLÍTIQUES</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="protocols_educacio" value="ABSENTISME" onchange="syncMultiSelect('protocols_educacio')"> ABSENTISME</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="protocols_educacio" value="ASSETJAMENT" onchange="syncMultiSelect('protocols_educacio')"> ASSETJAMENT</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="protocols_educacio" value="VIOLÈNCIES MASCLISTES" onchange="syncMultiSelect('protocols_educacio')"> VIOLÈNCIES MASCLISTES</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="protocols_educacio" value="LGTBIQA+" onchange="syncMultiSelect('protocols_educacio')"> LGTBIQA+</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="data-group" style="grid-column: span 3;">
+                        <span class="label">Professional de la xarxa</span>
+                        <span class="value" id="val-professional-xarxa">-</span>
+                        <label class="inline-switch"><input type="checkbox" id="in-professional-xarxa" class="edit-input"> Sí</label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="psicosocial" class="tab-content">
+                <div class="info-grid">
+                    <div class="data-group"><span class="label">Situació domicili</span><span class="value" id="val-situacio-domicili">-</span>
+                        <select id="in-situacio-domicili" class="edit-input">
+                            <option value="Lloguer">Lloguer</option><option value="Propietat">Propietat</option><option value="Ocupació">Ocupació</option><option value="Sense llar">Sense llar</option><option value="Acolliment familia extensa">Acolliment familia extensa</option><option value="Risc desnonament">Risc desnonament</option><option value="Recurs residencial xarxa inclusió">Recurs residencial xarxa inclusió</option><option value="Recurs residencial menors/emancipació">Recurs residencial menors/emancipació</option><option value="Recurs residencial familiar Ajuntament">Recurs residencial familiar Ajuntament</option>
+                        </select>
+                    </div>
+                    <div class="data-group"><span class="label">Membres unitat familiar</span><span class="value" id="val-membres-unitat-familiar">-</span>
+                        <select id="in-membres-unitat-familiar" class="edit-input"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="+ DE 5">+ DE 5</option></select>
+                    </div>
+                    <div class="data-group"><span class="label">Context familiar</span><span class="value" id="val-context-familiar">-</span>
+                        <select id="in-context-familiar" class="edit-input"><option value="FAM NOMBROSA">FAM NOMBROSA</option><option value="MONOPARENTAL">MONOPARENTAL</option><option value="RECONSTITUIDA">RECONSTITUIDA</option><option value="PARELLA SENSE FILLS">PARELLA SENSE FILLS</option><option value="PERSONA SOLA">PERSONA SOLA</option></select>
+                    </div>
+                    <div class="data-group"><span class="label">Nombre fills</span><span class="value" id="val-nombre-fills">-</span>
+                        <select id="in-nombre-fills" class="edit-input"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="+ DE 5">+ DE 5</option></select>
+                    </div>
+                    <div class="data-group" style="grid-column: span 3;">
+                        <span class="label">Situació de vulnerabilitat greu</span>
+                        <div id="val-vulnerabilitat-greu" class="selected-tags"></div>
+                        <div class="multi-select-box">
+                            <div class="multi-select-options">
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="vulnerabilitat_greu" value="Violència de Gènere" onchange="syncMultiSelect('vulnerabilitat_greu')"> Violència de Gènere</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="vulnerabilitat_greu" value="Explotació sexual / tracta / prostitució" onchange="syncMultiSelect('vulnerabilitat_greu')"> Explotació sexual / tracta / prostitució</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="vulnerabilitat_greu" value="Problemes de salut mental" onchange="syncMultiSelect('vulnerabilitat_greu')"> Problemes de salut mental</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="vulnerabilitat_greu" value="Malalties cròniques" onchange="syncMultiSelect('vulnerabilitat_greu')"> Malalties cròniques</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="vulnerabilitat_greu" value="Reclusió o exreclusos" onchange="syncMultiSelect('vulnerabilitat_greu')"> Reclusió o exreclusos</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="vulnerabilitat_greu" value="Menors no acompanyats" onchange="syncMultiSelect('vulnerabilitat_greu')"> Menors no acompanyats</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="vulnerabilitat_greu" value="Soledat no desitjada" onchange="syncMultiSelect('vulnerabilitat_greu')"> Soledat no desitjada</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="data-group"><span class="label">Bretxa digital</span><span class="value" id="val-bretxa-digital">-</span>
+                        <select id="in-bretxa-digital" class="edit-input"><option value="Si">Si</option><option value="No">No</option></select>
+                    </div>
+                    <div class="data-group"><span class="label">Participa en activitats comunitàries</span><span class="value" id="val-participa-comunitaries">-</span><label class="inline-switch"><input type="checkbox" id="in-participa-comunitaries" class="edit-input"> Sí</label></div>
+                    <div class="data-group" style="grid-column: span 3;">
+                        <span class="label">Indicadors risc / alerta social</span>
+                        <div id="val-indicadors-risc" class="selected-tags"></div>
+                        <div class="multi-select-box">
+                            <div class="multi-select-options">
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="indicadors_risc" value="CONDUCTUALS" onchange="syncMultiSelect('indicadors_risc')"> CONDUCTUALS</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="indicadors_risc" value="SEXUALITZACIÓ NO ADEQUADA" onchange="syncMultiSelect('indicadors_risc')"> SEXUALITZACIÓ NO ADEQUADA</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="indicadors_risc" value="CONFLICTES RELACIONALS" onchange="syncMultiSelect('indicadors_risc')"> CONFLICTES RELACIONALS</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="indicadors_risc" value="IMATGE I HIGIENE" onchange="syncMultiSelect('indicadors_risc')"> IMATGE I HIGIENE</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="indicadors_risc" value="SEGUIMENT SANITARI" onchange="syncMultiSelect('indicadors_risc')"> SEGUIMENT SANITARI</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="indicadors_risc" value="ALIMENTACIÓ" onchange="syncMultiSelect('indicadors_risc')"> ALIMENTACIÓ</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="indicadors_risc" value="SUPERVISIÓ / IMPLICACIÓ FAMILIAR (MENORS)" onchange="syncMultiSelect('indicadors_risc')"> SUPERVISIÓ / IMPLICACIÓ FAMILIAR (MENORS)</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="indicadors_risc" value="CONSUM HABITUAL" onchange="syncMultiSelect('indicadors_risc')"> CONSUM HABITUAL</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="indicadors_risc" value="CONSUM PUNTUAL" onchange="syncMultiSelect('indicadors_risc')"> CONSUM PUNTUAL</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="indicadors_risc" value="ABSENTISME" onchange="syncMultiSelect('indicadors_risc')"> ABSENTISME</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="indicadors_risc" value="NO OCI SALUDABLE" onchange="syncMultiSelect('indicadors_risc')"> NO OCI SALUDABLE</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="indicadors_risc" value="MANCA OBJECTIUS" onchange="syncMultiSelect('indicadors_risc')"> MANCA OBJECTIUS</label>
+                                <label class="multi-select-option"><input type="checkbox" data-multi-group="indicadors_risc" value="MANCA XARXA SOCIAL" onchange="syncMultiSelect('indicadors_risc')"> MANCA XARXA SOCIAL</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="educacio" class="tab-content">
+                <div class="info-grid">
+                    <div class="data-group"><span class="label">Nivell educatiu</span><span class="value" id="val-nivell-educatiu">-</span>
+                        <select id="in-nivell-educatiu" class="edit-input"><option value="INFANTIL">INFANTIL</option><option value="PRIMÀRIA">PRIMÀRIA</option><option value="SECUNDÀRIA">SECUNDÀRIA</option><option value="FP BÀSICA">FP BÀSICA</option><option value="FP MITJA">FP MITJA</option><option value="FP SUPERIOR">FP SUPERIOR</option><option value="BATXILLER">BATXILLER</option><option value="UNIVERSITAT">UNIVERSITAT</option></select>
+                    </div>
+                    <div class="data-group"><span class="label">Centre educatiu</span><span class="value" id="val-centre-educatiu">-</span><input type="text" id="in-centre-educatiu" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Situació escolar</span><span class="value" id="val-situacio-escolar">-</span>
+                        <select id="in-situacio-escolar" class="edit-input"><option value="Escolaritzat">Escolaritzat</option><option value="En conflicte amb el centre">En conflicte amb el centre</option><option value="Absentista moderat">Absentista moderat</option><option value="Exclusió educativa">Exclusió educativa</option><option value="Altres">Altres</option></select>
+                    </div>
+                    <div class="data-group"><span class="label">Situació laboral</span><span class="value" id="val-situacio-laboral">-</span>
+                        <select id="in-situacio-laboral" class="edit-input" onchange="syncConditionalFields()"><option value="Treball indefinit">Treball indefinit</option><option value="Treball a temps parcial">Treball a temps parcial</option><option value="Desocupat receptor de prestacions">Desocupat receptor de prestacions</option><option value="Desocupat no receptor de prestacions">Desocupat no receptor de prestacions</option><option value="Altres">Altres</option></select>
+                    </div>
+                    <div id="box-situacio-laboral-detall" class="data-group" style="grid-column: span 2;"><span class="label">Especificació laboral</span><span class="value" id="val-situacio-laboral-detall">-</span><input type="text" id="in-situacio-laboral-detall" class="edit-input" placeholder="Especifica si cal"></div>
+                    <div class="data-group"><span class="label">Discapacitat</span><span class="value" id="val-discapacitat">-</span>
+                        <select id="in-discapacitat" class="edit-input"><option value="SI">SI</option><option value="NO">NO</option></select>
+                    </div>
+                    <div class="data-group"><span class="label">Dependència</span><span class="value" id="val-dependencia">-</span>
+                        <select id="in-dependencia" class="edit-input"><option value="SI">SI</option><option value="NO">NO</option></select>
+                    </div>
+                    <div class="data-group"><span class="label">Malalties</span><span class="value" id="val-malaltia-tipus">-</span>
+                        <select id="in-malaltia-tipus" class="edit-input" onchange="syncConditionalFields()"><option value="">-</option><option value="-SALUT FÍSICA">-SALUT FÍSICA</option><option value="-SALUT MENTAL">-SALUT MENTAL</option></select>
+                    </div>
+                    <div id="box-malaltia-nom" class="data-group" style="grid-column: span 2;"><span class="label">Nom de la malaltia</span><span class="value" id="val-malaltia-nom">-</span><input type="text" id="in-malaltia-nom" class="edit-input"></div>
+                    <div class="data-group"><span class="label">Adicció</span><span class="value" id="val-adiccio">-</span>
+                        <select id="in-adiccio" class="edit-input" onchange="syncConditionalFields()"><option value="No">No</option><option value="Sí">Sí</option></select>
+                    </div>
+                    <div id="box-adiccio-a-que" class="data-group" style="grid-column: span 2;"><span class="label">A què</span><span class="value" id="val-adiccio-a-que">-</span><input type="text" id="in-adiccio-a-que" class="edit-input"></div>
+
+                    <div class="data-group" style="grid-column: span 3; margin-top: 10px;">
+                        <span class="label">Salut complementària</span>
+                        <div class="info-grid" style="grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                            <div class="data-group" style="border-bottom:none; padding-bottom:0;">
+                                <span class="label">Té al·lèrgies?</span>
+                                <span class="value" id="val-te-alergies">-</span>
+                                <select id="in-te-alergies" class="edit-input" onchange="checkAlergies()"><option value="No">No</option><option value="Sí">Sí</option></select>
+                            </div>
+                            <div class="data-group" style="border-bottom:none; padding-bottom:0;">
+                                <span class="label">TDA</span>
+                                <span class="value" id="val-tda">-</span>
+                                <select id="in-tda" class="edit-input"><option value="No">No</option><option value="Sí">Sí</option></select>
+                            </div>
+                            <div class="data-group" style="border-bottom:none; padding-bottom:0;">
+                                <span class="label">TDHA</span>
+                                <span class="value" id="val-tdha">-</span>
+                                <select id="in-tdha" class="edit-input"><option value="No">No</option><option value="Sí">Sí</option></select>
+                            </div>
+                            <div class="data-group" style="border-bottom:none; padding-bottom:0; grid-column: span 3;">
+                                <span class="label">Dependència</span>
+                                <span class="value" id="val-dependencia-medica">-</span>
+                                <select id="in-dependencia-medica" class="edit-input" onchange="checkDependencia()"><option value="No">No</option><option value="Sí">Sí</option></select>
+                            </div>
+                            <div id="group-grau" class="data-group" style="display:none; border-bottom:none; padding-bottom:0; grid-column: span 3;"><span class="label">Grau</span><span class="value" id="val-grau">-</span><select id="in-grau" class="edit-input"><option value="Grado I">Grado I</option><option value="Grado II">Grado II</option><option value="Grado III">Grado III</option></select></div>
+                            <div id="group-detall-alergies" class="data-group" style="display:none; border-bottom:none; padding-bottom:0; grid-column: span 3;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; width:100%;">
+                                    <div><span class="label">Ambientals</span><div id="val-al-amb" class="allergy-tag-container"></div><div id="inputs-amb" class="edit-input-container"></div></div>
+                                    <div><span class="label">Medicaments</span><div id="val-al-med" class="allergy-tag-container"></div><div id="inputs-med" class="edit-input-container"></div></div>
+                                    <div><span class="label">Alimentícies</span><div id="val-al-ali" class="allergy-tag-container"></div><div id="inputs-ali" class="edit-input-container"></div></div>
+                                </div>
+                            </div>
+                            <div class="data-group" style="border-bottom:none; padding-bottom:0; grid-column: span 3;"><span class="label">Observacions mèdiques</span><span class="value" id="val-observacions_mediques">-</span><textarea id="in-observacions_mediques" class="edit-input" style="height:80px;"></textarea></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="activitats" class="tab-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h3>Programes i Activitats</h3>
+                    <button class="btn-action" onclick="obrirModalActivitats()">+ Inscriure</button>
+                </div>
+                <div id="llista-activitats"></div>
+            </div>
+
+            <div id="seguiment" class="tab-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h3>Historial de Seguiment</h3>
+                    <button class="btn-action" onclick="obrirModalSeguiment()">+ Nou Informe</button>
+                </div>
+                <div id="llista-seguiment"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Core rendering functions - needed by fallback init script -->
+    <script>
+        function calcularEdat(data) {
+            if (!data) return '-';
+            const naix = new Date(data);
+            const avui = new Date();
+            let edat = avui.getFullYear() - naix.getFullYear();
+            if (avui.getMonth() < naix.getMonth() || (avui.getMonth() === naix.getMonth() && avui.getDate() < naix.getDate())) edat--;
+            return edat > 0 ? edat + ' anys' : '-';
+        }
+
+        function omplirDades(u) {
+            try {
+                console.log('[omplirDades] Starting with usuari:', u);
+                const dp = u.dades_personals || {};
+                const rel = u.relacio_serveis || u.socio_laboral || {};
+                const ps = u.situacio_psicosocial || u.habitatge || {};
+                const ed = u.educacio_salut || u.salut || {};
+                const toArray = function(value) {
+                    if (Array.isArray(value)) return value;
+                    if (typeof value === 'string' && value.trim()) return value.split(',').map(function(item) { return item.trim(); }).filter(Boolean);
+                    return [];
+                };
+                const setValue = function(id, value) {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    if (el.type === 'checkbox') {
+                        el.checked = value === true || value === 'Sí' || value === 'Si' || value === 'SI';
+                    } else {
+                        el.value = value ?? '';
+                    }
+                };
+
+                console.log('[omplirDades] dp:', dp);
+
+                document.getElementById('header-nom-complet').innerText = (dp.nom || '') + " " + (dp.cognoms || "");
+                document.getElementById('header-dni').innerText = dp.doc_numero || dp.dni || '-';
+                document.getElementById('header-expedient').innerText = u.numero_expediente || u.id;
+                document.getElementById('header-mobil').innerText = dp.telefon || dp.mobil || "-";
+                document.getElementById('header-edat').innerText = calcularEdat(dp.data_naixement);
+                
+                const estatPill = document.getElementById('header-estat-pill');
+                estatPill.innerText = u.estat || 'Actiu';
+                estatPill.className = 'status-pill ' + (u.estat === 'Inactiu' ? 'status-inactiu' : 'status-actiu');
+
+                // Mapeig camps personals
+                const camps = {
+                    'nom': dp.nom,
+                    'cognoms': dp.cognoms,
+                    'cognom2': dp.cognom2,
+                    'doc-tipus': dp.tipus_document,
+                    'doc-num': dp.doc_numero || dp.dni,
+                    'naixement': dp.data_naixement,
+                    'edat': dp.edat || calcularEdat(dp.data_naixement),
+                    'genere': dp.genere,
+                    'email': dp.email,
+                    'telefon': dp.telefon || dp.mobil,
+                    'adreca': dp.adreca,
+                    'barri': dp.barri_residencia,
+                    'distribucio-origen': dp.distribucio_origen || dp.nacionalitat,
+                    'minoria-etnica': dp.minoria_etnica,
+                    'situacio-admin': dp.situacio_admin,
+                    'situacio-domicili': ps.situacio_domicili || ps.domicili,
+                    'membres-unitat-familiar': ps.membres_unitat_familiar || ps.unitat_familiar,
+                    'context-familiar': ps.context_familiar || ps.context,
+                    'nombre-fills': ps.nombre_fills,
+                    'bretxa-digital': ps.bretxa_digital || ps.bretxa,
+                    'participa-comunitaries': ps.participa_comunitaries,
+                    'nivell-educatiu': ed.nivell_educatiu || ed.estudis,
+                    'centre-educatiu': ed.centre_educatiu,
+                    'situacio-escolar': ed.situacio_escolar,
+                    'situacio-laboral': ed.situacio_laboral,
+                    'situacio-laboral-detall': ed.situacio_laboral_detall,
+                    'discapacitat': ed.discapacitat,
+                    'dependencia': ed.dependencia,
+                    'malaltia-tipus': ed.malaltia_tipus,
+                    'malaltia-nom': ed.malaltia_nom,
+                    'adiccio': ed.adiccio,
+                    'adiccio-a-que': ed.adiccio_a_que,
+                    'te-alergies': ed.te_alergies,
+                    'tda': ed.tda,
+                    'tdha': ed.tdha,
+                    'dependencia-medica': ed.dependencia_medica,
+                    'grau': ed.grau,
+                    'observacions_mediques': ed.observacions
+                };
+
+                for (const [id, valor] of Object.entries(camps)) {
+                    const valueEl = document.getElementById('val-'+id);
+                    if (valueEl) valueEl.innerText = (valor === true ? 'Sí' : valor === false ? 'No' : (valor || '-'));
+                    const inputEl = document.getElementById('in-'+id);
+                    if (inputEl) {
+                        if (inputEl.type === 'checkbox') inputEl.checked = !!valor;
+                        else inputEl.value = valor ?? '';
+                    }
+                }
+
+                setValue('in-minoria-etnica', !!dp.minoria_etnica);
+                setValue('in-professional-xarxa', !!rel.professional_xarxa);
+                setValue('in-participa-comunitaries', !!ps.participa_comunitaries);
+
+                setCheckboxValues('derivat_per', toArray(rel.derivat_per));
+                setCheckboxValues('expedient_obert_a', toArray(rel.expedient_obert_a));
+                setCheckboxValues('protocols_educacio', toArray(rel.protocols_educacio));
+                setCheckboxValues('vulnerabilitat_greu', toArray(ps.vulnerabilitat_greu));
+                setCheckboxValues('indicadors_risc', toArray(ps.indicadors_risc));
+
+                setValue('in-derivat-per-altres', rel.derivat_per_altres || '');
+                setValue('in-situacio-laboral-detall', ed.situacio_laboral_detall || '');
+                setValue('in-malaltia-nom', ed.malaltia_nom || '');
+                setValue('in-adiccio-a-que', ed.adiccio_a_que || '');
+
+                document.getElementById('val-minoria-etnica').innerText = dp.minoria_etnica ? 'Sí' : 'No';
+                document.getElementById('val-professional-xarxa').innerText = rel.professional_xarxa ? 'Sí' : 'No';
+                document.getElementById('val-participa-comunitaries').innerText = ps.participa_comunitaries ? 'Sí' : 'No';
+                document.getElementById('val-situacio-domicili').innerText = ps.situacio_domicili || ps.domicili || '-';
+                document.getElementById('val-membres-unitat-familiar').innerText = ps.membres_unitat_familiar || ps.unitat_familiar || '-';
+                document.getElementById('val-context-familiar').innerText = ps.context_familiar || ps.context || '-';
+                document.getElementById('val-nombre-fills').innerText = ps.nombre_fills || '-';
+                document.getElementById('val-bretxa-digital').innerText = ps.bretxa_digital || '-';
+                document.getElementById('val-nivell-educatiu').innerText = ed.nivell_educatiu || ed.estudis || '-';
+                document.getElementById('val-centre-educatiu').innerText = ed.centre_educatiu || '-';
+                document.getElementById('val-situacio-escolar').innerText = ed.situacio_escolar || '-';
+                document.getElementById('val-situacio-laboral').innerText = ed.situacio_laboral || '-';
+                document.getElementById('val-situacio-laboral-detall').innerText = ed.situacio_laboral_detall || '-';
+                document.getElementById('val-discapacitat').innerText = ed.discapacitat || '-';
+                document.getElementById('val-dependencia').innerText = ed.dependencia || '-';
+                document.getElementById('val-malaltia-tipus').innerText = ed.malaltia_tipus || '-';
+                document.getElementById('val-malaltia-nom').innerText = ed.malaltia_nom || '-';
+                document.getElementById('val-adiccio').innerText = ed.adiccio || '-';
+                document.getElementById('val-adiccio-a-que').innerText = ed.adiccio_a_que || '-';
+
+                document.getElementById('val-te-alergies').innerText = ed.te_alergies || 'No';
+                document.getElementById('in-te-alergies').value = ed.te_alergies || 'No';
+                document.getElementById('val-tda').innerText = ed.tda || 'No';
+                document.getElementById('in-tda').value = ed.tda || 'No';
+                document.getElementById('val-tdha').innerText = ed.tdha || 'No';
+                document.getElementById('in-tdha').value = ed.tdha || 'No';
+                document.getElementById('val-dependencia-medica').innerText = ed.dependencia_medica || 'No';
+                document.getElementById('in-dependencia-medica').value = ed.dependencia_medica || 'No';
+                document.getElementById('val-grau').innerText = ed.grau || '-';
+                document.getElementById('in-grau').value = ed.grau || 'Grado I';
+                document.getElementById('val-observacions_mediques').innerText = ed.observacions || '-';
+                document.getElementById('in-observacions_mediques').value = ed.observacions || '';
+
+                document.getElementById('val-derivat_per').innerHTML = getCheckboxValues('derivat_per').map(function(value) { return `<span class="tag-chip">${value}</span>`; }).join('') || '<span style="color:#94a3b8;font-size:0.85rem;">Cap seleccionat</span>';
+                document.getElementById('val-expedient_obert_a').innerHTML = getCheckboxValues('expedient_obert_a').map(function(value) { return `<span class="tag-chip">${value}</span>`; }).join('') || '<span style="color:#94a3b8;font-size:0.85rem;">Cap seleccionat</span>';
+                document.getElementById('val-protocols_educacio').innerHTML = getCheckboxValues('protocols_educacio').map(function(value) { return `<span class="tag-chip">${value}</span>`; }).join('') || '<span style="color:#94a3b8;font-size:0.85rem;">Cap seleccionat</span>';
+                document.getElementById('val-vulnerabilitat_greu').innerHTML = getCheckboxValues('vulnerabilitat_greu').map(function(value) { return `<span class="tag-chip">${value}</span>`; }).join('') || '<span style="color:#94a3b8;font-size:0.85rem;">Cap seleccionat</span>';
+                document.getElementById('val-indicadors_risc').innerHTML = getCheckboxValues('indicadors_risc').map(function(value) { return `<span class="tag-chip">${value}</span>`; }).join('') || '<span style="color:#94a3b8;font-size:0.85rem;">Cap seleccionat</span>';
+
+                actualitzarEdat();
+                syncConditionalFields();
+                checkAlergies();
+                checkDependencia();
+                
+                console.log('[omplirDades] Completed successfully');
+            } catch(e) {
+                console.error('[omplirDades] Error:', e);
+            }
+        }
+    </script>
+
+    <script type="module">
+        import { db, auth } from './firebase-config.js';
+        import { doc, getDoc, updateDoc, setDoc, collection, addDoc, arrayUnion, query, where, getDocs, runTransaction, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        import { BeneficiariosGruposDB } from './grupos-db.js';
+        import { waitForCrypto } from './vault-init.js';
+        import { decryptField } from './crypto-utils.js';
+
+        const params = new URLSearchParams(window.location.search);
+        let userId = params.get('id');
+        let usuariActual = null;
+
+        // Inicialització
+        async function init() {
+            // Ensure the vault key is ready before decrypting any data.
+            console.log('[init] Starting, userId:', userId);
+            
+            // Add a 10-second timeout for vault initialization
+            const vaultReady = Promise.race([
+                waitForCrypto(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Vault timeout')), 10000))
+            ]);
+            
+            try {
+                await vaultReady;
+            } catch (e) {
+                console.warn('[init] Vault timeout or error:', e);
+                // Continue anyway - data might still load
+            }
+
+            if (userId && userId !== 'nou') {
+                try {
+                    console.log('[init] Fetching document for userId:', userId);
+                    const docSnap = await getDoc(doc(db, "expedientes", userId));
+                    console.log('[init] Document exists:', docSnap.exists());
+                    
+                    if (!docSnap.exists()) {
+                        document.getElementById('header-nom-complet').innerText = 'Expedient no trobat';
+                        return;
+                    }
+                    const raw = docSnap.data();
+                    console.log('[init] Raw data loaded:', raw);
+                    
+                    // Decrypt each sensitive section (backwards-compatible: plain objects pass through unchanged)
+                    const decrypted = {
+                        id: docSnap.id,
+                        ...raw,
+                        dades_personals: await decryptField(raw.dades_personals),
+                        relacio_serveis: await decryptField(raw.relacio_serveis || raw.socio_laboral),
+                        situacio_psicosocial: await decryptField(raw.situacio_psicosocial || raw.habitatge),
+                        educacio_salut: await decryptField(raw.educacio_salut || raw.salut),
+                        socio_laboral:   await decryptField(raw.relacio_serveis || raw.socio_laboral),
+                        habitatge:       await decryptField(raw.situacio_psicosocial || raw.habitatge),
+                        salut:           await decryptField(raw.educacio_salut || raw.salut)
+                    };
+                    console.log('[init] Decrypted data:', decrypted);
+                    usuariActual = decrypted;
+                    window._usuariActual = usuariActual; // expose for plain-script confirmSave
+                    if (!usuariActual.relacio_serveis || typeof usuariActual.relacio_serveis !== 'object') {
+                        usuariActual.relacio_serveis = { derivat_per: [], derivat_per_altres: '', expedient_obert_a: [], protocols_educacio: [], professional_xarxa: false };
+                    }
+                    if (!usuariActual.situacio_psicosocial || typeof usuariActual.situacio_psicosocial !== 'object') {
+                        usuariActual.situacio_psicosocial = { situacio_domicili: '', membres_unitat_familiar: '', context_familiar: '', nombre_fills: '', vulnerabilitat_greu: [], bretxa_digital: 'No', participa_comunitaries: false, indicadors_risc: [] };
+                    }
+                    if (!usuariActual.educacio_salut || typeof usuariActual.educacio_salut !== 'object') {
+                        usuariActual.educacio_salut = { nivell_educatiu: '', centre_educatiu: '', situacio_escolar: '', situacio_laboral: '', situacio_laboral_detall: '', discapacitat: 'NO', dependencia: 'NO', malaltia_tipus: '', malaltia_nom: '', adiccio: 'No', adiccio_a_que: '', te_alergies: 'No', alergies_detall: { amb: [], med: [], ali: [] }, tda: 'No', tdha: 'No', dependencia_medica: 'No', grau: '', observacions: '' };
+                    }
+                    if (!usuariActual.salut || typeof usuariActual.salut !== 'object') {
+                        usuariActual.salut = usuariActual.educacio_salut;
+                    }
+                    console.log('[init] About to call omplirDades');
+                    omplirDades(usuariActual);
+                    console.log('[init] omplirDades completed');
+                    pintarFamilia(usuariActual);
+                    pintarSeguiment();
+                    actualitzarCabeceraMedica(usuariActual);
+                } catch (err) {
+                    console.error('Error inicialitzant perfil:', err);
+                    document.getElementById('header-nom-complet').innerText = 'Error: ' + (err.code || err.message || 'Desconegut');
+                    return;
+                }
+                // Activitats in isolated try/catch so index errors don't block the rest
+                try {
+                    await pintarActivitats();
+                } catch (err) {
+                    console.warn('pintarActivitats error:', err.message);
+                    const l = document.getElementById('llista-activitats');
+                    if (l) l.innerHTML = `<p style="color:#f59e0b;font-size:0.85rem;padding:8px;">No s'han pogut carregar les activitats: ${err.message}</p>`;
+                }
+
+            } else if (userId === 'nou') {
+                toggleEdit();
+                document.getElementById('header-nom-complet').innerText = "Nou Registre";
+                document.getElementById('header-expedient').innerText = "PENDENT";
+            }
+        }
+
+        // UI functions are in the plain <script> above.
+        // Re-expose on window so module code can also call tancarModal() etc.
+        window.tancarModal = tancarModal;
+        window.openTab = openTab;
+        window.toggleEdit = toggleEdit;
+
+        // --- DERIVACIÓ PSICOLÒGICA (Restaurat completament) ---
+        window.obrirModalDerivacio = () => {
+            const modal = document.getElementById('customModal');
+            document.getElementById('modalTitle').innerText = "Fitxa de Derivació al Servei de Psicologia";
+            const programesParticipa = (usuariActual.programes || []).join(', ') || 'Cap';
+
+            document.getElementById('modalContent').innerHTML = `
+                <div class="derivacio-form">
+                    <div class="form-full" style="background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                        <p style="margin:0; font-size:0.85rem; color:#64748b;">DADES IDENTIFICATIVES:</p>
+                        <p style="margin:5px 0 0 0;"><strong>${usuariActual.dades_personals.nom} ${usuariActual.dades_personals.cognoms}</strong></p>
+                    </div>
+                    <div><label>Servei d'Origen</label><input type="text" id="der-servei" value="Atenció Social Nexe"></div>
+                    <div><label>Professional Referent</label><input type="text" id="der-referent" placeholder="Nom professional"></div>
+                    <div class="form-full"><label>Motiu de Derivació</label><textarea id="der-motiu" rows="2" placeholder="Descripció de la situació detectada..."></textarea></div>
+                    <div class="form-full"><label>Demanda de la Persona</label><textarea id="der-demanda" rows="2" placeholder="Què demana l'usuari/ària?"></textarea></div>
+                    <div><label>Urgència</label><select id="der-urgencia"><option value="Baixa">Baixa</option><option value="Mitjana">Mitjana</option><option value="Alta">Alta</option></select></div>
+                    <div><label>Data Derivació</label><input type="date" id="der-data" value="${new Date().toISOString().split('T')[0]}"></div>
+                    <div class="acceptacio-container">
+                        <label style="margin-bottom:12px; display:block;">Acceptació i Compromís (Imprescindible)</label>
+                        <div class="acceptacio-card" onclick="document.getElementById('check-inf').click()">
+                            <span>He estat informat/da sobre el funcionament del servei.</span>
+                            <input type="checkbox" id="check-inf" checked onclick="event.stopPropagation()">
+                        </div>
+                        <div class="acceptacio-card" onclick="document.getElementById('check-acc').click()">
+                            <span>Accepto voluntàriament la derivació.</span>
+                            <input type="checkbox" id="check-acc" checked onclick="event.stopPropagation()">
+                        </div>
+                    </div>
+                </div>`;
+            document.getElementById('modalButtons').innerHTML = `
+                <button onclick="enviarDerivacio()" class="btn-modal btn-confirm">Enviar Derivació</button>
+                <button onclick="tancarModal()" class="btn-modal btn-cancel">Cancel·lar</button>`;
+            modal.style.display = "flex";
+        }
+
+        window.enviarDerivacio = async () => {
+            const motiu = document.getElementById('der-motiu').value;
+            if(!motiu) {
+                document.getElementById('modalMsg').textContent = "Has d'especificar un motiu de derivació.";
+                document.getElementById('modalMsg').style.color = '#ef4444';
+                return;
+            }
+            const checkInf = document.getElementById('check-inf');
+            const checkAcc = document.getElementById('check-acc');
+            if (checkInf && !checkInf.checked) {
+                document.getElementById('modalMsg').textContent = "Cal confirmar que la persona ha estat informada.";
+                document.getElementById('modalMsg').style.color = '#ef4444';
+                return;
+            }
+            if (checkAcc && !checkAcc.checked) {
+                document.getElementById('modalMsg').textContent = "Cal confirmar que la persona accepta la derivació.";
+                document.getElementById('modalMsg').style.color = '#ef4444';
+                return;
+            }
+            try {
+                const nom = `${usuariActual.dades_personals?.nom || ''} ${usuariActual.dades_personals?.cognoms || ''}`.trim();
+                const urgenciaVal = document.getElementById('der-urgencia')?.value || 'Mitjana';
+                const urgMap = { 'Baixa': 'normal', 'Mitjana': 'preferent', 'Alta': 'urgent' };
+                const user = auth.currentUser;
+                const userName = user?.displayName || localStorage.getItem('userName') || user?.email?.split('@')[0] || 'Professional';
+                const userEmail = user?.email || localStorage.getItem('userEmail') || '';
+
+                // Desar a la col·lecció de derivacions de NexePsy
+                await addDoc(collection(db, 'nexepsy/derivacions/solicituds'), {
+                    beneficiariId: userId,
+                    beneficiariNom: nom,
+                    familiaId: usuariActual.familia_id || usuariActual.familiaId || '',
+                    servei: document.getElementById('der-servei')?.value?.trim() || '',
+                    urgencia: urgMap[urgenciaVal] || 'preferent',
+                    motiu,
+                    demanda: document.getElementById('der-demanda')?.value?.trim() || '',
+                    consentiment: true,
+                    solicitat_per_uid: user?.uid || '',
+                    solicitat_per_nom: userName,
+                    solicitat_per_email: userEmail,
+                    estat: 'pendent',
+                    data: serverTimestamp()
+                });
+
+                // Registrar al seguiment de l'expedient
+                await updateDoc(doc(db, "expedientes", userId), {
+                    seguiment: arrayUnion({
+                        data: new Date().toLocaleDateString(),
+                        text: `[DERIVACIÓ PSICOLOGIA] ${motiu}`
+                    })
+                });
+
+                tancarModal();
+                // Mostrar confirmació visual
+                const banner = document.createElement('div');
+                banner.style.cssText = 'position:fixed;top:20px;right:20px;z-index:99999;background:#f0fdf4;border:1.5px solid #86efac;border-radius:14px;padding:16px 20px;max-width:380px;box-shadow:0 8px 24px rgba(0,0,0,.12);font-family:inherit;';
+                banner.innerHTML = `<div style="font-weight:800;font-size:.9rem;color:#166534;margin-bottom:4px;">Sol·licitud enviada</div><div style="font-size:.83rem;color:#475569;">La derivació s'ha enviat al servei PsicoSocial. Pendent de resolució.</div><button onclick="this.parentElement.remove()" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:#94a3b8;">×</button>`;
+                document.body.appendChild(banner);
+                setTimeout(() => banner.remove(), 7000);
+            } catch(e) {
+                console.error(e);
+                document.getElementById('modalMsg').textContent = "Error en enviar la derivació. Torna-ho a intentar.";
+                document.getElementById('modalMsg').style.color = '#ef4444';
+            }
+        }
+
+        // --- SEGUIMENT ---
+        window.obrirModalSeguiment = () => {
+            const modal = document.getElementById('customModal');
+            document.getElementById('modalTitle').innerText = "Nou Informe de Seguiment";
+            document.getElementById('modalContent').innerHTML = "";
+            document.getElementById('modalTextarea').style.display = "block";
+            document.getElementById('modalTextarea').value = "";
+            document.getElementById('modalButtons').innerHTML = `
+                <button onclick="guardarSeguiment()" class="btn-modal btn-confirm">Guardar Informe</button>
+                <button onclick="tancarModal()" class="btn-modal btn-cancel">Cancel·lar</button>`;
+            modal.style.display = "flex";
+        }
+
+        window.guardarSeguiment = async () => {
+            const text = document.getElementById('modalTextarea').value;
+            if (!text.trim()) return;
+            await updateDoc(doc(db, "expedientes", userId), {
+                seguiment: arrayUnion({ data: new Date().toLocaleDateString(), text: text })
+            });
+            tancarModal();
+            location.reload();
+        }
+
+        function pintarSeguiment() {
+            const c = document.getElementById('llista-seguiment');
+            const items = usuariActual.seguiment || [];
+            c.innerHTML = items.slice().reverse().map(s => `
+                <div class="item-card" style="display:block">
+                    <small><strong>${s.data}</strong></small>
+                    <p style="margin:8px 0 0 0; line-height:1.5; color:#334155;">${s.text}</p>
+                </div>`).join('') || "<p style='color:#94a3b8'>No hi ha registres de seguiment.</p>";
+        }
+
+        // --- SALUT I ALERTES ---
+        window.manageLines = (input) => {
+            const container = input.parentElement;
+            const all = container.querySelectorAll('.allergy-input');
+            if (all[all.length - 1].value.trim() !== "") {
+                const n = document.createElement('input');
+                n.className = "edit-input allergy-input";
+                n.placeholder = "Nova...";
+                n.oninput = function() { manageLines(this); };
+                container.appendChild(n);
+            }
+        }
+
+        window.checkAlergies = checkAlergies;
+        window.checkDependencia = checkDependencia;
+
+        function actualitzarCabeceraMedica(u) {
+            const s = u.salut || {};
+            const teAlertes = s.te_alergies === "Sí" || s.dependencia === "Sí" || s.tda === "Sí" || s.tdha === "Sí";
+            document.getElementById('header-medical-alert').style.display = teAlertes ? 'block' : 'none';
+        }
+
+        window.showMedicalModal = () => {
+            const s = usuariActual.salut;
+            let html = '';
+            const labels = { amb: 'Ambientals', med: 'Medicaments', ali: 'Alimentícies' };
+            Object.keys(labels).forEach(k => {
+                if(s.alergies_detall?.[k]?.length) {
+                    html += `<div class="allergy-card"><h4>${labels[k]}</h4><p>${s.alergies_detall[k].join(', ')}</p></div>`;
+                }
+            });
+            document.getElementById('modalTitle').innerText = "Alertes de Salut i Al·lèrgies";
+            document.getElementById('modalContent').innerHTML = html || "<p>No hi ha alertes detallades.</p>";
+            document.getElementById('modalButtons').innerHTML = `<button class="btn-modal btn-cancel" onclick="tancarModal()">Tancar</button>`;
+            document.getElementById('customModal').style.display = 'flex';
+        }
+
+        // --- VINCLES I ACTIVITATS ---
+        window.obrirModalVincular = () => {
+            const modal = document.getElementById('customModal');
+            document.getElementById('modalTitle').innerText = "Vincular Familiar";
+            document.getElementById('modalContent').innerHTML = `
+                <input type="text" id="busc-fam" class="search-input" placeholder="Escriu nom o ID...">
+                <div id="resultatsFam" class="results-list"></div>`;
+            document.getElementById('modalButtons').innerHTML = `<button onclick="tancarModal()" class="btn-modal btn-cancel">Tancar</button>`;
+            modal.style.display = "flex";
+            document.getElementById('busc-fam').oninput = async (e) => {
+                const text = e.target.value.toLowerCase();
+                if(text.length < 2) return;
+                const q = query(collection(db, "expedientes"));
+                const snap = await getDocs(q);
+                let html = '';
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    if(doc.id !== userId && (d.dades_personals?.nom?.toLowerCase().includes(text))) {
+                        html += `<div class="result-item" onclick="vincularAction('${doc.id}', '${d.dades_personals.nom}')">${d.dades_personals.nom} <strong>${doc.id}</strong></div>`;
+                    }
+                });
+                document.getElementById('resultatsFam').innerHTML = html;
+            }
+        }
+
+        window.vincularAction = async (id, nom) => {
+            // Replace native prompt with an in-modal inline input
+            const content = document.getElementById('modalContent');
+            content.innerHTML += `
+                <div style="margin-top:16px;padding:14px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
+                    <label style="font-size:0.78rem;font-weight:700;color:#64748b;text-transform:uppercase;">Vincle amb ${nom}</label>
+                    <input id="inp-vincle" type="text" placeholder="p.ex. Mare, Pare, Fill..." style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;margin-top:6px;font-size:0.95rem;font-family:inherit;box-sizing:border-box;">
+                </div>`;
+            document.getElementById('modalButtons').innerHTML = `
+                <button class="btn-modal btn-confirm" onclick="_confirmarVincle('${id}')">Confirmar Vincle</button>
+                <button class="btn-modal btn-cancel" onclick="tancarModal()">Cancel\u00b7lar</button>`;
+        }
+
+        window._confirmarVincle = async (id) => {
+            const p = document.getElementById('inp-vincle')?.value?.trim();
+            if (!p) return;
+            await updateDoc(doc(db, "expedientes", userId), { familia: arrayUnion({ id, parentiu: p }) });
+            location.reload();
+        }
+
+        function pintarFamilia(u) {
+            const c = document.getElementById('llista-familia');
+            c.innerHTML = (u.familia || []).map(f => `
+                <div class="item-card">
+                    <div><span class="label">${f.parentiu}</span><span class="value">Usuari vinculat: ${f.id}</span></div>
+                    <a href="perfil-usuari.html?id=${f.id}" class="btn-link">Veure Fitxa →</a>
+                </div>`).join('') || "<p style='color:#94a3b8'>No hi ha vincles familiars.</p>";
+        }
+
+        let _unsubActivitats = null;
+        async function pintarActivitats() {
+            const l = document.getElementById('llista-activitats');
+            l.innerHTML = '<p style="color:#94a3b8">Carregant activitats...</p>';
+
+            if (_unsubActivitats) _unsubActivitats();
+            const inscQ = query(collection(db, "beneficiarios_grupos"), where("beneficiarioId", "==", userId));
+            return new Promise(resolve => {
+                let resolved = false;
+                _unsubActivitats = onSnapshot(inscQ, async (inscSnap) => {
+                    const inscripcions = inscSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                    // La Caixa CPI badge
+                    const isLaCaixa = inscripcions.some(i => {
+                        const dn = (i.departamentoNombre || '').toLowerCase();
+                        return dn.includes('la caixa') || dn.includes('cpi');
+                    });
+                    const lacaixaBadge = document.getElementById('header-lacaixa-badge');
+                    if (lacaixaBadge) lacaixaBadge.style.display = isLaCaixa ? 'flex' : 'none';
+
+                    if (inscripcions.length === 0) {
+                        l.innerHTML = "<p style='color:#94a3b8'>No participa en cap grup.</p>";
+                        if (!resolved) { resolved = true; resolve(); }
+                        return;
+                    }
+
+            // Fetch grup details + attendance stats in parallel
+            const [grupsSnaps, assistenciaSnaps] = await Promise.all([
+                Promise.all(inscripcions.map(i => getDoc(doc(db, "grupos", i.grupoId)))),
+                Promise.all(inscripcions.map(i => getDocs(query(collection(db, "asistencia"),
+                    where("beneficiarioId", "==", userId), where("grupoId", "==", i.grupoId)))))
+            ]);
+
+            l.innerHTML = inscripcions.map((ins, idx) => {
+                const grup = grupsSnaps[idx].exists() ? grupsSnaps[idx].data() : null;
+                const registres = assistenciaSnaps[idx].docs.map(d => d.data());
+                const presents = registres.filter(r => r.estat === 'P' || r.asistio === true).length;
+                const total = registres.filter(r => r.estat || r.asistio !== undefined).length;
+                const pct = total > 0 ? Math.round(presents / total * 100) : null;
+                const grupNomEsc = (grup?.nombre || ins.grupoId).replace(/'/g, "\\'");
+
+                return `
+                <div class="item-card" style="flex-direction:column; align-items:stretch; gap:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                        <div>
+                            <strong>${grup?.nombre || ins.grupoId}</strong>
+                            <small style="display:block; color:#64748b; margin-top:3px;">
+                                ${grup?.actividadNombre || ''} · ${grup?.departamentoNombre || ''}
+                                &nbsp;—&nbsp; ${total} sessions registrades
+                            </small>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            ${pct !== null ? `<span style="background:#e0f2fe;color:#075985;padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;">${pct}% assistència</span>` : ''}
+                            <span style="background:#dcfce7;color:#16a34a;padding:4px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;">ACTIU</span>
+                            <button onclick="veurHistorialGrup('${ins.grupoId}', '${grupNomEsc}', this)"
+                                style="background:none;border:1px solid #e2e8f0;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:0.8rem;color:#64748b;">
+                                Historial ▼
+                            </button>
+                        </div>
+                    </div>
+                    <div id="hist-${ins.grupoId}" style="display:none;"></div>
+                </div>`;
+            }).join('');
+                    if (!resolved) { resolved = true; resolve(); }
+                }, e => { console.warn('[pintarActivitats]', e); if (!resolved) { resolved = true; resolve(); } });
+            });
+
+            }
+
+        window.veurHistorialGrup = async (grupoId, grupNom, btn) => {
+            const container = document.getElementById('hist-' + grupoId);
+            if (container.style.display !== 'none') {
+                container.style.display = 'none';
+                btn.textContent = 'Historial ▼';
+                return;
+            }
+            btn.textContent = 'Historial ▲';
+            container.innerHTML = '<small style="color:#94a3b8">Carregant...</small>';
+            container.style.display = 'block';
+
+            const snap = await getDocs(query(collection(db, "asistencia"),
+                where("beneficiarioId", "==", userId), where("grupoId", "==", grupoId)));
+            const registres = snap.docs.map(d => d.data()).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+            if (registres.length === 0) {
+                container.innerHTML = '<small style="color:#94a3b8;padding:8px;display:block;">Sense registres d\'assistència.</small>';
+                return;
+            }
+
+            const colors = { P: '#dcfce7', F: '#fee2e2', FJ: '#fef9c3' };
+            const textColors = { P: '#16a34a', F: '#991b1b', FJ: '#854d0e' };
+            container.innerHTML = `
+                <table style="width:100%;border-collapse:collapse;font-size:0.82rem;margin-top:5px;">
+                    <thead><tr style="background:#f8fafc;">
+                        <th style="padding:6px 10px;text-align:left;color:#64748b;font-weight:600;">Data</th>
+                        <th style="padding:6px 10px;text-align:center;color:#64748b;font-weight:600;">Estat</th>
+                    </tr></thead>
+                    <tbody>
+                        ${registres.map(r => {
+                            const estat = r.estat || (r.asistio ? 'P' : 'F');
+                            return `<tr style="border-bottom:1px solid #f1f5f9;">
+                                <td style="padding:6px 10px;">${r.fecha}</td>
+                                <td style="padding:6px 10px;text-align:center;">
+                                    <span style="background:${colors[estat]||'#f1f5f9'};color:${textColors[estat]||'#475569'};padding:2px 8px;border-radius:10px;font-weight:700;">${estat}</span>
+                                </td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>`;
+        };
+
+        window.obrirModalActivitats = async () => {
+            document.getElementById('modalTitle').innerText = "Inscriure en un Grup";
+            document.getElementById('modalContent').innerHTML = '<p style="color:#94a3b8">Carregant grups disponibles...</p>';
+            document.getElementById('modalButtons').innerHTML = `<button onclick="tancarModal()" class="btn-modal btn-cancel">Tancar</button>`;
+            document.getElementById('customModal').style.display = 'flex';
+
+            const [grupsSnap, inscSnap] = await Promise.all([
+                getDocs(query(collection(db, "grupos"), where("estado", "==", "Activo"))),
+                getDocs(query(collection(db, "beneficiarios_grupos"), where("beneficiarioId", "==", userId)))
+            ]);
+
+            const jaInscrit = new Set(inscSnap.docs.map(d => d.data().grupoId));
+            const disponibles = grupsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(g => !jaInscrit.has(g.id));
+
+            if (disponibles.length === 0) {
+                document.getElementById('modalContent').innerHTML = '<p style="color:#10b981;font-weight:600;">L\'usuari ja pertany a tots els grups actius.</p>';
+                return;
+            }
+
+            document.getElementById('modalContent').innerHTML = `
+                <input type="text" id="busc-grup" class="search-input" placeholder="Cercar grup...">
+                <div id="llista-grups-modal" class="results-list">
+                    ${disponibles.map(g => `
+                        <div class="result-item" onclick="inscriureEnGrup('${g.id}', '${(g.nombre||'').replace(/'/g,"\\'")}')">
+                            <div>
+                                <strong>${g.nombre}</strong>
+                                <small style="display:block;color:#64748b;">${g.actividadNombre||''} · ${g.departamentoNombre||''}</small>
+                            </div>
+                            <span style="color:#10b981;font-weight:600;">+ Inscriure</span>
+                        </div>`).join('')}
+                </div>`;
+            document.getElementById('busc-grup').oninput = (e) => {
+                const text = e.target.value.toLowerCase();
+                document.querySelectorAll('#llista-grups-modal .result-item').forEach(item => {
+                    item.style.display = item.textContent.toLowerCase().includes(text) ? '' : 'none';
+                });
+            };
+        };
+
+        window.inscriureEnGrup = async (grupoId, grupNom) => {
+            const dp = usuariActual.dades_personals || {};
+            const nom = ((dp.nom || '') + ' ' + (dp.cognoms || '')).trim();
+            const edat = calcularEdatNum(dp.data_naixement);
+            try {
+                await BeneficiariosGruposDB.agregar(grupoId, userId, nom, edat, "Correcto");
+                tancarModal();
+                await pintarActivitats();
+            } catch (e) {
+                console.error(e);
+                document.getElementById('modalMsg').textContent = "Error en inscriure l'usuari al grup: " + (e.message || '');
+                document.getElementById('modalMsg').style.color = '#ef4444';
+            }
+        };
+
+        window.canviarEstatExpedient = async () => {
+            const nou = usuariActual.estat === "Inactiu" ? "Actiu" : "Inactiu";
+            const colorBtn = nou === "Actiu" ? "#10b981" : "#ef4444";
+            document.getElementById('modalTitle').innerText = "Canviar Estat de l'Expedient";
+            document.getElementById('modalContent').innerHTML = `
+                <p style="font-size:1rem;color:#1e293b;line-height:1.6;">
+                    Confirmes el canvi d'estat a
+                    <strong style="color:${colorBtn}">${nou}</strong>?
+                </p>`;
+            document.getElementById('modalTextarea').style.display = 'none';
+            document.getElementById('modalButtons').innerHTML = `
+                <button class="btn-modal btn-confirm" style="background:${colorBtn};" onclick="_confirmarCanviEstat('${nou}')">Confirmar</button>
+                <button class="btn-modal btn-cancel" onclick="tancarModal()">Cancel\u00b7lar</button>`;
+            document.getElementById('customModal').style.display = 'flex';
+        }
+
+        window._confirmarCanviEstat = async (nouEstat) => {
+            await updateDoc(doc(db, "expedientes", userId), { estat: nouEstat });
+            location.reload();
+        }
+
+        // === HISTORIAL SOCIAL 360° ===
+
+        async function obtenirDadesHistorial() {
+            const inscSnap = await getDocs(query(collection(db, "beneficiarios_grupos"), where("beneficiarioId", "==", userId)));
+            const inscripcions = inscSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            return Promise.all(inscripcions.map(async (ins) => {
+                const [grupSnap, assistSnap] = await Promise.all([
+                    getDoc(doc(db, "grupos", ins.grupoId)),
+                    getDocs(query(collection(db, "asistencia"), where("beneficiarioId", "==", userId), where("grupoId", "==", ins.grupoId)))
+                ]);
+                const grup = grupSnap.exists() ? grupSnap.data() : null;
+                const registres = assistSnap.docs.map(d => d.data());
+                const presents = registres.filter(r => r.estat === 'P' || r.asistio === true).length;
+                const total = registres.filter(r => r.estat || r.asistio !== undefined).length;
+                return {
+                    grupoId: ins.grupoId,
+                    grupNom: grup?.nombre || ins.grupoId,
+                    actividadNombre: grup?.actividadNombre || '-',
+                    departamentoNombre: grup?.departamentoNombre || '-',
+                    totalSessions: total,
+                    pct: total > 0 ? Math.round(presents / total * 100) : null
+                };
+            }));
+        }
+
+        function generarHTMLHistorial(u, grups) {
+            const dp = u.dades_personals || {};
+            const sl = u.socio_laboral || {};
+            const hab = u.habitatge || {};
+            const salut = u.salut || {};
+            const seguim = (u.seguiment || []).slice().reverse();
+            const ara = new Date().toLocaleDateString('ca-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+            const nomComplet = `${dp.nom || ''} ${dp.cognoms || ''}`.trim();
+
+            const seccio = (num, titol) => `
+                <div style="background:#1e3a8a;color:white;padding:8px 15px;font-size:0.75rem;font-weight:700;letter-spacing:1px;margin-top:12px;">${num}. ${titol}</div>`;
+
+            const grid2 = (items) => `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;padding:12px 15px;background:white;">
+                    ${items.map(([label, val]) => `
+                    <div>
+                        <div style="font-size:0.6rem;color:#94a3b8;font-weight:700;text-transform:uppercase;margin-bottom:2px;">${label}</div>
+                        <div style="font-size:0.875rem;color:#1e293b;font-weight:500;">${val || '-'}</div>
+                    </div>`).join('')}
+                </div>`;
+
+            const grupsTaula = grups.length === 0
+                ? `<p style="padding:12px 15px;color:#94a3b8;font-size:0.85rem;">Cap participació en grups registrada.</p>`
+                : `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+                    <thead><tr style="background:#f1f5f9;">
+                        <th style="padding:8px 12px;text-align:left;color:#64748b;font-size:0.68rem;text-transform:uppercase;">Grup</th>
+                        <th style="padding:8px 12px;text-align:left;color:#64748b;font-size:0.68rem;text-transform:uppercase;">Activitat</th>
+                        <th style="padding:8px 12px;text-align:center;color:#64748b;font-size:0.68rem;text-transform:uppercase;">Sessions</th>
+                        <th style="padding:8px 12px;text-align:center;color:#64748b;font-size:0.68rem;text-transform:uppercase;">% Assist.</th>
+                    </tr></thead>
+                    <tbody>${grups.map((g, i) => `
+                        <tr style="background:${i%2===0?'white':'#f8fafc'}">
+                            <td style="padding:8px 12px;font-weight:600;">${g.grupNom}</td>
+                            <td style="padding:8px 12px;color:#475569;">${g.actividadNombre}</td>
+                            <td style="padding:8px 12px;text-align:center;">${g.totalSessions}</td>
+                            <td style="padding:8px 12px;text-align:center;">${g.pct !== null ? `<span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:10px;font-weight:700;">${g.pct}%</span>` : '-'}</td>
+                        </tr>`).join('')}
+                    </tbody></table>`;
+
+            const seguimHTML = seguim.length === 0
+                ? `<p style="padding:12px 15px;color:#94a3b8;font-size:0.85rem;">Sense registres de seguiment.</p>`
+                : seguim.map(s => `
+                    <div style="padding:10px 15px;border-bottom:1px solid #f1f5f9;">
+                        <div style="font-size:0.72rem;font-weight:700;color:#2563eb;margin-bottom:4px;">${s.data}</div>
+                        <div style="font-size:0.875rem;color:#334155;line-height:1.5;white-space:pre-wrap;">${s.text}</div>
+                    </div>`).join('');
+
+            const estatStyle = u.estat === 'Baixa' ? 'background:#fee2e2;color:#991b1b' :
+                               u.estat === 'Inactiu' ? 'background:#f1f5f9;color:#475569' :
+                               'background:#dcfce7;color:#065f46';
+
+            const alergiesDetall = (() => {
+                if (salut.te_alergies !== 'Si' && salut.te_alergies !== 'Sí') return '';
+                const parts = [];
+                if (salut.alergies_detall?.amb?.length) parts.push('Ambientals: ' + salut.alergies_detall.amb.join(', '));
+                if (salut.alergies_detall?.med?.length) parts.push('Medicaments: ' + salut.alergies_detall.med.join(', '));
+                if (salut.alergies_detall?.ali?.length) parts.push('Alimentícies: ' + salut.alergies_detall.ali.join(', '));
+                return parts.length ? `<div style="padding:0 15px 10px;font-size:0.82rem;color:#dc2626;background:white;">${parts.join(' &nbsp;|&nbsp; ')}</div>` : '';
+            })();
+
+            return `<div id="doc-historial-360" style="font-family:Arial,sans-serif;background:white;">
+                <div style="background:#1e3a8a;padding:20px 20px 14px;color:white;">
+                    <div style="font-size:1.2rem;font-weight:700;letter-spacing:1px;">NEXE SOCIAL</div>
+                    <div style="font-size:0.8rem;opacity:0.75;margin-top:2px;">Historial Social 360°</div>
+                    <div style="font-size:0.7rem;opacity:0.6;float:right;margin-top:-32px;">Generat el ${ara}</div>
+                    <div style="clear:both;"></div>
+                </div>
+                <div style="background:#f1f5f9;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:5px;">
+                    <div>
+                        <div style="font-size:1.1rem;font-weight:700;color:#1e293b;">${nomComplet || '-'}</div>
+                        <div style="font-size:0.78rem;color:#64748b;margin-top:3px;">DNI: ${dp.dni || '-'} &nbsp;&middot;&nbsp; Expedient: ${u.numero_expediente || '-'} &nbsp;&middot;&nbsp; Edat: ${calcularEdat(dp.data_naixement)}</div>
+                    </div>
+                    <span style="${estatStyle};padding:5px 14px;border-radius:20px;font-size:0.72rem;font-weight:700;">${u.estat || 'Actiu'}</span>
+                </div>
+                ${seccio(1, 'Dades Personals')}
+                ${grid2([['Nom', dp.nom], ['Cognoms', dp.cognoms], ['DNI / NIE', dp.dni], ['Data Naixement', dp.data_naixement], ['Gènere', dp.genere], ['Nacionalitat', dp.nacionalitat], ['Telèfon', dp.mobil], ['Email', dp.email]])}
+                ${seccio(2, 'Situació Socio-Laboral')}
+                ${grid2([['Situació Laboral', sl.situacio_laboral], ['Situació Administrativa', sl.situ_adm], ['Ingressos', sl.ingressos], ['Estudis', sl.estudis], ['Origen Geogràfic', sl.origen], ['Bretxa Digital', sl.bretxa]])}
+                ${seccio(3, 'Habitatge i Unitat Familiar')}
+                ${grid2([['Tipus d\'Habitatge', hab.context], ['Situació Domicili', hab.domicili], ['Unitat Convivencial', hab.unitat_familiar], ['', '']])}
+                ${seccio(4, 'Salut')}
+                ${grid2([['Al·lèrgies', salut.te_alergies], ['Dependència', salut.grau ? `${salut.dependencia} – ${salut.grau}` : (salut.dependencia || 'No')], ['TDA', salut.tda], ['TDHA', salut.tdha]])}
+                ${alergiesDetall}
+                ${salut.observacions ? `<div style="padding:4px 15px 12px;background:white;"><span style="font-size:0.68rem;color:#94a3b8;font-weight:700;text-transform:uppercase;">Observacions: </span><span style="font-size:0.85rem;color:#334155;">${salut.observacions}</span></div>` : ''}
+                ${seccio(5, 'Participació en Grups i Activitats')}
+                ${grupsTaula}
+                ${seccio(6, 'Historial de Seguiment')}
+                ${seguimHTML}
+                <div style="padding:10px 15px;background:#f8fafc;font-size:0.65rem;color:#94a3b8;text-align:center;border-top:2px solid #e2e8f0;margin-top:12px;">Document confidencial generat per NEXE SOCIAL &nbsp;&middot;&nbsp; ${ara}</div>
+            </div>`;
+        }
+
+        window.obrirHistorial360 = async () => {
+            const modal = document.getElementById('customModal');
+            document.getElementById('modalTitle').innerText = 'Historial Social 360°';
+            document.getElementById('modalContent').innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">Generant historial…</div>';
+            document.getElementById('modalButtons').innerHTML = '';
+            document.getElementById('modalTextarea').style.display = 'none';
+            modal.style.display = 'flex';
+            modal.querySelector('.modal-box').style.maxWidth = '820px';
+            try {
+                const grups = await obtenirDadesHistorial();
+                window._historialGrups = grups;
+                document.getElementById('modalContent').innerHTML =
+                    `<div style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;max-height:52vh;overflow-y:auto;">${generarHTMLHistorial(usuariActual, grups)}</div>`;
+                document.getElementById('modalButtons').innerHTML = `
+                    <button onclick="imprimirHistorial360(this)" class="btn-modal" style="background:#6366f1;color:white;flex:1;display:flex;align-items:center;justify-content:center;gap:6px;">
+                        <svg style="width:16px;height:16px;fill:white;flex-shrink:0" viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+                        Imprimir
+                    </button>
+                    <button onclick="descarregarHistorial360PDF(this)" class="btn-modal" style="background:#2563eb;color:white;flex:1;display:flex;align-items:center;justify-content:center;gap:6px;">
+                        <svg style="width:16px;height:16px;fill:white;flex-shrink:0" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                        Descarregar PDF
+                    </button>
+                    <button onclick="tancarModal()" class="btn-modal btn-cancel" style="flex:0.5;">Tancar</button>`;
+            } catch(e) {
+                console.error(e);
+                document.getElementById('modalContent').innerHTML = `<p style="color:#ef4444;padding:20px;">Error: ${e.message}</p>`;
+                document.getElementById('modalButtons').innerHTML = `<button onclick="tancarModal()" class="btn-modal btn-cancel">Tancar</button>`;
+            }
+        };
+
+        const _SVG_PRINT = '<svg style="width:16px;height:16px;fill:white;vertical-align:middle" viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>';
+        const _SVG_DL    = '<svg style="width:16px;height:16px;fill:white;vertical-align:middle" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
+        const _SVG_SPIN  = '<svg style="width:15px;height:15px;fill:white;vertical-align:middle;animation:spin 1s linear infinite" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>';
+
+        window.imprimirHistorial360 = async (btn) => {
+            if (btn) { btn.innerHTML = _SVG_SPIN + ' Generant…'; btn.disabled = true; }
+            try {
+                if (!window.jspdf) {
+                    await new Promise((resolve, reject) => {
+                        const s = document.createElement('script');
+                        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                        s.onload = resolve; s.onerror = reject;
+                        document.head.appendChild(s);
+                    });
+                }
+                const { jsPDF } = window.jspdf;
+                const docPDF = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                generarPDFHistorial360(docPDF, usuariActual, window._historialGrups || []);
+                docPDF.autoPrint();
+                window.open(docPDF.output('bloburl'), '_blank');
+            } catch(e) {
+                console.error(e);
+                if (document.getElementById('modalMsg')) {
+                    document.getElementById('modalMsg').textContent = 'Error: ' + e.message;
+                    document.getElementById('modalMsg').style.color = '#ef4444';
+                }
+            } finally {
+                if (btn) { btn.innerHTML = _SVG_PRINT + ' Imprimir'; btn.disabled = false; }
+            }
+        };
+
+        window.descarregarHistorial360PDF = async (btn) => {
+            if (btn) { btn.innerHTML = _SVG_SPIN + ' Generant…'; btn.disabled = true; }
+            try {
+                if (!window.jspdf) {
+                    await new Promise((resolve, reject) => {
+                        const s = document.createElement('script');
+                        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                        s.onload = resolve; s.onerror = reject;
+                        document.head.appendChild(s);
+                    });
+                }
+                const { jsPDF } = window.jspdf;
+                const docPDF = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                generarPDFHistorial360(docPDF, usuariActual, window._historialGrups || []);
+                const nom = (usuariActual.dades_personals?.nom || 'usuari').replace(/\s+/g, '_');
+                docPDF.save(`Historial_360_${nom}_${new Date().toISOString().split('T')[0]}.pdf`);
+            } catch(e) {
+                console.error(e);
+                if (document.getElementById('modalMsg')) {
+                    document.getElementById('modalMsg').textContent = 'Error: ' + e.message;
+                    document.getElementById('modalMsg').style.color = '#ef4444';
+                }
+            } finally {
+                if (btn) { btn.innerHTML = _SVG_DL + ' Descarregar PDF'; btn.disabled = false; }
+            }
+        };
+
+        function norm(str) {
+            return String(str || '-').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\u00b7/g, '.').replace(/\u00e7/g, 'c').replace(/\u00c7/g, 'C');
+        }
+
+        function generarPDFHistorial360(doc, u, grups) {
+            const W = 210, mg = 18;
+            const dp = u.dades_personals || {};
+            const sl = u.socio_laboral || {};
+            const hab = u.habitatge || {};
+            const salut = u.salut || {};
+            const seguim = (u.seguiment || []).slice().reverse();
+            const ara = new Date().toLocaleDateString('ca-ES');
+            const nomComplet = norm(`${dp.nom || ''} ${dp.cognoms || ''}`.trim());
+            const ent = (() => {
+                try {
+                    const raw = JSON.parse(localStorage.getItem('nexe_config_entitat') || '{}');
+                    return {
+                        nom: raw.nom || 'NexeSocial',
+                        cif: raw.cif || '',
+                        telefon: raw.telefon || '',
+                        email: raw.email || ''
+                    };
+                } catch {
+                    return { nom: 'NexeSocial', cif: '', telefon: '', email: '' };
+                }
+            })();
+            const entContact = [ent.cif, ent.telefon, ent.email].filter(Boolean).join(' · ');
+            let y = 0;
+
+            // Header band
+            doc.setFillColor(30, 58, 138);
+            doc.rect(0, 0, W, 30, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
+            doc.text(String(ent.nom || 'NEXE SOCIAL').toUpperCase(), mg, 13);
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
+            doc.text('Historial Social 360', mg, 21);
+            doc.setFontSize(7.5);
+            doc.text(`Generat el ${ara}`, W - mg, 21, { align: 'right' });
+            if (entContact) {
+                doc.setFontSize(6.5);
+                doc.text(entContact, mg, 27);
+            }
+            y = 36;
+
+            // User identification box
+            doc.setFillColor(241, 245, 249);
+            doc.rect(mg, y, W - 2*mg, 19, 'F');
+            doc.setTextColor(30, 41, 59); doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+            doc.text(nomComplet || '-', mg + 4, y + 8);
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(100, 116, 139);
+            doc.text(`DNI: ${norm(dp.dni)}`, mg + 4, y + 15);
+            doc.text(`Expedient: ${norm(u.numero_expediente)}`, mg + 45, y + 15);
+            doc.text(`Estat: ${norm(u.estat || 'Actiu')}`, mg + 100, y + 15);
+            doc.text(`Edat: ${calcularEdat(dp.data_naixement)}`, mg + 140, y + 15);
+            y += 25;
+
+            const checkPage = (h = 18) => { if (y + h > 275) { doc.addPage(); y = 18; } };
+
+            const seccio = (num, titol) => {
+                checkPage(14);
+                doc.setFillColor(37, 99, 235);
+                doc.rect(mg, y, W - 2*mg, 7, 'F');
+                doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5);
+                doc.text(`${num}. ${norm(titol).toUpperCase()}`, mg + 3, y + 5);
+                y += 10; doc.setTextColor(30, 41, 59);
+            };
+
+            const fila2 = (l1, v1, l2, v2) => {
+                checkPage(12);
+                const mid = mg + (W - 2*mg) / 2 + 3;
+                doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(148, 163, 184);
+                doc.text(norm(l1).toUpperCase(), mg, y);
+                if (l2 !== null && l2 !== undefined && l2 !== '') doc.text(norm(l2).toUpperCase(), mid, y);
+                y += 4;
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(30, 41, 59);
+                doc.text(norm(v1).substring(0, 35), mg, y);
+                if (l2 !== null && l2 !== undefined && l2 !== '') doc.text(norm(v2).substring(0, 35), mid, y);
+                y += 7;
+            };
+
+            seccio(1, 'Dades Personals');
+            fila2('Nom', dp.nom, 'Cognoms', dp.cognoms);
+            fila2('DNI / NIE', dp.dni, 'Data Naixement', dp.data_naixement);
+            fila2('Genere', dp.genere, 'Nacionalitat', dp.nacionalitat);
+            fila2('Telefon', dp.mobil, 'Email', dp.email);
+            y += 2;
+
+            seccio(2, 'Situacio Socio-Laboral');
+            fila2('Situacio Laboral', sl.situacio_laboral, 'Situacio Administrativa', sl.situ_adm);
+            fila2('Ingressos', sl.ingressos, 'Estudis', sl.estudis);
+            fila2('Origen', sl.origen, 'Bretxa Digital', sl.bretxa);
+            y += 2;
+
+            seccio(3, 'Habitatge i Unitat Familiar');
+            fila2('Tipus Habitatge', hab.context, 'Situacio Domicili', hab.domicili);
+            fila2('Unitat Convivencial', hab.unitat_familiar, '', null);
+            y += 2;
+
+            seccio(4, 'Salut');
+            fila2('Alergies', salut.te_alergies, 'Dependencia', salut.grau ? `${salut.dependencia} - ${salut.grau}` : (salut.dependencia || 'No'));
+            fila2('TDA', salut.tda, 'TDHA', salut.tdha);
+            if (salut.observacions) {
+                checkPage(12);
+                doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(148, 163, 184);
+                doc.text('OBSERVACIONS', mg, y); y += 4;
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(51, 65, 85);
+                doc.splitTextToSize(norm(salut.observacions), W - 2*mg).forEach(l => { checkPage(6); doc.text(l, mg, y); y += 5; });
+            }
+            y += 2;
+
+            seccio(5, 'Participacio en Grups i Activitats');
+            if (grups.length === 0) {
+                doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(148, 163, 184);
+                doc.text('Cap participacio registrada.', mg, y); y += 10;
+            } else {
+                const cx = { g: mg, a: mg+62, s: mg+118, p: mg+140 };
+                doc.setFillColor(226, 232, 240);
+                doc.rect(mg, y, W - 2*mg, 7, 'F');
+                doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(100, 116, 139);
+                doc.text('GRUP', cx.g+2, y+5); doc.text('ACTIVITAT', cx.a+2, y+5);
+                doc.text('SESSIONS', cx.s+2, y+5); doc.text('% ASSIST.', cx.p+2, y+5);
+                y += 8;
+                grups.forEach((g, i) => {
+                    checkPage(9);
+                    if (i % 2 === 0) { doc.setFillColor(248, 250, 252); doc.rect(mg, y, W - 2*mg, 8, 'F'); }
+                    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(30, 41, 59);
+                    doc.text(norm(g.grupNom).substring(0, 22), cx.g+2, y+5.5);
+                    doc.text(norm(g.actividadNombre).substring(0, 16), cx.a+2, y+5.5);
+                    doc.text(String(g.totalSessions || 0), cx.s+2, y+5.5);
+                    doc.text(g.pct !== null ? `${g.pct}%` : '-', cx.p+2, y+5.5);
+                    y += 8;
+                });
+            }
+            y += 3;
+
+            seccio(6, 'Historial de Seguiment');
+            if (seguim.length === 0) {
+                doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(148, 163, 184);
+                doc.text('Sense registres.', mg, y); y += 10;
+            } else {
+                seguim.forEach(s => {
+                    checkPage(20);
+                    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(37, 99, 235);
+                    doc.text(norm(s.data || ''), mg, y); y += 5;
+                    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(51, 65, 85);
+                    doc.splitTextToSize(norm(s.text || ''), W - 2*mg - 3).forEach(l => { checkPage(6); doc.text(l, mg+3, y); y += 5; });
+                    y += 2;
+                    doc.setDrawColor(226, 232, 240); doc.line(mg, y, W - mg, y); y += 4;
+                });
+            }
+
+            // Footer on every page
+            const totalPages = doc.internal.getNumberOfPages();
+            for (let p = 1; p <= totalPages; p++) {
+                doc.setPage(p);
+                doc.setDrawColor(226, 232, 240); doc.line(mg, 283, W - mg, 283);
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(148, 163, 184);
+                doc.text('NEXE SOCIAL - Document Confidencial', mg, 289);
+                doc.text(`Pagina ${p} de ${totalPages}`, W - mg, 289, { align: 'right' });
+            }
+        }
+
+        // Auxiliars
+        function calcularEdat(data) {
+            if (!data) return "-";
+            const naix = new Date(data);
+            const avui = new Date();
+            let edat = avui.getFullYear() - naix.getFullYear();
+            if (avui.getMonth() < naix.getMonth() || (avui.getMonth() === naix.getMonth() && avui.getDate() < naix.getDate())) edat--;
+            return edat + " anys";
+        }
+
+        function calcularEdatNum(data) {
+            if (!data) return 0;
+            const naix = new Date(data);
+            const avui = new Date();
+            let edat = avui.getFullYear() - naix.getFullYear();
+            if (avui.getMonth() < naix.getMonth() || (avui.getMonth() === naix.getMonth() && avui.getDate() < naix.getDate())) edat--;
+            return Math.max(0, edat);
+        }
+
+        // authStateReady(auth) is the Firebase 10 exported function that resolves
+        // exactly once when auth state is known — prevents getDoc from hanging.
+        (typeof auth.authStateReady === 'function' ? auth.authStateReady() : Promise.resolve()).then(() => init()).catch(() => init());
+        window.addEventListener('beforeunload', () => { if (_unsubActivitats) _unsubActivitats(); });
+
+        // Expose a data reload function so confirmSave (plain script) can reload without full page reload
+        window._reloadUserData = async function() {
+            console.log('[_reloadUserData] Starting reload...');
+            try {
+                document.body.classList.remove('is-editing');
+                document.getElementById('btnEdit').style.display = 'inline-flex';
+                document.getElementById('btnSaveMain').style.display = 'none';
+                
+                const docSnap = await getDoc(doc(db, "expedientes", userId));
+                console.log('[_reloadUserData] Document exists:', docSnap.exists());
+                
+                if (!docSnap.exists()) {
+                    document.getElementById('header-nom-complet').innerText = 'Expedient no trobat';
+                    return;
+                }
+                
+                const raw = docSnap.data();
+                console.log('[_reloadUserData] Raw data from Firebase:', raw);
+                
+                const decrypted = {
+                    id: docSnap.id,
+                    ...raw,
+                    dades_personals: await decryptField(raw.dades_personals),
+                    relacio_serveis: await decryptField(raw.relacio_serveis || raw.socio_laboral),
+                    situacio_psicosocial: await decryptField(raw.situacio_psicosocial || raw.habitatge),
+                    educacio_salut: await decryptField(raw.educacio_salut || raw.salut),
+                    socio_laboral:   await decryptField(raw.relacio_serveis || raw.socio_laboral),
+                    habitatge:       await decryptField(raw.situacio_psicosocial || raw.habitatge),
+                    salut:           await decryptField(raw.educacio_salut || raw.salut)
+                };
+                console.log('[_reloadUserData] Decrypted data:', decrypted);
+                
+                usuariActual = decrypted;
+                window._usuariActual = usuariActual;
+                
+                if (!usuariActual.relacio_serveis || typeof usuariActual.relacio_serveis !== 'object') {
+                    usuariActual.relacio_serveis = { derivat_per: [], derivat_per_altres: '', expedient_obert_a: [], protocols_educacio: [], professional_xarxa: false };
+                }
+                if (!usuariActual.situacio_psicosocial || typeof usuariActual.situacio_psicosocial !== 'object') {
+                    usuariActual.situacio_psicosocial = { situacio_domicili: '', membres_unitat_familiar: '', context_familiar: '', nombre_fills: '', vulnerabilitat_greu: [], bretxa_digital: 'No', participa_comunitaries: false, indicadors_risc: [] };
+                }
+                if (!usuariActual.educacio_salut || typeof usuariActual.educacio_salut !== 'object') {
+                    usuariActual.educacio_salut = { nivell_educatiu: '', centre_educatiu: '', situacio_escolar: '', situacio_laboral: '', situacio_laboral_detall: '', discapacitat: 'NO', dependencia: 'NO', malaltia_tipus: '', malaltia_nom: '', adiccio: 'No', adiccio_a_que: '', te_alergies: 'No', alergies_detall: { amb: [], med: [], ali: [] }, tda: 'No', tdha: 'No', dependencia_medica: 'No', grau: '', observacions: '' };
+                }
+                if (!usuariActual.salut || typeof usuariActual.salut !== 'object') {
+                    usuariActual.salut = usuariActual.educacio_salut;
+                }
+                
+                omplirDades(usuariActual);
+                pintarFamilia(usuariActual);
+                actualitzarCabeceraMedica(usuariActual);
+                
+                try {
+                    await pintarActivitats();
+                } catch (err) {
+                    console.warn('pintarActivitats error:', err.message);
+                }
+                console.log('[_reloadUserData] Reload completed successfully');
+            } catch (err) {
+                console.error('[_reloadUserData] Error recarregant dades:', err);
+                _showSaveToast('Error recarregant dades: ' + (err.message || 'Desconegut'), false);
+            }
+        };
+
+        // Función para abrir el flujo de firma desde perfil de usuario
+        window.abrirParaFirmarPerfilUsuari = async function() {
+            try {
+                import('./signature-flow.js').then(mod => {
+                    const SignatureFlow = mod.default;
+                    const userName = window._usuariActual?.nombre || 'Usuari';
+                    
+                    SignatureFlow.openQuickSignFlow({
+                        documentTitle: `Perfil Usuario - ${userName}`,
+                        documentText: `Perfil de usuario: ${userName}`,
+                        sourceModule: 'perfil-usuari',
+                        metadata: {
+                            tipo: 'perfil-usuario',
+                            userName: userName,
+                        },
+                    });
+                });
+            } catch(e) {
+                console.error('Error obrint firma:', e);
+                alert('Error al obrir el flux de firma');
+            }
+        };
+    </script>
+
+    <!-- Simple init script that doesn't depend on modules - runs after modules finish loading -->
+    <script>
+        // This runs AFTER the module script (regardless of success/failure)
+        // If _reloadUserData wasn't set (module failed), we try to init anyway
+        window._initWithFallback = async function() {
+            console.log('[_initWithFallback] Running fallback init');
+
+            if (typeof window._reloadUserData === 'function') {
+                console.log('[_initWithFallback] Module already loaded, skipping fallback');
+                return;
+            }
+            
+            console.log('[_initWithFallback] Module failed, using fallback initialization');
+            // Module failed to load, try to initialize without encryption
+            // This is a fallback for displaying data in plain format
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const userId = params.get('id');
+                
+                if (!userId || userId === 'nou') {
+                    console.log('[_initWithFallback] Creating new record');
+                    return;
+                }
+
+                const [{ db }, fs, vi, cu] = await Promise.all([
+                    import('./firebase-config.js'),
+                    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'),
+                    import('./vault-init.js'),
+                    import('./crypto-utils.js')
+                ]);
+
+                try {
+                    await Promise.race([
+                        vi.waitForCrypto(),
+                        new Promise(resolve => setTimeout(resolve, 1200))
+                    ]);
+                } catch (e) {
+                    console.warn('[_initWithFallback] waitForCrypto timed out:', e);
+                }
+
+                const snap = await fs.getDoc(fs.doc(db, 'expedientes', userId));
+                
+                if (!snap.exists()) {
+                    document.getElementById('header-nom-complet').innerText = 'Expedient no trobat';
+                    return;
+                }
+                
+                const raw = snap.data();
+                const usuariActual = { id: snap.id, ...raw };
+                
+                // Try to decrypt, but if it fails, use raw data
+                try {
+                    if (cu.isReady && cu.isReady()) {
+                        usuariActual.dades_personals = await cu.decryptField(raw.dades_personals) || {};
+                        usuariActual.relacio_serveis = await cu.decryptField(raw.relacio_serveis || raw.socio_laboral) || {};
+                        usuariActual.situacio_psicosocial = await cu.decryptField(raw.situacio_psicosocial || raw.habitatge) || {};
+                        usuariActual.educacio_salut = await cu.decryptField(raw.educacio_salut || raw.salut) || {};
+                        usuariActual.socio_laboral = usuariActual.relacio_serveis;
+                        usuariActual.habitatge = usuariActual.situacio_psicosocial;
+                        usuariActual.salut = usuariActual.educacio_salut;
+                    } else {
+                        throw new Error('Crypto not ready');
+                    }
+                } catch (e) {
+                    console.warn('[_initWithFallback] Crypto not ready or failed, using plain data:', e);
+                    usuariActual.dades_personals = raw.dades_personals || {};
+                    usuariActual.relacio_serveis = raw.relacio_serveis || raw.socio_laboral || {};
+                    usuariActual.situacio_psicosocial = raw.situacio_psicosocial || raw.habitatge || {};
+                    usuariActual.educacio_salut = raw.educacio_salut || raw.salut || {};
+                    usuariActual.socio_laboral = usuariActual.relacio_serveis;
+                    usuariActual.habitatge = usuariActual.situacio_psicosocial;
+                    usuariActual.salut = usuariActual.educacio_salut;
+                }
+                
+                window._usuariActual = usuariActual;
+                console.log('[_initWithFallback] Data loaded:', usuariActual);
+                
+                // Now try to call omplirDades if it exists
+                if (typeof omplirDades === 'function') {
+                    console.log('[_initWithFallback] Calling omplirDades');
+                    omplirDades(usuariActual);
+                    console.log('[_initWithFallback] omplirDades completed');
+                } else {
+                    console.warn('[_initWithFallback] omplirDades function not found');
+                    document.getElementById('header-nom-complet').innerText = 'Datos cargados (fallback - sin renderizado)';
+                }
+            } catch (e) {
+                console.error('[_initWithFallback] Error:', e);
+                document.getElementById('header-nom-complet').innerText = 'Error en fallback: ' + (e.message || e);
+            }
+        };
+        
+        // Auto-execute fallback init if data isn't loaded
+        // Check every 150ms starting from 700ms, max 2.5s
+        let _fallbackStarted = false;
+        const _checkInterval = setInterval(async () => {
+            if (_fallbackStarted) return;
+            
+            const elapsed = Date.now() - window._pageLoadTime;
+            const valNom = document.getElementById('val-nom')?.textContent?.trim();
+            const dataLoaded = valNom && valNom !== '-' && valNom !== 'Carregant...';
+            
+            // If data not loaded after 700ms, try fallback.
+            // Force fallback after 2.5s regardless.
+            if ((elapsed > 700 && !dataLoaded) || elapsed > 2500) {
+                _fallbackStarted = true;
+                clearInterval(_checkInterval);
+                console.log('[AUTO FALLBACK] Triggering at', elapsed, 'ms (dataLoaded:', dataLoaded, ')');
+                await window._initWithFallback();
+                console.log('[AUTO FALLBACK] Completed');
+            }
+        }, 150);
+        
+        window._pageLoadTime = Date.now();
+    </script>
+</body>
+</html>

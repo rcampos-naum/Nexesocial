@@ -1,0 +1,184 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    
+    <link rel="icon" type="image/svg+xml" href="../img/nexeadmin-icon.svg">
+    <style>
+        body { font-family: Inter, system-ui, sans-serif; background: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .card { background: white; border-radius: 20px; padding: 40px; max-width: 560px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h2 { color: #1e293b; margin: 0 0 8px; font-size: 1.4rem; }
+        p { color: #64748b; font-size: 0.9rem; margin: 0 0 24px; line-height: 1.6; }
+        .log { background: #0f172a; color: #94a3b8; font-family: monospace; font-size: 0.8rem; border-radius: 10px; padding: 16px; min-height: 160px; max-height: 300px; overflow-y: auto; margin: 20px 0; white-space: pre-line; }
+        .log .ok  { color: #4ade80; }
+        .log .err { color: #f87171; }
+        .log .info{ color: #60a5fa; }
+        .btn { padding: 14px 28px; border: none; border-radius: 10px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all .2s; font-family: inherit; }
+        .btn-danger  { background: #ef4444; color: white; }
+        .btn-danger:hover:not(:disabled) { background: #dc2626; }
+        .btn-secondary { background: #e2e8f0; color: #475569; margin-left: 10px; }
+        .btn:disabled { opacity: .5; cursor: not-allowed; }
+        .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; margin: 3px; }
+        .badge-red { background: #fee2e2; color: #dc2626; }
+        .done-msg { background: #f0fdf4; border: 2px solid #4ade80; border-radius: 12px; padding: 16px; color: #16a34a; font-weight: 600; text-align: center; margin-top: 16px; display: none; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div style="width:44px;height:44px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </div>
+        <div>
+            <h2>Eliminar Dades de Demo</h2>
+            <p style="margin:0;font-size:0.82rem;">Neteja controlada de departaments i personal generat automÃ ticament</p>
+        </div>
+    </div>
+
+    <p>Aquesta eina eliminarÃ  les dades de prova generades pel sistema de demo. Selecciona el que vols eliminar:</p>
+
+    <div style="margin-bottom:20px;">
+        <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;margin-bottom:8px;">
+            <input type="checkbox" id="chk-depts" checked style="width:18px;height:18px;accent-color:#ef4444;">
+            <div>
+                <strong style="color:#1e293b;">Departaments</strong>
+                <span class="badge badge-red">Firestore: departamentos</span>
+                <span class="badge badge-red">localStorage: nexesocial_departments</span>
+                <div style="font-size:0.78rem;color:#64748b;margin-top:2px;">Totes les entrades de la colÂ·lecciÃ³ departamentos</div>
+            </div>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;margin-bottom:8px;">
+            <input type="checkbox" id="chk-personal" checked style="width:18px;height:18px;accent-color:#ef4444;">
+            <div>
+                <strong style="color:#1e293b;">Personal (empleados)</strong>
+                <span class="badge badge-red">Firestore: empleados</span>
+                <span class="badge badge-red">localStorage: nexesocial_staff</span>
+                <div style="font-size:0.78rem;color:#64748b;margin-top:2px;">Totes les fitxes de personal/treballadors</div>
+            </div>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;margin-bottom:8px;">
+            <input type="checkbox" id="chk-activitats" style="width:18px;height:18px;accent-color:#ef4444;">
+            <div>
+                <strong style="color:#1e293b;">Activitats (opcional)</strong>
+                <span class="badge badge-red">Firestore: actividades</span>
+                <span class="badge badge-red">localStorage: nexesocial_activities</span>
+                <div style="font-size:0.78rem;color:#64748b;margin-top:2px;">Activitats lligades als departaments de demo</div>
+            </div>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;margin-bottom:8px;">
+            <input type="checkbox" id="chk-donacions" style="width:18px;height:18px;accent-color:#ef4444;">
+            <div>
+                <strong style="color:#1e293b;">Donants, Donacions i ProveÃ¯dors</strong>
+                <span class="badge badge-red">Firestore: donants</span>
+                <span class="badge badge-red">Firestore: donacions</span>
+                <span class="badge badge-red">Firestore: proveidors</span>
+                <div style="font-size:0.78rem;color:#64748b;margin-top:2px;">SÃ²cies, donants, donacions i directori de proveÃ¯dors</div>
+            </div>
+        </label>
+    </div>
+
+    <div id="log" class="log"><span class="info">Esperant confirmaciÃ³...</span></div>
+
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:4px;">
+        <button class="btn btn-danger" id="btnRun" onclick="runCleanup()">Eliminar seleccionats</button>
+        <button class="btn btn-secondary" onclick="window.location.href='nexeadmin.html'">CancelÂ·lar</button>
+    </div>
+
+    <div class="done-msg" id="done-msg">
+        âœ… Neteja completada correctament. Pots tancar aquesta pÃ gina.
+        <div style="margin-top:10px;"><a href="nexeadmin.html" style="color:#16a34a;font-weight:700;">â†’ Tornar a NexeAdmin</a></div>
+    </div>
+</div>
+
+<script src="../security-check.js"></script>
+<script type="module">
+    import { db, auth } from '../firebase-config.js';
+    import { collection, getDocs, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+    await window.checkModuleAccess('NexeAdmin');
+
+    const logEl = document.getElementById('log');
+    function log(msg, cls = '') {
+        const span = document.createElement('span');
+        span.className = cls;
+        span.textContent = msg + '\n';
+        logEl.appendChild(span);
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+    function clearLog() { logEl.innerHTML = ''; }
+
+    async function deleteCollection(colPath) {
+        log(`[${colPath}] Obtenint documents...`, 'info');
+        const snap = await getDocs(collection(db, colPath));
+        if (snap.empty) { log(`[${colPath}] Ja estava buida.`, 'ok'); return 0; }
+        let count = 0;
+        for (const d of snap.docs) {
+            await deleteDoc(doc(db, colPath, d.id));
+            count++;
+        }
+        log(`[${colPath}] âœ“ ${count} documents eliminats.`, 'ok');
+        return count;
+    }
+
+    function clearLS(...keys) {
+        let cleared = 0;
+        for (const k of keys) {
+            if (localStorage.getItem(k) !== null) {
+                localStorage.removeItem(k);
+                log(`[localStorage] eliminat: ${k}`, 'ok');
+                cleared++;
+            }
+        }
+        return cleared;
+    }
+
+    window.runCleanup = async function() {
+        const depts     = document.getElementById('chk-depts').checked;
+        const personal  = document.getElementById('chk-personal').checked;
+        const activitats = document.getElementById('chk-activitats').checked;
+        const donacions = document.getElementById('chk-donacions').checked;
+
+        if (!depts && !personal && !activitats && !donacions) {
+            alert('Selecciona almenys una opciÃ³.');
+            return;
+        }
+
+        if (!confirm('Segur que vols eliminar les dades seleccionades? Aquesta acciÃ³ Ã©s IRREVERSIBLE.')) return;
+
+        const btn = document.getElementById('btnRun');
+        btn.disabled = true;
+        clearLog();
+        log('Iniciant neteja...', 'info');
+        let total = 0;
+
+        try {
+            if (depts) {
+                total += await deleteCollection('departamentos');
+                clearLS('nexesocial_departments');
+            }
+            if (personal) {
+                total += await deleteCollection('empleados');
+                clearLS('nexesocial_staff');
+            }
+            if (activitats) {
+                total += await deleteCollection('actividades');
+                clearLS('nexesocial_activities');
+            }
+            if (donacions) {
+                total += await deleteCollection('donants');
+                total += await deleteCollection('donacions');
+                total += await deleteCollection('proveidors');
+            }
+
+            log(`\nFinalitzat. ${total} documents eliminats de Firestore.`, 'ok');
+            document.getElementById('done-msg').style.display = 'block';
+        } catch (e) {
+            log(`ERROR: ${e.message}`, 'err');
+            btn.disabled = false;
+        }
+    };
+</script>
+</body>
+</html>
+

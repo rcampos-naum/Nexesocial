@@ -1,0 +1,687 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Configuracio</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cfg-bg: radial-gradient(circle at 15% 12%, #eff6ff 0%, #f8fafc 44%, #eef2ff 100%);
+            --cfg-panel: #ffffff;
+            --cfg-line: #e2e8f0;
+            --cfg-title: #0f172a;
+            --cfg-muted: #64748b;
+            --cfg-brand: #2563eb;
+            --cfg-brand-soft: #dbeafe;
+            --cfg-shadow: 0 14px 36px -18px rgba(15, 23, 42, 0.32);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            background: var(--cfg-bg);
+        }
+
+        .main-content {
+            padding: 28px 30px 34px;
+        }
+
+        .page-header {
+            background: rgba(255, 255, 255, 0.84);
+            border: 1px solid rgba(226, 232, 240, 0.86);
+            border-radius: 16px;
+            padding: 20px 22px;
+            margin-bottom: 18px;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--cfg-shadow);
+        }
+        .page-header h1 {
+            margin: 0;
+            color: var(--cfg-title);
+            font-size: 1.62rem;
+            letter-spacing: -0.01em;
+        }
+        .page-header p {
+            margin: 6px 0 0;
+            color: var(--cfg-muted);
+            font-size: 0.92rem;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr);
+            gap: 18px;
+            align-items: start;
+        }
+        .config-nav {
+            background: var(--cfg-panel);
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid var(--cfg-line);
+            box-shadow: var(--cfg-shadow);
+            position: sticky;
+            top: 78px;
+        }
+        .config-nav-item {
+            padding: 11px 12px;
+            margin-bottom: 6px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--cfg-muted);
+            font-weight: 600;
+            border: 1px solid transparent;
+        }
+        .config-nav-item:hover {
+            background: #f8fafc;
+            color: #0f172a;
+            border-color: #e2e8f0;
+        }
+        .config-nav-item.active {
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+            color: #ffffff;
+            border-color: #1d4ed8;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.16);
+        }
+        .config-nav-item svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            flex-shrink: 0;
+        }
+
+        .content-card {
+            background: var(--cfg-panel);
+            border: 1px solid var(--cfg-line);
+            border-radius: 16px;
+            box-shadow: var(--cfg-shadow);
+            padding: 20px 22px;
+        }
+
+        .form-section { margin-bottom: 30px; }
+        .form-section h3 {
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eef2f7;
+            color: var(--cfg-title);
+            font-size: 1rem;
+            letter-spacing: -0.01em;
+        }
+
+        .grid-form {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .form-group label {
+            font-size: 0.75rem;
+            color: var(--cfg-muted);
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            border: 1px solid #dbe3ee;
+            border-radius: 10px;
+            padding: 10px 11px;
+            background: #ffffff;
+            color: #0f172a;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--cfg-brand);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform .15s ease, box-shadow .15s ease;
+            box-shadow: 0 8px 18px -10px rgba(37,99,235,.65);
+        }
+        .btn-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px -10px rgba(37,99,235,.72);
+        }
+        .btn-save:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .user-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            border-radius: 10px;
+            background: #fbfdff;
+            margin-bottom: 10px;
+        }
+        .user-row:last-child { margin-bottom: 0; }
+        .user-info { display: flex; align-items: center; gap: 12px; }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: #e2e8f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        
+        .profile-card {
+            background: linear-gradient(115deg, #0f4cbd 0%, #2563eb 48%, #0ea5a8 100%);
+            color: white;
+            padding: 26px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--cfg-shadow);
+            border: 1px solid rgba(255,255,255,.12);
+        }
+        .profile-card h2 { margin: 0 0 10px 0; font-size: 1.62rem; letter-spacing: -0.01em; }
+        .profile-info { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+        .info-item { background: rgba(255,255,255,0.13); padding: 13px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.13); }
+        .info-label { font-size: 0.7rem; opacity: 0.82; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.04em; font-weight: 700; }
+        .info-value { font-size: 1.02rem; font-weight: 700; }
+
+        @media (max-width: 1020px) {
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+            .config-nav {
+                position: static;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .main-content {
+                padding: 18px 14px 24px;
+            }
+            .page-header {
+                padding: 14px 14px;
+            }
+            .page-header h1 {
+                font-size: 1.28rem;
+            }
+            .profile-info,
+            .grid-form {
+                grid-template-columns: 1fr;
+            }
+            .profile-card {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <script type="module" src="sidebar.js"></script>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Configuracio de l'Entitat</h1>
+            <p>Dades mestres, marca documental, seus i seguretat en una sola vista.</p>
+        </div>
+
+        <!-- PERFIL DEL USUARI LOGEADO -->
+        <div class="profile-card" id="profileCard" style="display:none;">
+            <h2 id="profileName">Carregant...</h2>
+            <div class="profile-info">
+                <div class="info-item">
+                    <div class="info-label">Email</div>
+                    <div class="info-value" id="profileEmail">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Rol</div>
+                    <div class="info-value" id="profileRole">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Estado</div>
+                    <div class="info-value" id="profileStatus">Actiu</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Ultima connexio</div>
+                    <div class="info-value" id="profileLastLogin">Hoy</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-grid">
+            <div class="config-nav">
+                <div class="config-nav-item active" onclick="switchConfig('general', this)">
+                    <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+                    Dades Generals
+                </div>
+                <div class="config-nav-item" onclick="switchConfig('centres', this)">
+                    <svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 10h.01M9 13h.01M9 16h.01M15 10h.01M15 13h.01M15 16h.01"/></svg>
+                    Centres i Seus
+                </div>
+                <div class="config-nav-item" onclick="switchConfig('impressio', this)">
+                    <svg viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    Impressio / PDF
+                </div>
+                <div class="config-nav-item" onclick="switchConfig('seguretat', this)">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    Seguretat
+                </div>
+            </div>
+
+            <div class="content-card">
+                
+                <div id="c-general" class="config-content">
+                    <div class="form-section">
+                        <h3>Dades de l'Entitat</h3>
+                        <div class="grid-form">
+                            <div class="form-group" style="grid-column: span 2;"><label>Nom Oficial</label><input type="text" id="gen-nom" placeholder="Associació NexeSocial"></div>
+                            <div class="form-group"><label>CIF</label><input type="text" id="gen-cif" placeholder="G-12345678"></div>
+                            <div class="form-group"><label>Telefon Principal</label><input type="text" id="gen-telefon" placeholder="971 00 00 00"></div>
+                            <div class="form-group" style="grid-column: span 2;"><label>Email de contacte</label><input type="email" id="gen-email" placeholder="info@nexesocial.org"></div>
+                            <div class="form-group" style="grid-column: span 2;"><label>Adreca fiscal</label><input type="text" id="gen-adreca" placeholder="Carrer Exemple, 10 - 07000 Palma"></div>
+                            <div class="form-group"><label>Web</label><input type="text" id="gen-web" placeholder="https://nexesocial.org"></div>
+                            <div class="form-group"><label>Persona responsable</label><input type="text" id="gen-responsable" placeholder="Nom i cognoms"></div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px;margin-top:20px;">
+                            <button class="btn-save" id="btn-save-general" onclick="saveGeneralEntity()">Actualitzar Dades</button>
+                            <span id="gen-status" style="font-size:0.85rem;color:#10b981;display:none;">Desat correctament</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="c-centres" class="config-content" style="display:none;">
+                    <div class="form-section">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                            <h3 style="margin:0; border:none;">Centres de Treball</h3>
+                            <button class="btn-save" style="font-size:0.8rem; padding:5px 10px;">+ Afegir Seu</button>
+                        </div>
+                        <div class="user-row">
+                            <div><strong>Seu Central - Son Roca</strong><br><small>Carrer de la Veritat, 10, Palma</small></div>
+                            <span class="id-pill">Principal</span>
+                        </div>
+                        <div class="user-row">
+                            <div><strong>Espai Jove - Son Rapinya</strong><br><small>Carrer Major, 5, Palma</small></div>
+                            <button class="btn-small" style="background:none; color:var(--primary-blue); border:1px solid; border-radius:5px; padding:3px 8px;">Editar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="c-impressio" class="config-content" style="display:none;">
+                    <div class="form-section">
+                        <h3>Plantilla d'Impressio / PDF</h3>
+                        <p style="color:#64748b;font-size:0.88rem;margin:-10px 0 20px;">Configuracio que apareix a tots els informes i documents PDF generats. Actualitza-la cada any o quan canviin les dades de l'entitat.</p>
+                        <div class="grid-form">
+                            <div class="form-group" style="grid-column:span 2;">
+                                <label>Nom de l'Entitat (capcalera PDF)</label>
+                                <input type="text" id="imp-nom" placeholder="Associacio NexeSocial">
+                            </div>
+                            <div class="form-group" style="grid-column:span 2;">
+                                <label>Subtitol / descripcio breu</label>
+                                <input type="text" id="imp-subtitol" placeholder="Sistema de Gestio d'Intervencio Social">
+                            </div>
+                            <div class="form-group">
+                                <label>Any vigent dels documents</label>
+                                <input type="number" id="imp-any" placeholder="2026" min="2020" max="2099">
+                            </div>
+                            <div class="form-group">
+                                <label>CIF de l'Entitat</label>
+                                <input type="text" id="imp-cif" placeholder="G-12345678">
+                            </div>
+                            <div class="form-group">
+                                <label>Telefon</label>
+                                <input type="text" id="imp-telefon" placeholder="971 000 000">
+                            </div>
+                            <div class="form-group">
+                                <label>Email de contacte</label>
+                                <input type="email" id="imp-email" placeholder="info@entitat.org">
+                            </div>
+                            <div class="form-group" style="grid-column:span 2;">
+                                <label>Adreca</label>
+                                <input type="text" id="imp-adreca" placeholder="Carrer Exemple, 10 - 07000 Palma">
+                            </div>
+                            <div class="form-group" style="grid-column:span 2;">
+                                <label>Text del rol del signant (peu de pagina PDF)</label>
+                                <input type="text" id="imp-rol" placeholder="Tecnic/a d'Intervencio Social - NexeSocial Services">
+                                <small style="color:#64748b; font-size:0.78rem; margin-top:4px;">Es prioritza automàticament el rol del perfil del tècnic connectat (NexeAdmin). Aquest camp queda com a valor per defecte.</small>
+                                <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                                    <button type="button" class="btn-save" style="padding:7px 10px; font-size:0.78rem;" onclick="setSignerRoleFromProfile()">Usar rol del meu perfil</button>
+                                </div>
+                            </div>
+                            <div class="form-group" style="grid-column:span 2;">
+                                <label>Text legal peu de pagina</label>
+                                <input type="text" id="imp-peu" placeholder="Aquest document te caracter oficial. La seva reproduccio parcial esta prohibida.">
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px;margin-top:20px;">
+                            <button class="btn-save" id="btn-save-imp" onclick="saveImpressio()">Desar configuracio</button>
+                            <span id="imp-status" style="font-size:0.85rem;color:#10b981;display:none;">Desat correctament</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="c-seguretat" class="config-content" style="display:none;">
+                    <div class="form-section">
+                        <h3>Seguretat</h3>
+                        <p style="color:#64748b;font-size:0.9rem; margin-bottom:16px;">Configuracio basica de seguretat i accessos.</p>
+                        <div class="grid-form">
+                            <div class="form-group" style="grid-column:span 2;">
+                                <label>Canvi de contrasenya</label>
+                                <button type="button" class="btn-save" onclick="window.location.href='perfil.html'">Anar a perfil d'usuari</button>
+                            </div>
+                            <div class="form-group" style="grid-column:span 2;">
+                                <label>Permisos i rols</label>
+                                <button type="button" class="btn-save" onclick="window.location.href='NexeAdmin/admin-permisos.html'">Obrir matriu de permisos</button>
+                            </div>
+                            <div class="form-group" style="grid-column:span 2;">
+                                <label>Flux unificat de firmes</label>
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                    <button type="button" class="btn-save" onclick="window.location.href='NexeSing/nexesing.html'">Obrir NexeSing</button>
+                                    <button type="button" class="btn-save" style="background:#0f766e;" onclick="crearSolicitudFirmaConfig()">Enviar aquesta configuracio a firma</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        // Cargar los datos del usuario logeado
+        import './auth-manager.js';
+        import SignatureFlow from './signature-flow.js';
+        import { db } from './firebase-config.js';
+        import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        const IMP_FIELDS = ['nom','subtitol','any','cif','telefon','email','adreca','rol','peu'];
+        const GENERAL_FIELDS = ['nom','cif','telefon','email','adreca','web','responsable'];
+
+        window.crearSolicitudFirmaConfig = async function() {
+            try {
+                const emailsRaw = prompt('Emails dels signants (separats per coma):');
+                if (!emailsRaw) return;
+                const signers = emailsRaw
+                    .split(',')
+                    .map(s => s.trim())
+                    .filter(Boolean)
+                    .map((email, idx) => ({ email, name: email, order: idx + 1 }));
+
+                if (!signers.length) {
+                    alert('No has indicat signants.');
+                    return;
+                }
+
+                const resum = {
+                    nom: document.getElementById('gen-nom')?.value || '',
+                    cif: document.getElementById('gen-cif')?.value || '',
+                    email: document.getElementById('gen-email')?.value || '',
+                    adreca: document.getElementById('gen-adreca')?.value || '',
+                };
+
+                await SignatureFlow.requestSignature({
+                    documentTitle: `Aprovacio configuracio entitat - ${resum.nom || 'NexeSocial'}`,
+                    documentUrl: window.location.href,
+                    documentText: JSON.stringify(resum, null, 2),
+                    sourceModule: 'configuracio',
+                    sourcePath: window.location.pathname,
+                    signers,
+                    metadata: { type: 'entity-config-approval' }
+                });
+
+                alert('Solicitud de firma enviada correctament.');
+            } catch (e) {
+                alert('No hem pogut enviar la solicitud: ' + e.message);
+            }
+        };
+
+        async function loadImpressio() {
+            try {
+                // Try Firestore first, fall back to localStorage cache
+                const snap = await getDoc(doc(db, 'config', 'entitat'));
+                const data = snap.exists() ? snap.data() : JSON.parse(localStorage.getItem('nexe_config_entitat') || '{}');
+                IMP_FIELDS.forEach(f => {
+                    const el = document.getElementById('imp-' + f);
+                    if (el && data[f]) el.value = data[f];
+                });
+                if (!document.getElementById('imp-rol')?.value) {
+                    setSignerRoleFromProfile();
+                }
+            } catch(e) {
+                const cached = JSON.parse(localStorage.getItem('nexe_config_entitat') || '{}');
+                IMP_FIELDS.forEach(f => {
+                    const el = document.getElementById('imp-' + f);
+                    if (el && cached[f]) el.value = cached[f];
+                });
+                if (!document.getElementById('imp-rol')?.value) {
+                    setSignerRoleFromProfile();
+                }
+            }
+        }
+
+        function resolveRoleLabelFromProfile() {
+            const profileRole = (localStorage.getItem('userSignatureRole') || '').trim();
+            if (profileRole) return profileRole;
+
+            const matrixRoles = (() => {
+                try { return JSON.parse(localStorage.getItem('userMatrixRoles') || '[]'); } catch { return []; }
+            })();
+            const legacyRoles = (() => {
+                try { return JSON.parse(localStorage.getItem('userRoles') || '[]'); } catch { return []; }
+            })();
+            const userRole = localStorage.getItem('userRole') || '';
+
+            const has = (v) => matrixRoles.includes(v) || legacyRoles.includes(v);
+
+            if (has('admin') || has('admin_sistema') || has('direccio') || userRole === 'admin') return 'Direccio / Administracio';
+            if (has('coordinador') || userRole === 'editor') return 'Coordinador/a de Programa';
+            if (has('tecnic') || has('administracio') || has('manteniment') || userRole === 'tecnic') return "Tecnic/a d'Intervencio Social";
+            if (has('voluntari') || userRole === 'voluntari') return 'Personal voluntari';
+
+            const custom = matrixRoles.find((r) => !['admin', 'directora', 'coordinador', 'tecnic', 'voluntari'].includes(String(r || '').toLowerCase()));
+            if (custom) return String(custom).replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+            return '';
+        }
+
+        window.setSignerRoleFromProfile = function() {
+            const roleLabel = resolveRoleLabelFromProfile();
+            const cached = (() => {
+                try { return JSON.parse(localStorage.getItem('nexe_config_entitat') || '{}'); } catch { return {}; }
+            })();
+            const entName = document.getElementById('imp-nom')?.value?.trim() || cached?.nom || 'NexeSocial';
+            const value = roleLabel ? `${roleLabel} - ${entName}` : `Tecnic/a d'Intervencio Social - ${entName}`;
+            const input = document.getElementById('imp-rol');
+            if (input) input.value = value;
+        };
+
+        async function loadGeneralEntity() {
+            try {
+                const snap = await getDoc(doc(db, 'config', 'entitat'));
+                const data = snap.exists() ? snap.data() : JSON.parse(localStorage.getItem('nexe_config_entitat') || '{}');
+                GENERAL_FIELDS.forEach((f) => {
+                    const el = document.getElementById('gen-' + f);
+                    if (el && data[f]) el.value = data[f];
+                });
+            } catch {
+                const cached = JSON.parse(localStorage.getItem('nexe_config_entitat') || '{}');
+                GENERAL_FIELDS.forEach((f) => {
+                    const el = document.getElementById('gen-' + f);
+                    if (el && cached[f]) el.value = cached[f];
+                });
+            }
+        }
+
+        window.saveImpressio = async function() {
+            const data = {};
+            IMP_FIELDS.forEach(f => {
+                const el = document.getElementById('imp-' + f);
+                if (el) data[f] = el.value.trim();
+            });
+            const btn = document.getElementById('btn-save-imp');
+            const status = document.getElementById('imp-status');
+            btn.disabled = true;
+            try {
+                await setDoc(doc(db, 'config', 'entitat'), { ...data, updatedAt: new Date().toISOString() }, { merge: true });
+                localStorage.setItem('nexe_config_entitat', JSON.stringify(data));
+                status.style.display = 'inline';
+                setTimeout(() => { status.style.display = 'none'; }, 3000);
+            } catch(e) {
+                // Save to localStorage at minimum
+                localStorage.setItem('nexe_config_entitat', JSON.stringify(data));
+                status.textContent = 'Desat localment (sense connexio a BD)';
+                status.style.color = '#f59e0b';
+                status.style.display = 'inline';
+                setTimeout(() => { status.style.display = 'none'; status.style.color = '#10b981'; status.textContent = 'Desat correctament'; }, 4000);
+            }
+            btn.disabled = false;
+        };
+
+        window.saveGeneralEntity = async function() {
+            const data = {};
+            GENERAL_FIELDS.forEach((f) => {
+                const el = document.getElementById('gen-' + f);
+                if (el) data[f] = el.value.trim();
+            });
+
+            // Keep document-related aliases in sync
+            const cached = JSON.parse(localStorage.getItem('nexe_config_entitat') || '{}');
+            const merged = {
+                ...cached,
+                ...data,
+                nom: data.nom || cached.nom || '',
+                cif: data.cif || cached.cif || '',
+                telefon: data.telefon || cached.telefon || '',
+                email: data.email || cached.email || '',
+                adreca: data.adreca || cached.adreca || ''
+            };
+
+            const btn = document.getElementById('btn-save-general');
+            const status = document.getElementById('gen-status');
+            btn.disabled = true;
+            try {
+                await setDoc(doc(db, 'config', 'entitat'), { ...merged, updatedAt: new Date().toISOString() }, { merge: true });
+                localStorage.setItem('nexe_config_entitat', JSON.stringify(merged));
+                status.style.display = 'inline';
+                setTimeout(() => { status.style.display = 'none'; }, 3000);
+                window.dispatchEvent(new CustomEvent('nexe-entity-config-updated'));
+            } catch {
+                localStorage.setItem('nexe_config_entitat', JSON.stringify(merged));
+                status.textContent = 'Desat localment (sense connexio a BD)';
+                status.style.color = '#f59e0b';
+                status.style.display = 'inline';
+                setTimeout(() => {
+                    status.style.display = 'none';
+                    status.style.color = '#10b981';
+                    status.textContent = 'Desat correctament';
+                }, 4000);
+                window.dispatchEvent(new CustomEvent('nexe-entity-config-updated'));
+            }
+            btn.disabled = false;
+        };
+
+        document.addEventListener('DOMContentLoaded', loadImpressio);
+        document.addEventListener('DOMContentLoaded', loadGeneralEntity);
+
+        async function loadUserProfile() {
+            // Esperar a que AuthManager estigui llest
+            await new Promise(resolve => {
+                const checkReady = setInterval(() => {
+                    if (window.Auth && window.Auth.isReady) {
+                        clearInterval(checkReady);
+                        resolve();
+                    }
+                }, 100);
+                setTimeout(() => clearInterval(checkReady), 5000);
+            });
+
+            const user = window.Auth?.getUser();
+            
+            if (!user) {
+                console.warn('No user logged in');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            console.log('Loading profile for:', user.email);
+
+            // Mostrar la tarjeta de perfil
+            const profileCard = document.getElementById('profileCard');
+            profileCard.style.display = 'block';
+
+            // Rellenar los datos
+            document.getElementById('profileName').textContent = user.displayName || user.nombre || user.email.split('@')[0];
+            document.getElementById('profileEmail').textContent = user.email;
+            document.getElementById('profileRole').textContent = (user.role || 'user').toUpperCase();
+            
+            // Mostrar permisos como badge
+            if (user.permisos) {
+                const perms = Object.entries(user.permisos)
+                    .filter(([_, v]) => v !== 'none')
+                    .map(([k, _]) => k.toUpperCase())
+                    .join(', ');
+                
+                if (perms) {
+                    const permElement = document.createElement('div');
+                    permElement.className = 'info-item';
+                    permElement.innerHTML = `
+                        <div class="info-label">Permisos</div>
+                        <div class="info-value">${perms || 'No'}</div>
+                    `;
+                    
+                    const profileInfo = document.querySelector('.profile-info');
+                    if (profileInfo) {
+                        profileInfo.appendChild(permElement);
+                    }
+                }
+            }
+
+            console.log('Profile loaded successfully');
+        }
+
+        // Cargar perfil cuando el DOM este listo
+        document.addEventListener('DOMContentLoaded', loadUserProfile);
+    </script>
+
+    <script>
+        function switchConfig(target, triggerEl) {
+            document.querySelectorAll('.config-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('.config-nav-item').forEach(i => i.classList.remove('active'));
+            
+            document.getElementById('c-' + target).style.display = 'block';
+            if (triggerEl) triggerEl.classList.add('active');
+        }
+    </script>
+    <footer class="main-footer">
+        <div class="footer-content">
+            <span>2026 NexeSocial - Sistema de Gestio</span>
+            <span class="author-tag">Desenvolupat per <strong>Rafa Campos</strong></span>
+        </div>
+    </footer>
+    <script type="module" src="database.js"></script>
+</body>
+</html>
+

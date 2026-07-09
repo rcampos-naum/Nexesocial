@@ -1,0 +1,238 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" type="image/svg+xml" href="../img/NexePsy-icon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script type="module" src="../database.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f8fafc; color: #1e293b; font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; }
+        .main-content { flex-grow: 1; margin-left: 280px; padding: 40px 60px; max-width: calc(100% - 280px); transition: margin-left 0.4s; }
+        body.collapsed .main-content { margin-left: 85px; max-width: calc(100% - 85px); }
+
+        .page-header { margin-bottom: 36px; }
+        .page-header h1 { font-size: 2rem; font-weight: 800; margin: 8px 0 0; letter-spacing: -0.04em; color: #0f172a; }
+        .page-header p { color: #64748b; margin: 8px 0 0; font-size: 0.9rem; }
+        .badge-section { font-size: 0.72rem; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: 1px; }
+
+        .card { background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 28px; margin-bottom: 24px; }
+        .card-title { font-size: 0.75rem; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: .08em; margin: 0 0 20px; display: flex; align-items: center; gap: 8px; }
+
+        label.field-label { display: block; font-size: 0.78rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
+        input[type="text"] { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 12px; font-family: inherit; font-size: 0.95rem; outline: none; transition: 0.2s; }
+        input[type="text"]:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+
+        .upload-area { border: 2px dashed #c7d2fe; border-radius: 16px; padding: 36px 24px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; }
+        .upload-area:hover, .upload-area.drag-over { border-color: #6366f1; background: #eef2ff; }
+        .upload-area input[type="file"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .upload-icon { font-size: 2.2rem; margin-bottom: 10px; }
+        .upload-label { font-weight: 700; color: #6366f1; margin-bottom: 4px; }
+        .upload-hint { font-size: 0.78rem; color: #94a3b8; }
+
+        .logos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; margin-top: 20px; }
+        .logo-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px 12px 12px; display: flex; flex-direction: column; align-items: center; gap: 10px; position: relative; }
+        .logo-item img { max-width: 110px; max-height: 60px; object-fit: contain; }
+        .logo-item span { font-size: 0.72rem; color: #64748b; text-align: center; word-break: break-all; }
+        .logo-remove { position: absolute; top: 6px; right: 8px; background: #fee2e2; border: none; color: #b91c1c; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; }
+        .logo-remove:hover { background: #fecaca; }
+
+        .preview-box { background: #0f172a; border-radius: 14px; padding: 20px; display: flex; align-items: center; gap: 16px; min-height: 72px; }
+        .preview-label { color: #94a3b8; font-size: 0.72rem; font-weight: 700; white-space: nowrap; }
+        .preview-logos { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .preview-logos img { max-height: 32px; max-width: 80px; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.85; }
+        .preview-empty { color: #475569; font-size: 0.78rem; font-style: italic; }
+
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 0.88rem; border: none; cursor: pointer; transition: 0.2s; font-family: inherit; }
+        .btn-primary { background: #6366f1; color: white; box-shadow: 0 4px 14px rgba(99,102,241,.3); }
+        .btn-primary:hover { background: #4f46e5; transform: translateY(-1px); }
+        .btn-outline { background: white; color: #475569; border: 1px solid #e2e8f0; }
+        .btn-outline:hover { background: #f1f5f9; }
+
+        .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #065f46; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; z-index: 9999; box-shadow: 0 8px 24px rgba(0,0,0,.2); opacity: 0; pointer-events: none; transition: opacity .3s; }
+        .toast.show { opacity: 1; }
+
+        @media (max-width: 768px) { .main-content { margin-left: 0 !important; padding: 20px; } }
+    </style>
+</head>
+<body>
+    <div id="sidebar-container"></div>
+
+    <main class="main-content">
+        <div class="page-header">
+            <span class="badge-section">AdministraciÃ³</span>
+            <h1>Logos FinanÃ§adors</h1>
+            <p>Gestiona els logos que apareixeran als documents generats per NexePsy</p>
+        </div>
+
+        <!-- TEXT DEL PROGRAMA -->
+        <div class="card">
+            <div class="card-title">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+                Text del programa
+            </div>
+            <label class="field-label">Missatge que apareixerÃ  sobre els logos en tots els documents</label>
+            <input type="text" id="programa-text" value="Programa PsicoSocial amb el suport de:" maxlength="120" placeholder="Programa PsicoSocial amb el suport de:">
+        </div>
+
+        <!-- UPLOAD LOGOS -->
+        <div class="card">
+            <div class="card-title">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                Logos (SVG, JPG, JPEG, PNG)
+            </div>
+
+            <div class="upload-area" id="uploadArea">
+                <input type="file" id="fileInput" accept=".svg,.jpg,.jpeg,.png" multiple>
+                <div class="upload-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+                <div class="upload-label">Fes clic o arrossega fitxers aquÃ­</div>
+                <div class="upload-hint">SVG, JPG, JPEG, PNG â€” Es mostraran a l'esquerra inferior dels PDFs</div>
+            </div>
+
+            <div class="logos-grid" id="logosGrid"></div>
+        </div>
+
+        <!-- PREVISUALITZACIÃ“ -->
+        <div class="card">
+            <div class="card-title">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                PrevisualitzaciÃ³ en document
+            </div>
+            <p style="font-size:0.82rem;color:#94a3b8;margin:0 0 14px;">Tal com apareixerÃ  a la cantonada inferior esquerra dels PDFs</p>
+            <div class="preview-box">
+                <div>
+                    <div class="preview-label" id="previewText">Programa PsicoSocial amb el suport de:</div>
+                    <div class="preview-logos" id="previewLogos">
+                        <span class="preview-empty">Cap logo carregat</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACCIONS -->
+        <div style="display:flex; gap:12px; justify-content:flex-end; padding-bottom: 60px;">
+            <button class="btn btn-outline" onclick="esborrarTot()">Eliminar tots els logos</button>
+            <button class="btn btn-primary" onclick="desar()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Desar configuraciÃ³
+            </button>
+        </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="../security-check.js"></script>
+    <script type="module">await window.checkModuleAccess('NexePsy');</script>
+    <script src="sidebar-nexepsy.js"></script>
+    <script>
+        const LS_KEY_LOGOS = 'psy_financiadors_logos';
+        const LS_KEY_TEXT  = 'psy_financiadors_text';
+
+        let logosCarregats = []; // [{name, data (dataURL)}]
+
+        function init() {
+            const saved = localStorage.getItem(LS_KEY_LOGOS);
+            const text  = localStorage.getItem(LS_KEY_TEXT);
+            if (saved) try { logosCarregats = JSON.parse(saved); } catch {}
+            if (text) document.getElementById('programa-text').value = text;
+            renderGrid();
+            updatePreview();
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('logosGrid');
+            if (logosCarregats.length === 0) { grid.innerHTML = ''; return; }
+            grid.innerHTML = logosCarregats.map((l, i) => `
+                <div class="logo-item">
+                    <button class="logo-remove" onclick="eliminarLogo(${i})" title="Eliminar">Ã—</button>
+                    <img src="${l.data}" alt="${l.name}" onerror="this.style.display='none'">
+                    <span>${l.name}</span>
+                </div>
+            `).join('');
+        }
+
+        function updatePreview() {
+            const txt = document.getElementById('programa-text').value || 'Programa PsicoSocial amb el suport de:';
+            document.getElementById('previewText').textContent = txt;
+            const cont = document.getElementById('previewLogos');
+            if (logosCarregats.length === 0) {
+                cont.innerHTML = '<span class="preview-empty">Cap logo carregat</span>';
+            } else {
+                cont.innerHTML = logosCarregats.map(l =>
+                    `<img src="${l.data}" alt="${l.name}">`
+                ).join('');
+            }
+        }
+
+        document.getElementById('programa-text').addEventListener('input', updatePreview);
+
+        document.getElementById('fileInput').addEventListener('change', function() {
+            processarFitxers(Array.from(this.files));
+            this.value = '';
+        });
+
+        // Drag & drop
+        const ua = document.getElementById('uploadArea');
+        ua.addEventListener('dragover', e => { e.preventDefault(); ua.classList.add('drag-over'); });
+        ua.addEventListener('dragleave', () => ua.classList.remove('drag-over'));
+        ua.addEventListener('drop', e => {
+            e.preventDefault(); ua.classList.remove('drag-over');
+            processarFitxers(Array.from(e.dataTransfer.files));
+        });
+
+        function processarFitxers(files) {
+            const allowed = ['image/svg+xml', 'image/jpeg', 'image/png'];
+            const vÃ lids = files.filter(f => allowed.includes(f.type));
+            if (vÃ lids.length === 0) { mostrarToast('Format no vÃ lid. Acceptats: SVG, JPG, JPEG, PNG', '#b91c1c'); return; }
+            let pending = vÃ lids.length;
+            vÃ lids.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    logosCarregats.push({ name: file.name, data: e.target.result });
+                    pending--;
+                    if (pending === 0) { renderGrid(); updatePreview(); }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function eliminarLogo(i) {
+            logosCarregats.splice(i, 1);
+            renderGrid();
+            updatePreview();
+        }
+
+        function esborrarTot() {
+            if (!confirm('Segur que vols eliminar tots els logos?')) return;
+            logosCarregats = [];
+            renderGrid();
+            updatePreview();
+            localStorage.removeItem(LS_KEY_LOGOS);
+            localStorage.removeItem(LS_KEY_TEXT);
+            mostrarToast('âœ“ Logos eliminats');
+        }
+
+        function desar() {
+            const txt = document.getElementById('programa-text').value.trim();
+            localStorage.setItem(LS_KEY_LOGOS, JSON.stringify(logosCarregats));
+            localStorage.setItem(LS_KEY_TEXT, txt || 'Programa PsicoSocial amb el suport de:');
+            mostrarToast('âœ“ ConfiguraciÃ³ desada correctament');
+        }
+
+        function mostrarToast(msg, color = '#065f46') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.background = color;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
+
+
+

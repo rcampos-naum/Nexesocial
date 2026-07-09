@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexeSocial – Manteniment RMT</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root { --blue:#3b82f6; --green:#10b981; --red:#ef4444; --orange:#f59e0b; --bg:#f8fafc; --dark:#1e293b; }
+
+        body { margin:0; font-family:'Inter',sans-serif; background:var(--bg); color:var(--dark); overflow-x:hidden; }
+        .main-content { padding: 30px; }
+        .header-card { background:white; padding:22px 25px; border-radius:20px; box-shadow:0 4px 12px rgba(0,0,0,0.04); display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; border-left:5px solid var(--blue); flex-wrap:wrap; gap:12px; }
+        .btn { padding:10px 18px; border-radius:12px; border:none; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:8px; font-size:0.88rem; transition:0.18s; white-space:nowrap; color:white; font-family:inherit; }
+        .btn-blue { background:var(--blue); }
+        .btn-green { background:var(--green); }
+        .btn-outline { background:transparent !important; border:1.5px solid #e2e8f0 !important; color:#64748b !important; }
+        .btn-sm { padding:6px 12px; font-size:0.78rem; }
+        .btn:hover { filter:brightness(0.92); }
+        .tabs { display:flex; gap:8px; margin-bottom:22px; overflow-x:auto; padding-bottom:4px; -webkit-overflow-scrolling:touch; }
+        .tab-item { background:white; padding:9px 16px; border-radius:12px; border:1px solid #e2e8f0; cursor:pointer; color:#64748b; font-weight:600; display:flex; align-items:center; gap:8px; white-space:nowrap; flex-shrink:0; font-size:0.88rem; }
+        .tab-item.active { background:var(--blue); color:white; border-color:var(--blue); }
+        .tab-badge { background:rgba(255,255,255,0.25); padding:1px 7px; border-radius:20px; font-size:0.72rem; font-weight:700; }
+        .tab-item:not(.active) .tab-badge { background:#fef2f2; color:var(--red); }
+        .tab-item:not(.active) .tab-badge:empty { display:none; }
+        /* Preventiu cards */
+        .prev-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(310px,1fr)); gap:16px; }
+        .prev-card { background:white; border-radius:16px; padding:18px; box-shadow:0 2px 8px rgba(0,0,0,0.04); border-left:5px solid #e2e8f0; }
+        .prev-card.st-overdue { border-left-color:var(--red); }
+        .prev-card.st-urgent  { border-left-color:var(--orange); }
+        .prev-card.st-soon    { border-left-color:#fbbf24; }
+        .prev-card.st-ok      { border-left-color:var(--green); }
+        .prev-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:800; }
+        .prev-badge.st-overdue { background:#fee2e2; color:var(--red); }
+        .prev-badge.st-urgent  { background:#fef3c7; color:var(--orange); }
+        .prev-badge.st-soon    { background:#fef9c3; color:#ca8a04; }
+        .prev-badge.st-ok      { background:#dcfce7; color:var(--green); }
+        .prev-badge.st-none    { background:#f1f5f9; color:#94a3b8; }
+        /* Table */
+        .table-wrap { background:white; border-radius:16px; box-shadow:0 2px 10px rgba(0,0,0,0.04); overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; min-width:480px; }
+        th { background:#fcfdfe; padding:12px 15px; text-align:left; font-size:0.72rem; color:#94a3b8; text-transform:uppercase; border-bottom:1px solid #f1f5f9; font-weight:700; }
+        td { padding:13px 15px; border-bottom:1px solid #f1f5f9; font-size:0.88rem; vertical-align:middle; }
+        tr:last-child td { border-bottom:none; }
+        tr:hover td { background:#fafafa; }
+        /* Modal */
+        .modal-overlay { display:none; position:fixed; z-index:20000; inset:0; background:rgba(15,23,42,0.55); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:15px; box-sizing:border-box; }
+        .modal-overlay.open { display:flex; }
+        .modal-card { background:white; border-radius:22px; width:100%; max-width:560px; box-shadow:0 25px 60px rgba(0,0,0,0.22); max-height:92vh; overflow-y:auto; }
+        .modal-header { padding:20px 22px 0; display:flex; align-items:center; gap:12px; }
+        .modal-body { padding:18px 22px; }
+        .modal-footer { padding:0 22px 22px; display:flex; gap:10px; }
+        .form-group { margin-bottom:14px; }
+        .fg-label { display:block; font-weight:700; font-size:0.82rem; margin-bottom:5px; color:#475569; }
+        input[type=text], input[type=date], select, textarea { width:100%; padding:11px 13px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:0.92rem; box-sizing:border-box; font-family:inherit; color:#1e293b; }
+        input[type=text]:focus, input[type=date]:focus, select:focus, textarea:focus { outline:none; border-color:var(--blue); }
+        input[readonly] { background:#f8fafc; color:#64748b; }
+        .input-icon-row { display:flex; gap:8px; }
+        .input-icon-row input, .input-icon-row select { flex:1; }
+        #sig-canvas { width:100% !important; height:165px; border:2px dashed #e2e8f0; border-radius:12px; cursor:crosshair; background:#f8fafc; display:block; touch-action:none; }
+        #sig-canvas.signed { border-color:var(--green); border-style:solid; background:white; }
+        #qr-reader { width:100%; border-radius:14px; overflow:hidden; background:#000; min-height:220px; display:none; border:2px solid var(--blue); margin-bottom:14px; }
+        .check-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:6px; cursor:pointer; transition:background 0.15s; user-select:none; }
+        .check-item:hover { background:#f8fafc; }
+        .check-item.done { background:#f0fdf4; border-color:#a7f3d0; }
+        .check-item input[type=checkbox] { width:18px; height:18px; accent-color:var(--green); flex-shrink:0; cursor:pointer; }
+        .st-badge { padding:4px 10px; border-radius:20px; font-size:0.72rem; font-weight:800; }
+        .st-pendent { background:#fee2e2; color:var(--red); }
+        .st-proces  { background:#fef3c7; color:var(--orange); }
+        .st-resolt  { background:#dcfce7; color:var(--green); }
+        .info-box { background:#f8fafc; border:1px solid #e2e8f0; padding:12px 15px; border-radius:12px; margin-bottom:14px; }
+        .info-box p { margin:3px 0; font-size:0.85rem; color:#475569; }
+        .info-box strong { color:#1e293b; }
+        .hist-item { padding:9px 12px; border-left:3px solid #e2e8f0; margin-bottom:6px; background:#f8fafc; border-radius:0 10px 10px 0; }
+        .hist-date { font-size:0.75rem; color:#94a3b8; }
+        .hist-tecnic { font-size:0.82rem; color:#475569; margin-top:2px; }
+        .empty-state { text-align:center; padding:50px 20px; color:#94a3b8; }
+        .poll-spin { display:inline-block; width:18px; height:18px; border:3px solid #e2e8f0; border-top-color:var(--blue); border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .section-title { font-size:0.78rem; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; margin:22px 0 12px; }
+        @media (max-width:768px) {
+            .main-content { padding:70px 14px 24px; }
+            .header-card { flex-direction:column; align-items:flex-start; }
+            #header-btns { display:flex; flex-direction:column; width:100%; }
+            #header-btns .btn { width:100%; justify-content:center; }
+            .prev-grid { grid-template-columns:1fr; }
+        }
+        @media print {
+            body * { visibility:hidden; }
+            #print-area, #print-area * { visibility:visible; }
+            #print-area { position:fixed; left:0; top:0; width:100%; display:flex !important; flex-direction:column; align-items:center; justify-content:center; background:white; padding:20px; }
+        }
+        /* PDF preview modal */
+        #pdf-preview-overlay { display:none; position:fixed; z-index:30000; inset:0; background:rgba(15,23,42,0.7); backdrop-filter:blur(6px); flex-direction:column; align-items:center; justify-content:flex-start; padding:0; }
+        #pdf-preview-overlay.open { display:flex; }
+        #pdf-preview-topbar { width:100%; background:#1e293b; display:flex; align-items:center; justify-content:space-between; padding:10px 18px; box-sizing:border-box; flex-shrink:0; gap:10px; }
+        #pdf-preview-title { color:white; font-weight:700; font-size:0.92rem; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .pdf-tb-btn { padding:7px 16px; border-radius:10px; border:none; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:7px; font-size:0.85rem; font-family:inherit; transition:0.15s; }
+        .pdf-tb-btn:hover { filter:brightness(0.9); }
+        #pdf-iframe { flex:1; width:100%; border:none; background:white; display:block; }
+        .pdf-tb-sign { display:inline-flex; align-items:center; gap:7px; padding:7px 16px; border-radius:10px; background:linear-gradient(135deg,#7c3aed 0%,#2563eb 100%); color:white; border:none; font-weight:700; cursor:pointer; font-size:0.85rem; font-family:inherit; transition:0.15s; }
+        .pdf-tb-sign:hover { filter:brightness(1.1); }
+    </style>
+</head>
+<body>
+    <script type="module" src="sidebar.js"></script>
+
+    <main class="main-content">
+        <div class="header-card">
+            <div>
+                <h1 style="margin:0; font-size:1.4rem;">Manteniment Tècnic</h1>
+                <p style="color:#64748b; margin:4px 0 0; font-size:0.88rem;">Gestió d'actius RMT · Incidències · Manteniment Preventiu</p>
+            </div>
+            <div id="header-btns" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
+        </div>
+        <div class="tabs">
+            <div id="t-preventiu" class="tab-item active" onclick="canviarPestanya('preventiu')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Preventiu <span class="tab-badge" id="badge-preventiu"></span></div>
+            <div id="t-correctiu" class="tab-item" onclick="canviarPestanya('correctiu')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Correctiu <span class="tab-badge" id="badge-correctiu"></span></div>
+            <div id="t-actius" class="tab-item" onclick="canviarPestanya('actius')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> Actius</div>
+            <div id="t-sales" class="tab-item" onclick="canviarPestanya('sales')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Sales</div>
+            <div id="t-historial" class="tab-item" onclick="canviarPestanya('historial')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Historial</div>
+        </div>
+        <div id="content-area"><div class="empty-state"><span class="poll-spin"></span></div></div>
+    </main>
+
+    <!-- Universal modal -->
+    <div id="modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <span id="modal-icon" style="font-size:22px;"></span>
+                <h2 id="modal-titol" style="margin:0; font-size:1.1rem; flex:1;"></h2>
+                <button onclick="tancarModal()" style="border:none;background:none;font-size:26px;color:#94a3b8;cursor:pointer;padding:0;line-height:1;">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer" id="modal-footer">
+                <button onclick="tancarModal()" class="btn btn-outline" style="flex:1;justify-content:center;">Cancel·lar</button>
+                <button id="btn-ok" class="btn btn-blue" style="flex:2;justify-content:center;">Desar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF preview modal -->
+    <div id="pdf-preview-overlay">
+        <div id="pdf-preview-topbar">
+            <span id="pdf-preview-title">Vista prèvia del document</span>
+            <button class="pdf-tb-btn" style="background:#3b82f6;color:white;" onclick="_pdfPrint()" title="Imprimir">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Imprimir
+            </button>
+            <button class="pdf-tb-sign" onclick="_pdfSign()" title="Signar o enviar a firma unificada">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7z"/><polyline points="9 12 11 14 15 10"/></svg>
+                Signar
+            </button>
+            <button class="pdf-tb-btn" style="background:#10b981;color:white;" onclick="_pdfSave()" title="Obre en nova pestanya i utilitza Desar com a PDF al diàleg d'impressió">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Desar com PDF
+            </button>
+            <button class="pdf-tb-btn" style="background:#475569;color:white;" onclick="_pdfClose()" title="Tancar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Tancar
+            </button>
+        </div>
+        <iframe id="pdf-iframe" title="Vista prèvia PDF"></iframe>
+    </div>
+
+    <!-- Mobile signature QR modal -->
+    <div id="modal-qr-firma" class="modal-overlay">
+        <div class="modal-card" style="max-width:360px; text-align:center;">
+            <div class="modal-header" style="justify-content:space-between;">
+                <span style="display:flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></span>
+                <h2 style="margin:0;font-size:1.05rem;flex:1;text-align:left;padding-left:10px;">Firma des del mòbil</h2>
+                <button onclick="cancelarFirmaMovil()" style="border:none;background:none;font-size:26px;color:#94a3b8;cursor:pointer;padding:0;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color:#64748b;font-size:0.88rem;margin-top:0;">Escaneja amb el mòbil per signar el document:</p>
+                <div id="qr-firma-container" style="width:180px;height:180px;margin:0 auto 16px;"></div>
+                <div style="display:flex;align-items:center;justify-content:center;gap:10px;color:#64748b;font-size:0.85rem;">
+                    <span class="poll-spin"></span><span>Esperant la firma...</span>
+                </div>
+                <p style="font-size:0.73rem;color:#94a3b8;margin-top:10px;">La firma s'importarà automàticament quan l'hagis completat.</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from './firebase-config.js';
+        import { collection, doc, getDocs, addDoc, updateDoc, setDoc, getDoc, serverTimestamp, onSnapshot }
+            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        /* STATE */
+        let tab = 'preventiu';
+        let allSales=[], allActius=[], allCorrectiu=[], allPreventiu=[];
+        let sigPad=null, qrScanner=null, pollTimer=null, editId=null;
+        const _rmtUnsubs=[];
+        let _rtStarted=false;
+
+        /* INIT SIGNATURA — ajusta resolució interna del canvas al tamany CSS real */
+        function _initSigPad(c) {
+            const ratio = window.devicePixelRatio || 1;
+            c.width  = c.offsetWidth  * ratio;
+            c.height = c.offsetHeight * ratio;
+            c.getContext('2d').scale(ratio, ratio);
+            return new SignaturePad(c, { minWidth:1, maxWidth:3 });
+        }
+
+        /* TRIM SIGNATURA — retalla la zona buida del canvas i retorna dataURL */
+        function _trimSignatura(pad) {
+            const canvas = pad._canvas || document.getElementById('sig-canvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+            const px = ctx.getImageData(0,0,w,h).data;
+            let x0=w,y0=h,x1=0,y1=0;
+            for(let y=0;y<h;y++) for(let x=0;x<w;x++) {
+                if(px[(y*w+x)*4+3]>10){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
+            }
+            if(x0>x1||y0>y1) return pad.toDataURL('image/png');
+            const pad2=14;
+            x0=Math.max(0,x0-pad2); y0=Math.max(0,y0-pad2);
+            x1=Math.min(w-1,x1+pad2); y1=Math.min(h-1,y1+pad2);
+            const tw=x1-x0+1, th=y1-y0+1;
+            const tmp=document.createElement('canvas'); tmp.width=tw; tmp.height=th;
+            const tc=tmp.getContext('2d');
+            tc.fillStyle='#ffffff'; tc.fillRect(0,0,tw,th);
+            tc.drawImage(canvas,x0,y0,tw,th,0,0,tw,th);
+            return tmp.toDataURL('image/png');
+        }
+
+        /* ICONS — inline SVG helpers */
+        const I = {
+            wrench:    `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+            warning:   `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+            box:       `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>`,
+            pin:       `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+            fire:      `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`,
+            snow:      `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><line x1="12" y1="2" x2="12" y2="22"/><path d="m20 6-8 4-8-4"/><path d="m20 18-8-4-8 4"/></svg>`,
+            elevator:  `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 13V11l3-3 3 3v2"/><path d="M9 21v-2l3 3 3-3v2"/></svg>`,
+            zap:       `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+            bulb:      `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>`,
+            check:     `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>`,
+            building:  `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></svg>`,
+            camera:    `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,
+            printer:   `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>`,
+            pencil:    `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+            trash:     `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
+            phone:     `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>`,
+            calendar:  `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+            refresh:   `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`,
+        };
+        function sdot(st){const c={overdue:'#ef4444',urgent:'#f59e0b',soon:'#fbbf24',ok:'#10b981',none:'#cbd5e1'}[st]||'#94a3b8';return `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${c};vertical-align:middle;flex-shrink:0;margin-right:1px;"></span>`;}
+
+        /* CONSTANTS */
+        const FREQ_LABELS = { mensual:'Mensual', trimestral:'Trimestral', semestral:'Semestral', anual:'Anual', bianual:'Bianual', none:'Sense prog.' };
+        const FREQ_DAYS   = { mensual:30, trimestral:90, semestral:180, anual:365, bianual:730 };
+        const TIPUS_EQUIP = { extintor:`${I.fire} Extintor`, climatitzador:`${I.snow} Climatització`, ascensor:`${I.elevator} Ascensor`, electricitat:`${I.zap} Electricitat`, lluminaria:`${I.bulb} Lluminàries Emergència`, generic:`${I.wrench} Genèric` };
+        // Checklists: items with {text, obs} use SI/NO/NA table (R-MT.03 format)
+        // Items as plain strings use checkbox format
+        const CHECKLISTS = {
+            extintor: [
+                { text: 'Accesibilitat i senyalització dels extintors correcta' },
+                { text: 'Els extintors de CO₂ es troben junts als elements elèctrics i els de pols en la resta d\'emplaçaments' },
+                { text: 'Aparentment presenten els extintors bon estat de conservació i no han estat descarregats total o parcialment' },
+                { text: 'Inspecció ocular de segurs, correctes' },
+                { text: 'Inspecció ocular de precintes, correctes' },
+                { text: 'Inspecció ocular d\'inscripcions, han de ser llegibles' },
+                { text: 'Comprovació de pes' },
+                { text: 'Comprovació de pressió a la zona d\'operació' },
+                { text: 'Inspecció ocular de l\'estat extern de les parts mecàniques, correctes' },
+                { text: 'S\'ha realitzat revisió quinquennal del Sistema de Protecció contra incendis' },
+                { text: 'Comprovació visual de l\'existència, bon estat quant a neteja i il·luminació en la foscor dels senyals lluminosos' }
+            ],
+            lluminaria: [
+                { text: 'Accesibilitat i senyalització correcta' },
+                { text: 'Comprovació visual existència, bon estat quant a neteja' },
+                { text: 'Il·luminació en la foscor dels senyals lluminosos' },
+                { text: 'Estat extern lluminàries (sense cops, oxidació)' },
+                { text: 'Test funcionament manual (botó de prova)' },
+                { text: 'Comprovació bateria (autonomia mínima 1h)' }
+            ],
+            climatitzador:['Neteja filtres unitat interior','Neteja bateria evaporadora','Neteja bandeja condensats i drenatge','Neteja unitat exterior','Comprovació connexions elèctriques','Revisió circuit refrigerant (sense fugues)','Test funcionament fred','Test funcionament calor'],
+            electricitat: ['Revisió quadre elèctric principal','Comprovació tèrmics i diferencials','Revisió connexions i cablatge visible','Il·luminació emergència funcionant','Verificació posada a terra correcta'],
+            ascensor:[], generic:[]
+        };
+
+        /* HELPERS */
+        function fmtDate(ts) {
+            if (!ts) return '—';
+            const d = ts.toDate ? ts.toDate() : new Date(ts);
+            return d.toLocaleDateString('ca-ES', {day:'2-digit',month:'2-digit',year:'numeric'});
+        }
+        function calcNextDate(from, freq) {
+            if (!from||!FREQ_DAYS[freq]) return null;
+            const d = from instanceof Date ? from : (from.toDate ? from.toDate() : new Date(from));
+            const r = new Date(d); r.setDate(r.getDate()+FREQ_DAYS[freq]); return r;
+        }
+        function dueStatus(px) {
+            if (!px) return 'none';
+            const d = px instanceof Date ? px : (px.toDate ? px.toDate() : new Date(px));
+            const diff = Math.floor((d - new Date())/86400000);
+            if (diff<0) return 'overdue'; if (diff<=7) return 'urgent'; if (diff<=30) return 'soon'; return 'ok';
+        }
+        function daysLabel(px) {
+            if (!px) return '';
+            const d = px instanceof Date ? px : (px.toDate ? px.toDate() : new Date(px));
+            const diff = Math.floor((d - new Date())/86400000);
+            if (diff<0) return `Vençut fa ${Math.abs(diff)} dies`; if (diff===0) return 'Venca avui!'; if (diff===1) return 'Venca demà!'; return `${diff} dies restants`;
+        }
+        function statusLabel(st) { return {overdue:`${sdot('overdue')} Vençut`,urgent:`${sdot('urgent')} Urgent`,soon:`${sdot('soon')} Pròximament`,ok:`${sdot('ok')} Al dia`,none:`${sdot('none')} Sense data`}[st]||'—'; }
+        function genUuid() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16);}); }
+        async function nextCodi(col, prefix) {
+            const s=await getDocs(collection(db,col));
+            // Find highest existing number to avoid gaps from deletions
+            const nums=s.docs.map(d=>{
+                const c=d.data().codi||'';
+                return parseInt(c.replace(prefix,''))||0;
+            });
+            const max=nums.length?Math.max(...nums):0;
+            return prefix+(max+1).toString().padStart(2,'0');
+        }
+        function nextCodiInc() {
+            const year=new Date().getFullYear();
+            const prefix=`RMT-I${year}-`;
+            const nums=allCorrectiu
+                .map(c=>c.codiInc||'')
+                .filter(c=>c.startsWith(prefix))
+                .map(c=>parseInt(c.replace(prefix,''))||0);
+            const max=nums.length?Math.max(...nums):0;
+            return prefix+(max+1).toString().padStart(2,'0');
+        }
+        function getSalaName(id) { return allSales.find(s=>s.id===id)?.nom||(id?id:'—'); }
+
+        /* PDF PREVIEW HELPERS */
+        let _pdfBlob=null, _pdfFilename='document.pdf', _pdfHtml=null;
+        function mostrarPreviewPDF(htmlContent, filename) {
+            _pdfFilename=filename||'document.pdf';
+            _pdfHtml=htmlContent;
+            const blob=new Blob([htmlContent],{type:'text/html'});
+            _pdfBlob=blob;
+            const url=URL.createObjectURL(blob);
+            const iframe=document.getElementById('pdf-iframe');
+            iframe.src=url;
+            document.getElementById('pdf-preview-title').textContent=filename||'Vista prèvia';
+            document.getElementById('pdf-preview-overlay').classList.add('open');
+        }
+        window._pdfClose=function(){
+            document.getElementById('pdf-preview-overlay').classList.remove('open');
+            const iframe=document.getElementById('pdf-iframe');
+            URL.revokeObjectURL(iframe.src);
+            iframe.src='';
+            _pdfBlob=null;
+        };
+        window._pdfSign=async function(){
+            if(!_pdfHtml || !_pdfFilename) return;
+            try {
+                const SignatureFlow = (await import('./signature-flow.js')).default;
+                window._pdfClose();
+                SignatureFlow.openQuickSignFlow({
+                    contentHtml: _pdfHtml,
+                    filename: _pdfFilename.replace('.pdf',''),
+                    description: `Informe de manteniment: ${_pdfFilename}`,
+                    module: 'NexeSing',
+                    signatureType: 'contract'
+                });
+            } catch(e) {
+                console.error('[RMT sign error]',e);
+                alert('Error obrint la firma: '+e.message);
+            }
+        };
+        window._pdfPrint=function(){
+            if(!_pdfBlob) return;
+            const _u=URL.createObjectURL(_pdfBlob);
+            const w=window.open(_u,'_blank');
+            if(w){
+                w.addEventListener('load',()=>{w.focus();w.print();});
+                setTimeout(()=>URL.revokeObjectURL(_u),60000);
+            } else {
+                // fallback si popup blocat
+                document.getElementById('pdf-iframe').contentWindow.print();
+                URL.revokeObjectURL(_u);
+            }
+        };
+        window._pdfSave=async function(){
+            if(!_pdfHtml) return;
+            const btn=document.querySelector('.pdf-tb-btn[onclick="_pdfSave()"]');
+            const origTxt=btn?btn.innerHTML:'';
+            if(btn){btn.disabled=true;btn.innerHTML='Generant PDF...';}
+            try {
+                // Extraiem styles + body i els passem com a string —
+                // html2pdf els injecta en un div temporal del document principal
+                // de manera que html2canvas té accés complet als estils i imatges
+                const parsed=new DOMParser().parseFromString(_pdfHtml,'text/html');
+                const styles=Array.from(parsed.querySelectorAll('style')).map(s=>s.outerHTML).join('');
+                const content=styles+parsed.body.innerHTML;
+                await html2pdf().set({
+                    margin:[6,6,6,6],
+                    filename:_pdfFilename,
+                    image:{type:'jpeg',quality:0.97},
+                    html2canvas:{scale:2,useCORS:true,logging:false,backgroundColor:'#ffffff'},
+                    jsPDF:{unit:'mm',format:'a4',orientation:'landscape'},
+                    pagebreak:{mode:['css','legacy']}
+                }).from(content,'string').save();
+                if(btn){btn.disabled=false;btn.innerHTML=origTxt;}
+            } catch(e){
+                console.error('PDF error:',e);
+                alert('Error generant el PDF: '+e.message);
+                if(btn){btn.disabled=false;btn.innerHTML=origTxt;}
+            }
+        };
+        function curUser() { return localStorage.getItem('userName')||''; }
+        function curEmail() { return localStorage.getItem('userEmail')||''; }
+
+        /* REALTIME LISTENERS */
+        const _ready = {s:false, a:false, c:false, p:false};
+        function _onData(key) {
+            _ready[key] = true;
+            if (Object.values(_ready).every(Boolean)) {
+                try { updateBadges(); renderContent(); }
+                catch(e) {
+                    console.error('[RMT] renderContent error:', e);
+                    const el=document.getElementById('content-area');
+                    if(el) el.innerHTML=`<div class="empty-state"><p style="color:#ef4444;font-weight:700;margin-bottom:8px;">Error en carregar la pàgina</p><p style="font-size:0.82rem;color:#94a3b8;">${e.message}</p></div>`;
+                }
+            }
+        }
+        function _onError(key, e) {
+            console.error('[RMT] Firestore error for', key, e);
+            _ready[key] = true; // marca com a llest per no bloquejar les altres
+            if (Object.values(_ready).every(Boolean)) {
+                try { updateBadges(); renderContent(); } catch(_) {}
+            }
+        }
+        // Timeout de seguretat: si als 8s no han respost tots els listeners, renderitza igualment
+        setTimeout(() => {
+            if (!Object.values(_ready).every(Boolean)) {
+                Object.keys(_ready).forEach(k => _ready[k] = true);
+                try { updateBadges(); renderContent(); } catch(_) {}
+            }
+        }, 8000);
+        function initListeners() {
+            if (_rtStarted) return;
+            _rtStarted = true;
+            _rmtUnsubs.push(onSnapshot(collection(db,'rmt_sales'),    ss => { allSales     = ss.docs.map(d=>({id:d.id,...d.data()})); _onData('s'); }, e=>_onError('s',e)));
+            _rmtUnsubs.push(onSnapshot(collection(db,'rmt_actius'),   ss => { allActius    = ss.docs.map(d=>({id:d.id,...d.data()})).filter(a=>a.actiu!==false); _onData('a'); }, e=>_onError('a',e)));
+            _rmtUnsubs.push(onSnapshot(collection(db,'rmt_correctiu'),ss => { allCorrectiu = ss.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)); _onData('c'); }, e=>_onError('c',e)));
+            _rmtUnsubs.push(onSnapshot(collection(db,'rmt_preventiu'),ss => { allPreventiu = ss.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)); _onData('p'); }, e=>_onError('p',e)));
+        }
+
+        async function bootstrapInitialData() {
+            try {
+                const [salesSnap, actiusSnap, correctiuSnap, preventiuSnap] = await Promise.all([
+                    getDocs(collection(db,'rmt_sales')),
+                    getDocs(collection(db,'rmt_actius')),
+                    getDocs(collection(db,'rmt_correctiu')),
+                    getDocs(collection(db,'rmt_preventiu'))
+                ]);
+                allSales = salesSnap.docs.map(d=>({id:d.id,...d.data()}));
+                allActius = actiusSnap.docs.map(d=>({id:d.id,...d.data()})).filter(a=>a.actiu!==false);
+                allCorrectiu = correctiuSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+                allPreventiu = preventiuSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+                Object.keys(_ready).forEach((k)=>{ _ready[k]=true; });
+                updateBadges();
+                renderContent();
+            } catch (e) {
+                console.error('[RMT] initial bootstrap error:', e);
+                // Keep UI responsive even if some first reads fail.
+                Object.keys(_ready).forEach((k)=>{ _ready[k]=true; });
+                updateBadges();
+                renderContent();
+            }
+        }
+        function updateBadges() {
+            const p=allActius.filter(a=>a.tipusMant&&a.tipusMant!=='none'&&['overdue','urgent'].includes(dueStatus(a.proximMant))).length;
+            document.getElementById('badge-preventiu').textContent=p>0?p:'';
+            const c=allCorrectiu.filter(x=>x.estat!=='Resolt').length;
+            document.getElementById('badge-correctiu').textContent=c>0?c:'';
+        }
+
+        /* TABS */
+        window.canviarPestanya = function(t) {
+            tab=t; document.querySelectorAll('.tab-item').forEach(el=>el.classList.remove('active'));
+            document.getElementById('t-'+t).classList.add('active'); renderContent();
+        };
+        function renderContent() {
+            const el=document.getElementById('content-area'), hb=document.getElementById('header-btns');
+            if (tab==='preventiu') {
+                hb.innerHTML=`<button onclick="obrirScannerPreventiu()" class="btn btn-outline">${I.camera} Escaneja per mantenir</button><button onclick="generarInformeUnificat()" class="btn btn-outline btn-sm">${I.printer} Informe Unificat</button><button onclick="generarInformeUnificatGrup('extintor')" class="btn btn-outline btn-sm" title="Informe Extintors i Lluminàries d'Emergència">${I.printer} Extintors &amp; Emerg.</button><button onclick="generarInformeUnificatGrup('climatitzador')" class="btn btn-outline btn-sm" title="Informe Climatització">${I.printer} Climatització</button><button onclick="generarInformeUnificatGrup('ascensor')" class="btn btn-outline btn-sm" title="Informe Ascensor">${I.printer} Ascensor</button>`;
+                renderPreventiu(el);
+            }
+            else if (tab==='correctiu') {
+                hb.innerHTML=`<button onclick="obrirFormIncidencia()" class="btn btn-green">+ Nova Incidència</button><button onclick="generarInformeUnificatIncidencies()" class="btn btn-outline btn-sm">${I.printer} Informe Incidències</button>`;
+                renderCorrectiu(el);
+            }
+            else if (tab==='actius') { hb.innerHTML=`<button onclick="obrirFormActiu()" class="btn btn-green">+ Nou Actiu</button><button onclick="generarReportActius()" class="btn btn-outline btn-sm">${I.printer} Llistat Actius</button>`; renderActius(el); }
+            else if (tab==='sales') { hb.innerHTML=`<button onclick="obrirFormSala()" class="btn btn-green">+ Nova Sala</button>`; renderSales(el); }
+            else if (tab==='historial') { hb.innerHTML=''; renderHistorial(el); }
+        }
+
+        /* RENDER PREVENTIU */
+        function renderPreventiu(el) {
+            const withMant=allActius.filter(a=>a.tipusMant&&a.tipusMant!=='none');
+            const noMant=allActius.filter(a=>!a.tipusMant||a.tipusMant==='none');
+            const order={overdue:0,urgent:1,soon:2,ok:3,none:4};
+            const sorted=[...withMant].sort((a,b)=>(order[dueStatus(a.proximMant)]||4)-(order[dueStatus(b.proximMant)]||4));
+            if (!sorted.length&&!noMant.length) { el.innerHTML=`<div class="empty-state"><p style="font-size:2rem;">${I.box}</p><p>No hi ha actius. Crea sales i actius des de les pestanyes corresponents.</p></div>`; return; }
+            let html='';
+            if (sorted.length) {
+                html+='<div class="prev-grid">';
+                for (const a of sorted) {
+                    const st=dueStatus(a.proximMant), isExt=a.empresa===true;
+                    const hist=allPreventiu.filter(p=>p.activId===a.id).slice(0,3);
+                    const histTotal=allPreventiu.filter(p=>p.activId===a.id).length;
+                    const histHtml=hist.length ? hist.map(p=>{
+                        const tLabel=p.trimestre?` · T${p.trimestre}`:''; 
+                        return `<div class="hist-item" style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><div><div class="hist-date">${fmtDate(p.createdAt)}${tLabel}</div><div class="hist-tecnic">${p.empresa?I.building+' ':I.wrench+' '}${p.tecnic||'\u2014'}${p.numCert?' \u00b7 Cert: '+p.numCert:''}</div></div><button onclick="generarInformePDF('${p.id}')" class="btn btn-outline btn-sm" title="Generar PDF" style="padding:4px 8px;flex-shrink:0;">${I.printer}</button></div>`;
+                    }).join('') : '<p style="font-size:0.82rem;color:#94a3b8;margin:0;">Sense historial</p>';
+                    const histFooter=histTotal>3?`<div style="margin-top:6px;"><button onclick="veureTotHistorial('${a.id}')" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;font-size:0.75rem;">Veure tot l'historial (${histTotal})</button></div>`:'';
+                    const ds=daysLabel(a.proximMant), dc=st==='overdue'?'#ef4444':st==='urgent'?'#f59e0b':'#64748b';
+                    html+=`<div class="prev-card st-${st}">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+                            <div><div style="font-size:0.76rem;color:#94a3b8;font-weight:600;">${a.codi}</div><div style="font-weight:700;font-size:1rem;">${a.nom}</div></div>
+                            <span class="prev-badge st-${st}">${statusLabel(st)}</span>
+                        </div>
+                        <div style="font-size:0.82rem;color:#64748b;margin-bottom:6px;">${TIPUS_EQUIP[a.tipusEquip]||I.wrench} \u00b7 ${I.pin} ${getSalaName(a.salaId)}${a.ubicacio?' \u00b7 '+a.ubicacio:''} \u00b7 ${I.refresh} ${FREQ_LABELS[a.tipusMant]||'\u2014'}${isExt?' \u00b7 '+I.building+' Emp. ext.':''}</div>
+                        <div style="font-size:0.82rem;color:#475569;margin-bottom:${ds?'4px':'10px'};"><strong>Últim:</strong> ${fmtDate(a.ultimMant)} · <strong>Pròxim:</strong> ${fmtDate(a.proximMant)}</div>
+                        ${ds?`<div style="font-size:0.78rem;font-weight:700;color:${dc};margin-bottom:10px;">${ds}</div>`:''}
+                        <details style="margin-bottom:12px;"><summary style="font-size:0.78rem;color:#94a3b8;cursor:pointer;">Historial recent (${histTotal})</summary><div style="margin-top:8px;">${histHtml}</div>${histFooter}</details>
+                        ${isExt?`<button onclick="obrirFormExtPreventiu('${a.id}')" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;">${I.building} Registrar visita empresa externa</button>`
+                               :`<button onclick="obrirFormPreventiu('${a.id}')" class="btn btn-blue btn-sm" style="width:100%;justify-content:center;">${I.wrench} Realitzar manteniment</button>`}
+                    </div>`;
+                }
+                html+='</div>';
+            }
+            if (noMant.length) {
+                html+=`<p class="section-title" style="margin-top:${sorted.length?'28px':'0'};">Actius sense manteniment programat (${noMant.length})</p><div class="prev-grid">`;
+                for (const a of noMant) html+=`<div class="prev-card" style="opacity:0.65;"><div style="font-size:0.76rem;color:#94a3b8;">${a.codi}</div><div style="font-weight:600;">${a.nom}</div><div style="font-size:0.82rem;color:#94a3b8;margin-top:4px;">${I.pin} ${getSalaName(a.salaId)}</div><div style="margin-top:10px;"><button onclick="obrirFormActiu('${a.id}')" class="btn btn-outline btn-sm" style="font-size:0.75rem;">${I.pencil} Assignar programaci\u00f3</button></div></div>`;
+                html+='</div>';
+            }
+            el.innerHTML=html;
+        }
+
+        /* RENDER CORRECTIU */
+        function renderCorrectiu(el) {
+            if (!allCorrectiu.length) { el.innerHTML=`<div class="empty-state"><p style="font-size:2rem;">${I.check}</p><p>No hi ha incid\u00e8ncies registrades.</p></div>`; return; }
+            const rows=allCorrectiu.map(inc=>{
+                const stc=inc.estat==='Pendent'?'st-pendent':inc.estat==='En Procés'?'st-proces':'st-resolt';
+                const gb=inc.gravetat==='alta'?'#fee2e2':inc.gravetat==='mitja'?'#fef3c7':'#f1f5f9';
+                const gc=inc.gravetat==='alta'?'#b91c1c':inc.gravetat==='mitja'?'#92400e':'#475569';
+                let btn=inc.estat==='Pendent'?`<button onclick="confirmarInici('${inc.id}')" class="btn btn-blue btn-sm">${I.wrench} Iniciar</button>`:inc.estat==='En Proc\u00e9s'?`<button onclick="tancarIncidencia('${inc.id}')" class="btn btn-green btn-sm">${I.check} Tancar</button>`:`<small style="color:#94a3b8;">Resolt ${fmtDate(inc.dataResolt)}</small>`;
+                const incCodi = inc.codiInc || inc.rmt || '—';
+                const equipInfo = inc.rmt ? `<br><small style="color:#94a3b8;font-family:monospace;">${inc.rmt}${inc.activNom?' · '+inc.activNom:''}</small>` : (inc.activNom ? `<br><small style="color:#94a3b8;">${inc.activNom}</small>` : '');
+                const dataSol = inc.dataSolicitud ? `<br><small style="color:#94a3b8;">${inc.dataSolicitud}</small>` : '';
+                return `<tr><td><strong style="font-family:monospace;font-size:0.88rem;">${incCodi}</strong>${equipInfo}${dataSol}</td><td style="max-width:200px;">${inc.desc||'—'}</td><td style="font-size:0.82rem;">${inc.qui||'—'}</td><td><span class="st-badge ${stc}">${inc.estat}</span>${inc.gravetat?`<br><span style="font-size:0.68rem;background:${gb};color:${gc};padding:2px 7px;border-radius:12px;font-weight:700;margin-top:3px;display:inline-block;">${inc.gravetat.toUpperCase()}</span>`:''}</td><td style="text-align:right;">${btn}</td></tr>`;
+            }).join('');
+            el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Codi incidència</th><th>Descripció</th><th>Sol·licitant</th><th>Estat</th><th style="text-align:right;">Acció</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        }
+
+        /* RENDER ACTIUS */
+        function renderActius(el) {
+            if (!allActius.length) { el.innerHTML=`<div class="empty-state"><p>No hi ha actius. Afegeix-ne un amb el botó superior.</p></div>`; return; }
+            const rows=allActius.map(a=>{
+                const st=dueStatus(a.proximMant);
+                const dot=sdot(st);
+                return `<tr><td><strong>${a.codi}</strong></td><td>${a.nom}${a.ubicacio?`<br><small style="color:#94a3b8;">${a.ubicacio}</small>`:''}</td><td>${TIPUS_EQUIP[a.tipusEquip]||I.wrench+' Gen\u00e8ric'}</td><td>${getSalaName(a.salaId)}</td><td>${FREQ_LABELS[a.tipusMant]||'\u2014'}${a.empresa?' '+I.building:''}</td><td>${dot} ${fmtDate(a.proximMant)}</td><td style="text-align:right;"><button onclick="imprimirQR('${a.codi}','${encodeURIComponent(a.nom)}')" class="btn btn-outline btn-sm">${I.printer} QR</button> <button onclick="obrirFormActiu('${a.id}')" class="btn btn-outline btn-sm">${I.pencil}</button></td></tr>`;
+            }).join('');
+            el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Codi</th><th>Nom</th><th>Tipus</th><th>Sala</th><th>Freq.</th><th>Pròxim mant.</th><th style="text-align:right;">Accions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        }
+
+        /* RENDER SALES */
+        function renderSales(el) {
+            if (!allSales.length) { el.innerHTML=`<div class="empty-state"><p>No hi ha sales. Afegeix-ne una amb el botó superior.</p></div>`; return; }
+            const rows=allSales.map(s=>{
+                const n=allActius.filter(a=>a.salaId===s.id).length;
+                return `<tr><td><strong>${s.codi}</strong></td><td>${s.nom}</td><td>${s.planta||'\u2014'}</td><td style="color:#64748b;">${n} actiu${n!==1?'s':''}</td><td>${s.notes||''}</td><td style="text-align:right;"><button onclick="imprimirQR('${s.codi}','${encodeURIComponent(s.nom)}')" class="btn btn-outline btn-sm">${I.printer} QR</button> <button onclick="obrirFormSala('${s.id}')" class="btn btn-outline btn-sm">${I.pencil}</button></td></tr>`;
+            }).join('');
+            el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Codi</th><th>Nom</th><th>Planta</th><th>Actius</th><th>Notes</th><th style="text-align:right;">Accions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        }
+
+        /* MODAL HELPERS */
+        window.tancarModal = function() {
+            document.getElementById('modal').classList.remove('open');
+            document.getElementById('modal-footer').style.display='flex';
+            stopScanner(); editId=null; sigPad=null;
+        };
+        function obrirModal(icon, titol, body, onOk, okLabel='Desar') {
+            document.getElementById('modal-icon').innerHTML=icon;
+            document.getElementById('modal-titol').textContent=titol;
+            document.getElementById('modal-body').innerHTML=body;
+            document.getElementById('modal-footer').style.display='flex';
+            document.getElementById('btn-ok').textContent=okLabel;
+            document.getElementById('btn-ok').onclick=onOk;
+            document.getElementById('modal').classList.add('open');
+        }
+
+        /* FORM: NOVA SALA */
+        window.obrirFormSala = async function(id=null) {
+            editId=id; const sala=id?(allSales.find(s=>s.id===id)||{}): {};
+            const cd=sala.codi||await nextCodi('rmt_sales','RMT-S-');
+            obrirModal(I.pin,id?'Editar Sala':'Nova Sala',`
+                <div class="form-group"><label class="fg-label">Codi RMT</label><input type="text" id="s-codi" value="${sala.codi||cd}" readonly></div>
+                <div class="form-group"><label class="fg-label">Nom de la sala</label><input type="text" id="s-nom" value="${sala.nom||''}" placeholder="Sala Naüm, Aula 1..."></div>
+                <div class="form-group"><label class="fg-label">Planta / Ubicació</label><input type="text" id="s-planta" value="${sala.planta||''}" placeholder="Planta baixa, 1ª Planta..."></div>
+                <div class="form-group"><label class="fg-label">Notes</label><textarea id="s-notes" rows="2">${sala.notes||''}</textarea></div>`,
+                guardarSala, id?'Actualitzar':'Crear Sala');
+        };
+        async function guardarSala() {
+            const nom=document.getElementById('s-nom').value.trim(); if(!nom) return alert('El nom és obligatori.');
+            const data={codi:document.getElementById('s-codi').value, nom, planta:document.getElementById('s-planta').value.trim(), notes:document.getElementById('s-notes').value.trim(), ultimaModificacio:serverTimestamp()};
+            const btn=document.getElementById('btn-ok'); if(btn){btn.disabled=true;btn.textContent='Desant...';}
+            try {
+                editId ? await updateDoc(doc(db,'rmt_sales',editId),data) : (data.createdAt=serverTimestamp(), await addDoc(collection(db,'rmt_sales'),data));
+                tancarModal();
+            } catch(e) { alert('Error: '+e.message); if(btn){btn.disabled=false;btn.textContent='Desar';} }
+        }
+
+        /* FORM: NOU ACTIU */
+        window.obrirFormActiu = async function(id=null) {
+            editId=id; const a=id?(allActius.find(x=>x.id===id)||{}):{};
+            const cd=a.codi||await nextCodi('rmt_actius','RMT-A-');
+            const sOpts=allSales.map(s=>`<option value="${s.id}" ${a.salaId===s.id?'selected':''}>${s.codi} — ${s.nom}</option>`).join('');
+            obrirModal(I.box,id?'Editar Actiu':'Nou Actiu',`
+                <div class="form-group"><label class="fg-label">Codi RMT</label><input type="text" id="a-codi" value="${a.codi||cd}" readonly></div>
+                <div class="form-group"><label class="fg-label">Nom de l'actiu</label><input type="text" id="a-nom" value="${a.nom||''}" placeholder="Projector, Extintor P-1..."></div>
+                <div class="form-group"><label class="fg-label">Tipus d'equip</label><select id="a-tipus">
+                    <option value="generic" ${(!a.tipusEquip||a.tipusEquip==='generic')?'selected':''}>${I.wrench} Gen\u00e8ric</option>
+                    <option value="extintor" ${a.tipusEquip==='extintor'?'selected':''}>${I.fire} Extintor</option>
+                    <option value="climatitzador" ${a.tipusEquip==='climatitzador'?'selected':''}>${I.snow} Climatitzaci\u00f3</option>
+                    <option value="ascensor" ${a.tipusEquip==='ascensor'?'selected':''}>${I.elevator} Ascensor (empresa ext.)</option>
+                    <option value="electricitat" ${a.tipusEquip==='electricitat'?'selected':''}>${I.zap} Electricitat</option>
+                    <option value="lluminaria" ${a.tipusEquip==='lluminaria'?'selected':''}>${I.bulb} Llumin\u00e0ries Emerg\u00e8ncia</option>
+                </select></div>
+                <div class="form-group"><label class="fg-label">Sala</label><select id="a-sala"><option value="">— Sense sala —</option>${sOpts}</select></div>
+                <div class="form-group"><label class="fg-label">Ubicació exacta dins la sala <small style="font-weight:400;">(optional)</small></label><input type="text" id="a-ubic" value="${a.ubicacio||''}" placeholder="Entrada dreta, armari tècnic..."></div>
+                <div class="form-group"><label class="fg-label">Freqüència de manteniment preventiu</label><select id="a-freq">
+                    <option value="none" ${(!a.tipusMant||a.tipusMant==='none')?'selected':''}>Sense programació</option>
+                    <option value="mensual" ${a.tipusMant==='mensual'?'selected':''}>Mensual (30 dies)</option>
+                    <option value="trimestral" ${a.tipusMant==='trimestral'?'selected':''}>Trimestral (3 mesos)</option>
+                    <option value="semestral" ${a.tipusMant==='semestral'?'selected':''}>Semestral (6 mesos)</option>
+                    <option value="anual" ${a.tipusMant==='anual'?'selected':''}>Anual (12 mesos)</option>
+                    <option value="bianual" ${a.tipusMant==='bianual'?'selected':''}>Bianual (2 anys)</option>
+                </select></div>
+                <div class="form-group"><label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" id="a-empresa" ${a.empresa?'checked':''} style="width:18px;height:18px;accent-color:var(--blue);"> <span class="fg-label" style="margin:0;">Manteniment per empresa externa</span></label></div>
+                <div class="form-group" id="g-emp" style="${a.empresa?'':'display:none;'}"><label class="fg-label">Nom de l'empresa externa</label><input type="text" id="a-empresa-nom" value="${a.empresaNom||''}"></div>
+                <div class="form-group"><label class="fg-label">Notes internes</label><textarea id="a-notes" rows="2">${a.notes||''}</textarea></div>`,
+                guardarActiu, id?'Actualitzar':'Crear Actiu');
+            document.getElementById('a-empresa').addEventListener('change',e=>{document.getElementById('g-emp').style.display=e.target.checked?'':'none';});
+            document.getElementById('a-tipus').addEventListener('change',e=>{ if(e.target.value==='ascensor'){document.getElementById('a-empresa').checked=true;document.getElementById('g-emp').style.display='';} });
+        };
+        async function guardarActiu() {
+            const nom=document.getElementById('a-nom').value.trim(); if(!nom) return alert('El nom és obligatori.');
+            const sid=document.getElementById('a-sala').value;
+            const data={codi:document.getElementById('a-codi').value, nom, tipusEquip:document.getElementById('a-tipus').value, salaId:sid||null, salaNom:sid?(allSales.find(s=>s.id===sid)?.nom||''):'', ubicacio:document.getElementById('a-ubic').value.trim(), tipusMant:document.getElementById('a-freq').value, empresa:document.getElementById('a-empresa').checked, empresaNom:document.getElementById('a-empresa-nom')?.value?.trim()||'', notes:document.getElementById('a-notes').value.trim(), actiu:true, ultimaModificacio:serverTimestamp()};
+            const btn=document.getElementById('btn-ok'); if(btn){btn.disabled=true;btn.textContent='Desant...';}
+            try {
+                editId ? await updateDoc(doc(db,'rmt_actius',editId),data) : (data.createdAt=serverTimestamp(), await addDoc(collection(db,'rmt_actius'),data));
+                tancarModal();
+            } catch(e) { alert('Error: '+e.message); if(btn){btn.disabled=false;btn.textContent='Desar';} }
+        }
+
+        /* FORM: NOVA INCIDÈNCIA — R-MT.01 format */
+        window.obrirFormIncidencia = function(pre='') {
+            obrirModal(I.warning,'Nova Incidència (R-MT.01)',`
+                <div id="qr-reader"></div>
+                <div class="form-group"><label class="fg-label">Codi RMT de l'element afectat</label><div class="input-icon-row"><input type="text" id="i-rmt" value="${pre}" placeholder="RMT-A-001" style="text-transform:uppercase;"><button onclick="activarCamara('i-rmt')" class="btn btn-outline" style="padding:10px 13px;flex:unset;">${I.camera}</button></div></div>
+                <div class="form-group"><label class="fg-label">Tasca a realitzar / Descripció del problema</label><textarea id="i-desc" rows="3" placeholder="Descriu el problema i la tasca a realitzar..."></textarea></div>
+                <div class="form-group"><label class="fg-label">Sol·licitant (qui ho reporta)</label><input type="text" id="i-qui" value="${curUser()}"></div>
+                <div class="form-group"><label class="fg-label">Data de la sol·licitud</label><input type="date" id="i-data" value="${new Date().toISOString().split('T')[0]}"></div>
+                <div class="form-group"><label class="fg-label">Gravetat</label><select id="i-gravetat"><option value="baixa">Baixa — No urgeix</option><option value="mitja" selected>Mitja — Cal gestionar</option><option value="alta">Alta — Urgent</option></select></div>`,
+                guardarIncidencia,'Crear Incidència');
+        };
+        async function guardarIncidencia() {
+            const rmt=document.getElementById('i-rmt').value.trim().toUpperCase(); if(!rmt) return alert('El codi RMT és obligatori.');
+            const a=allActius.find(x=>x.codi===rmt)||allSales.find(s=>s.codi===rmt);
+            const dataSol=document.getElementById('i-data').value;
+            const codiInc=nextCodiInc();
+            const btn=document.getElementById('btn-ok'); if(btn){btn.disabled=true;btn.textContent='Creant...';}
+            try {
+                await addDoc(collection(db,'rmt_correctiu'),{codiInc, rmt, desc:document.getElementById('i-desc').value.trim(), qui:document.getElementById('i-qui').value.trim(), quiEmail:curEmail(), dataSolicitud:dataSol, gravetat:document.getElementById('i-gravetat').value, estat:'Pendent', tecnic:'', resolucio:'', activNom:a?.nom||'', salaId:a?.salaId||'', salaNom:a?.salaNom||'', createdAt:serverTimestamp()});
+                tancarModal();
+            } catch(e) { alert('Error: '+e.message); if(btn){btn.disabled=false;btn.textContent='Crear Incidència';} }
+        }
+
+        /* HELPERS HTML */
+        function hEsc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+        /* INCIDÈNCIA: INICIAR */
+        window.confirmarInici = async function(incId) {
+            const inc=allCorrectiu.find(c=>c.id===incId)||{};
+            obrirModal(I.wrench,'Iniciar Incidència',`<div class="info-box"><p><strong>Codi:</strong> ${hEsc(inc.codiInc||inc.rmt||incId)}</p><p><strong>Element:</strong> ${hEsc(inc.rmt||'')}${inc.activNom?' &mdash; '+hEsc(inc.activNom):''}</p><p><strong>Descripci&oacute;:</strong> ${hEsc(inc.desc||'')}</p></div><p style="text-align:center;color:#64748b;margin-top:12px;">Vols marcar com <strong>"En Proc&eacute;s"</strong>?</p>`,
+                async()=>{
+                    const btn=document.getElementById('btn-ok'); if(btn){btn.disabled=true;btn.textContent='Iniciant...';}
+                    try { await updateDoc(doc(db,'rmt_correctiu',incId),{estat:'En Procés',dataInici:serverTimestamp()}); tancarModal(); }
+                    catch(e) { alert('Error: '+e.message); if(btn){btn.disabled=false;btn.textContent='Iniciar';} }
+                },'Iniciar');
+        };
+
+        /* INCIDÈNCIA: TANCAR */
+        window.tancarIncidencia = async function(incId) {
+            const inc=allCorrectiu.find(c=>c.id===incId)||{};
+            obrirModal(I.check,'Tancar Incid&egrave;ncia (R-MT.01)',`
+                <div class="info-box"><p><strong>Codi:</strong> ${hEsc(inc.codiInc||inc.rmt||incId)}</p><p><strong>Element:</strong> ${hEsc(inc.rmt||'')}${inc.activNom?' &mdash; '+hEsc(inc.activNom):''}</p><p><strong>Tasca:</strong> ${hEsc(inc.desc||'')}</p><p><strong>Sol&middot;licitant:</strong> ${hEsc(inc.qui||'&mdash;')}</p></div>
+                <div class="form-group"><label class="fg-label">Resultat / Accions realitzades</label><textarea id="r-resolucio" rows="3" placeholder="Descriu les accions realitzades i el resultat final..."></textarea></div>
+                <div class="form-group"><label class="fg-label">Data quan s'ha solucionat</label><input type="date" id="r-data-resolt" value="${new Date().toISOString().split('T')[0]}"></div>
+                <div class="form-group"><label class="fg-label">T&egrave;cnic responsable</label><input type="text" id="r-tecnic" value="${hEsc(curUser())}"></div>
+                <div class="form-group"><label class="fg-label">Firma del t&egrave;cnic <span style="font-weight:400;color:#94a3b8;">(opcional)</span></label>
+                    <canvas id="sig-canvas"></canvas>
+                    <div style="display:flex;gap:8px;margin-top:8px;"><button type="button" onclick="sigPad?.clear()" class="btn btn-outline btn-sm">${I.trash} Esborrar</button><button type="button" onclick="firmarMovilIncidencia('${incId}')" class="btn btn-outline btn-sm">${I.phone} Firmar des del m\u00f2bil</button></div>
+                </div>`,
+                ()=>guardarTancament(incId),'Tancar Incidència');
+            setTimeout(()=>{ const c=document.getElementById('sig-canvas'); if(c) sigPad=_initSigPad(c); },200);
+        };
+        async function guardarTancament(incId) {
+            const resultat=document.getElementById('r-resolucio').value.trim();
+            const btn=document.getElementById('btn-ok'); if(btn){btn.disabled=true;btn.textContent='Tancant...';}
+            try {
+                const firmaData=sigPad&&!sigPad.isEmpty()?_trimSignatura(sigPad):'';
+                await updateDoc(doc(db,'rmt_correctiu',incId),{
+                    estat:'Resolt', resolucio: resultat, resultat: resultat,
+                    dataSolventada: document.getElementById('r-data-resolt').value || new Date().toISOString().split('T')[0],
+                    tecnic:document.getElementById('r-tecnic').value,
+                    firma:firmaData, dataResolt:serverTimestamp()
+                });
+                tancarModal();
+            } catch(e) { alert('Error: '+e.message); if(btn){btn.disabled=false;btn.textContent='Tancar Incidència';} }
+        }
+
+        /* FORM: MANTENIMENT PREVENTIU INTERN */
+        window.obrirFormPreventiu = function(actiuId) {
+            const a=allActius.find(x=>x.id===actiuId); if(!a) return;
+            const items=CHECKLISTS[a.tipusEquip]||[];
+            const isRMT03 = items.length > 0 && typeof items[0] === 'object'; // SI/NO/NA format
+            const curTrimestre = Math.ceil((new Date().getMonth()+1)/3);
+
+            let checkHtml = '';
+            if (isRMT03) {
+                // R-MT.03 format: table with SI / NO / NA / OBSERVACIONES
+                checkHtml = `
+                <div class="form-group">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <label class="fg-label" style="margin:0;">Llista d'inspecció (R-MT.03)</label>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label class="fg-label" style="margin:0;font-size:0.78rem;">Trimestre:</label>
+                            <select id="p-trimestre" style="width:auto;padding:6px 10px;font-size:0.82rem;">
+                                <option value="1" ${curTrimestre===1?'selected':''}>1r Trimestre</option>
+                                <option value="2" ${curTrimestre===2?'selected':''}>2n Trimestre</option>
+                                <option value="3" ${curTrimestre===3?'selected':''}>3r Trimestre</option>
+                                <option value="4" ${curTrimestre===4?'selected':''}>4t Trimestre</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                    <table style="width:100%;border-collapse:collapse;min-width:420px;font-size:0.82rem;">
+                        <thead>
+                            <tr style="background:#f8fafc;">
+                                <th style="padding:7px 10px;text-align:left;border:1px solid #e2e8f0;color:#475569;">Inspecció</th>
+                                <th style="padding:7px;text-align:center;border:1px solid #e2e8f0;color:#10b981;width:38px;">SI</th>
+                                <th style="padding:7px;text-align:center;border:1px solid #e2e8f0;color:#ef4444;width:38px;">NO</th>
+                                <th style="padding:7px;text-align:center;border:1px solid #e2e8f0;color:#94a3b8;width:38px;">NA</th>
+                                <th style="padding:7px 10px;text-align:left;border:1px solid #e2e8f0;color:#475569;">Observacions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${items.map((item,i)=>`
+                            <tr>
+                                <td style="padding:8px 10px;border:1px solid #e2e8f0;">${item.text}</td>
+                                <td style="padding:8px;text-align:center;border:1px solid #e2e8f0;"><input type="radio" name="ci-${i}" value="SI" style="width:16px;height:16px;accent-color:#10b981;"></td>
+                                <td style="padding:8px;text-align:center;border:1px solid #e2e8f0;"><input type="radio" name="ci-${i}" value="NO" style="width:16px;height:16px;accent-color:#ef4444;"></td>
+                                <td style="padding:8px;text-align:center;border:1px solid #e2e8f0;"><input type="radio" name="ci-${i}" value="NA" style="width:16px;height:16px;accent-color:#94a3b8;"></td>
+                                <td style="padding:6px 8px;border:1px solid #e2e8f0;"><input type="text" id="ci-obs-${i}" placeholder="—" style="border:none;background:transparent;width:100%;padding:0;font-size:0.8rem;"></td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>`;
+            } else if (items.length > 0) {
+                checkHtml = '<div class="form-group"><label class="fg-label">Llista de verificació</label>'+items.map((item,i)=>`<label class="check-item" id="ci-l-${i}"><input type="checkbox" id="ci-${i}" onchange="this.closest('.check-item').classList.toggle('done',this.checked)"> ${item}</label>`).join('')+'</div>';
+            }
+
+            obrirModal(I.wrench,`Manteniment Preventiu — ${a.nom}`,`
+                <div class="info-box"><p><strong>Equip:</strong> ${a.codi} — ${a.nom}</p><p><strong>Ubicació:</strong> ${I.pin} ${getSalaName(a.salaId)}${a.ubicacio?' · '+a.ubicacio:''}</p><p><strong>Tipus:</strong> ${TIPUS_EQUIP[a.tipusEquip]||'Genèric'} · <strong>Freq:</strong> ${FREQ_LABELS[a.tipusMant]||'—'}</p></div>
+                ${checkHtml}
+                <div class="form-group"><label class="fg-label">Data de realització</label><input type="date" id="p-data" value="${new Date().toISOString().split('T')[0]}"></div>
+                <div class="form-group"><label class="fg-label">Observacions generals</label><textarea id="p-obs" rows="2" placeholder="Anomalies generals, mesures preses..."></textarea></div>
+                <div class="form-group"><label class="fg-label">Tècnic responsable</label><input type="text" id="p-tecnic" value="${curUser()}"></div>
+                <div class="form-group"><label class="fg-label">Firma obligàtoria (requisit de qualitat R-MT)</label>
+                    <canvas id="sig-canvas"></canvas>
+                    <div style="display:flex;gap:8px;margin-top:8px;"><button type="button" onclick="sigPad?.clear();document.getElementById('sig-canvas').classList.remove('signed')" class="btn btn-outline btn-sm">${I.trash} Esborrar</button><button type="button" onclick="firmarDesMovil('${actiuId}')" class="btn btn-outline btn-sm">${I.phone} Firmar des del m\u00f2bil</button></div>
+                    <p style="font-size:0.75rem;color:#94a3b8;margin:6px 0 0;">La firma des del mòbil genera un QR per signar amb el telèfon. S'importa automàticament.</p>
+                </div>`,
+                ()=>guardarPreventiu(actiuId,isRMT03),'Desar Registre');
+            setTimeout(()=>{ const c=document.getElementById('sig-canvas'); if(c) sigPad=_initSigPad(c); },200);
+        };
+        async function guardarPreventiu(actiuId, isRMT03=false) {
+            if(sigPad&&sigPad.isEmpty()) return alert('La firma és obligatòria per als registres de qualitat.');
+            const a=allActius.find(x=>x.id===actiuId); if(!a) return;
+            const btn=document.getElementById('btn-ok'); if(btn){btn.disabled=true;btn.textContent='Desant...';}
+            try {
+            const dataMant=new Date(document.getElementById('p-data').value+'T12:00:00');
+            const proxData=(a.tipusMant&&a.tipusMant!=='none')?calcNextDate(dataMant,a.tipusMant):null;
+            const chItems=CHECKLISTS[a.tipusEquip]||[];
+            let items;
+            if (isRMT03) {
+                const trimestre = document.getElementById('p-trimestre')?.value || '';
+                items = chItems.map((item,i)=>{
+                    const radios = document.querySelectorAll(`input[name="ci-${i}"]`);
+                    const checked = [...radios].find(r=>r.checked);
+                    return { text:item.text, resultat:checked?checked.value:'—', obs:document.getElementById(`ci-obs-${i}`)?.value||'' };
+                });
+                items._trimestre = trimestre; // will be saved in the doc
+            } else {
+                items = chItems.map((label,i)=>({label,ok:document.getElementById(`ci-${i}`)?.checked||false}));
+            }
+            const trimestre = document.getElementById('p-trimestre')?.value || '';
+            await addDoc(collection(db,'rmt_preventiu'),{
+                activId:actiuId, activCodi:a.codi, activNom:a.nom,
+                salaId:a.salaId||'', salaNom:a.salaNom||'',
+                dataMant:dataMant.toISOString(),
+                trimestre: trimestre || null,
+                tecnic:document.getElementById('p-tecnic').value.trim(),
+                tecnicEmail:curEmail(),
+                observacions:document.getElementById('p-obs').value.trim(),
+                items, firma:sigPad?_trimSignatura(sigPad):'',
+                empresa:false, createdAt:serverTimestamp()
+            });
+            await updateDoc(doc(db,'rmt_actius',actiuId),{ultimMant:serverTimestamp(),proximMant:proxData?proxData.toISOString():null});
+            tancarModal();
+            } catch(e) { alert('Error en desar: '+e.message); if(btn){btn.disabled=false;btn.textContent='Desar Registre';} }
+        }
+
+        /* FORM: MANTENIMENT PREVENTIU EMPRESA EXTERNA */
+        window.obrirFormExtPreventiu = function(actiuId) {
+            const a=allActius.find(x=>x.id===actiuId); if(!a) return;
+            const isAsc=a.tipusEquip==='ascensor';
+            // Auto-calculate default next review date from today + frequency
+            const defaultProxDate = (a.tipusMant&&a.tipusMant!=='none') ? calcNextDate(new Date(), a.tipusMant) : null;
+            const defaultProxStr  = defaultProxDate ? defaultProxDate.toISOString().split('T')[0] : '';
+            obrirModal(I.building,`Manteniment Extern — ${a.nom}`,`
+                <div class="info-box">
+                    <p><strong>Equip:</strong> ${a.codi} — ${a.nom}</p>
+                    <p><strong>Ubicació:</strong> ${I.pin} ${getSalaName(a.salaId)}${a.ubicacio?' · '+a.ubicacio:''}</p>
+                    <p><strong>Freq.:</strong> ${FREQ_LABELS[a.tipusMant]||'—'}${a.proximMant?` · <strong>Darrera pròxima revisió:</strong> ${fmtDate(a.proximMant)}`:''}</p>
+                </div>
+                <div class="form-group"><label class="fg-label">Empresa realitzadora</label><input type="text" id="e-empresa" value="${a.empresaNom||''}" placeholder="Empresa de Manteniment SL"></div>
+                <div class="form-group"><label class="fg-label">Data de realització</label><input type="date" id="e-data" value="${new Date().toISOString().split('T')[0]}"></div>
+                <div class="form-group"><label class="fg-label">Núm. certificat / albarà</label><input type="text" id="e-cert" placeholder="Optional — p.ex. ALB-2024-0045"></div>
+                ${isAsc?`
+                <div class="form-group"><label class="check-item" id="asc-l"><input type="checkbox" id="e-ok" onchange="this.closest('.check-item').classList.toggle('done',this.checked)"> Manteniment realitzat correctament i documentat</label></div>
+                <div class="form-group">
+                    <label class="fg-label">${I.calendar} Pròxima revisíó OCA (autocalculada)</label>
+                    <input type="date" id="e-prox-data" value="${defaultProxStr}">
+                    <p style="font-size:0.75rem;color:#94a3b8;margin:4px 0 0;">Autocalculada per freqüència. Modifica si l'empresa indica una data específica.</p>
+                </div>`:''}
+                <div class="form-group"><label class="fg-label">Observacions</label><textarea id="e-obs" rows="2" placeholder="Incidències detectades..."></textarea></div>`,
+                ()=>guardarExtPreventiu(actiuId),'Marcar Realitzat');
+        };
+        async function guardarExtPreventiu(actiuId) {
+            const a=allActius.find(x=>x.id===actiuId); if(!a) return;
+            const btn=document.getElementById('btn-ok'); const origText=btn?.textContent;
+            if(btn){btn.disabled=true; btn.textContent='Desant...';}
+            try {
+                const dataMant=new Date(document.getElementById('e-data').value+'T12:00:00');
+                // Use manually set next date if provided (ascensor), otherwise auto-calculate
+                const proxInput=document.getElementById('e-prox-data')?.value;
+                const proxData=proxInput
+                    ? new Date(proxInput+'T12:00:00')
+                    : ((a.tipusMant&&a.tipusMant!=='none')?calcNextDate(dataMant,a.tipusMant):null);
+                await addDoc(collection(db,'rmt_preventiu'),{
+                    activId:actiuId, activCodi:a.codi, activNom:a.nom,
+                    salaId:a.salaId||'', salaNom:a.salaNom||'',
+                    dataMant:dataMant.toISOString(),
+                    tecnic:document.getElementById('e-empresa').value.trim(),
+                    observacions:document.getElementById('e-obs').value.trim(),
+                    numCert:document.getElementById('e-cert').value.trim(),
+                    items:[], firma:'', empresa:true, createdAt:serverTimestamp()
+                });
+                await updateDoc(doc(db,'rmt_actius',actiuId),{
+                    ultimMant:serverTimestamp(),
+                    proximMant:proxData?proxData.toISOString():null
+                });
+                tancarModal();
+            } catch(e) {
+                console.error('guardarExtPreventiu error:', e);
+                alert('Error en desar el manteniment: '+e.message);
+                if(btn){btn.disabled=false; btn.textContent=origText;}
+            }
+        }
+
+        /* SCANNER — obrir formulari via QR */
+        window.obrirScannerPreventiu = function() {
+            obrirModal(I.camera,'Escanejar Actiu',`
+                <p style="color:#64748b;font-size:0.88rem;margin-top:0;">Escaneja el QR d'un actiu per obrir directament el formulari de manteniment.</p>
+                <div id="qr-reader"></div>
+                <div style="text-align:center;margin-top:10px;"><button onclick="activarCamara('_scan_prev')" class="btn btn-blue" style="justify-content:center;">${I.camera} Activar c\u00e0mera</button></div>`,
+                null, null);
+            document.getElementById('modal-footer').style.display='none';
+        };
+
+        /* QR SCAN */
+        function stopScanner() {
+            if(qrScanner){qrScanner.stop().catch(()=>{});qrScanner=null;}
+            const el=document.getElementById('qr-reader'); if(el) el.style.display='none';
+        }
+        window.activarCamara = function(targetId) {
+            const qrEl=document.getElementById('qr-reader'); if(!qrEl) return alert('Lector QR no disponible.');
+            stopScanner(); qrEl.style.display='block';
+            qrScanner=new Html5Qrcode('qr-reader');
+            qrScanner.start({facingMode:'environment'},{fps:10,qrbox:220},text=>{
+                const code=text.trim().toUpperCase(); stopScanner();
+                if(targetId==='_scan_prev'){
+                    tancarModal();
+                    const a=allActius.find(x=>x.codi===code);
+                    if(a){ a.empresa?obrirFormExtPreventiu(a.id):obrirFormPreventiu(a.id); }
+                    else alert(`Actiu "${code}" no trobat.`);
+                } else {
+                    const inp=document.getElementById(targetId); if(inp) inp.value=code;
+                }
+            }).catch(()=>alert('Càmera no disponible o permís denegat.'));
+        };
+
+        /* FIRMA MÒBIL */
+        async function initFirmaMovil(codi, nom) {
+            const sid=genUuid(), url=`${location.origin}/firma-movil.html?sid=${sid}`;
+            await setDoc(doc(db,'rmt_firmes',sid),{
+                status:'pending', activCodi:codi, activNom:nom,
+                signant: curUser(),   // pre-fill on mobile
+                created:serverTimestamp()
+            });
+            document.getElementById('modal-qr-firma').classList.add('open');
+            document.getElementById('qr-firma-container').innerHTML='';
+            new QRCode(document.getElementById('qr-firma-container'),{text:url,width:180,height:180});
+            return sid;
+        }
+        function startPolling(sid) {
+            if(pollTimer) clearInterval(pollTimer);
+            pollTimer=setInterval(async()=>{
+                const snap=await getDoc(doc(db,'rmt_firmes',sid));
+                if(snap.exists()&&snap.data().status==='done'){
+                    clearInterval(pollTimer); pollTimer=null;
+                    document.getElementById('modal-qr-firma').classList.remove('open');
+                    const fd=snap.data();
+                    if(sigPad&&fd.signatura){
+                        // Resize canvas to its actual rendered size before import
+                        const c=document.getElementById('sig-canvas');
+                        if(c){
+                            const ratio=window.devicePixelRatio||1;
+                            c.width=c.offsetWidth*ratio;
+                            c.height=c.offsetHeight*ratio;
+                            c.getContext('2d').scale(ratio,ratio);
+                            sigPad=new SignaturePad(c);
+                        }
+                        sigPad.fromDataURL(fd.signatura, {ratio:1});
+                        if(c) c.classList.add('signed');
+                    }
+                    // Name is already pre-filled (from curUser), just confirm it
+                    if(fd.signant){
+                        const t=document.getElementById('p-tecnic')||document.getElementById('r-tecnic');
+                        if(t) t.value=fd.signant;
+                    }
+                }
+            },2000);
+        }
+        window.firmarDesMovil = async function(actiuId) {
+            const a=allActius.find(x=>x.id===actiuId);
+            startPolling(await initFirmaMovil(a?.codi||'',a?.nom||''));
+        };
+        window.firmarMovilIncidencia = async function(incId) {
+            const inc=allCorrectiu.find(c=>c.id===incId);
+            startPolling(await initFirmaMovil(inc?.rmt||'',inc?.activNom||''));
+        };
+        window.cancelarFirmaMovil = function() {
+            if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
+            document.getElementById('modal-qr-firma').classList.remove('open');
+        };
+
+        /* QR PRINT */
+        window.imprimirQR = function(codi, nomEnc) {
+            const nom=decodeURIComponent(nomEnc);
+            obrirModal(I.printer,'Imprimir Etiqueta QR',`<div id="print-area" style="text-align:center;padding:15px;background:white;"><div id="canvas-qr" style="margin:0 auto;display:inline-block;"></div><div style="font-family:monospace;font-size:1.2rem;font-weight:800;margin-top:8px;border-top:2px solid black;padding-top:8px;">${codi}</div><div style="font-size:0.9rem;font-weight:600;margin-top:4px;">${nom}</div><div style="font-size:0.6rem;color:#888;text-transform:uppercase;margin-top:4px;">Manteniment NexeSocial</div></div>`,
+                ()=>window.print(),'Imprimir');
+            setTimeout(()=>{new QRCode(document.getElementById('canvas-qr'),{text:codi,width:130,height:130});},150);
+        };
+
+        /* HISTORIAL COMPLET */
+        window.veureTotHistorial = function(actiuId) {
+            const a=allActius.find(x=>x.id===actiuId); if(!a) return;
+            const hist=allPreventiu.filter(p=>p.activId===actiuId).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+            if(!hist.length){return alert('Sense registres de manteniment.');}
+            const rows=hist.map(p=>{
+                const tLabel=p.trimestre?` · T${p.trimestre}`:'';
+                const tipus=p.empresa?'Empresa ext.':'Intern';
+                return `<tr>
+                    <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:0.85rem;">${fmtDate(p.createdAt)}${tLabel}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:0.85rem;">${tipus}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:0.85rem;">${p.tecnic||'—'}${p.numCert?`<br><small style="color:#94a3b8;">Cert: ${p.numCert}</small>`:''}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;text-align:right;">
+                        <button onclick="generarInformePDF('${p.id}')" class="btn btn-outline btn-sm">${I.printer} PDF</button>
+                    </td>
+                </tr>`;
+            }).join('');
+            obrirModal(I.wrench,`Historial — ${a.nom}`,`
+                <div class="info-box" style="margin-bottom:14px;"><p><strong>${a.codi}</strong> · ${a.nom} · ${FREQ_LABELS[a.tipusMant]||'—'}</p></div>
+                <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;">
+                    <thead><tr>
+                        <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#94a3b8;text-transform:uppercase;border-bottom:2px solid #f1f5f9;">Data</th>
+                        <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#94a3b8;text-transform:uppercase;border-bottom:2px solid #f1f5f9;">Tipus</th>
+                        <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#94a3b8;text-transform:uppercase;border-bottom:2px solid #f1f5f9;">Tècnic / Empresa</th>
+                        <th style="padding:8px 12px;border-bottom:2px solid #f1f5f9;"></th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                </table></div>`,
+                null, null);
+            document.getElementById('modal-footer').style.display='none';
+        };
+
+        /* GENERAR INFORME PDF — helper per construir el cos d'un registre */
+        function _buildInformeBody(p) {
+            const a=allActius.find(x=>x.id===p.activId)||{};
+            const sala=allSales.find(s=>s.id===p.salaId)||{};
+            const refCode=`RMT-${p.empresa?'04':'03'}-${(p.activCodi||'').replace('RMT-A-','')}`;
+            const tipusNom={extintor:'Extintor',climatitzador:'Climatització',ascensor:'Ascensor',electricitat:'Electricitat',lluminaria:'Lluminàries Emergència',generic:'Genèric'}[a.tipusEquip||'']||'Genèric';
+            const isRMT03=Array.isArray(p.items)&&p.items.length>0&&p.items[0]?.resultat!==undefined;
+            const isCheckbox=Array.isArray(p.items)&&p.items.length>0&&p.items[0]?.label!==undefined;
+            let checklistHtml='';
+            if(isRMT03){
+                const rows=p.items.map(item=>`
+                    <tr>
+                        <td style="padding:7px 10px;border:1px solid #d1d5db;font-size:12px;">${item.text}</td>
+                        <td style="padding:7px;text-align:center;border:1px solid #d1d5db;font-size:12px;color:#059669;font-weight:700;">${item.resultat==='SI'?'&#10003;':''}</td>
+                        <td style="padding:7px;text-align:center;border:1px solid #d1d5db;font-size:12px;color:#dc2626;font-weight:700;">${item.resultat==='NO'?'&#10007;':''}</td>
+                        <td style="padding:7px;text-align:center;border:1px solid #d1d5db;font-size:12px;color:#6b7280;">${item.resultat==='NA'?'&mdash;':''}</td>
+                        <td style="padding:7px 10px;border:1px solid #d1d5db;font-size:11px;color:#374151;">${item.obs||''}</td>
+                    </tr>`).join('');
+                checklistHtml=`<div style="margin-top:20px;"><div style="background:#f3f4f6;border-left:4px solid #1d4ed8;padding:8px 12px;font-weight:700;font-size:13px;margin-bottom:8px;">LLISTA D'INSPECCI&Oacute; (R-MT.03)${p.trimestre?' &mdash; Trimestre '+p.trimestre:''}</div><table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#f9fafb;"><th style="padding:7px 10px;border:1px solid #d1d5db;font-size:11px;text-align:left;color:#374151;">Inspecció</th><th style="padding:7px;border:1px solid #d1d5db;font-size:11px;text-align:center;color:#059669;width:36px;">SI</th><th style="padding:7px;border:1px solid #d1d5db;font-size:11px;text-align:center;color:#dc2626;width:36px;">NO</th><th style="padding:7px;border:1px solid #d1d5db;font-size:11px;text-align:center;color:#6b7280;width:36px;">NA</th><th style="padding:7px 10px;border:1px solid #d1d5db;font-size:11px;text-align:left;color:#374151;">Observacions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+            } else if(isCheckbox){
+                const items=p.items.map(item=>`<tr><td style="padding:6px 10px;border:1px solid #d1d5db;font-size:12px;">${item.label}</td><td style="padding:6px;text-align:center;border:1px solid #d1d5db;font-size:13px;">${item.ok?'<span style="color:#059669;font-weight:700;">&#10003;</span>':'<span style="color:#dc2626;">&#10007;</span>'}</td></tr>`).join('');
+                checklistHtml=`<div style="margin-top:20px;"><div style="background:#f3f4f6;border-left:4px solid #1d4ed8;padding:8px 12px;font-weight:700;font-size:13px;margin-bottom:8px;">LLISTA DE VERIFICACI&Oacute;</div><table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#f9fafb;"><th style="padding:7px 10px;border:1px solid #d1d5db;font-size:11px;text-align:left;color:#374151;">Element de verificació</th><th style="padding:7px;border:1px solid #d1d5db;font-size:11px;text-align:center;color:#374151;width:60px;">Resultat</th></tr></thead><tbody>${items}</tbody></table></div>`;
+            }
+            const sigHtml=p.firma?`<div style="margin-top:6px;display:inline-block;border:1px solid #d1d5db;border-radius:6px;background:#fff;padding:4px;"><img src="${p.firma}" style="display:block;max-width:180px;max-height:70px;width:auto;height:auto;object-fit:contain;" alt="Firma"></div>`:'<div style="height:70px;border:1px solid #d1d5db;border-radius:6px;margin-top:6px;"></div>';
+            const dataMant=p.dataMant?new Date(p.dataMant).toLocaleDateString('ca-ES',{day:'2-digit',month:'2-digit',year:'numeric'}):'&mdash;';
+            const now=new Date().toLocaleDateString('ca-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+            return {refCode,body:`
+<div class="doc-header">
+    <div>
+        <div class="doc-logo">Nexe<span>Social</span></div>
+        <div style="font-size:11px;color:#6b7280;margin-top:3px;">Sistema de Gestió de Manteniment (RMT)</div>
+        <div style="font-size:13px;font-weight:700;margin-top:6px;">${p.empresa?'Registre de Manteniment Extern &mdash; R-MT.04':'Registre de Manteniment Preventiu &mdash; R-MT.03'}</div>
+    </div>
+    <div class="doc-meta">
+        <div class="ref">${refCode}</div>
+        <div>Actiu: <strong>${p.activCodi||'&mdash;'}</strong></div>
+        <div>Data emissió: ${now}</div>
+    </div>
+</div>
+<div class="section-title">Dades de l'Actiu</div>
+<div class="field-grid">
+    <div class="field"><div class="field-label">Codi RMT</div><div class="field-value">${p.activCodi||'&mdash;'}</div></div>
+    <div class="field"><div class="field-label">Nom de l'actiu</div><div class="field-value">${p.activNom||'&mdash;'}</div></div>
+    <div class="field"><div class="field-label">Tipus d'equip</div><div class="field-value">${tipusNom}</div></div>
+    <div class="field"><div class="field-label">Sala / Ubicació</div><div class="field-value">${sala.nom||p.salaNom||'&mdash;'}${a.ubicacio?' &middot; '+a.ubicacio:''}</div></div>
+    <div class="field"><div class="field-label">Freqüència programada</div><div class="field-value">${FREQ_LABELS[a.tipusMant||'']||'&mdash;'}</div></div>
+    <div class="field"><div class="field-label">Empresa externa</div><div class="field-value">${a.empresaNom||'&mdash;'}</div></div>
+</div>
+<div class="section-title">Dades de la Intervenció</div>
+<div class="field-grid cols3">
+    <div class="field"><div class="field-label">Data de realització</div><div class="field-value">${dataMant}</div></div>
+    <div class="field"><div class="field-label">${p.empresa?'Empresa realitzadora':'Tècnic responsable'}</div><div class="field-value">${p.tecnic||'&mdash;'}</div></div>
+    <div class="field"><div class="field-label">Núm. certificat / albarà</div><div class="field-value">${p.numCert||'&mdash;'}</div></div>
+</div>
+${checklistHtml}
+<div class="section-title">Observacions generals</div>
+<div class="obs-box">${p.observacions||'Sense observacions.'}</div>
+<div class="sign-row">
+    <div class="sign-box">
+        <div class="sign-label">Firma del tècnic / responsable</div>
+        ${sigHtml}
+        <div style="font-size:12px;margin-top:6px;color:#374151;">${p.tecnic||''}</div>
+    </div>
+    <div class="sign-box">
+        <div class="sign-label">Segell / Vistiplau entitat</div>
+        <div style="height:80px;border:1px solid #d1d5db;border-radius:6px;margin-top:6px;"></div>
+    </div>
+</div>
+<div class="footer">
+    <span>NexeSocial &mdash; Sistema RMT &middot; Document generat automàticament</span>
+    <span>${refCode} &middot; ${now}</span>
+</div>`};
+        }
+        const _docCss=`*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:13px;color:#111;background:white;padding:28px 32px;}.doc-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1d4ed8;padding-bottom:14px;margin-bottom:18px;}.doc-logo{font-size:20px;font-weight:900;color:#1d4ed8;letter-spacing:-0.5px;}.doc-logo span{color:#111;}.doc-meta{text-align:right;font-size:11px;color:#6b7280;}.doc-meta .ref{font-size:16px;font-weight:900;color:#111;margin-bottom:4px;font-family:monospace;}.section-title{background:#1d4ed8;color:white;padding:6px 12px;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;margin:16px 0 8px;}.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #d1d5db;border-radius:4px;overflow:hidden;}.field-grid.cols3{grid-template-columns:1fr 1fr 1fr;}.field{padding:8px 12px;border-bottom:1px solid #d1d5db;}.field:nth-child(odd){border-right:1px solid #d1d5db;}.field:last-child:nth-child(odd){border-right:none;}.field.full{grid-column:1/-1;}.field-label{font-size:10px;font-weight:700;text-transform:uppercase;color:#6b7280;margin-bottom:3px;}.field-value{font-size:13px;color:#111;font-weight:600;}.obs-box{border:1px solid #d1d5db;border-radius:4px;padding:10px 12px;min-height:50px;font-size:12px;color:#374151;}.sign-row{display:flex;gap:20px;margin-top:16px;}.sign-box{flex:1;}.sign-label{font-size:10px;font-weight:700;text-transform:uppercase;color:#6b7280;margin-bottom:4px;}.footer{margin-top:28px;border-top:1px solid #d1d5db;padding-top:10px;font-size:10px;color:#9ca3af;display:flex;justify-content:space-between;}.page-doc{padding:22px 28px;page-break-after:always;}@media print{a[href]::after{content:none!important;}a{color:inherit;text-decoration:none;}html{zoom:0.78;}.page-doc{padding:8px 14px;page-break-after:always;page-break-inside:avoid;}@page{size:A4 landscape;margin:6mm 6mm;}}`;
+
+        /* GENERAR INFORME PDF — individual */
+        window.generarInformePDF = function(prevId) {
+            const p=allPreventiu.find(x=>x.id===prevId);
+            if(!p){alert('Registre no trobat.'); return;}
+            const {refCode,body}=_buildInformeBody(p);
+            const html=`<!DOCTYPE html><html lang="ca"><head><meta charset="UTF-8"><title>${refCode}</title><style>${_docCss}</style></head><body>${body}</body></html>`;
+            mostrarPreviewPDF(html, `${refCode}-${(p.activCodi||'actiu').replace(/[^a-zA-Z0-9-]/g,'_')}.pdf`);
+        };
+
+        /* GENERAR INFORME UNIFICAT — tots els registres en un sol PDF */
+        window.generarInformeUnificat = function() {
+            if(!allPreventiu.length){alert('No hi ha registres de manteniment preventiu.'); return;}
+            const sorted=[...allPreventiu].sort((a,b)=>{
+                const ca=a.activCodi||''; const cb=b.activCodi||'';
+                if(ca!==cb) return ca.localeCompare(cb);
+                return (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0);
+            });
+            const now=new Date().toLocaleDateString('ca-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+            const pages=sorted.map(p=>{
+                const {body}=_buildInformeBody(p);
+                return `<div class="page-doc">${body}</div>`;
+            }).join('');
+            const html=`<!DOCTYPE html><html lang="ca"><head><meta charset="UTF-8"><title>Informe Unificat Manteniment Preventiu</title><style>${_docCss}</style></head><body>${pages}<div style="padding:28px 32px;font-size:10px;color:#9ca3af;border-top:1px solid #d1d5db;margin-top:10px;">NexeSocial &mdash; Informe Unificat RMT &middot; ${sorted.length} registre${sorted.length!==1?'s':''} &middot; Generat: ${now}</div></body></html>`;
+            mostrarPreviewPDF(html, `R-MT.UNIF-${new Date().toISOString().slice(0,10)}.pdf`);
+        };
+
+        /* REPORT: MANTENIMENT PREVENTIU PER GRUP */
+        window.generarReportPreventiu = function(grup) {
+            const GRUPS = {
+                extintor:     { label: "Extintors i Lluminàries d'Emergència", tipus: ['extintor','lluminaria'], ref: 'R-MT.RPT-EXT' },
+                climatitzador:{ label: 'Climatització i Ventilació',           tipus: ['climatitzador'],         ref: 'R-MT.RPT-CLI' },
+                ascensor:     { label: 'Ascensor',                             tipus: ['ascensor'],              ref: 'R-MT.RPT-ASC' },
+            };
+            const g=GRUPS[grup]; if(!g) return;
+            const actius=allActius.filter(a=>g.tipus.includes(a.tipusEquip));
+            if(!actius.length){alert('No hi ha actius d\'aquest tipus registrats.'); return;}
+            const now=new Date().toLocaleDateString('ca-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+            let sectionsHtml='';
+            for(const a of actius){
+                const hist=allPreventiu.filter(p=>p.activId===a.id).sort((x,y)=>(y.createdAt?.seconds||0)-(x.createdAt?.seconds||0));
+                const sala=allSales.find(s=>s.id===a.salaId);
+                const st=dueStatus(a.proximMant);
+                const stColor={overdue:'#ef4444',urgent:'#f59e0b',soon:'#ca8a04',ok:'#059669',none:'#94a3b8'}[st]||'#94a3b8';
+                const stLabel={overdue:'VENÇUT',urgent:'URGENT',soon:'PRÒXIMAMENT',ok:'AL DIA',none:'SENSE DATA'}[st];
+                const histRows=hist.length?hist.map(p=>{
+                    const dm=p.dataMant?new Date(p.dataMant).toLocaleDateString('ca-ES',{day:'2-digit',month:'2-digit',year:'numeric'}):fmtDate(p.createdAt);
+                    return `<tr><td style="padding:6px 9px;border:1px solid #e5e7eb;font-size:11px;">${dm}</td><td style="padding:6px 9px;border:1px solid #e5e7eb;font-size:11px;">${p.empresa?'Empresa ext.':'Intern'}</td><td style="padding:6px 9px;border:1px solid #e5e7eb;font-size:11px;">${p.tecnic||'\u2014'}</td><td style="padding:6px 9px;border:1px solid #e5e7eb;font-size:11px;">${p.numCert||'\u2014'}</td><td style="padding:6px 9px;border:1px solid #e5e7eb;font-size:11px;max-width:180px;">${p.observacions||'\u2014'}</td></tr>`;
+                }).join(''):`<tr><td colspan="5" style="padding:9px;text-align:center;color:#94a3b8;font-size:11px;border:1px solid #e5e7eb;font-style:italic;">Sense registres de manteniment</td></tr>`;
+                sectionsHtml+=`<div style="margin-bottom:22px;page-break-inside:avoid;"><div style="background:#1e40af;color:white;padding:7px 12px;display:flex;justify-content:space-between;align-items:center;border-radius:4px 4px 0 0;"><span style="font-weight:700;font-size:13px;">${a.codi} \u2014 ${a.nom}</span><span style="background:rgba(255,255,255,0.2);padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;">${stLabel}</span></div><div style="border:1px solid #e5e7eb;border-top:none;padding:9px 12px;background:#f9fafb;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"><div><span style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;">Sala / Ubicació</span><br><span style="font-size:12px;font-weight:600;">${sala?.nom||'\u2014'}${a.ubicacio?' \u00b7 '+a.ubicacio:''}</span></div><div><span style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;">Freqüència</span><br><span style="font-size:12px;font-weight:600;">${FREQ_LABELS[a.tipusMant]||'\u2014'}</span></div><div><span style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;">Pròxim manteniment</span><br><span style="font-size:12px;font-weight:600;color:${stColor};">${fmtDate(a.proximMant)}</span></div></div><table style="width:100%;border-collapse:collapse;margin-top:6px;"><thead><tr style="background:#f3f4f6;"><th style="padding:6px 9px;border:1px solid #e5e7eb;font-size:10px;text-align:left;color:#374151;text-transform:uppercase;">Data</th><th style="padding:6px 9px;border:1px solid #e5e7eb;font-size:10px;text-align:left;color:#374151;text-transform:uppercase;">Tipus</th><th style="padding:6px 9px;border:1px solid #e5e7eb;font-size:10px;text-align:left;color:#374151;text-transform:uppercase;">Tècnic / Empresa</th><th style="padding:6px 9px;border:1px solid #e5e7eb;font-size:10px;text-align:left;color:#374151;text-transform:uppercase;">Certificat</th><th style="padding:6px 9px;border:1px solid #e5e7eb;font-size:10px;text-align:left;color:#374151;text-transform:uppercase;">Observacions</th></tr></thead><tbody>${histRows}</tbody></table></div>`;
+            }
+            const totalActius=actius.length;
+            const totalMant=allPreventiu.filter(p=>actius.some(a=>a.id===p.activId)).length;
+            const vencuts=actius.filter(a=>dueStatus(a.proximMant)==='overdue').length;
+            const urgents=actius.filter(a=>dueStatus(a.proximMant)==='urgent').length;
+            const html=`<!DOCTYPE html><html lang="ca"><head><meta charset="UTF-8"><title>Informe ${g.label}</title><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:12px;color:#111;background:white;padding:24px 28px;}.sum-row{display:flex;gap:12px;margin-bottom:20px;}.sum-box{flex:1;border:1px solid #e5e7eb;border-radius:6px;padding:10px 12px;text-align:center;}.sum-num{font-size:22px;font-weight:900;color:#1d4ed8;}.sum-lbl{font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;margin-top:2px;}@media print{a[href]::after{content:none!important;}a{color:inherit;}body{padding:12px 16px;}@page{size:A4 landscape;margin:10mm 8mm;}}</style>ó de Manteniment (RMT)</div><div style="font-size:15px;font-weight:800;margin-top:5px;">Informe de Manteniment \u2014 ${g.label}</div></div><div style="text-align:right;font-size:11px;color:#6b7280;"><div style="font-size:13px;font-weight:900;color:#111;font-family:monospace;margin-bottom:3px;">${g.ref}</div><div>Data emissió: ${now}</div><div>${totalActius} actiu${totalActius!==1?'s':''} \u00b7 ${totalMant} manteniment${totalMant!==1?'s':''}</div></div></div><div class="sum-row"><div class="sum-box"><div class="sum-num">${totalActius}</div><div class="sum-lbl">Total actius</div></div><div class="sum-box"><div class="sum-num">${totalMant}</div><div class="sum-lbl">Manteniments</div></div><div class="sum-box" style="border-color:${vencuts>0?'#fecaca':'#e5e7eb'};"><div class="sum-num" style="color:${vencuts>0?'#ef4444':'#1d4ed8'}">${vencuts}</div><div class="sum-lbl">Vençuts</div></div><div class="sum-box" style="border-color:${urgents>0?'#fde68a':'#e5e7eb'};"><div class="sum-num" style="color:${urgents>0?'#f59e0b':'#1d4ed8'}">${urgents}</div><div class="sum-lbl">Urgents</div></div></div>${sectionsHtml}<div style="margin-top:20px;border-top:1px solid #e5e7eb;padding-top:9px;font-size:10px;color:#9ca3af;display:flex;justify-content:space-between;"><span>NexeSocial \u2014 Sistema RMT \u00b7 Document generat automàticament</span><span>${g.ref} \u00b7 ${now}</span></div></body></html>`;
+            mostrarPreviewPDF(html, `${g.ref}-${new Date().toISOString().slice(0,10)}.pdf`);
+        };
+
+        /* REPORT: INCIDÈNCIES */
+        window.generarReportIncidencies = function() {
+            if(!allCorrectiu.length){alert('No hi ha incidències registrades.'); return;}
+            const now=new Date().toLocaleDateString('ca-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+            const total=allCorrectiu.length;
+            const pendents=allCorrectiu.filter(x=>x.estat==='Pendent').length;
+            const enProces=allCorrectiu.filter(x=>x.estat==='En Procés').length;
+            const resoltes=allCorrectiu.filter(x=>x.estat==='Resolt').length;
+            const rows=allCorrectiu.map(inc=>{
+                const stC=inc.estat==='Pendent'?'#ef4444':inc.estat==='En Procés'?'#f59e0b':'#059669';
+                const gB=inc.gravetat==='alta'?'#fee2e2':inc.gravetat==='mitja'?'#fef3c7':'#f1f5f9';
+                const gC=inc.gravetat==='alta'?'#b91c1c':inc.gravetat==='mitja'?'#92400e':'#475569';
+                const dataInc=inc.createdAt?fmtDate(inc.createdAt):(inc.dataSolicitud||'\u2014');
+                const dataRes=inc.dataResolt?new Date(inc.dataResolt).toLocaleDateString('ca-ES',{day:'2-digit',month:'2-digit',year:'numeric'}):'\u2014';
+                return `<tr><td style="padding:7px 9px;border:1px solid #e5e7eb;font-size:11px;font-family:monospace;font-weight:700;">${inc.codiInc||inc.rmt||'\u2014'}</td><td style="padding:7px 9px;border:1px solid #e5e7eb;font-size:11px;white-space:nowrap;">${dataInc}</td><td style="padding:7px 9px;border:1px solid #e5e7eb;font-size:11px;max-width:160px;">${inc.desc||'\u2014'}</td><td style="padding:7px 9px;border:1px solid #e5e7eb;font-size:11px;">${inc.qui||'\u2014'}</td><td style="padding:7px 9px;border:1px solid #e5e7eb;font-size:11px;">${inc.activNom||'\u2014'}</td><td style="padding:7px 9px;border:1px solid #e5e7eb;font-size:11px;text-align:center;"><span style="background:${stC};color:white;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;">${inc.estat}</span>${inc.gravetat?` <span style="background:${gB};color:${gC};padding:1px 5px;border-radius:10px;font-size:9px;font-weight:700;">${inc.gravetat.toUpperCase()}</span>`:''}</td><td style="padding:7px 9px;border:1px solid #e5e7eb;font-size:11px;white-space:nowrap;">${dataRes}</td></tr>`;
+            }).join('');
+            const html=`<!DOCTYPE html><html lang="ca"><head><meta charset="UTF-8"><title>Informe Incid&egrave;ncies RMT</title><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:12px;color:#111;background:white;padding:22px 26px;}.sum-row{display:flex;gap:12px;margin-bottom:18px;}.sum-box{flex:1;border:1px solid #e5e7eb;border-radius:6px;padding:10px 12px;text-align:center;}.sum-num{font-size:22px;font-weight:900;color:#1d4ed8;}.sum-lbl{font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;margin-top:2px;}@media print{a[href]::after{content:none!important;}a{color:inherit;}body{padding:10px 14px;}@page{size:A4 landscape;margin:10mm 8mm;}}</style></head><body><div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1d4ed8;padding-bottom:12px;margin-bottom:16px;"><div><div style="font-size:18px;font-weight:900;color:#1d4ed8;">Nexe<span style="color:#111;">Social</span></div><div style="font-size:11px;color:#6b7280;margin-top:2px;">Sistema de Gesti\u00f3 de Manteniment (RMT)</div><div style="font-size:15px;font-weight:800;margin-top:5px;">Informe d'Incid\u00e8ncies \u2014 R-MT.01</div></div><div style="text-align:right;font-size:11px;color:#6b7280;"><div style="font-size:13px;font-weight:900;color:#111;font-family:monospace;margin-bottom:3px;">R-MT.RPT-INC</div><div>Data emissi\u00f3: ${now}</div><div>${total} incid\u00e8ncia${total!==1?'es':''}</div></div></div><div class="sum-row"><div class="sum-box"><div class="sum-num">${total}</div><div class="sum-lbl">Total</div></div><div class="sum-box" style="border-color:${pendents>0?'#fecaca':'#e5e7eb'};"><div class="sum-num" style="color:${pendents>0?'#ef4444':'#1d4ed8'}">${pendents}</div><div class="sum-lbl">Pendents</div></div><div class="sum-box" style="border-color:${enProces>0?'#fde68a':'#e5e7eb'};"><div class="sum-num" style="color:${enProces>0?'#f59e0b':'#1d4ed8'}">${enProces}</div><div class="sum-lbl">En proc\u00e9s</div></div><div class="sum-box" style="border-color:#d1fae5;"><div class="sum-num" style="color:#059669;">${resoltes}</div><div class="sum-lbl">Resoltes</div></div></div><table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#f3f4f6;"><th style="padding:7px 9px;border:1px solid #e5e7eb;font-size:10px;text-align:left;text-transform:uppercase;color:#374151;">Codi</th><th style="padding:7px 9px;border:1px solid #e5e7eb;font-size:10px;text-align:left;text-transform:uppercase;color:#374151;">Data</th><th style="padding:7px 9px;border:1px solid #e5e7eb;font-size:10px;text-align:left;text-transform:uppercase;color:#374151;">Descripci\u00f3</th><th style="padding:7px 9px;border:1px solid #e5e7eb;font-size:10px;text-align:left;text-transform:uppercase;color:#374151;">Sol\u00b7licitant</th><th style="padding:7px 9px;border:1px solid #e5e7eb;font-size:10px;text-align:left;text-transform:uppercase;color:#374151;">Actiu</th><th style="padding:7px 9px;border:1px solid #e5e7eb;font-size:10px;text-align:center;text-transform:uppercase;color:#374151;">Estat</th><th style="padding:7px 9px;border:1px solid #e5e7eb;font-size:10px;text-align:left;text-transform:uppercase;color:#374151;">Resoluci\u00f3</th></tr></thead><tbody>${rows}</tbody></table><div style="margin-top:20px;border-top:1px solid #e5e7eb;padding-top:9px;font-size:10px;color:#9ca3af;display:flex;justify-content:space-between;"><span>NexeSocial \u2014 Sistema RMT \u00b7 Document generat autom\u00e0ticament</span><span>R-MT.RPT-INC \u00b7 ${now}</span></div></body></html>`;
+            mostrarPreviewPDF(html, `R-MT.RPT-INC-${new Date().toISOString().slice(0,10)}.pdf`);
+        };
+
+        /* REPORT: LLISTAT ACTIUS */
+        window.generarReportActius = function() {
+            if(!allActius.length){alert('No hi ha actius registrats.'); return;}
+            const now=new Date().toLocaleDateString('ca-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+            const salesMap={}; allSales.forEach(s=>salesMap[s.id]=s.nom);
+            // Group by sala
+            const bySala={};
+            allActius.forEach(a=>{
+                const sNom=salesMap[a.salaId]||a.salaId||'Sense sala';
+                if(!bySala[sNom]) bySala[sNom]=[];
+                bySala[sNom].push(a);
+            });
+            const tipusLabel={extintor:'Extintor',climatitzador:'Climatització',ascensor:'Ascensor',electricitat:'Electricitat',lluminaria:'Llum. Emerg.',generic:'Genèric'};
+            let sectionsHtml='';
+            for(const [salaNom,actius] of Object.entries(bySala).sort(([a],[b])=>a.localeCompare(b))){
+                const rows=actius.sort((a,b)=>a.codi.localeCompare(b.codi)).map(a=>{
+                    const st=dueStatus(a.proximMant);
+                    const stC={overdue:'#ef4444',urgent:'#f59e0b',soon:'#ca8a04',ok:'#059669',none:'#94a3b8'}[st]||'#94a3b8';
+                    return `<tr><td style="padding:7px 10px;border:1px solid #e5e7eb;font-size:12px;font-family:monospace;font-weight:700;">${a.codi}</td><td style="padding:7px 10px;border:1px solid #e5e7eb;font-size:12px;font-weight:600;">${a.nom}</td><td style="padding:7px 10px;border:1px solid #e5e7eb;font-size:11px;">${tipusLabel[a.tipusEquip]||a.tipusEquip||'\u2014'}</td><td style="padding:7px 10px;border:1px solid #e5e7eb;font-size:11px;">${a.ubicacio||'\u2014'}</td><td style="padding:7px 10px;border:1px solid #e5e7eb;font-size:11px;">${FREQ_LABELS[a.tipusMant]||'\u2014'}${a.empresa?' \u00b7 Ext.':''}</td><td style="padding:7px 10px;border:1px solid #e5e7eb;font-size:11px;color:${stC};font-weight:700;">${fmtDate(a.proximMant)}</td></tr>`;
+                }).join('');
+                sectionsHtml+=`<div style="margin-bottom:20px;page-break-inside:avoid;"><div style="background:#1e40af;color:white;padding:6px 12px;font-weight:700;font-size:12px;border-radius:4px 4px 0 0;">${salaNom}</div><table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#f3f4f6;"><th style="padding:6px 10px;border:1px solid #e5e7eb;font-size:10px;text-align:left;text-transform:uppercase;color:#374151;">Codi RMT</th><th style="padding:6px 10px;border:1px solid #e5e7eb;font-size:10px;text-align:left;text-transform:uppercase;color:#374151;">Nom de l'Actiu</th><th style="padding:6px 10px;border:1px solid #e5e7eb;font-size:10px;text-align:left;text-transform:uppercase;color:#374151;">Tipus</th><th style="padding:6px 10px;border:1px solid #e5e7eb;font-size:10px;text-align:left;text-transform:uppercase;color:#374151;">Ubicació específica</th><th style="padding:6px 10px;border:1px solid #e5e7eb;font-size:10px;text-align:left;text-transform:uppercase;color:#374151;">Freq. mant.</th><th style="padding:6px 10px;border:1px solid #e5e7eb;font-size:10px;text-align:left;text-transform:uppercase;color:#374151;">Pròxim mant.</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+            }
+            const total=allActius.length;
+            const html=`<!DOCTYPE html><html lang="ca"><head><meta charset="UTF-8"><title>Llistat d'Actius RMT</title><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:12px;color:#111;background:white;padding:22px 28px;}@media print{a[href]::after{content:none!important;}a{color:inherit;}body{padding:12px 16px;}@page{size:A4 landscape;margin:10mm 8mm;}}</style></head><body><div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1d4ed8;padding-bottom:12px;margin-bottom:18px;"><div><div style="font-size:18px;font-weight:900;color:#1d4ed8;">Nexe<span style="color:#111;">Social</span></div><div style="font-size:11px;color:#6b7280;margin-top:2px;">Sistema de Gestió de Manteniment (RMT)</div><div style="font-size:15px;font-weight:800;margin-top:5px;">Llistat d'Actius i Ubicacions \u2014 R-MT.INV</div></div><div style="text-align:right;font-size:11px;color:#6b7280;"><div style="font-size:13px;font-weight:900;color:#111;font-family:monospace;margin-bottom:3px;">R-MT.INV</div><div>Data emissió: ${now}</div><div>${total} actiu${total!==1?'s':''} \u00b7 ${allSales.length} sala${allSales.length!==1?'s':''}</div></div></div>${sectionsHtml}<div style="margin-top:20px;border-top:1px solid #e5e7eb;padding-top:9px;font-size:10px;color:#9ca3af;display:flex;justify-content:space-between;"><span>NexeSocial \u2014 Sistema RMT \u00b7 Document generat automàticament</span><span>R-MT.INV \u00b7 ${now}</span></div></body></html>`;
+            mostrarPreviewPDF(html, `R-MT.INV-${new Date().toISOString().slice(0,10)}.pdf`);
+        };
+
+        /* INFORME UNIFICAT PER GRUP (registres individuals filtrats per tipus d'equip) */
+        window.generarInformeUnificatGrup = function(grup) {
+            const TIPUS_MAP={extintor:['extintor','lluminaria'],climatitzador:['climatitzador'],ascensor:['ascensor']};
+            const GRUP_NOM={extintor:'Extintors & Llumin\u00e0ries Emerg\u00e8ncia',climatitzador:'Climatitzaci\u00f3',ascensor:'Ascensor'};
+            const tipus=TIPUS_MAP[grup]||[grup];
+            const filtered=allPreventiu.filter(p=>{
+                const a=allActius.find(x=>x.id===p.activId)||{};
+                return tipus.includes(a.tipusEquip||'');
+            });
+            if(!filtered.length){alert(`No hi ha registres de manteniment per a ${GRUP_NOM[grup]||grup}.`);return;}
+            const sorted=[...filtered].sort((a,b)=>{
+                const ca=a.activCodi||'',cb=b.activCodi||'';
+                if(ca!==cb)return ca.localeCompare(cb);
+                return (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0);
+            });
+            const now=new Date().toLocaleDateString('ca-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+            const pages=sorted.map(p=>{const{body}=_buildInformeBody(p);return `<div class="page-doc">${body}</div>`;}).join('');
+            const html=`<!DOCTYPE html><html lang="ca"><head><meta charset="UTF-8"><title>Informe Unificat ${GRUP_NOM[grup]||grup}</title><style>${_docCss}</style></head><body>${pages}<div style="padding:16px 32px;font-size:10px;color:#9ca3af;border-top:1px solid #d1d5db;margin-top:10px;">NexeSocial \u2014 Informe Unificat RMT ${GRUP_NOM[grup]||grup} \u00b7 ${sorted.length} registre${sorted.length!==1?'s':''} \u00b7 Generat: ${now}</div></body></html>`;
+            mostrarPreviewPDF(html,`R-MT.UNIF-${grup.toUpperCase()}-${new Date().toISOString().slice(0,10)}.pdf`);
+        };
+
+        /* INFORME UNIFICAT INCID\u00c8NCIES (registre individual per cada incid\u00e8ncia amb firma) */
+        window.generarInformeUnificatIncidencies = function() {
+            if(!allCorrectiu.length){alert('No hi ha incid\u00e8ncies registrades.');return;}
+            const now=new Date().toLocaleDateString('ca-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+            const sorted=[...allCorrectiu].sort((a,b)=>{
+                const da=a.createdAt?.seconds||0,db=b.createdAt?.seconds||0;
+                return db-da;
+            });
+            const stColor=e=>e==='Pendent'?'#ef4444':e==='En Proc\u00e9s'?'#f59e0b':'#059669';
+            const grColor=g=>g==='alta'?'#b91c1c':g==='mitja'?'#92400e':'#475569';
+            const grBg=g=>g==='alta'?'#fee2e2':g==='mitja'?'#fef3c7':'#f1f5f9';
+            const pages=sorted.map(inc=>{
+                const refCode=inc.codiInc||inc.rmt||'INC';
+                const dataInc=inc.createdAt?fmtDate(inc.createdAt):(inc.dataSolicitud||'\u2014');
+                const dataRes=inc.dataResolt?new Date(inc.dataResolt).toLocaleDateString('ca-ES',{day:'2-digit',month:'2-digit',year:'numeric'}):'\u2014';
+                const sigHtml=inc.firma?`<div style="margin-top:6px;display:inline-block;border:1px solid #d1d5db;border-radius:6px;background:#fff;padding:4px;"><img src="${inc.firma}" style="display:block;max-width:180px;max-height:70px;width:auto;height:auto;object-fit:contain;" alt="Firma"></div>`:'<div style="height:70px;border:1px solid #d1d5db;border-radius:6px;margin-top:6px;"></div>';
+                const gTag=inc.gravetat?`<span style="background:${grBg(inc.gravetat)};color:${grColor(inc.gravetat)};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;margin-left:8px;">${inc.gravetat.toUpperCase()}</span>`:'';
+                return `<div class="page-doc">
+<div class="doc-header">
+  <div>
+    <div class="doc-logo">Nexe<span>Social</span></div>
+    <div style="font-size:11px;color:#6b7280;margin-top:3px;">Sistema de Gesti\u00f3 de Manteniment (RMT)</div>
+    <div style="font-size:13px;font-weight:700;margin-top:6px;">Registre d'Incid\u00e8ncia \u2014 R-MT.01</div>
+  </div>
+  <div class="doc-meta">
+    <div class="ref">${refCode}</div>
+    <div>Data emissió: ${now}</div>
+    <div style="margin-top:4px;"><span style="background:${stColor(inc.estat)};color:white;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;">${inc.estat}</span>${gTag}</div>
+  </div>
+</div>
+<div class="section-title">Dades de la Incid\u00e8ncia</div>
+<div class="field-grid">
+  <div class="field"><div class="field-label">Codi incid\u00e8ncia</div><div class="field-value">${refCode}</div></div>
+  <div class="field"><div class="field-label">Data sol·licitud</div><div class="field-value">${dataInc}</div></div>
+  <div class="field"><div class="field-label">Sol·licitant</div><div class="field-value">${inc.qui||'\u2014'}</div></div>
+  <div class="field"><div class="field-label">Actiu afectat</div><div class="field-value">${inc.activNom||'\u2014'}${inc.activCodi?' ('+inc.activCodi+')':''}</div></div>
+</div>
+<div class="section-title">Descripci\u00f3</div>
+<div class="obs-box">${inc.desc||'Sense descripci\u00f3.'}</div>
+<div class="section-title">Resoluci\u00f3</div>
+<div class="field-grid cols3">
+  <div class="field"><div class="field-label">T\u00e8cnic responsable</div><div class="field-value">${inc.tecnic||'\u2014'}</div></div>
+  <div class="field"><div class="field-label">Data resoluci\u00f3</div><div class="field-value">${dataRes}</div></div>
+  <div class="field"><div class="field-label">Estat final</div><div class="field-value">${inc.estat}</div></div>
+</div>
+<div class="section-title">Resultat / Observacions</div>
+<div class="obs-box">${inc.resolucio||inc.resultat||'Pendent de resoluci\u00f3.'}</div>
+<div class="sign-row">
+  <div class="sign-box">
+    <div class="sign-label">Firma del t\u00e8cnic responsable</div>
+    ${sigHtml}
+    <div style="font-size:12px;margin-top:6px;color:#374151;">${inc.tecnic||''}</div>
+  </div>
+  <div class="sign-box">
+    <div class="sign-label">Segell / Vistiplau entitat</div>
+    <div style="height:80px;border:1px solid #d1d5db;border-radius:6px;margin-top:6px;"></div>
+  </div>
+</div>
+<div class="footer"><span>NexeSocial \u2014 Sistema RMT \u00b7 Document generat autom\u00e0ticament</span><span>${refCode} \u00b7 ${now}</span></div>
+</div>`;
+            }).join('');
+            const html=`<!DOCTYPE html><html lang="ca"><head><meta charset="UTF-8"><title>Informe Unificat Incid\u00e8ncies RMT</title><style>${_docCss}</style></head><body>${pages}<div style="padding:16px 32px;font-size:10px;color:#9ca3af;border-top:1px solid #d1d5db;margin-top:10px;">NexeSocial \u2014 Informe Unificat Incid\u00e8ncies \u00b7 ${sorted.length} registre${sorted.length!==1?'s':''} \u00b7 Generat: ${now}</div></body></html>`;
+            mostrarPreviewPDF(html,`R-MT.UNIF-INC-${new Date().toISOString().slice(0,10)}.pdf`);
+        };
+
+
+        /* HISTORIAL D'INFORMES */
+        function renderHistorial(el) {
+            // Construïm mapa sala → actius → preventiu + correctiu
+            const salesMap={};
+            allSales.forEach(s=>{ salesMap[s.id]={nom:s.nom, actius:{}}; });
+            // Agrupar actius per sala
+            allActius.forEach(a=>{
+                const sId=a.salaId||'__sense_sala__';
+                if(!salesMap[sId]) salesMap[sId]={nom:a.salaId||'Sense sala', actius:{}};
+                salesMap[sId].actius[a.id]={nom:a.nom, codi:a.codi, tipus:a.tipusEquip, registres:[]};
+            });
+            // Afegir registres preventiu a cada actiu
+            allPreventiu.forEach(p=>{
+                const aId=p.activId;
+                for(const sala of Object.values(salesMap)){
+                    if(sala.actius[aId]){
+                        sala.actius[aId].registres.push({tipus:'preventiu', rec:p});
+                        break;
+                    }
+                }
+            });
+            // Agrupar incidències — les afegim com a "actiu virtual" per sala si tenen activId
+            allCorrectiu.forEach(inc=>{
+                const aId=inc.activId;
+                if(aId){
+                    for(const sala of Object.values(salesMap)){
+                        if(sala.actius[aId]){
+                            sala.actius[aId].registres.push({tipus:'correctiu', rec:inc});
+                            break;
+                        }
+                    }
+                } else {
+                    // Incidències sense actiu → sala genèrica
+                    if(!salesMap['__inc__']) salesMap['__inc__']={nom:'Incidències sense actiu', actius:{}};
+                    if(!salesMap['__inc__'].actius['__inc__']) salesMap['__inc__'].actius['__inc__']={nom:'Diverses', codi:'—', tipus:'', registres:[]};
+                    salesMap['__inc__'].actius['__inc__'].registres.push({tipus:'correctiu', rec:inc});
+                }
+            });
+
+            const tipusLabel={extintor:'Extintor',climatitzador:'Climatitz.',ascensor:'Ascensor',electricitat:'Electricitat',lluminaria:'Llum.Emerg.',generic:'Genèric'};
+            const estC=e=>e==='Pendent'?'#ef4444':e==='En Procés'?'#f59e0b':'#059669';
+
+            let html=`<div style="padding:0 4px;">`;
+
+            const salasSorted=Object.entries(salesMap).filter(([,s])=>Object.values(s.actius).some(a=>a.registres.length>0)).sort(([,a],[,b])=>a.nom.localeCompare(b.nom));
+
+            if(!salasSorted.length){
+                html+=`<div class="empty-state" style="padding:60px 0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <p style="margin-top:12px;color:#94a3b8;">Encara no hi ha informes generats.</p>
+                </div>`;
+            } else {
+                for(const [,sala] of salasSorted){
+                    const activsAmbReg=Object.values(sala.actius).filter(a=>a.registres.length>0).sort((a,b)=>a.codi.localeCompare(b.codi));
+                    if(!activsAmbReg.length) continue;
+                    html+=`<div style="margin-bottom:24px;">
+                        <div style="background:#1e40af;color:white;padding:8px 14px;border-radius:8px 8px 0 0;font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            ${hEsc(sala.nom)}
+                        </div>`;
+                    for(const actiu of activsAmbReg){
+                        const sorted=[...actiu.registres].sort((a,b)=>(b.rec.createdAt?.seconds||0)-(a.rec.createdAt?.seconds||0));
+                        html+=`<div style="border:1px solid #e2e8f0;border-top:none;background:white;">
+                            <div style="background:#f1f5f9;padding:6px 14px;font-size:12px;font-weight:700;color:#334155;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e2e8f0;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                                <span style="font-family:monospace;color:#1d4ed8;">${hEsc(actiu.codi)}</span>
+                                <span>${hEsc(actiu.nom)}</span>
+                                ${actiu.tipus?`<span style="background:#e0e7ff;color:#3730a3;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;">${tipusLabel[actiu.tipus]||actiu.tipus}</span>`:''}
+                                <span style="margin-left:auto;color:#94a3b8;font-weight:400;">${sorted.length} registre${sorted.length!==1?'s':''}</span>
+                            </div>
+                            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                                <thead>
+                                    <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
+                                        <th style="padding:6px 12px;text-align:left;color:#64748b;font-weight:700;font-size:11px;text-transform:uppercase;width:160px;">Nº Informe</th>
+                                        <th style="padding:6px 12px;text-align:left;color:#64748b;font-weight:700;font-size:11px;text-transform:uppercase;width:90px;">Tipus</th>
+                                        <th style="padding:6px 12px;text-align:left;color:#64748b;font-weight:700;font-size:11px;text-transform:uppercase;width:100px;">Data</th>
+                                        <th style="padding:6px 12px;text-align:left;color:#64748b;font-weight:700;font-size:11px;text-transform:uppercase;">Tècnic / Descripció</th>
+                                        <th style="padding:6px 12px;text-align:center;color:#64748b;font-weight:700;font-size:11px;text-transform:uppercase;width:80px;">Estat</th>
+                                        <th style="padding:6px 12px;text-align:center;color:#64748b;font-weight:700;font-size:11px;text-transform:uppercase;width:70px;">Informe</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                        for(const {tipus,rec} of sorted){
+                            const isInc=tipus==='correctiu';
+                            const refCode=isInc?(rec.codiInc||rec.rmt||'INC'):(rec.rmt||rec.codi||'—');
+                            const data=rec.createdAt?fmtDate(rec.createdAt):(rec.dataSolicitud||'—');
+                            const tecnicDesc=isInc?hEsc(rec.desc||'—'):hEsc(rec.tecnic||'—');
+                            const estat=isInc?(rec.estat||'—'):hEsc(rec.tipusMant||'—');
+                            const estatColor=isInc?estC(rec.estat||''):'#059669';
+                            const estatTxt=isInc?hEsc(rec.estat||'—'):'OK';
+                            const btnClick=isInc?`generarInformePDFInc('${rec.id}')`:`generarInformePDF('${rec.id}')`;
+                            html+=`<tr style="border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+                                <td style="padding:7px 12px;font-family:monospace;font-weight:700;color:#1d4ed8;font-size:11px;">${hEsc(refCode)}</td>
+                                <td style="padding:7px 12px;">
+                                    <span style="background:${isInc?'#fee2e2':'#dbeafe'};color:${isInc?'#b91c1c':'#1d4ed8'};padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;">${isInc?'Incidència':'Preventiu'}</span>
+                                </td>
+                                <td style="padding:7px 12px;color:#475569;font-size:11px;">${data}</td>
+                                <td style="padding:7px 12px;color:#374151;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${tecnicDesc}</td>
+                                <td style="padding:7px 12px;text-align:center;"><span style="background:${estatColor};color:white;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;">${estatTxt}</span></td>
+                                <td style="padding:7px 12px;text-align:center;">
+                                    <button onclick="${btnClick}" class="btn btn-outline btn-sm" style="padding:3px 10px;font-size:11px;" title="Veure informe">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        Veure
+                                    </button>
+                                </td>
+                            </tr>`;
+                        }
+                        html+=`</tbody></table></div>`;
+                    }
+                    html+=`</div>`;
+                }
+            }
+            html+=`</div>`;
+            el.innerHTML=html;
+        }
+
+        /* GENERAR PDF INDIVIDUAL INCIDÈNCIA */
+        window.generarInformePDFInc = function(incId) {
+            const inc=allCorrectiu.find(x=>x.id===incId);
+            if(!inc){alert('Registre no trobat.'); return;}
+            const now=new Date().toLocaleDateString('ca-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+            const refCode=inc.codiInc||inc.rmt||'INC';
+            const dataInc=inc.createdAt?fmtDate(inc.createdAt):(inc.dataSolicitud||'—');
+            const dataRes=inc.dataResolt?new Date(inc.dataResolt).toLocaleDateString('ca-ES',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
+            const stC=inc.estat==='Pendent'?'#ef4444':inc.estat==='En Procés'?'#f59e0b':'#059669';
+            const sigHtml=inc.firma?`<div style="margin-top:6px;display:inline-block;border:1px solid #d1d5db;border-radius:6px;background:#fff;padding:4px;"><img src="${inc.firma}" style="display:block;max-width:180px;max-height:70px;object-fit:contain;" alt="Firma"></div>`:'<div style="height:70px;border:1px solid #d1d5db;border-radius:6px;margin-top:6px;"></div>';
+            const body=`<div class="doc-header"><div><div class="doc-logo">Nexe<span>Social</span></div><div style="font-size:11px;color:#6b7280;margin-top:3px;">Sistema de Gestió de Manteniment (RMT)</div><div style="font-size:13px;font-weight:700;margin-top:6px;">Registre d'Incidència — R-MT.01</div></div><div class="doc-meta"><div class="ref">${refCode}</div><div>Data emissió: ${now}</div><div style="margin-top:4px;"><span style="background:${stC};color:white;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;">${inc.estat}</span></div></div></div><div class="section-title">Dades de la Incidència</div><div class="field-grid"><div class="field"><div class="field-label">Codi incidència</div><div class="field-value">${refCode}</div></div><div class="field"><div class="field-label">Data sol·licitud</div><div class="field-value">${dataInc}</div></div><div class="field"><div class="field-label">Sol·licitant</div><div class="field-value">${hEsc(inc.qui||'—')}</div></div><div class="field"><div class="field-label">Actiu afectat</div><div class="field-value">${hEsc(inc.activNom||'—')}${inc.activCodi?' ('+hEsc(inc.activCodi)+')':''}</div></div></div><div class="section-title">Descripció</div><div class="obs-box">${hEsc(inc.desc||'Sense descripció.')}</div><div class="section-title">Resolució</div><div class="field-grid cols3"><div class="field"><div class="field-label">Tècnic responsable</div><div class="field-value">${hEsc(inc.tecnic||'—')}</div></div><div class="field"><div class="field-label">Data resolució</div><div class="field-value">${dataRes}</div></div><div class="field"><div class="field-label">Estat final</div><div class="field-value">${inc.estat}</div></div></div><div class="section-title">Resultat / Observacions</div><div class="obs-box">${hEsc(inc.resolucio||inc.resultat||'Pendent de resolució.')}</div><div class="sign-row"><div class="sign-box"><div class="sign-label">Firma del tècnic responsable</div>${sigHtml}</div><div class="sign-box"><div class="sign-label">Vistiplau / Segell entitat</div><div style="height:80px;border:1px solid #d1d5db;border-radius:6px;margin-top:6px;"></div></div></div><div class="footer"><span>NexeSocial — Sistema RMT · Document generat automàticament</span><span>${refCode} · ${now}</span></div>`;
+            const html=`<!DOCTYPE html><html lang="ca"><head><meta charset="UTF-8"><title>${refCode}</title><style>${_docCss}</style></head><body>${body}</body></html>`;
+            mostrarPreviewPDF(html, `${refCode}.pdf`);
+        };
+
+        /* INICIALITZAR */
+        bootstrapInitialData().finally(() => {
+            const startRT = () => initListeners();
+            if (typeof window.requestIdleCallback === 'function') {
+                window.requestIdleCallback(startRT, { timeout: 1800 });
+            } else {
+                setTimeout(startRT, 400);
+            }
+        });
+        window.addEventListener('beforeunload', () => { _rmtUnsubs.forEach((u) => { try { u(); } catch {} }); });
+
+    </script>
+</body>
+</html>

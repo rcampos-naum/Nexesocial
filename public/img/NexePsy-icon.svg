@@ -1,0 +1,14 @@
+<svg width="45" height="45" viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="techLuxe" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(7, 7)">
+    <path d="M5 18 Q15 0 25 18 T5 18" fill="none" stroke="url(#techLuxe)" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="15" cy="18" r="4.5" fill="#1e293b"/>
+    <circle cx="5" cy="18" r="2.5" fill="url(#techLuxe)"/>
+    <circle cx="25" cy="18" r="2.5" fill="url(#techLuxe)"/>
+  </g>
+</svg>

@@ -1,0 +1,586 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" type="image/svg+xml" href="../img/NexePsy-icon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script type="module" src="../database.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --text-main: #1e293b; --text-muted: #64748b;
+            --bg: #f8fafc; --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: var(--text-main); font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; }
+        .main-content { flex-grow: 1; margin-left: 280px; padding: 40px 60px; max-width: calc(100% - 280px); }
+        body.collapsed .main-content { margin-left: 85px; max-width: calc(100% - 85px); }
+
+        /* PAGE HEADER */
+        .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; gap: 20px; }
+        .page-title { font-size: 1.6rem; font-weight: 800; letter-spacing: -.03em; margin: 0 0 4px; }
+        .page-subtitle { color: var(--text-muted); font-size: .9rem; margin: 0; }
+
+        /* TABS */
+        .tabs { display: flex; gap: 4px; background: white; border: 1px solid var(--border); border-radius: 14px; padding: 5px; margin-bottom: 28px; width: fit-content; }
+        .tab-btn { padding: 9px 22px; border-radius: 10px; border: none; background: transparent; font-family: inherit; font-weight: 700; font-size: .84rem; cursor: pointer; transition: .2s; color: var(--text-muted); position: relative; }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99,102,241,.3); }
+        .tab-badge { position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; border-radius: 99px; font-size: .65rem; font-weight: 800; padding: 1px 6px; min-width: 18px; text-align: center; }
+
+        /* CARDS */
+        .derivacio-card { background: white; border-radius: 18px; border: 1px solid var(--border); padding: 22px 26px; margin-bottom: 14px; transition: .2s; }
+        .derivacio-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.07); }
+        .derivacio-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 16px; }
+        .derivacio-nom { font-size: 1.05rem; font-weight: 800; margin: 0 0 4px; }
+        .derivacio-meta { color: var(--text-muted); font-size: .82rem; }
+        .derivacio-motiu { background: #f8fafc; border-radius: 10px; padding: 12px 16px; font-size: .85rem; color: #334155; margin-bottom: 14px; line-height: 1.6; }
+        .derivacio-footer { display: flex; gap: 10px; justify-content: flex-end; align-items: center; }
+
+        /* BADGES */
+        .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 99px; font-size: .75rem; font-weight: 700; }
+        .badge-pendent { background: #fef3c7; color: #92400e; }
+        .badge-acceptada { background: #d1fae5; color: #065f46; }
+        .badge-rebutjada { background: #fee2e2; color: #991b1b; }
+        .badge-espera { background: #ede9fe; color: #4338ca; }
+        .badge-normal { background: #f1f5f9; color: #475569; }
+        .badge-preferent { background: #fef3c7; color: #92400e; }
+        .badge-urgent { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+        /* BUTTONS */
+        .btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 18px; border-radius: 11px; font-weight: 700; font-size: .82rem; border: none; cursor: pointer; transition: .2s; font-family: inherit; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-outline { background: white; color: var(--text-main); border: 1.5px solid var(--border); }
+        .btn-outline:hover { border-color: #94a3b8; }
+
+        /* ESPERA CARD */
+        .espera-card { background: white; border-radius: 18px; border: 1px solid var(--border); padding: 22px 26px; margin-bottom: 14px; display: flex; align-items: center; gap: 20px; transition: .2s; }
+        .espera-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.07); }
+        .espera-avatar { width: 48px; height: 48px; background: #ede9fe; color: #4f46e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; flex-shrink: 0; }
+        .espera-info { flex: 1; }
+        .espera-nom { font-size: 1rem; font-weight: 800; margin: 0 0 4px; }
+        .espera-meta { color: var(--text-muted); font-size: .8rem; }
+        .espera-actions { display: flex; gap: 8px; }
+
+        /* MODAL */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(4px); z-index: 9000; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: white; border-radius: 22px; padding: 32px 36px; max-width: 520px; width: 100%; margin: 16px; box-shadow: 0 24px 60px rgba(0,0,0,.18); }
+        .modal-box h3 { margin: 0 0 22px; font-size: 1.15rem; font-weight: 800; }
+        .field { margin-bottom: 16px; }
+        .field label { display: block; font-size: .8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+        .field textarea, .field input[type=text] { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; font-size: .88rem; resize: vertical; transition: .2s; }
+        .field textarea:focus, .field input:focus { outline: none; border-color: var(--primary); }
+        .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+        /* EMPTY STATE */
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+        .empty-state p { margin: 0; font-size: .95rem; }
+
+        /* LOADING */
+        .spinner { width: 28px; height: 28px; border: 3px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; margin: 60px auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* TOAST */
+        .toast { position: fixed; bottom: 30px; right: 30px; background: #1e293b; color: white; padding: 14px 20px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; z-index: 99999; transform: translateY(80px); opacity: 0; transition: .3s; pointer-events: none; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.ok { background: #065f46; }
+        .toast.err { background: #b91c1c; }
+
+        /* SECTION TITLE */
+        .section-title { font-size: 1rem; font-weight: 800; margin: 0 0 16px; display: flex; align-items: center; gap: 10px; }
+        .count-pill { background: var(--primary); color: white; border-radius: 99px; font-size: .72rem; font-weight: 800; padding: 2px 10px; }
+
+        /* DIVIDER */
+        .servei-chip { background: #f1f5f9; color: #475569; border-radius: 99px; padding: 3px 10px; font-size: .75rem; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div id="sidebar-container"></div>
+    <script src="../security-check.js"></script>
+    <script src="sidebar-nexepsy.js"></script>
+
+    <!-- Modal: Motiu de rebuig -->
+    <div class="modal-overlay" id="modal-rebuig">
+        <div class="modal-box">
+            <h3>Motiu del rebuig</h3>
+            <p style="color:#64748b;font-size:.9rem;margin:0 0 20px;">Indica el motiu pel qual es rebutja aquesta derivaciÃ³. El professional que l'ha solÂ·licitat rebrÃ  una notificaciÃ³.</p>
+            <div class="field">
+                <label>Motiu *</label>
+                <textarea id="rebuig-motiu" rows="4" placeholder="Ex: No compleix els criteris d'inclusiÃ³ del programa, derivaciÃ³ incompleta..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modal-rebuig')">CancelÂ·lar</button>
+                <button class="btn btn-danger" onclick="confirmarRebuig()">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Confirmar rebuig
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Confirmar acceptaciÃ³ -->
+    <div class="modal-overlay" id="modal-accept">
+        <div class="modal-box">
+            <h3>Acceptar derivaciÃ³</h3>
+            <p style="color:#64748b;font-size:.9rem;margin:0 0 20px;">S'afegirÃ  <strong id="accept-nom"></strong> a la llista d'espera del servei PsicoSocial i es notificarÃ  al professional solÂ·licitant.</p>
+            <div class="field">
+                <label>Terapeuta assignat/da (opcional)</label>
+                <input type="text" id="accept-terapeuta" placeholder="Deixar en blanc per assignar mÃ©s endavant">
+            </div>
+            <div class="field">
+                <label>Notes internes</label>
+                <textarea id="accept-notes" rows="3" placeholder="Observacions per a la gestiÃ³ de la llista d'espera..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modal-accept')">CancelÂ·lar</button>
+                <button class="btn btn-success" onclick="confirmarAcceptacio()">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                    Acceptar i afegir a llista
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Detall derivaciÃ³ -->
+    <div class="modal-overlay" id="modal-detall">
+        <div class="modal-box" style="max-width:600px;">
+            <h3>Detall de la derivaciÃ³</h3>
+            <div id="detall-contingut"></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modal-detall')">Tancar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Iniciar intervenciÃ³ des d'espera -->
+    <div class="modal-overlay" id="modal-iniciar">
+        <div class="modal-box">
+            <h3>Iniciar intervenciÃ³</h3>
+            <p style="color:#64748b;font-size:.9rem;margin:0 0 20px;">Crea una intervenciÃ³ activa per a <strong id="iniciar-nom"></strong>.</p>
+            <div class="field">
+                <label>DiagnÃ²stic / Motiu d'atenciÃ³ *</label>
+                <input type="text" id="iniciar-diagnostic" placeholder="Ex: Ansietat, Suport familiar...">
+            </div>
+            <div class="field">
+                <label>Terapeuta responsable</label>
+                <input type="text" id="iniciar-terapeuta" placeholder="Nom del/la terapeuta">
+            </div>
+            <div class="field">
+                <label>Sessions planificades</label>
+                <input type="text" id="iniciar-sessions" value="6" style="width:120px;">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('modal-iniciar')">CancelÂ·lar</button>
+                <button class="btn btn-primary" onclick="confirmarIniciar()">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Iniciar intervenciÃ³
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Llista d'espera &amp; Derivacions</h1>
+                <p class="page-subtitle">Gestiona les solÂ·licituds de derivaciÃ³ al servei PsicoSocial i la llista d'espera</p>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" id="tab-pendents" onclick="switchTab('pendents')">
+                Derivacions pendents
+                <span class="tab-badge" id="badge-pendents" style="display:none;">0</span>
+            </button>
+            <button class="tab-btn" id="tab-espera" onclick="switchTab('espera')">Llista d'espera</button>
+            <button class="tab-btn" id="tab-historial" onclick="switchTab('historial')">Historial</button>
+        </div>
+
+        <!-- TAB: PENDENTS -->
+        <div id="panel-pendents">
+            <div class="section-title">
+                SolÂ·licituds pendents de resoluciÃ³
+                <span class="count-pill" id="cnt-pendents">0</span>
+            </div>
+            <div id="list-pendents"><div class="spinner"></div></div>
+        </div>
+
+        <!-- TAB: ESPERA -->
+        <div id="panel-espera" style="display:none;">
+            <div class="section-title">
+                Persones en llista d'espera
+                <span class="count-pill" id="cnt-espera">0</span>
+            </div>
+            <div id="list-espera"><div class="spinner"></div></div>
+        </div>
+
+        <!-- TAB: HISTORIAL -->
+        <div id="panel-historial" style="display:none;">
+            <div class="section-title">
+                Derivacions resoltes
+                <span class="count-pill" id="cnt-historial">0</span>
+            </div>
+            <div id="list-historial"><div class="spinner"></div></div>
+        </div>
+    </main>
+
+    <div class="toast" id="esp-toast"></div>
+
+    <script type="module">
+        import { db, auth } from '../firebase-config.js';
+        import {
+            collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, orderBy,
+            serverTimestamp, Timestamp, runTransaction, onSnapshot
+        } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        await window.checkModuleAccess('NexePsy');
+
+        // â”€â”€ Utilitats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        function $i(id) { return document.getElementById(id); }
+        function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+        function toast(msg, tone = 'ok') {
+            const el = $i('esp-toast');
+            el.textContent = msg; el.className = `toast show ${tone}`;
+            clearTimeout(window._espToast);
+            window._espToast = setTimeout(() => el.className = 'toast', 3000);
+        }
+        function formatDate(ts) {
+            if (!ts) return 'â€”';
+            const d = ts.toDate ? ts.toDate() : new Date(ts);
+            return d.toLocaleDateString('ca-ES', { day:'2-digit', month:'short', year:'numeric' });
+        }
+        function urgBadge(u) {
+            const map = { normal: 'Normal', preferent: 'Preferent', urgent: 'URGENT' };
+            return `<span class="badge badge-${esc(u || 'normal')}">${esc(map[u] || u || 'Normal')}</span>`;
+        }
+        function closeModal(id) { $i(id)?.classList.remove('open'); }
+        window.closeModal = closeModal;
+
+        // â”€â”€ Dades â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        let allDerivacions = [];
+        let _rebuigId = null;
+        let _acceptId = null;
+        let _iniciarId = null;
+
+        let _unsubAll = null;
+
+        function loadAll() {
+            if (_unsubAll) _unsubAll();
+            const q = query(collection(db, 'nexepsy/derivacions/solicituds'), orderBy('data', 'desc'));
+            _unsubAll = onSnapshot(q, (snap) => {
+                allDerivacions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderAll();
+            }, (e) => {
+                console.error(e);
+                ['list-pendents','list-espera','list-historial'].forEach(id => {
+                    $i(id).innerHTML = '<div class="empty-state"><p style="color:#ef4444;">Error carregant dades.</p></div>';
+                });
+            });
+        }
+        window.addEventListener('beforeunload', () => { if (_unsubAll) _unsubAll(); });
+
+        function renderAll() {
+            const pendents = allDerivacions.filter(d => d.estat === 'pendent');
+            const espera   = allDerivacions.filter(d => d.estat === 'acceptada');
+            const historial= allDerivacions.filter(d => d.estat === 'rebutjada' || d.estat === 'iniciada');
+
+            // Badges
+            $i('cnt-pendents').textContent = pendents.length;
+            $i('cnt-espera').textContent = espera.length;
+            $i('cnt-historial').textContent = historial.length;
+            const badge = $i('badge-pendents');
+            if (pendents.length > 0) { badge.textContent = pendents.length; badge.style.display = ''; }
+            else { badge.style.display = 'none'; }
+
+            // PENDENTS
+            if (!pendents.length) {
+                $i('list-pendents').innerHTML = '<div class="empty-state"><div class="empty-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><p>No hi ha solÂ·licituds pendents de resoluciÃ³.</p></div>';
+            } else {
+                $i('list-pendents').innerHTML = pendents.map(d => `
+                    <div class="derivacio-card">
+                        <div class="derivacio-card-header">
+                            <div>
+                                <p class="derivacio-nom">${esc(d.beneficiariNom || d.beneficiariId)}</p>
+                                <div class="derivacio-meta">
+                                    SolÂ·licitat per <strong>${esc(d.solicitat_per_nom || 'â€”')}</strong>
+                                    ${d.servei ? ` Â· <span class="servei-chip">${esc(d.servei)}</span>` : ''}
+                                    Â· ${formatDate(d.data)}
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+                                ${urgBadge(d.urgencia)}
+                                <span class="badge badge-pendent">Pendent</span>
+                            </div>
+                        </div>
+                        <div class="derivacio-motiu">${esc(d.motiu || 'â€”')}</div>
+                        <div class="derivacio-footer">
+                            <button class="btn btn-outline" style="font-size:.78rem;" onclick="veureDerall('${esc(d.id)}')">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                Detall
+                            </button>
+                            <button class="btn btn-danger" style="font-size:.78rem;" onclick="rebutjar('${esc(d.id)}')">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                Rebutjar
+                            </button>
+                            <button class="btn btn-success" style="font-size:.78rem;" onclick="acceptar('${esc(d.id)}')">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                Acceptar
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // ESPERA
+            if (!espera.length) {
+                $i('list-espera').innerHTML = '<div class="empty-state"><div class="empty-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><p>La llista d\'espera Ã©s buida.</p></div>';
+            } else {
+                $i('list-espera').innerHTML = espera.map(d => `
+                    <div class="espera-card">
+                        <div class="espera-avatar">${esc((d.beneficiariNom || '?').charAt(0).toUpperCase())}</div>
+                        <div class="espera-info">
+                            <p class="espera-nom">${esc(d.beneficiariNom || d.beneficiariId)}</p>
+                            <div class="espera-meta">
+                                ${d.terapeuta_assignat ? `Terapeuta: <strong>${esc(d.terapeuta_assignat)}</strong> Â· ` : 'Sense terapeuta assignat Â· '}
+                                En espera des del ${formatDate(d.data_acceptacio || d.data)}
+                                ${d.motiu ? ` Â· <em>${esc(d.motiu.substring(0,60))}${d.motiu.length > 60 ? 'â€¦' : ''}</em>` : ''}
+                            </div>
+                        </div>
+                        <div class="espera-actions">
+                            <button class="btn btn-outline" style="font-size:.78rem;" onclick="veureDerall('${esc(d.id)}')">Detall</button>
+                            <button class="btn btn-primary" style="font-size:.78rem;" onclick="iniciarInterv('${esc(d.id)}')">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                Iniciar intervenciÃ³
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // HISTORIAL
+            if (!historial.length) {
+                $i('list-historial').innerHTML = '<div class="empty-state"><div class="empty-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></div><p>Sense registres en l\'historial.</p></div>';
+            } else {
+                $i('list-historial').innerHTML = historial.map(d => {
+                    const isRebutjada = d.estat === 'rebutjada';
+                    return `
+                    <div class="derivacio-card" style="opacity:.85;">
+                        <div class="derivacio-card-header">
+                            <div>
+                                <p class="derivacio-nom">${esc(d.beneficiariNom || d.beneficiariId)}</p>
+                                <div class="derivacio-meta">
+                                    SolÂ·licitat per <strong>${esc(d.solicitat_per_nom || 'â€”')}</strong> Â· ${formatDate(d.data)}
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+                                ${urgBadge(d.urgencia)}
+                                <span class="badge badge-${esc(d.estat)}">${d.estat === 'rebutjada' ? 'Rebutjada' : 'Iniciada'}</span>
+                            </div>
+                        </div>
+                        ${isRebutjada && d.motiu_rebuig ? `<div class="derivacio-motiu" style="background:#fff1f2;border-left:3px solid #ef4444;"><strong>Motiu rebuig:</strong> ${esc(d.motiu_rebuig)}</div>` : ''}
+                        <div class="derivacio-footer">
+                            <button class="btn btn-outline" style="font-size:.78rem;" onclick="veureDerall('${esc(d.id)}')">Detall</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+        }
+
+        // â”€â”€ Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        window.switchTab = function(tab) {
+            ['pendents','espera','historial'].forEach(t => {
+                $i(`panel-${t}`).style.display = t === tab ? '' : 'none';
+                $i(`tab-${t}`).classList.toggle('active', t === tab);
+            });
+        };
+
+        // â”€â”€ Veure detall â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        window.veureDerall = function(id) {
+            const d = allDerivacions.find(x => x.id === id);
+            if (!d) return;
+            $i('detall-contingut').innerHTML = `
+                <div style="display:grid;gap:12px;">
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">${urgBadge(d.urgencia)}<span class="badge badge-${esc(d.estat)}">${esc(d.estat)}</span></div>
+                    <div class="derivacio-motiu"><strong>Beneficiari/Ã ria:</strong> ${esc(d.beneficiariNom || d.beneficiariId)}</div>
+                    <div class="derivacio-motiu"><strong>SolÂ·licitat per:</strong> ${esc(d.solicitat_per_nom || 'â€”')} (${esc(d.solicitat_per_email || 'â€”')})</div>
+                    ${d.servei ? `<div class="derivacio-motiu"><strong>Servei d'origen:</strong> ${esc(d.servei)}</div>` : ''}
+                    <div class="derivacio-motiu"><strong>Motiu:</strong><br>${esc(d.motiu || 'â€”')}</div>
+                    <div class="derivacio-motiu"><strong>Data solÂ·licitud:</strong> ${formatDate(d.data)}</div>
+                    ${d.estat === 'rebutjada' && d.motiu_rebuig ? `<div class="derivacio-motiu" style="background:#fff1f2;border-left:3px solid #ef4444;"><strong>Motiu del rebuig:</strong><br>${esc(d.motiu_rebuig)}</div>` : ''}
+                    ${d.terapeuta_assignat ? `<div class="derivacio-motiu"><strong>Terapeuta assignat/da:</strong> ${esc(d.terapeuta_assignat)}</div>` : ''}
+                    ${d.notes_espera ? `<div class="derivacio-motiu"><strong>Notes internes:</strong> ${esc(d.notes_espera)}</div>` : ''}
+                    ${d.expedientId ? `<div class="derivacio-motiu"><strong>Expedient creat:</strong> <a href="nexepsy-individu.html?id=${esc(d.beneficiariId)}" style="color:#4f46e5;font-weight:700;">Veure expedient â†’</a></div>` : ''}
+                </div>`;
+            $i('modal-detall').classList.add('open');
+        };
+
+        // â”€â”€ Rebutjar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        window.rebutjar = function(id) {
+            _rebuigId = id;
+            $i('rebuig-motiu').value = '';
+            $i('modal-rebuig').classList.add('open');
+        };
+
+        window.confirmarRebuig = async function() {
+            const motiu = $i('rebuig-motiu').value.trim();
+            if (!motiu) { toast('Cal indicar el motiu del rebuig', 'err'); return; }
+            if (!_rebuigId) return;
+            try {
+                const d = allDerivacions.find(x => x.id === _rebuigId);
+                const resolucio_per = auth.currentUser;
+                await updateDoc(doc(db, 'nexepsy/derivacions/solicituds', _rebuigId), {
+                    estat: 'rebutjada',
+                    motiu_rebuig: motiu,
+                    data_resolucio: serverTimestamp(),
+                    resolt_per_uid: resolucio_per?.uid || '',
+                    resolt_per_nom: resolucio_per?.displayName || resolucio_per?.email || localStorage.getItem('userName') || 'PsicÃ²leg/a'
+                });
+                // NotificaciÃ³ al solÂ·licitant
+                if (d?.solicitat_per_uid) {
+                    await addDoc(collection(db, 'nexepsy_notificacions'), {
+                        destinatari_uid: d.solicitat_per_uid,
+                        destinatari_email: d.solicitat_per_email || '',
+                        tipus: 'derivacio_rebutjada',
+                        beneficiariNom: d.beneficiariNom || d.beneficiariId,
+                        motiu_rebuig: motiu,
+                        derivacioId: _rebuigId,
+                        text: `La derivaciÃ³ de ${d.beneficiariNom || d.beneficiariId} ha estat rebutjada. Motiu: ${motiu}`,
+                        llegida: false,
+                        data: serverTimestamp()
+                    });
+                }
+                closeModal('modal-rebuig');
+                toast('DerivaciÃ³ rebutjada. NotificaciÃ³ enviada.', 'ok');
+                await loadAll();
+                switchTab('historial');
+            } catch(e) { console.error(e); toast('Error en rebutjar la derivaciÃ³', 'err'); }
+        };
+
+        // â”€â”€ Acceptar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        window.acceptar = function(id) {
+            const d = allDerivacions.find(x => x.id === id);
+            _acceptId = id;
+            $i('accept-nom').textContent = d?.beneficiariNom || d?.beneficiariId || '';
+            $i('accept-terapeuta').value = '';
+            $i('accept-notes').value = '';
+            $i('modal-accept').classList.add('open');
+        };
+
+        window.confirmarAcceptacio = async function() {
+            if (!_acceptId) return;
+            try {
+                const d = allDerivacions.find(x => x.id === _acceptId);
+                const resolucio_per = auth.currentUser;
+                const terapeuta = $i('accept-terapeuta').value.trim();
+                const notes = $i('accept-notes').value.trim();
+                await updateDoc(doc(db, 'nexepsy/derivacions/solicituds', _acceptId), {
+                    estat: 'acceptada',
+                    terapeuta_assignat: terapeuta || null,
+                    notes_espera: notes || null,
+                    data_acceptacio: serverTimestamp(),
+                    resolt_per_uid: resolucio_per?.uid || '',
+                    resolt_per_nom: resolucio_per?.displayName || resolucio_per?.email || localStorage.getItem('userName') || 'PsicÃ²leg/a'
+                });
+                // NotificaciÃ³ al solÂ·licitant
+                if (d?.solicitat_per_uid) {
+                    await addDoc(collection(db, 'nexepsy_notificacions'), {
+                        destinatari_uid: d.solicitat_per_uid,
+                        destinatari_email: d.solicitat_per_email || '',
+                        tipus: 'derivacio_acceptada',
+                        beneficiariNom: d.beneficiariNom || d.beneficiariId,
+                        derivacioId: _acceptId,
+                        text: `La derivaciÃ³ de ${d.beneficiariNom || d.beneficiariId} ha estat acceptada i s'ha afegit a la llista d'espera.`,
+                        llegida: false,
+                        data: serverTimestamp()
+                    });
+                }
+                closeModal('modal-accept');
+                toast('Acceptada i afegida a la llista d\'espera.', 'ok');
+                await loadAll();
+                switchTab('espera');
+            } catch(e) { console.error(e); toast('Error en acceptar la derivaciÃ³', 'err'); }
+        };
+
+        // â”€â”€ Iniciar intervenciÃ³ des d'espera â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        window.iniciarInterv = function(id) {
+            const d = allDerivacions.find(x => x.id === id);
+            _iniciarId = id;
+            $i('iniciar-nom').textContent = d?.beneficiariNom || d?.beneficiariId || '';
+            $i('iniciar-diagnostic').value = d?.motiu ? d.motiu.substring(0,80) : '';
+            $i('iniciar-terapeuta').value = d?.terapeuta_assignat || '';
+            $i('iniciar-sessions').value = '6';
+            $i('modal-iniciar').classList.add('open');
+        };
+
+        window.confirmarIniciar = async function() {
+            const diagnostic = $i('iniciar-diagnostic').value.trim();
+            if (!diagnostic) { toast('El diagnÃ²stic Ã©s obligatori', 'err'); return; }
+            if (!_iniciarId) return;
+            try {
+                const d = allDerivacions.find(x => x.id === _iniciarId);
+                const user = auth.currentUser;
+                const terapeutaNom = $i('iniciar-terapeuta').value.trim() || user?.displayName || localStorage.getItem('userName') || 'PsicÃ²leg/a';
+
+                // Generar nÃºmero expedient
+                const counterRef = doc(db, 'nexepsy/config/contadors', 'expedients');
+                let numExpedient;
+                let intervRef;
+                await runTransaction(db, async (tx) => {
+                    const snap = await tx.get(counterRef);
+                    const next = snap.exists() ? (snap.data().ultim || 0) + 1 : 1;
+                    numExpedient = `PS${new Date().getFullYear()}-${String(next).padStart(3,'0')}`;
+                    tx.set(counterRef, { ultim: next }, { merge: true });
+                });
+
+                // Crear intervenciÃ³
+                const intervDoc = await addDoc(collection(db, 'nexepsy/intervenciones/intervenciones'), {
+                    beneficiariId: d.beneficiariId,
+                    familiaId: d.familiaId || '',
+                    pacienteId: d.beneficiariId,
+                    pacienteNombre: d.beneficiariNom || d.beneficiariId,
+                    diagnÃ³stico: diagnostic,
+                    tipusAtencio: 'individual',
+                    objectius: '',
+                    descripciÃ³n: '',
+                    sesionesPlaneadas: parseInt($i('iniciar-sessions').value) || 6,
+                    sesionesRealizadas: 0,
+                    terapeutaNombre: terapeutaNom,
+                    estado: 'activa',
+                    numExpedient,
+                    derivacioId: _iniciarId,
+                    fechaCreacion: serverTimestamp(),
+                    ultimaActualizacion: serverTimestamp()
+                });
+
+                // Actualitzar derivaciÃ³
+                await updateDoc(doc(db, 'nexepsy/derivacions/solicituds', _iniciarId), {
+                    estat: 'iniciada',
+                    expedientId: intervDoc.id,
+                    numExpedient,
+                    data_inici: serverTimestamp()
+                });
+
+                closeModal('modal-iniciar');
+                toast(`IntervenciÃ³ creada â€” ${numExpedient}`, 'ok');
+                await loadAll();
+                switchTab('historial');
+            } catch(e) { console.error(e); toast('Error en iniciar la intervenciÃ³', 'err'); }
+        };
+
+        // â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        loadAll();
+    </script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexeSocial - Reportar Incidencia</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        .main-content { padding: 20px; box-sizing: border-box; }
+        .report-wrap {
+            max-width: 860px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+            overflow: hidden;
+        }
+        .report-head {
+            padding: 22px;
+            background: linear-gradient(135deg, #eff6ff, #f8fafc);
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .report-head h1 { margin: 0; color: #0f172a; font-size: 1.45rem; }
+        .report-head p { margin: 8px 0 0 0; color: #475569; }
+        .report-body { padding: 22px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .fg { margin-bottom: 14px; }
+        .fg label { display: block; margin-bottom: 6px; font-weight: 700; color: #334155; }
+        .fg input, .fg select, .fg textarea {
+            width: 100%; box-sizing: border-box;
+            border: 1px solid #cbd5e1; border-radius: 10px;
+            padding: 10px 12px; font: inherit; background: #fff;
+        }
+        .fg textarea { min-height: 120px; resize: vertical; }
+        .small-help { color: #64748b; font-size: 0.84rem; margin-top: 4px; }
+        .actions { display: flex; gap: 10px; margin-top: 8px; }
+        .btn-primary {
+            background: #2563eb; color: white; border: none;
+            padding: 11px 16px; border-radius: 10px; font-weight: 700; cursor: pointer;
+        }
+        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
+        .btn-secondary {
+            background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;
+            padding: 11px 16px; border-radius: 10px; font-weight: 700; cursor: pointer;
+            text-decoration: none; display: inline-flex; align-items: center;
+        }
+        .msg { margin-top: 12px; padding: 10px 12px; border-radius: 10px; display: none; }
+        .msg.ok { background: #dcfce7; border: 1px solid #86efac; color: #166534; }
+        .msg.err { background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; }
+
+        @media (max-width: 820px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import './sidebar.js';
+        import './auth-manager.js';
+    </script>
+
+    <main class="main-content">
+        <section class="report-wrap">
+            <div class="report-head">
+                <h1>Reportar incidencia de soporte</h1>
+                <p>Cualquier usuario puede reportar. Soporte/coordinacion hara el triage y la prioridad final.</p>
+            </div>
+
+            <div class="report-body">
+                <form id="inc-form">
+                    <div class="grid">
+                        <div class="fg">
+                            <label for="inc-modul">Modulo afectado</label>
+                            <select id="inc-modul" required>
+                                <option value="">Selecciona modulo</option>
+                                <option>Auth</option>
+                                <option>Family/Expedient</option>
+                                <option>Signature</option>
+                                <option>Reception/Cites</option>
+                                <option>Manteniment</option>
+                                <option>NexePsy</option>
+                                <option>NexeAdmin</option>
+                                <option>Altres</option>
+                            </select>
+                        </div>
+                        <div class="fg">
+                            <label for="inc-gravetat">Urgencia percibida</label>
+                            <select id="inc-gravetat" required>
+                                <option value="mitja" selected>Mitja</option>
+                                <option value="alta">Alta</option>
+                                <option value="baixa">Baixa</option>
+                            </select>
+                            <div class="small-help">La severidad final la valida soporte en triage.</div>
+                        </div>
+                    </div>
+
+                    <div class="grid">
+                        <div class="fg">
+                            <label for="inc-rmt">Codigo RMT (si aplica)</label>
+                            <input id="inc-rmt" type="text" maxlength="40" placeholder="RMT-A-001">
+                        </div>
+                        <div class="fg">
+                            <label for="inc-localizador">Localizador (si aplica)</label>
+                            <input id="inc-localizador" type="text" maxlength="40" placeholder="ABC123">
+                        </div>
+                    </div>
+
+                    <div class="fg">
+                        <label for="inc-desc">Que estaba intentando hacer y que ha pasado</label>
+                        <textarea id="inc-desc" required placeholder="Explica pasos, resultado esperado y resultado actual"></textarea>
+                    </div>
+
+                    <div class="actions">
+                        <button id="btn-send" class="btn-primary" type="submit">Enviar incidencia</button>
+                        <a class="btn-secondary" href="home.html">Volver a inicio</a>
+                    </div>
+
+                    <div id="msg-ok" class="msg ok"></div>
+                    <div id="msg-err" class="msg err"></div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import { db, auth } from './firebase-config.js';
+        import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+        import { addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        const form = document.getElementById('inc-form');
+        const btn = document.getElementById('btn-send');
+        const okBox = document.getElementById('msg-ok');
+        const errBox = document.getElementById('msg-err');
+
+        function showOk(msg) {
+            okBox.style.display = 'block';
+            errBox.style.display = 'none';
+            okBox.textContent = msg;
+        }
+
+        function showErr(msg) {
+            errBox.style.display = 'block';
+            okBox.style.display = 'none';
+            errBox.textContent = msg;
+        }
+
+        function normalize(val) {
+            return String(val || '').trim();
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.replace('index.html');
+            }
+        });
+
+        form.addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            const user = auth.currentUser;
+            if (!user) {
+                showErr('Sessio no valida. Torna a iniciar sessio.');
+                return;
+            }
+
+            const modul = normalize(document.getElementById('inc-modul').value);
+            const gravetat = normalize(document.getElementById('inc-gravetat').value) || 'mitja';
+            const rmt = normalize(document.getElementById('inc-rmt').value).toUpperCase();
+            const localizador = normalize(document.getElementById('inc-localizador').value).toUpperCase();
+            const desc = normalize(document.getElementById('inc-desc').value);
+
+            if (!modul) {
+                showErr('Selecciona el modul afectat.');
+                return;
+            }
+            if (desc.length < 12) {
+                showErr('Descriu una mica mes el problema (minim 12 caracters).');
+                return;
+            }
+
+            const d = new Date();
+            const ymd = d.toISOString().split('T')[0];
+            const codiInc = `INC-WEB-${Date.now().toString().slice(-7)}`;
+            const reporterName = localStorage.getItem('userName') || user.displayName || user.email || 'Usuari';
+
+            btn.disabled = true;
+            btn.textContent = 'Enviant...';
+
+            try {
+                await addDoc(collection(db, 'rmt_correctiu'), {
+                    codiInc,
+                    rmt,
+                    desc: `[${modul}] ${desc}`,
+                    qui: reporterName,
+                    quiEmail: user.email || '',
+                    dataSolicitud: ymd,
+                    gravetat,
+                    estat: 'Pendent',
+                    tecnic: '',
+                    resolucio: '',
+                    activNom: '',
+                    salaId: '',
+                    salaNom: '',
+                    canal: 'web_usuari',
+                    localizador,
+                    reporterUid: user.uid,
+                    createdAt: serverTimestamp()
+                });
+
+                form.reset();
+                document.getElementById('inc-gravetat').value = 'mitja';
+                showOk(`Incidencia enviada correctamente (${codiInc}). Soporte hara triage.`);
+            } catch (err) {
+                showErr('No se ha podido enviar la incidencia: ' + (err?.message || 'error desconegut'));
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Enviar incidencia';
+            }
+        });
+    </script>
+</body>
+</html>

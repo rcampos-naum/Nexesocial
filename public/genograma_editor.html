@@ -1,0 +1,550 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Genograma Social - NexePsy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --psy-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --nexe-bg: #f1f5f9;
+            --nexe-dark: #0f172a;
+            --sidebar-w: 380px;
+            --success: #10b981;
+        }
+
+        * { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Inter', sans-serif; background: var(--nexe-bg); overflow: hidden; }
+
+        .app-wrapper { display: flex; height: 100vh; }
+
+        /* --- SIDEBAR --- */
+        .config-sidebar {
+            width: var(--sidebar-w); background: white; border-right: 1px solid #e2e8f0;
+            display: flex; flex-direction: column; box-shadow: 10px 0 30px rgba(0,0,0,0.02); z-index: 10;
+        }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid #f1f5f9; }
+        .scroll-content { flex-grow: 1; overflow-y: auto; padding: 20px; }
+        
+        /* Info Expediente desde BBDD */
+        .expediente-info {
+            background: #f8fafc; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 20px;
+        }
+        .expediente-label { font-size: 0.6rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin-bottom: 4px; }
+        .expediente-val-id { font-weight: 700; color: #6366f1; font-size: 0.9rem; }
+        .expediente-val-fam { font-size: 0.8rem; color: #475569; font-weight: 500; }
+
+        h2 { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; margin: 20px 0 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .input-group { margin-bottom: 10px; }
+        .full { grid-column: span 2; }
+        label { display: block; font-size: 0.65rem; font-weight: 800; color: #475569; margin-bottom: 3px; }
+        input, select { 
+            width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0; 
+            background: #f8fafc; font-size: 0.8rem; font-family: inherit;
+        }
+
+        .btn-main {
+            width: 100%; padding: 12px; background: var(--psy-gradient); color: white;
+            border: none; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 5px;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        .btn-main:active { transform: scale(0.98); }
+
+        /* --- CANVAS AREA --- */
+        .canvas-area { flex-grow: 1; position: relative; display: flex; align-items: center; justify-content: center; padding: 20px; background: #cbd5e1; overflow: auto; }
+        
+        #genogram-stage { 
+            background-color: white;
+            background-image: 
+                linear-gradient(#f1f5f9 1px, transparent 1px),
+                linear-gradient(90deg, #f1f5f9 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-radius: 8px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            cursor: crosshair;
+            width: 900px; 
+            height: 700px;
+        }
+
+        .bottom-toolbar {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: white; padding: 6px; border-radius: 100px; display: flex; gap: 5px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 90%; overflow-x: auto;
+        }
+        .tool-item {
+            padding: 8px 15px; border-radius: 100px; border: none; background: transparent;
+            font-size: 0.65rem; font-weight: 700; color: #64748b; cursor: pointer; white-space: nowrap;
+        }
+        .tool-item.active { background: var(--nexe-dark); color: white; }
+
+        #saveToast {
+            position: fixed; top: 20px; right: 20px; background: var(--success); color: white;
+            padding: 12px 25px; border-radius: 10px; font-weight: 700; font-size: 0.8rem;
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2); display: none; z-index: 2000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 380px; text-align: center; }
+        .edit-badge { position: absolute; top: 15px; right: 15px; background: #6366f1; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.6rem; font-weight: 800; display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="saveToast">✔ Canvis guardats correctament</div>
+
+    <div class="app-wrapper">
+        <aside class="config-sidebar">
+            <div class="sidebar-header">
+                <button class="btn-main" style="background: #f1f5f9; color: #64748b; margin-bottom: 10px;" onclick="mostrarModal()">← Tornar</button>
+                <h1 style="font-size: 1.1rem; font-weight: 800; margin:0;">Editor de Genograma</h1>
+            </div>
+            
+            <div class="scroll-content">
+                <div class="expediente-info">
+                    <div class="expediente-label">Expedient Actiu (BBDD)</div>
+                    <div id="disp_id" class="expediente-val-id">Carregant ID...</div>
+                    <div id="disp_fam" class="expediente-val-fam">Buscant família...</div>
+                </div>
+
+                <h2 id="formTitle">Identificació Membre</h2>
+                <div class="form-grid">
+                    <div class="input-group full">
+                        <label>Seleccionar de l'Expedient</label>
+                        <select id="selectFromDB" onchange="autoFillFromDB()">
+                            <option value="">-- Triar persona --</option>
+                        </select>
+                    </div>
+                    <div class="input-group full"><label>Nom i Cognoms</label><input type="text" id="nodeName"></div>
+                    <div class="input-group full">
+                        <label>Data Naixement</label>
+                        <div style="display: flex; gap: 5px;">
+                            <input type="number" id="birthDay" placeholder="DD" oninput="calcularEdadExacta()">
+                            <input type="number" id="birthMonth" placeholder="MM" oninput="calcularEdadExacta()">
+                            <input type="number" id="birthYear" placeholder="AAAA" oninput="calcularEdadExacta()">
+                        </div>
+                    </div>
+                    <div class="input-group"><label>Edat Actual</label><input type="text" id="nodeAge" readonly style="background:#e2e8f0"></div>
+                    
+                    <div class="input-group">
+                        <label>Tipus d'Element</label>
+                        <select id="nodeType">
+                            <option value="male">Home (Quadrat)</option>
+                            <option value="female">Dona (Cercle)</option>
+                            <option value="nonbinary">No Binari (Rombe)</option>
+                            <option value="inst">Institució / Recurs</option>
+                            <option value="preg">Embaràs</option>
+                            <option value="pet">Mascota</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Rol Clínic</label>
+                        <select id="nodeRole">
+                            <option value="normal">Familiar Estàndard</option>
+                            <option value="ip">Persona Principal (IP)</option>
+                            <option value="dead">Difunt (X)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Àmbit / Xarxa</label>
+                        <select id="nodeNetwork">
+                            <option value="family">Xarxa Familiar</option>
+                            <option value="pro">Xarxa Professional</option>
+                            <option value="informal">Amistats / Veïnat</option>
+                        </select>
+                    </div>
+
+                    <h2 class="full">Salut i Social</h2>
+                    <div class="input-group full">
+                        <label>Indicador de Risc / Salut</label>
+                        <select id="nodeRisk">
+                            <option value="">Cap</option>
+                            <option value="⚠">⚠ Risc Social</option>
+                            <option value="🧠">🧠 Salut Mental</option>
+                            <option value="🍺">🍺 Consum Substàncies</option>
+                            <option value="💸">💸 Dificultat Econòmica</option>
+                            <option value="⭐">⭐ Factor Protecció</option>
+                        </select>
+                    </div>
+                    <div class="input-group full"><label>Observacions Socials</label><input type="text" id="nodeSocial" placeholder="Ex: Treballa a Correus"></div>
+                </div>
+
+                <button id="btnSave" class="btn-main" onclick="guardarMiembro()">Afegir al Mapa</button>
+                <button id="btnCancelEdit" class="btn-main" style="background:#94a3b8; display:none;" onclick="cancelarEdicion()">Cancel·lar Edició</button>
+                
+                <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn-main" style="background: #10b981;" onclick="guardarProgreso(true)">Guardar Canvis</button>
+                    <button class="btn-main" style="background: #0f172a;" onclick="exportarProceso()">Exportar Genograma</button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="canvas-area">
+            <div class="edit-badge" id="editBadge">MODE EDICIÓ ACTIU</div>
+            <canvas id="genogram-stage"></canvas>
+            
+            <nav class="bottom-toolbar">
+                <button class="tool-item active" onclick="setTool('select', this)">Selecció</button>
+                <button class="tool-item" onclick="setTool('l_norm', this)">Relació</button>
+                <button class="tool-item" onclick="setTool('l_strong', this)">Forta</button>
+                <button class="tool-item" onclick="setTool('l_weak', this)">Dèbil</button>
+                <button class="tool-item" onclick="setTool('l_conflict', this)" style="color:#ef4444">Conflicte</button>
+                <button class="tool-item" onclick="setTool('l_unstable', this)" style="color:#f59e0b">~~~ Inestable</button>
+                <button class="tool-item" onclick="setTool('l_abuse', this)" style="color:#7c3aed">Abús (->)</button>
+                <button class="tool-item" onclick="setTool('l_sep', this)" style="color:#64748b">Separació (/)</button>
+                <button class="tool-item" onclick="setTool('l_div', this)" style="color:#1e293b">Divorci (//)</button>
+            </nav>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="exitModal">
+        <div class="modal-content">
+            <div style="font-weight:800; margin-bottom:10px;">Sortir de l'editor?</div>
+            <div style="font-size:0.8rem; margin-bottom:20px;">Assegura't de guardar els canvis abans de sortir.</div>
+            <div style="display:flex; gap:10px;">
+                <button style="background:#f1f5f9; border:none; padding:10px; flex:1; border-radius:8px; cursor:pointer;" onclick="cerrarModal()">Tornar</button>
+                <button style="background:#ef4444; color:white; border:none; padding:10px; flex:1; border-radius:8px; cursor:pointer;" onclick="window.location.href='NexePsy/nexepsy.html'">Sortir</button>
+            </div>
+        </div>
+    </div>
+
+    
+    <script type="module" src="auth-guard.js"></script>
+    <script>
+        const canvas = document.getElementById('genogram-stage');
+        const ctx = canvas.getContext('2d');
+        
+        function setupCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = 900 * dpr;
+            canvas.height = 700 * dpr;
+            ctx.scale(dpr, dpr);
+            canvas.style.width = '900px';
+            canvas.style.height = '700px';
+        }
+        setupCanvas();
+
+        let nodes = []; let links = [];
+        let currentTool = 'select';
+        let selectedNode = null;
+        let isDragging = false;
+        let startX, startY;
+        let expedientesDB = [];
+        let _genoFamId = new URLSearchParams(location.search).get('famId') || '';
+        let _genoKey = _genoFamId ? 'genograma_nodes_' + _genoFamId : 'genograma_nodes';
+        let _genoKeyLinks = _genoFamId ? 'genograma_links_' + _genoFamId : 'genograma_links';
+        let _genoKeyImg = _genoFamId ? 'genograma_temp_' + _genoFamId : 'genograma_temp';
+
+        // --- CARGA DESDE LA "BASE DE DATOS" (LocalStorage + Firestore) ---
+        window.onload = function() {
+            // Si no hi ha famId, intentem llegir de localStorage (mode lliure)
+            if (!_genoFamId) {
+                const currentID = localStorage.getItem('current_id_expedient') || '';
+                const rawExp = localStorage.getItem('nexe_persones');
+                expedientesDB = rawExp ? JSON.parse(rawExp) : [];
+                const activo = expedientesDB.find(e => e.id === currentID);
+                if (activo) {
+                    document.getElementById('disp_id').innerText = 'Mode lliure — Sense expedient';
+                    document.getElementById('disp_fam').innerText = 'Genograma no vinculat';
+                }
+                document.getElementById('disp_id').innerText = 'Mode lliure';
+                document.getElementById('disp_fam').innerText = 'Sense expedient familiar';
+            }
+            // Cargar estado anterior del lienzo si existe
+            const savedNodes = localStorage.getItem(_genoKey);
+            const savedLinks = localStorage.getItem(_genoKeyLinks);
+            if (savedNodes) nodes = JSON.parse(savedNodes);
+            if (savedLinks) links = JSON.parse(savedLinks);
+            render();
+        };
+
+        // Función para autocompletar desde el selector
+        function autoFillFromDB() {
+            const id = document.getElementById('selectFromDB').value;
+            if (!id) return;
+            const persona = expedientesDB.find(p => p.id === id);
+            if (persona) {
+                document.getElementById('nodeName').value =
+                    (persona.nom || persona.nombre || '') + ' ' + (persona.cognoms || persona.apellidos || '');
+                const dob = persona.dataNaixement || persona.fechaNacimiento || persona.data_naix || '';
+                if (dob) {
+                    const fecha = new Date(dob);
+                    document.getElementById('birthDay').value = fecha.getDate();
+                    document.getElementById('birthMonth').value = fecha.getMonth() + 1;
+                    document.getElementById('birthYear').value = fecha.getFullYear();
+                    calcularEdadExacta();
+                }
+                // Detecta gènere si el camp existeix
+                const sexe = (persona.sexe || persona.genero || '').toLowerCase();
+                document.getElementById('nodeType').value =
+                    sexe === 'f' || sexe === 'femeni' || sexe === 'mujer' ? 'female' : 'male';
+                if (persona._esIP) document.getElementById('nodeRole').value = 'ip';
+            }
+        }
+
+        // --- LÓGICA DE GUARDADO ---
+        function guardarProgreso(showToast = true) {
+            const tempSelected = selectedNode;
+            selectedNode = null;
+            render();
+
+            try {
+                const img = canvas.toDataURL('image/png');
+                localStorage.setItem(_genoKeyImg, img);
+                // Clau genèrica per compatibilitat amb informe
+                localStorage.setItem('genograma_temp', img);
+                localStorage.setItem(_genoKey, JSON.stringify(nodes));
+                localStorage.setItem(_genoKeyLinks, JSON.stringify(links));
+
+                if(showToast) {
+                    const toast = document.getElementById('saveToast');
+                    toast.style.display = 'block';
+                    setTimeout(() => toast.style.display = 'none', 2500);
+                }
+            } catch (e) { console.error("Error al guardar:", e); }
+
+            selectedNode = tempSelected;
+            render();
+        }
+
+        function exportarProceso() {
+            guardarProgreso(false);
+            window.location.href = 'genograma-export.html';
+        }
+
+        // --- FUNCIONES DEL CANVAS (Mantenidas) ---
+        function setTool(tool, btn) {
+            currentTool = tool;
+            document.querySelectorAll('.tool-item').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function calcularEdadExacta() {
+            const d = document.getElementById('birthDay').value;
+            const m = document.getElementById('birthMonth').value;
+            const y = document.getElementById('birthYear').value;
+            if(!y || y < 1900) return;
+            const birth = new Date(y, m - 1, d);
+            const today = new Date();
+            let age = today.getFullYear() - birth.getFullYear();
+            if (today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) age--;
+            document.getElementById('nodeAge').value = age >= 0 ? age : "";
+        }
+
+        function guardarMiembro() {
+            const data = {
+                name: document.getElementById('nodeName').value || "Sense Nom",
+                day: document.getElementById('birthDay').value,
+                month: document.getElementById('birthMonth').value,
+                year: document.getElementById('birthYear').value,
+                age: document.getElementById('nodeAge').value,
+                type: document.getElementById('nodeType').value,
+                role: document.getElementById('nodeRole').value,
+                network: document.getElementById('nodeNetwork').value,
+                risk: document.getElementById('nodeRisk').value,
+                social: document.getElementById('nodeSocial').value
+            };
+
+            if(selectedNode) {
+                Object.assign(selectedNode, data);
+                cancelarEdicion();
+            } else {
+                nodes.push({...data, id: Date.now(), x: 450, y: 350});
+            }
+            resetForm(); render();
+        }
+
+        function resetForm() {
+            ['nodeName','birthDay','birthMonth','birthYear','nodeAge','nodeSocial','selectFromDB'].forEach(id => document.getElementById(id).value = "");
+        }
+
+        function cargarDatosEdicion(node) {
+            selectedNode = node;
+            document.getElementById('nodeName').value = node.name;
+            document.getElementById('nodeAge').value = node.age;
+            document.getElementById('nodeType').value = node.type;
+            document.getElementById('nodeRole').value = node.role;
+            document.getElementById('formTitle').innerText = "Editant Element";
+            document.getElementById('btnSave').innerText = "Guardar Canvis";
+            document.getElementById('btnCancelEdit').style.display = "block";
+            document.getElementById('editBadge').style.display = "block";
+        }
+
+        function cancelarEdicion() {
+            selectedNode = null;
+            resetForm();
+            document.getElementById('formTitle').innerText = "Identificació Membre";
+            document.getElementById('btnSave').innerText = "Afegir al Mapa";
+            document.getElementById('btnCancelEdit').style.display = "none";
+            document.getElementById('editBadge').style.display = "none";
+            render();
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, 900, 700);
+            links.forEach(l => {
+                ctx.beginPath();
+                ctx.lineWidth = (l.type === 'l_strong') ? 4 : 2;
+                ctx.strokeStyle = "#1e293b";
+                ctx.setLineDash(l.type === 'l_weak' ? [5, 5] : []);
+                ctx.moveTo(l.x1, l.y1); ctx.lineTo(l.x2, l.y2);
+                ctx.stroke();
+            });
+            nodes.forEach(n => {
+                ctx.save(); ctx.translate(n.x, n.y);
+                ctx.strokeStyle = (selectedNode === n) ? "#6366f1" : "#1e293b";
+                ctx.lineWidth = (n.role === 'ip') ? 4 : 2;
+                ctx.beginPath();
+                if (n.type === 'male') ctx.strokeRect(-20, -20, 40, 40);
+                else if (n.type === 'female') { ctx.arc(0, 0, 20, 0, Math.PI * 2); ctx.stroke(); }
+                ctx.fillStyle = "#1e293b"; ctx.textAlign = "center"; 
+                ctx.font = "bold 10px Inter"; ctx.fillText(n.age || "", 0, 4); 
+                ctx.font = "600 11px Inter"; ctx.fillText(n.name, 0, 40);
+                ctx.restore();
+            });
+        }
+
+        canvas.addEventListener('mousedown', e => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+            const target = nodes.find(n => Math.hypot(n.x - x, n.y - y) < 30);
+            if(currentTool === 'select' && target) {
+                cargarDatosEdicion(target); isDragging = true;
+            } else if(currentTool.startsWith('l_') && target) {
+                startX = target.x; startY = target.y; isDragging = "link";
+            }
+        });
+
+        canvas.addEventListener('mousemove', e => {
+            if(!isDragging || isDragging === "link") return;
+            const rect = canvas.getBoundingClientRect();
+            selectedNode.x = e.clientX - rect.left; selectedNode.y = e.clientY - rect.top;
+            render();
+        });
+
+        canvas.addEventListener('mouseup', e => {
+            if(isDragging === "link") {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+                const target = nodes.find(n => Math.hypot(n.x - x, n.y - y) < 30);
+                if(target) links.push({x1: startX, y1: startY, x2: target.x, y2: target.y, type: currentTool});
+            }
+            isDragging = false; render();
+        });
+
+        function mostrarModal() { document.getElementById('exitModal').style.display = 'flex'; }
+        function cerrarModal() { document.getElementById('exitModal').style.display = 'none'; }
+    </script>
+
+    <!-- Càrrega des de Firestore quan hi ha ?famId= -->
+    <script type="module">
+        import { db } from './firebase-config.js';
+        import { doc, getDoc, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        const famId = new URLSearchParams(location.search).get('famId');
+        if (!famId) return; // mode lliure, res a fer
+
+        async function carregarFamilia() {
+            try {
+                // 1. Dades de la família
+                const famSnap = await getDoc(doc(db, 'familias', famId));
+                const fam = famSnap.exists() ? famSnap.data() : {};
+
+                const nomFam = fam.apellido || fam.apellidos || fam.nom || famId;
+                document.getElementById('disp_id').innerText = 'Família: ' + nomFam;
+                document.getElementById('disp_fam').innerText =
+                    (fam.nombreRepresentante ? 'Representant: ' + fam.nombreRepresentante : '') +
+                    (fam.dirección ? ' · ' + fam.dirección : '');
+
+                // 2. Membres de la família (beneficiarios)
+                const benSnap = await getDocs(query(
+                    collection(db, 'beneficiarios'),
+                    where('familia_id', '==', famId)
+                ));
+
+                const select = document.getElementById('selectFromDB');
+                select.innerHTML = '<option value="">-- Triar persona --</option>';
+
+                // Expos global per a autoFillFromDB
+                window.expedientesDB = [];
+
+                benSnap.docs.forEach(d => {
+                    const p = { id: d.id, ...d.data() };
+                    window.expedientesDB.push(p);
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    const nom = (p.nom || p.nombre || '') + ' ' + (p.cognoms || p.apellidos || '');
+                    const rel = p.relacio || p.relacion || p.parentesc || '';
+                    opt.text = nom.trim() + (rel ? ' (' + rel + ')' : '');
+                    select.add(opt);
+                });
+
+                // Si no hi ha beneficiaris directes, mirem miembros subcol·lecció
+                if (benSnap.empty) {
+                    const membresSnap = await getDocs(collection(db, `familias/${famId}/miembros`));
+                    membresSnap.docs.forEach(d => {
+                        const p = { id: d.id, ...d.data() };
+                        window.expedientesDB.push(p);
+                        const opt = document.createElement('option');
+                        opt.value = p.id;
+                        const nom = (p.nom || p.nombre || p.nomComplet || '');
+                        const rel = p.relacio || p.relacion || p.parentesc || p.parentesco || '';
+                        opt.text = nom + (rel ? ' (' + rel + ')' : '');
+                        select.add(opt);
+                    });
+                }
+
+                // Representant principal (si no és beneficiari)
+                if (fam.nombreRepresentante) {
+                    const optR = document.createElement('option');
+                    optR.value = 'rep_' + famId;
+                    optR.text = fam.nombreRepresentante + ' (Representant)';
+                    window.expedientesDB.push({
+                        id: 'rep_' + famId,
+                        nom: fam.nombreRepresentante,
+                        cognoms: '',
+                        _esIP: true
+                    });
+                    select.add(optR);
+                }
+
+                if (select.options.length === 1) {
+                    const opt = document.createElement('option');
+                    opt.disabled = true; opt.text = '(Sense membres registrats)';
+                    select.add(opt);
+                }
+
+            } catch(e) {
+                console.warn('[Genograma] Error carregant família:', e);
+                document.getElementById('disp_id').innerText = 'Error carregant dades';
+            }
+        }
+
+        // Actualitzem les claus per famId (var del script principal)
+        window._genoFamId = famId;
+        window._genoKey = 'genograma_nodes_' + famId;
+        window._genoKeyLinks = 'genograma_links_' + famId;
+        window._genoKeyImg = 'genograma_temp_' + famId;
+
+        // Carreguem nodes guardats per aquest famId (si existeixen)
+        const savedNodes = localStorage.getItem('genograma_nodes_' + famId);
+        const savedLinks = localStorage.getItem('genograma_links_' + famId);
+        if (savedNodes) { window.nodes = JSON.parse(savedNodes); }
+        if (savedLinks) { window.links = JSON.parse(savedLinks); }
+
+        await carregarFamilia();
+        if (typeof render === 'function') render();
+    </script>
+</body>
+</html>

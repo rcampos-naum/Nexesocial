@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Gestió d'Avisos</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        .main-content { padding: 20px; box-sizing: border-box; }
+        .admin-container { display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; margin-top: 20px; }
+
+        /* Estils Formularis */
+        .panel-creacio { background: white; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0; height: fit-content; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 700; color: #1e293b; }
+        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; }
+
+        .btn-publicar { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        .btn-publicar:hover { background: #1d4ed8; }
+        .btn-publicar[disabled] { background: #94a3b8; cursor: not-allowed; }
+        .publish-lock-msg {
+            display: none; margin-top: 10px; font-size: 0.82rem; color: #b91c1c;
+            background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 8px 10px;
+        }
+
+        /* Llista Gestió */
+        .panel-llista { background: #f8fafc; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0; }
+        .item-gestio { background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-eliminar { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+
+        /* --- ESTILS DEL MODAL --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 20000;
+        }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 16px; max-width: 400px; width: 90%;
+            text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); transform: translateY(-20px); transition: 0.3s;
+        }
+        .modal-icon { width: 56px; height: 56px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; }
+        .modal-icon svg { width: 100%; height: 100%; fill: none; stroke-width: 2; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+        .btn-modal { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
+        .btn-confirm { background: #2563eb; color: white; }
+        .btn-cancel { background: #f1f5f9; color: #64748b; }
+
+        .recipient-input-wrap { position: relative; }
+        .recipient-suggestions {
+            position: absolute; left: 0; right: 0; top: calc(100% + 4px);
+            background: white; border: 1px solid #e2e8f0; border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(15,23,42,0.12); z-index: 20; display: none;
+            max-height: 200px; overflow-y: auto;
+        }
+        .recipient-suggestion {
+            padding: 9px 10px; border: none; background: white; width: 100%; text-align: left;
+            cursor: pointer; border-bottom: 1px solid #f1f5f9;
+        }
+        .recipient-suggestion:hover { background: #eff6ff; }
+        .recipient-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .recipient-chip {
+            display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; color: #1d4ed8;
+            border: 1px solid #bfdbfe; border-radius: 999px; padding: 4px 10px; font-size: 0.8rem; font-weight: 700;
+        }
+        .recipient-chip button {
+            border: none; background: none; color: #1d4ed8; cursor: pointer; font-weight: 800; padding: 0;
+        }
+        .dept-grid {
+            display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
+            border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px;
+            max-height: 180px; overflow-y: auto; background: #fafcff;
+        }
+        .dept-opt { display: flex; align-items: center; gap: 7px; font-size: 0.86rem; color: #334155; }
+    </style>
+</head>
+<body>
+    <script type="module" src="sidebar.js"></script>
+
+    <main class="main-content">
+        <header style="margin-bottom: 30px;">
+            <h1 style="display:flex;align-items:center;gap:10px;margin:0;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11v3a2 2 0 0 0 2 2h2l5 4V4L7 8H5a2 2 0 0 0-2 2v1z"/><path d="M16 8a5 5 0 0 1 0 8"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>
+                Administració del Tauler
+            </h1>
+            <p style="color: #64748b;">Gestiona els missatges grocs de la pàgina principal.</p>
+        </header>
+
+        <div class="admin-container">
+            <section class="panel-creacio">
+                <h3>Crear Nou Avís</h3>
+                <div class="form-group">
+                    <label>Títol</label>
+                    <input type="text" id="admin-titol">
+                </div>
+                <div class="form-group">
+                    <label>Missatge</label>
+                    <textarea id="admin-missatge" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Prioritat</label>
+                    <select id="admin-prioritat">
+                        <option value="baixa">Baixa (Blau)</option>
+                        <option value="mitja">Mitja (Taronja)</option>
+                        <option value="alta">Alta (Vermell)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Destinataris</label>
+                    <select id="admin-target" onchange="toggleTargetUser()">
+                        <option value="all">Tot el personal</option>
+                        <option value="users">Persones concretes</option>
+                        <option value="departments">Per departaments</option>
+                    </select>
+                </div>
+                <div class="form-group" id="target-user-wrap" style="display:none;">
+                    <label>Persones (es pot enviar a més d'una)</label>
+                    <div class="recipient-input-wrap">
+                        <input type="text" id="admin-target-user" placeholder="Escriu nom o email...">
+                        <div id="user-suggestions" class="recipient-suggestions"></div>
+                    </div>
+                    <div id="selected-users" class="recipient-chips"></div>
+                </div>
+                <div class="form-group" id="target-dept-wrap" style="display:none;">
+                    <label>Departaments (multi-selecció)</label>
+                    <div id="dept-options" class="dept-grid"></div>
+                </div>
+                <button id="btn-publicar-avis" class="btn-publicar" onclick="prepararGuardar()">Publicar Avís</button>
+                <div id="publish-lock-msg" class="publish-lock-msg"></div>
+            </section>
+
+            <section class="panel-llista">
+                <h3>Avisos Publicats</h3>
+                <div id="llista-avisos-admin"></div>
+            </section>
+        </div>
+    </main>
+
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-content">
+            <span id="modalIcon" class="modal-icon"></span>
+            <h2 id="modalTitle" style="margin:0 0 10px 0;"></h2>
+            <p id="modalMessage" style="color: #64748b; margin:0;"></p>
+            <div id="modalFooter" class="modal-buttons"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from './firebase-config.js';
+        import {
+            collection, addDoc, deleteDoc, doc, getDocs, onSnapshot, orderBy, query, serverTimestamp
+        } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        // FUNCIONALITAT MODAL REUTILITZABLE
+        function showModal(title, msg, type, onConfirm = null) {
+            const modal = document.getElementById('customModal');
+            const icon = document.getElementById('modalIcon');
+            const footer = document.getElementById('modalFooter');
+            
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = msg;
+            
+            const iconMap = {
+                success: '<svg viewBox="0 0 24 24" stroke="#16a34a"><circle cx="12" cy="12" r="10"></circle><path d="M8 12l3 3 5-6"></path></svg>',
+                error: '<svg viewBox="0 0 24 24" stroke="#dc2626"><circle cx="12" cy="12" r="10"></circle><path d="M15 9l-6 6"></path><path d="M9 9l6 6"></path></svg>',
+                warning: '<svg viewBox="0 0 24 24" stroke="#d97706"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>'
+            };
+            icon.innerHTML = iconMap[type] || iconMap.warning;
+            
+            footer.innerHTML = '';
+            if (onConfirm) {
+                const btnCancel = document.createElement('button');
+                btnCancel.className = 'btn-modal btn-cancel';
+                btnCancel.innerText = 'Cancel·lar';
+                btnCancel.onclick = closeModal;
+                
+                const btnOk = document.createElement('button');
+                btnOk.className = 'btn-modal btn-confirm';
+                btnOk.innerText = 'Confirmar';
+                btnOk.onclick = () => { onConfirm(); closeModal(); };
+                
+                footer.appendChild(btnCancel);
+                footer.appendChild(btnOk);
+            } else {
+                const btnOk = document.createElement('button');
+                btnOk.className = 'btn-modal btn-confirm';
+                btnOk.innerText = 'D\'acord';
+                btnOk.onclick = closeModal;
+                footer.appendChild(btnOk);
+            }
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('customModal').style.display = 'none'; }
+
+        let _avisosDocs = [];
+        let _usersCatalog = [];
+        let _selectedUsers = [];
+        let _departmentsCatalog = [];
+        let _canPublishAvisos = false;
+
+        function updatePublishLockUI() {
+            const btn = document.getElementById('btn-publicar-avis');
+            const msg = document.getElementById('publish-lock-msg');
+            const formIds = ['admin-titol', 'admin-missatge', 'admin-prioritat', 'admin-target', 'admin-target-user'];
+            const disable = !_canPublishAvisos;
+            if (btn) btn.disabled = disable;
+            formIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = disable;
+            });
+            document.querySelectorAll('.dept-cb').forEach(cb => { cb.disabled = disable; });
+            if (!msg) return;
+            if (disable) {
+                msg.style.display = 'block';
+                msg.textContent = 'No tens permisos per publicar avisos. Contacta amb Administració.';
+            } else {
+                msg.style.display = 'none';
+                msg.textContent = '';
+            }
+        }
+
+        async function evaluatePublishPermissions() {
+            try {
+                if (window.Auth && !window.Auth.isReady) await window.Auth.initialize();
+            } catch (_) {}
+            const user = window.Auth?.getUser?.();
+            const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+            const role = user?.role || localStorage.getItem('userRole') || 'user';
+            const hasModule = !!(window.Auth?.hasAccessTo?.('admin'));
+            const hasRole = ['admin', 'superadmin', 'direccio', 'editor'].includes(role) ||
+                userRoles.includes('admin_sistema') || userRoles.includes('direccio') || userRoles.includes('coordinador');
+            _canPublishAvisos = hasModule || hasRole;
+            updatePublishLockUI();
+        }
+
+        window.toggleTargetUser = function() {
+            const mode = document.getElementById('admin-target').value;
+            document.getElementById('target-user-wrap').style.display = mode === 'users' ? 'block' : 'none';
+            document.getElementById('target-dept-wrap').style.display = mode === 'departments' ? 'block' : 'none';
+        };
+
+        function escapeHtml(v) {
+            return String(v || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+        }
+
+        function normalizeDept(value) {
+            return String(value || '').trim().toLowerCase();
+        }
+
+        function renderSelectedUsers() {
+            const el = document.getElementById('selected-users');
+            el.innerHTML = _selectedUsers.map(u => `
+                <span class="recipient-chip">
+                    ${escapeHtml(u.name || u.email)}
+                    <button type="button" onclick="removeSelectedUser('${escapeHtml(u.email)}')">x</button>
+                </span>
+            `).join('');
+        }
+
+        window.removeSelectedUser = function(email) {
+            _selectedUsers = _selectedUsers.filter(u => u.email !== email);
+            renderSelectedUsers();
+        };
+
+        function addSelectedUser(user) {
+            if (!user?.email) return;
+            const exists = _selectedUsers.some(u => u.email === user.email);
+            if (!exists) _selectedUsers.push(user);
+            renderSelectedUsers();
+            document.getElementById('admin-target-user').value = '';
+            document.getElementById('user-suggestions').style.display = 'none';
+        }
+
+        function renderUserSuggestions(term) {
+            const box = document.getElementById('user-suggestions');
+            const q = String(term || '').trim().toLowerCase();
+            if (!q) {
+                box.style.display = 'none';
+                box.innerHTML = '';
+                return;
+            }
+            const opts = _usersCatalog
+                .filter(u => (u.email + ' ' + (u.name || '')).toLowerCase().includes(q))
+                .slice(0, 8);
+            if (!opts.length) {
+                box.style.display = 'none';
+                box.innerHTML = '';
+                return;
+            }
+            box.innerHTML = opts.map(u => `
+                <button type="button" class="recipient-suggestion" data-email="${escapeHtml(u.email)}">
+                    <strong>${escapeHtml(u.name || u.email)}</strong><br>
+                    <small style="color:#64748b;">${escapeHtml(u.email)}${u.departmentName ? (' · ' + escapeHtml(u.departmentName)) : ''}</small>
+                </button>
+            `).join('');
+            box.style.display = 'block';
+            box.querySelectorAll('.recipient-suggestion').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const found = _usersCatalog.find(u => u.email === btn.dataset.email);
+                    addSelectedUser(found);
+                });
+            });
+        }
+
+        function renderDepartmentOptions() {
+            const wrap = document.getElementById('dept-options');
+            if (!_departmentsCatalog.length) {
+                wrap.innerHTML = '<div style="color:#94a3b8;">No hi ha departaments disponibles.</div>';
+                return;
+            }
+            wrap.innerHTML = _departmentsCatalog.map(d => `
+                <label class="dept-opt">
+                    <input type="checkbox" class="dept-cb" value="${escapeHtml(d.key)}">
+                    <span>${escapeHtml(d.name)}</span>
+                </label>
+            `).join('');
+        }
+
+        async function carregarUsuarisDatalist() {
+            try {
+                const snap = await getDocs(collection(db, 'usuarios'));
+                _usersCatalog = [];
+                snap.forEach(d => {
+                    const data = d.data() || {};
+                    const email = String(data.email || '').trim().toLowerCase();
+                    if (!email) return;
+                    const name = ((data.nombre || '') + ' ' + (data.apellidos || '')).trim() || data.name || email;
+                    const deptRaw = data.departament || data.departamento || data.department || data.departamentNom || data.departamentoNom || '';
+                    _usersCatalog.push({
+                        uid: d.id,
+                        email,
+                        name,
+                        departmentName: String(deptRaw || '').trim(),
+                        departmentKey: normalizeDept(deptRaw)
+                    });
+                });
+
+                const lsDepts = JSON.parse(localStorage.getItem('nexesocial_departments') || '[]')
+                    .map(d => ({ key: normalizeDept(d.name || d.nombre || d.id), name: d.name || d.nombre || d.id }))
+                    .filter(d => !!d.key);
+                const userDepts = _usersCatalog
+                    .filter(u => !!u.departmentKey)
+                    .map(u => ({ key: u.departmentKey, name: u.departmentName || u.departmentKey }));
+
+                const map = new Map();
+                [...lsDepts, ...userDepts].forEach(d => {
+                    if (!map.has(d.key)) map.set(d.key, d.name);
+                });
+                _departmentsCatalog = [...map.entries()].map(([key, name]) => ({ key, name }));
+                renderDepartmentOptions();
+                updatePublishLockUI();
+            } catch (_) {
+                // no-op
+            }
+        }
+
+        window.prepararGuardar = async function() {
+            if (!_canPublishAvisos) {
+                showModal('Permís denegat', 'No teniu permisos per publicar avisos.', 'error');
+                return;
+            }
+            const t = document.getElementById('admin-titol').value;
+            const m = document.getElementById('admin-missatge').value;
+            const p = document.getElementById('admin-prioritat').value;
+            const target = document.getElementById('admin-target').value;
+            const selectedDeptKeys = [...document.querySelectorAll('.dept-cb:checked')].map(cb => cb.value);
+
+            if (!t || !m) {
+                showModal("Error", "Has d'omplir el títol i el missatge.", "error");
+                return;
+            }
+
+            if (target === 'users' && !_selectedUsers.length) {
+                showModal("Error", "Has d'afegir almenys una persona destinatària.", "error");
+                return;
+            }
+            if (target === 'departments' && !selectedDeptKeys.length) {
+                showModal("Error", "Has de seleccionar almenys un departament.", "error");
+                return;
+            }
+
+            let targetEmails = [];
+            let targetUids = [];
+            let targetDepartments = [];
+            if (target === 'users') {
+                targetEmails = _selectedUsers.map(u => u.email);
+                targetUids = _selectedUsers.map(u => u.uid).filter(Boolean);
+            } else if (target === 'departments') {
+                targetDepartments = selectedDeptKeys;
+                const deptUsers = _usersCatalog.filter(u => targetDepartments.includes(u.departmentKey));
+                targetEmails = [...new Set(deptUsers.map(u => u.email))];
+                targetUids = [...new Set(deptUsers.map(u => u.uid).filter(Boolean))];
+            }
+
+            // Legacy local copy for Home compatibility
+            const avisosGuardats = JSON.parse(localStorage.getItem('nexe_avisos')) || [];
+            
+            const nouAvis = {
+                titol: t,
+                missatge: m,
+                prioritat: p,
+                data: new Date().toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+            };
+
+            avisosGuardats.push(nouAvis);
+            
+            // Guardem al navegador
+            localStorage.setItem('nexe_avisos', JSON.stringify(avisosGuardats));
+
+            // Broadcast notification for bell (all staff or directed user)
+            await addDoc(collection(db, 'notificaciones'), {
+                type: 'aviso_general',
+                titol: t,
+                missatge: m,
+                prioritat: p,
+                target,
+                targetEmail: targetEmails[0] || null,
+                targetUid: targetUids[0] || null,
+                targetEmails,
+                targetUids,
+                targetDepartments,
+                route: 'gestio-avisos.html',
+                activa: true,
+                createdAt: serverTimestamp(),
+                createdByEmail: localStorage.getItem('userEmail') || '',
+                createdByName: localStorage.getItem('userName') || ''
+            });
+
+            document.getElementById('admin-titol').value = "";
+            document.getElementById('admin-missatge').value = "";
+            document.getElementById('admin-target').value = 'all';
+            document.getElementById('admin-target-user').value = '';
+            _selectedUsers = [];
+            renderSelectedUsers();
+            document.querySelectorAll('.dept-cb').forEach(cb => { cb.checked = false; });
+            window.toggleTargetUser();
+            
+            actualitzarLlistaAdmin();
+            showModal("Publicat", "L'avís ja és visible a la campana de notificacions.", "success");
+        };
+
+        function actualitzarLlistaAdmin() {
+            const cont = document.getElementById('llista-avisos-admin');
+            const avisos = _avisosDocs;
+            
+            if (avisos.length === 0) {
+                cont.innerHTML = "<p style='color:#94a3b8; font-style:italic;'>No hi ha avisos.</p>";
+                return;
+            }
+
+            cont.innerHTML = avisos.map((a) => `
+                <div class="item-gestio">
+                    <div>
+                        <strong>${a.titol || '-'}</strong><br>
+                        <small>${a.data || ''} · ${
+                            a.target === 'users'
+                                ? ('Persones: ' + ((a.targetEmails || []).join(', ') || '-'))
+                                : a.target === 'departments'
+                                    ? ('Departaments: ' + ((a.targetDepartments || []).join(', ') || '-'))
+                                    : 'Tot el personal'
+                        }</small>
+                    </div>
+                    <button class="btn-eliminar" onclick="confirmarEliminar('${a._id}')">Eliminar</button>
+                </div>
+            `).join('');
+        }
+
+        window.confirmarEliminar = function(docId) {
+            showModal("Estàs segur?", "Aquesta acció eliminarà l'avís permanentment.", "warning", () => {
+                deleteDoc(doc(db, 'notificaciones', docId)).catch(() => {});
+            });
+        };
+
+        function listenAvisos() {
+            const qAvis = query(collection(db, 'notificaciones'), orderBy('createdAt', 'desc'));
+            onSnapshot(qAvis, (snap) => {
+                _avisosDocs = snap.docs
+                    .map(d => ({ _id: d.id, ...d.data() }))
+                    .filter(a => a.type === 'aviso_general' && a.activa !== false)
+                    .map(a => ({
+                        ...a,
+                        data: a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString('ca-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : (a.data || '')
+                    }));
+
+                // Keep legacy localStorage in sync with Firestore source of truth
+                // so deleted notices do not reappear or look "re-sent".
+                const legacy = _avisosDocs.map(a => ({
+                    titol: a.titol || '',
+                    missatge: a.missatge || '',
+                    prioritat: a.prioritat || 'mitja',
+                    data: a.data || ''
+                }));
+                localStorage.setItem('nexe_avisos', JSON.stringify(legacy));
+
+                actualitzarLlistaAdmin();
+            }, () => {
+                actualitzarLlistaAdmin();
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.toggleTargetUser();
+            carregarUsuarisDatalist();
+            listenAvisos();
+            actualitzarLlistaAdmin();
+            evaluatePublishPermissions();
+
+            const input = document.getElementById('admin-target-user');
+            const suggestions = document.getElementById('user-suggestions');
+            input.addEventListener('input', () => renderUserSuggestions(input.value));
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const v = (input.value || '').trim().toLowerCase();
+                    if (!v) return;
+                    const found = _usersCatalog.find(u => u.email === v);
+                    if (found) addSelectedUser(found);
+                }
+            });
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.recipient-input-wrap')) suggestions.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>

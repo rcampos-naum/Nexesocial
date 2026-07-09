@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexeSocial – Gestió de Convenis</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ── Page layout ── */
+        .main-content { margin-left: 280px; padding: 32px 36px; overflow-y: auto; }
+        body.collapsed .main-content { margin-left: 72px !important; }
+
+        /* ── Page header ── */
+        .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .page-header h1 { margin: 0; font-size: 1.5rem; color: #0f172a; font-weight: 800; }
+        .page-header p { margin: 4px 0 0; color: #64748b; font-size: 0.87rem; }
+
+        /* ── Summary pills ── */
+        .summary-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
+        .summary-pill {
+            background: white; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 14px 20px; display: flex; flex-direction: column; gap: 2px; min-width: 130px;
+        }
+        .summary-pill .pill-val { font-size: 1.6rem; font-weight: 800; color: #0f172a; }
+        .summary-pill .pill-lbl { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .summary-pill.vigent .pill-val { color: #16a34a; }
+        .summary-pill.pendent .pill-val { color: #d97706; }
+        .summary-pill.caducat .pill-val { color: #dc2626; }
+
+        /* ── Filter bar ── */
+        .filter-bar {
+            background: white; border: 1px solid #e2e8f0; border-radius: 14px;
+            padding: 14px 18px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px;
+        }
+        .filter-bar input, .filter-bar select {
+            border: 1px solid #e2e8f0; border-radius: 8px; padding: 9px 12px;
+            font-size: 0.875rem; font-family: inherit; color: #0f172a; background: #f8fafc;
+        }
+        .filter-bar input { min-width: 220px; }
+        .filter-bar input:focus, .filter-bar select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .filter-bar label { font-size: 0.78rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.4px; }
+
+        /* ── Table ── */
+        .table-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; }
+        .table-card table { width: 100%; border-collapse: collapse; }
+        .table-card th {
+            padding: 12px 16px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; color: #475569; background: #f8fafc; border-bottom: 2px solid #e2e8f0;
+            text-align: left;
+        }
+        .table-card td { padding: 13px 16px; border-bottom: 1px solid #f1f5f9; font-size: 0.875rem; color: #334155; vertical-align: middle; }
+        .table-card tr:last-child td { border-bottom: none; }
+        .table-card tr:hover td { background: #f8fafc; cursor: pointer; }
+        .empty-row td { text-align: center; color: #94a3b8; padding: 32px; }
+
+        /* ── Status badges ── */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+        .badge.vigent   { background: #dcfce7; color: #166534; }
+        .badge.pendent  { background: #fef9c3; color: #854d0e; }
+        .badge.caducat  { background: #fee2e2; color: #991b1b; }
+        .badge.arxivat  { background: #f1f5f9; color: #475569; }
+        .badge.expira-aviat { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+
+        /* ── Tipo entidad pills ── */
+        .tipo-pill { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 0.72rem; font-weight: 700; }
+        .tipo-pill.empresa   { background: #dbeafe; color: #1d4ed8; }
+        .tipo-pill.educatiu  { background: #ede9fe; color: #6d28d9; }
+        .tipo-pill.public    { background: #d1fae5; color: #065f46; }
+
+        /* ── Action buttons in table ── */
+        .btn-link { background: none; border: none; color: #2563eb; font-size: 0.82rem; font-weight: 600; cursor: pointer; padding: 4px 6px; border-radius: 6px; font-family: inherit; }
+        .btn-link:hover { background: #eff6ff; }
+        .btn-link.danger { color: #dc2626; }
+        .btn-link.danger:hover { background: #fee2e2; }
+
+        /* ── Primary button ── */
+        .btn-primary {
+            background: #2563eb; color: white; border: none; border-radius: 10px;
+            padding: 11px 22px; font-weight: 700; font-size: 0.92rem; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px; font-family: inherit; transition: .15s;
+        }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+        /* ── Modal ── */
+        .modal {
+            display: none; position: fixed; inset: 0; background: rgba(15,23,42,.6);
+            z-index: 30000; align-items: center; justify-content: center;
+            backdrop-filter: blur(8px); padding: 16px;
+        }
+        .modal.open { display: flex; }
+        .modal-card {
+            background: white; border-radius: 20px; width: min(96vw, 780px); max-height: 92vh;
+            overflow-y: auto; box-shadow: 0 30px 80px rgba(0,0,0,.35); padding: 28px 32px;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .modal-header h2 { margin: 0; font-size: 1.15rem; font-weight: 800; color: #0f172a; }
+        .modal-close { background: none; border: none; cursor: pointer; color: #64748b; padding: 6px; border-radius: 8px; }
+        .modal-close:hover { background: #f1f5f9; color: #0f172a; }
+        .modal-close svg { display: block; }
+
+        /* Modal sections */
+        .form-section { margin-bottom: 22px; }
+        .form-section-title {
+            font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.7px;
+            color: #64748b; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .form-section-title span { background: #e0f2fe; color: #0369a1; border-radius: 99px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+        .form-grid.cols-1 { grid-template-columns: 1fr; }
+        @media (max-width: 600px) {
+            .form-grid, .form-grid.cols-3 { grid-template-columns: 1fr; }
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 0.78rem; font-weight: 700; color: #475569; }
+        .form-group input, .form-group select, .form-group textarea {
+            border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;
+            font-size: 0.875rem; font-family: inherit; color: #0f172a; background: white;
+            transition: .15s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+        .form-group textarea { resize: vertical; min-height: 70px; }
+        .form-group.full { grid-column: 1 / -1; }
+
+        /* Radio group */
+        .radio-group { display: flex; gap: 14px; flex-wrap: wrap; }
+        .radio-label { display: flex; align-items: center; gap: 7px; cursor: pointer; font-size: 0.875rem; color: #334155; font-weight: 500; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 9px; transition: .15s; }
+        .radio-label:hover { border-color: #93c5fd; background: #f0f7ff; }
+        .radio-label input[type=radio] { accent-color: #2563eb; width: 16px; height: 16px; }
+        .radio-label.selected { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+
+        /* Checkbox group for programs */
+        .check-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .check-label { display: flex; align-items: center; gap: 7px; cursor: pointer; font-size: 0.875rem; color: #334155; padding: 7px 12px; border: 1px solid #e2e8f0; border-radius: 9px; transition: .15s; }
+        .check-label:hover { border-color: #93c5fd; background: #f0f7ff; }
+        .check-label input[type=checkbox] { accent-color: #2563eb; width: 15px; height: 15px; }
+
+        /* Doc method selector */
+        .doc-method-opts { display: flex; flex-direction: column; gap: 10px; }
+        .doc-opt { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 10px; cursor: pointer; transition: .15s; }
+        .doc-opt:hover { border-color: #93c5fd; }
+        .doc-opt.selected { border-color: #2563eb; background: #eff6ff; }
+        .doc-opt input[type=radio] { accent-color: #2563eb; margin-top: 2px; flex-shrink: 0; }
+        .doc-opt-text strong { font-size: 0.875rem; color: #0f172a; display: block; }
+        .doc-opt-text small { font-size: 0.78rem; color: #64748b; }
+        .upload-area {
+            border: 2px dashed #cbd5e1; border-radius: 10px; padding: 18px; text-align: center;
+            cursor: pointer; transition: .15s; margin-top: 10px;
+        }
+        .upload-area:hover { border-color: #2563eb; background: #f0f7ff; }
+        .upload-area.has-file { border-color: #16a34a; background: #f0fdf4; }
+        .upload-area svg { color: #94a3b8; }
+        .upload-area.has-file svg { color: #16a34a; }
+        .file-name { font-size: 0.82rem; color: #16a34a; font-weight: 600; margin-top: 4px; }
+
+        /* Modal footer */
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 26px; padding-top: 18px; border-top: 1px solid #f1f5f9; }
+        .btn-ghost { background: #f1f5f9; color: #334155; border: none; border-radius: 10px; padding: 11px 20px; font-weight: 600; font-size: 0.92rem; cursor: pointer; font-family: inherit; transition: .15s; }
+        .btn-ghost:hover { background: #e2e8f0; }
+
+        /* Toast */
+        .toast-banner {
+            position: fixed; bottom: 24px; right: 24px; z-index: 40000;
+            background: #0f172a; color: white; border-radius: 12px; padding: 14px 18px;
+            font-size: 0.875rem; box-shadow: 0 16px 32px rgba(0,0,0,.25); display: none;
+            max-width: 340px; animation: toast-in .2s ease-out;
+        }
+        .toast-banner.show { display: block; }
+        .toast-banner.success { border-left: 4px solid #16a34a; }
+        .toast-banner.warning { border-left: 4px solid #d97706; }
+        .toast-banner.error   { border-left: 4px solid #dc2626; }
+        @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Alert de caducitat */
+        .expiry-alert { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 12px 16px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; color: #92400e; font-size: 0.875rem; font-weight: 600; }
+        .expiry-alert svg { flex-shrink: 0; }
+
+        /* Read-only state */
+        .read-only-banner { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; font-size: 0.82rem; color: #64748b; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+        /* Approve button */
+        .btn-approve { background: #16a34a; color: white; border: none; border-radius: 10px; padding: 9px 16px; font-weight: 700; font-size: 0.85rem; cursor: pointer; font-family: inherit; transition: .15s; }
+        .btn-approve:hover { background: #15803d; }
+    </style>
+</head>
+<body>
+    <!-- Sidebar injectat per sidebar.js -->
+    <main class="main-content">
+
+        <div id="expiryAlertBanner" class="expiry-alert" style="display:none;">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span id="expiryAlertText"></span>
+        </div>
+
+        <div class="page-header">
+            <div>
+                <h1>Gestió de Convenis i Acords</h1>
+                <p>Empreses, centres educatius i organismes públics vinculats als programes</p>
+            </div>
+            <button class="btn-primary" id="btnNouConveni">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Nou Conveni / Acord
+            </button>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-row">
+            <div class="summary-pill vigent">
+                <span class="pill-val" id="sumVigent">–</span>
+                <span class="pill-lbl">Vigents</span>
+            </div>
+            <div class="summary-pill pendent">
+                <span class="pill-val" id="sumPendent">–</span>
+                <span class="pill-lbl">Pendents</span>
+            </div>
+            <div class="summary-pill caducat">
+                <span class="pill-val" id="sumCaducat">–</span>
+                <span class="pill-lbl">Caducats</span>
+            </div>
+            <div class="summary-pill">
+                <span class="pill-val" id="sumTotal">–</span>
+                <span class="pill-lbl">Total</span>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-bar">
+            <div>
+                <label>Cercar entitat</label><br>
+                <input type="text" id="filterText" placeholder="Nom o CIF…" oninput="window._conv.applyFilters()">
+            </div>
+            <div>
+                <label>Tipus d'entitat</label><br>
+                <select id="filterTipo" onchange="window._conv.applyFilters()">
+                    <option value="">Tots</option>
+                    <option value="empresa">Empresa Privada</option>
+                    <option value="educatiu">Centre Educatiu</option>
+                    <option value="public">Organisme Públic</option>
+                </select>
+            </div>
+            <div>
+                <label>Tipus de conveni</label><br>
+                <select id="filterTipoConv" onchange="window._conv.applyFilters()">
+                    <option value="">Tots</option>
+                    <option value="collaboracio">Col·laboració</option>
+                    <option value="practiques">Pràctiques</option>
+                    <option value="dual">Dual</option>
+                </select>
+            </div>
+            <div>
+                <label>Estat</label><br>
+                <select id="filterEstat" onchange="window._conv.applyFilters()">
+                    <option value="">Tots</option>
+                    <option value="vigent">Vigent</option>
+                    <option value="pendent">Pendent</option>
+                    <option value="caducat">Caducat</option>
+                    <option value="arxivat">Arxivat</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Entitat</th>
+                        <th>Tipus entitat</th>
+                        <th>Tipus conveni</th>
+                        <th>Programa(es)</th>
+                        <th>Estat</th>
+                        <th>Expira</th>
+                        <th>Accions</th>
+                    </tr>
+                </thead>
+                <tbody id="convenisTableBody">
+                    <tr class="empty-row"><td colspan="7">Carregant…</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- ══ MODAL: Nou / Editar Conveni ══ -->
+    <div id="conveniModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="conveniModalTitle">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="conveniModalTitle">Nou Conveni / Acord</h2>
+                <button class="modal-close" onclick="window._conv.closeModal()" aria-label="Tancar">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+
+            <div id="readOnlyBanner" class="read-only-banner" style="display:none;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Tens permís de lectura. Contacta amb administració per fer canvis.
+            </div>
+
+            <form id="conveniForm" novalidate>
+                <input type="hidden" id="convId">
+
+                <!-- 1. Dades entitat -->
+                <div class="form-section">
+                    <div class="form-section-title"><span>1</span> Dades de l'entitat externa</div>
+                    <div class="form-grid cols-1" style="margin-bottom:12px;">
+                        <div class="form-group">
+                            <label>Tipus d'entitat *</label>
+                            <div class="radio-group" id="tipoEntidadGroup">
+                                <label class="radio-label" id="lbl-empresa">
+                                    <input type="radio" name="tipoEntidad" value="empresa" onchange="window._conv.updateRadioStyles('tipoEntidad')"> Empresa Privada
+                                </label>
+                                <label class="radio-label" id="lbl-educatiu">
+                                    <input type="radio" name="tipoEntidad" value="educatiu" onchange="window._conv.updateRadioStyles('tipoEntidad')"> Centre Educatiu
+                                </label>
+                                <label class="radio-label" id="lbl-public">
+                                    <input type="radio" name="tipoEntidad" value="public" onchange="window._conv.updateRadioStyles('tipoEntidad')"> Organisme Públic
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label>Nom / Raó Social *</label>
+                            <input type="text" id="entNom" maxlength="200" placeholder="Ex: IES Son Rullan">
+                        </div>
+                        <div class="form-group">
+                            <label>CIF / NIF</label>
+                            <input type="text" id="entCif" maxlength="15" placeholder="Ex: B12345678">
+                        </div>
+                        <div class="form-group">
+                            <label>Persona de contacte</label>
+                            <input type="text" id="entContacte" maxlength="100" placeholder="Nom i cognom">
+                        </div>
+                        <div class="form-group">
+                            <label>Email de contacte</label>
+                            <input type="email" id="entEmail" maxlength="150" placeholder="contacte@entitat.cat">
+                        </div>
+                        <div class="form-group">
+                            <label>Telèfon</label>
+                            <input type="tel" id="entTelefon" maxlength="20" placeholder="+34 000 000 000">
+                        </div>
+                    </div>
+                    <!-- Empresa / escola: sector -->
+                    <div id="sectorRow" class="form-grid" style="margin-top:10px; display:none;">
+                        <div class="form-group">
+                            <label>Sector productiu</label>
+                            <input type="text" id="entSector" maxlength="100" placeholder="Ex: Sector serveis / FP Sanitat">
+                        </div>
+                        <div class="form-group">
+                            <label>Representant legal</label>
+                            <input type="text" id="entRepresentant" maxlength="100" placeholder="Nom i càrrec">
+                        </div>
+                    </div>
+                    <!-- Organisme públic: número resolució -->
+                    <div id="ressolucioRow" class="form-grid" style="margin-top:10px; display:none;">
+                        <div class="form-group full">
+                            <label>Número de resolució / Protocol BOE-BOIB</label>
+                            <input type="text" id="entRessolucio" maxlength="150" placeholder="Ex: BOIB Núm. 28/2024">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Definició de l'acord -->
+                <div class="form-section">
+                    <div class="form-section-title"><span>2</span> Definició de l'acord</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Tipus de conveni *</label>
+                            <select id="tipoConveni">
+                                <option value="">Seleccionar…</option>
+                                <option value="collaboracio">Col·laboració</option>
+                                <option value="practiques">Pràctiques</option>
+                                <option value="dual">Dual</option>
+                            </select>
+                        </div>
+                        <div class="form-group full" style="margin-top:4px;">
+                            <label>Programa(es) vinculats *</label>
+                            <div class="check-group" id="programesGroup">
+                                <!-- Loaded dynamically from departments -->
+                            </div>
+                        </div>
+                        <div class="form-group full">
+                            <label>Notes / Objecte del conveni</label>
+                            <textarea id="convNotes" placeholder="Descripció breu de l'objecte del conveni…"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Vigència -->
+                <div class="form-section">
+                    <div class="form-section-title"><span>3</span> Vigència i períodes</div>
+                    <div class="form-grid cols-3">
+                        <div class="form-group">
+                            <label>Data inici *</label>
+                            <input type="date" id="dataInici">
+                        </div>
+                        <div class="form-group">
+                            <label>Data fi <span style="font-weight:400; color:#94a3b8;">(opcional · s'auto-completa)</span></label>
+                            <input type="date" id="dataFi">
+                        </div>
+                        <div class="form-group">
+                            <label>Estat</label>
+                            <select id="convEstat">
+                                <option value="pendent">Pendent de VºBº</option>
+                                <option value="vigent">Vigent</option>
+                                <option value="caducat">Caducat</option>
+                                <option value="arxivat">Arxivat</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Documentació -->
+                <div class="form-section">
+                    <div class="form-section-title"><span>4</span> Documentació legal</div>
+                    <div class="doc-method-opts">
+                        <label class="doc-opt" id="docOpt-intern" onclick="window._conv.selectDocMethod('intern')">
+                            <input type="radio" name="docMethod" value="intern">
+                            <div class="doc-opt-text">
+                                <strong>Generar model intern de l'APP</strong>
+                                <small>El sistema genera el document base segons el programa seleccionat</small>
+                            </div>
+                        </label>
+                        <label class="doc-opt" id="docOpt-extern" onclick="window._conv.selectDocMethod('extern')">
+                            <input type="radio" name="docMethod" value="extern">
+                            <div class="doc-opt-text">
+                                <strong>Adjuntar document extern (PDF / Escaneig)</strong>
+                                <small>Puja el document que ha enviat l'entitat com a document mestre</small>
+                            </div>
+                        </label>
+                    </div>
+                    <!-- Upload area (shown when extern selected) -->
+                    <div id="uploadArea" class="upload-area" style="display:none;" onclick="document.getElementById('fileInput').click()">
+                        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <div style="margin-top:8px; font-size:0.875rem; color:#64748b;">Fes clic per adjuntar document</div>
+                        <div style="font-size:0.75rem; color:#94a3b8; margin-top:4px;">PDF, DOC, JPG fins a 20 MB</div>
+                        <div id="uploadFileName" class="file-name" style="display:none;"></div>
+                        <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display:none;" onchange="window._conv.onFileSelected(this)">
+                    </div>
+                    <!-- Link document ja existent -->
+                    <div id="existingDocLink" style="display:none; margin-top:10px; font-size:0.85rem;">
+                        Document actual: <a id="existingDocAnchor" href="#" target="_blank" rel="noopener noreferrer" style="color:#2563eb; font-weight:600;">Veure document ↗</a>
+                    </div>
+                </div>
+
+                <!-- 5. Firmants -->
+                <div class="form-section">
+                    <div class="form-section-title"><span>5</span> Firmants i coordinació</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Responsable entitat</label>
+                            <input type="text" id="firmantEntitat" maxlength="100" placeholder="Nom complet">
+                        </div>
+                        <div class="form-group">
+                            <label>DNI responsable entitat</label>
+                            <input type="text" id="firmantDni" maxlength="20" placeholder="00000000X">
+                        </div>
+                        <div class="form-group full">
+                            <label>Responsable del Programa (coordinador/a)</label>
+                            <select id="firmantPrograma">
+                                <option value="">Seleccionar…</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visto bueno (direció) -->
+                <div id="vistoBuenoSection" style="display:none; margin-bottom:18px;">
+                    <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                        <svg width="18" height="18" fill="none" stroke="#16a34a" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <span style="font-size:0.875rem; color:#166534; font-weight:600; flex:1;">Conveni pendent de Visto Bueno de la Direcció</span>
+                        <button type="button" class="btn-approve" id="btnVisBo" onclick="window._conv.approveConveni()">Donar Visto Bueno</button>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-ghost" onclick="window._conv.closeModal()">Cancel·lar</button>
+                    <button type="button" class="btn-primary" onclick="abrirParaFirmarConvenio()" style="background:#10b981; border-color:#10b981;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 11h8M12 15h8M12 19h4"/></svg>
+                        Enviar a Firmar
+                    </button>
+                    <button type="submit" class="btn-primary" id="btnGuardarConveni">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        Guardar i activar conveni
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="convToast" class="toast-banner"></div>
+
+    <script type="module" src="convenios-logic.js?v=1.0.0"></script>
+    <script type="module" src="sidebar.js?v=6.1"></script>
+    
+    <script>
+        // Función para abrir el flujo de firma desde convenios
+        window.abrirParaFirmarConvenio = async function() {
+            try {
+                import('./signature-flow.js').then(mod => {
+                    const SignatureFlow = mod.default;
+                    const nombre = document.getElementById('conv_nom')?.value || 'Conveni';
+                    const entity = document.getElementById('conv_ent')?.value || 'Entitat';
+                    
+                    SignatureFlow.openQuickSignFlow({
+                        documentTitle: `Conveni - ${nombre}`,
+                        documentText: `Conveni ${nombre} amb ${entity}`,
+                        sourceModule: 'convenios',
+                        metadata: {
+                            nombre: nombre,
+                            entidad: entity,
+                            tipo: 'convenio',
+                        },
+                    });
+                });
+            } catch(e) {
+                console.error('Error obrint firma:', e);
+                alert('Error al obrir el flux de firma');
+            }
+        };
+    </script>
+</body>
+</html>

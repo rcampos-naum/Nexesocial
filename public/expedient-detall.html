@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexeSocial - Llistat d'Expedients</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    
+    <style>
+        .header-actions { 
+            display: flex; justify-content: space-between; align-items: flex-start; 
+            margin-bottom: 25px; flex-wrap: wrap; gap: 15px;
+        }
+        .title-section h1 { margin: 0; font-size: 1.8rem; color: #1e293b; }
+        .title-section p { margin: 5px 0 0 0; color: #64748b; font-size: 1rem; }
+
+        .btn-nou { 
+            background: #10b981; color: white; border: none; padding: 12px 24px; 
+            border-radius: 10px; cursor: pointer; font-weight: 700; 
+            display: flex; align-items: center; gap: 8px; transition: 0.3s;
+        }
+        .btn-nou:hover { background: #059669; transform: translateY(-2px); }
+
+        .search-container {
+            background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;
+            margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 15px;
+        }
+        .search-bar { 
+            padding: 12px 15px; border-radius: 8px; border: 1px solid #e2e8f0; 
+            width: 100%; max-width: 400px; font-size: 0.95rem; outline-color: #2563eb;
+        }
+
+        .table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; min-width: 950px; }
+        th { 
+            text-align: left; padding: 15px; background: #f8fafc; color: #64748b; 
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; 
+        }
+        td { padding: 15px; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-size: 0.95rem; }
+        
+        tbody tr { cursor: pointer; transition: 0.2s; }
+        tbody tr:hover { background-color: #f8faff; }
+
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
+        .badge-adult { background: #e0f2fe; color: #075985; }
+        .exp-num { font-family: monospace; font-weight: 800; color: #2563eb; }
+    </style>
+</head>
+<body>
+    <script type="module" src="sidebar.js"></script>
+
+    <main class="main-content">
+        <div class="header-actions">
+            <div class="title-section">
+                <h1>Expedients Socials</h1>
+                <p>Gestió centralitzada d'usuaris i unitats familiars</p>
+            </div>
+            <button class="btn-nou" onclick="anarAlta()">
+                <span>+</span> Nou Registre Únic
+            </button>
+        </div>
+
+        <div class="search-container">
+            <div style="display:flex; gap:10px; flex-grow:1;">
+                <input type="text" id="buscador" class="search-bar" placeholder="Cerca per nom, DNI o nº d'expedient..." onkeyup="filtrarTaula()">
+                <select id="filtre-tipus" class="search-bar" style="max-width:150px;" onchange="filtrarTaula()">
+                    <option value="tots">Tots els perfils</option>
+                    <option value="menor">Menors</option>
+                    <option value="adult">Adults</option>
+                </select>
+            </div>
+            <div style="color: #64748b; font-size: 0.9rem;">
+                Total: <strong id="count">0</strong> registres
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nº EXPEDIENT</th>
+                        <th>Nom i Cognoms</th>
+                        <th>DNI / NIE</th>
+                        <th>Estat</th>
+                        <th>Gènere</th>
+                        <th>Situ. Adm.</th>
+                        <th>Laboral</th>
+                        <th>Accions</th>
+                    </tr>
+                </thead>
+                <tbody id="taula-cos"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script type="module">
+        import { db } from './firebase-config.js';
+        // CORRECCIÓ: Totes les funcions de Firestore des de la mateixa URL
+        import { 
+            collection, 
+            getDocs 
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { waitForCrypto } from './vault-init.js';
+        import { decryptField } from './crypto-utils.js';
+
+        // Variable per al filtratge
+        window.totesLesDades = [];
+
+        // --- FUNCIONS GLOBALS (Disponibles per a l'HTML) ---
+        
+        window.anarAlta = function() {
+            window.location.href = 'perfil-usuari.html?id=nou';
+        };
+
+        window.filtrarTaula = function() {
+            const text = document.getElementById('buscador').value.toLowerCase();
+            const filtrats = window.totesLesDades.filter(u => {
+                const nomComplet = (u.nom + " " + u.cognoms).toLowerCase();
+                return nomComplet.includes(text) || 
+                       u.dni.toLowerCase().includes(text) || 
+                       u.numero_expediente.toLowerCase().includes(text);
+            });
+            renderitzarTaula(filtrats);
+        };
+
+        // --- LÒGICA DE FIREBASE ---
+
+        async function carregarDadesFirebase() {
+            const tbody = document.getElementById('taula-cos');
+            
+            try {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:40px;">Carregant dades des del núvol...</td></tr>`;
+
+                // Ensure encryption key is ready before reading
+                await waitForCrypto();
+                
+                const querySnapshot = await getDocs(collection(db, "expedientes"));
+                const expedients = [];
+
+                for (const docSnap of querySnapshot.docs) {
+                    const data = docSnap.data();
+                    // Decrypt sensitive sections (backwards-compatible with plain records)
+                    const dp = await decryptField(data.dades_personals) || {};
+                    const sl = await decryptField(data.socio_laboral) || {};
+                    expedients.push({
+                        doc_id: docSnap.id,
+                        numero_expediente: data.numero_expediente || "---",
+                        nom: dp.nom || "Sense nom",
+                        cognoms: dp.cognoms || "",
+                        dni: dp.dni || "---",
+                        estat: data.estat || "Actiu",
+                        genere: dp.genere || "-",
+                        situ_adm: sl.situ_adm || "-",
+                        laboral: sl.situacio_laboral || "-"
+                    });
+                }
+
+                window.totesLesDades = expedients;
+                renderitzarTaula(expedients);
+
+            } catch (error) {
+                console.error("Error en carregar dades:", error);
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red; padding:40px;">⚠️ Error de permisos o connexió amb Firebase.</td></tr>`;
+            }
+        }
+
+        function renderitzarTaula(llista) {
+            const tbody = document.getElementById('taula-cos');
+            tbody.innerHTML = "";
+            document.getElementById('count').innerText = llista.length;
+
+            if (llista.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:40px; color:#94a3b8;">No s'han trobat expedients.</td></tr>`;
+                return;
+            }
+
+            llista.forEach(u => {
+                const fila = document.createElement('tr');
+                fila.onclick = () => window.location.href = `perfil-usuari.html?id=${u.doc_id}`;
+                
+                const estatColors = {
+                    'Actiu':   'background:#d1fae5;color:#065f46',
+                    'Baixa':   'background:#fee2e2;color:#991b1b',
+                    'Inactiu': 'background:#f1f5f9;color:#475569'
+                };
+                const estatStyle = estatColors[u.estat] || estatColors['Inactiu'];
+                fila.innerHTML = `
+                    <td><span class="exp-num">${u.numero_expediente}</span></td>
+                    <td><b>${u.nom} ${u.cognoms}</b></td>
+                    <td style="font-family: monospace;">${u.dni}</td>
+                    <td><span class="badge" style="${estatStyle}">${u.estat}</span></td>
+                    <td>${u.genere}</td>
+                    <td>${u.situ_adm}</td>
+                    <td>${u.laboral}</td>
+                    <td><small style="color:#2563eb; font-weight:600;">Veure fitxa →</small></td>
+                `;
+                tbody.appendChild(fila);
+            });
+        }
+
+        // Executar càrrega en iniciar
+        document.addEventListener('DOMContentLoaded', carregarDadesFirebase);
+    </script>
+</body>
+</html>

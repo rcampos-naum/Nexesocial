@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexeSocial – CaixaProinfància</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        :root {
+            --primary:#0f172a;--accent:#3b82f6;--success:#10b981;
+            --warning:#f59e0b;--danger:#ef4444;--border:#e2e8f0;
+            --cpi:#e8660d;
+        }
+        body{margin:0;background:#f8fafc;display:flex;flex-direction:column;height:100vh;font-family:'Inter',sans-serif;}
+        .content-wrapper{margin-left:280px;margin-top:60px;padding:25px;transition:0.3s;overflow-y:auto;flex-grow:1;}
+        body.collapsed .content-wrapper{margin-left:70px;}
+
+        .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+        .page-header h1{margin:0;color:var(--primary);font-size:1.7rem;display:flex;align-items:center;gap:10px;}
+        .cpi-badge{background:var(--cpi);color:white;border-radius:6px;padding:3px 10px;font-size:0.72rem;font-weight:700;letter-spacing:.04em;}
+
+        /* Summary cards */
+        .summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px;}
+        .summary-card{background:white;border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+        .summary-label{color:#64748b;font-size:0.73rem;text-transform:uppercase;font-weight:700;letter-spacing:.04em;}
+        .summary-value{color:var(--primary);font-size:1.6rem;font-weight:800;margin-top:6px;}
+        .summary-card.green .summary-value{color:var(--success);}
+        .summary-card.red .summary-value{color:var(--danger);}
+        .summary-card.orange .summary-value{color:var(--cpi);}
+
+        /* Tabs */
+        .tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid var(--border);padding-bottom:0;}
+        .tab-btn{padding:10px 22px;border:none;background:none;font-family:inherit;font-size:.88rem;font-weight:600;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s;}
+        .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+        .tab-pane{display:none;} .tab-pane.active{display:block;}
+
+        /* Buttons */
+        .btn{padding:9px 18px;border-radius:8px;border:none;font-family:inherit;font-size:.85rem;font-weight:600;cursor:pointer;transition:.15s;}
+        .btn-primary{background:var(--accent);color:white;}
+        .btn-primary:hover{background:#2563eb;}
+        .btn-success{background:var(--success);color:white;}
+        .btn-danger{background:var(--danger);color:white;}
+        .btn-outline{background:white;border:1.5px solid var(--border);color:var(--primary);}
+        .btn-outline:hover{background:#f1f5f9;}
+        .btn-cpi{background:var(--cpi);color:white;}
+        .btn-sm{padding:5px 12px;font-size:.78rem;}
+
+        /* Simulator */
+        .sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+        @media(max-width:900px){.sim-grid{grid-template-columns:1fr;} #ocr-body > div[style*="grid"]{grid-template-columns:1fr !important;}}
+        .sim-card{background:white;border:1px solid var(--border);border-radius:14px;padding:22px;}
+        .sim-section-title{font-size:.9rem;font-weight:800;color:var(--primary);margin:0 0 14px;display:flex;align-items:center;gap:7px;}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+        .form-row.c1{grid-template-columns:1fr;}
+        .form-row.c3{grid-template-columns:1fr 1fr 1fr;}
+        .form-field{display:flex;flex-direction:column;gap:5px;}
+        .form-field label{font-size:.78rem;font-weight:700;color:#374151;}
+        .form-field input,.form-field select,.form-field textarea{
+            padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;
+            font-family:inherit;font-size:.85rem;background:white;transition:.15s;
+        }
+        .form-field input:focus,.form-field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+        .form-field input[type=number]{width:100%;box-sizing:border-box;}
+
+        /* Result box */
+        .result-box{border-radius:14px;padding:22px;text-align:center;margin-top:4px;}
+        .result-box.cumple{background:#dcfce7;border:2px solid #16a34a;}
+        .result-box.nocumple{background:#fee2e2;border:2px solid #dc2626;}
+        .result-box.neutral{background:#f1f5f9;border:2px solid var(--border);}
+        .result-title{font-size:1.1rem;font-weight:800;margin-bottom:10px;}
+        .result-title.cumple{color:#15803d;}
+        .result-title.nocumple{color:#b91c1c;}
+        .result-detail{font-size:.82rem;color:#475569;line-height:1.6;}
+        .result-num{font-size:1.5rem;font-weight:800;margin:8px 0;}
+        .result-num.cumple{color:#15803d;}
+        .result-num.nocumple{color:#b91c1c;}
+
+        /* Income table */
+        .income-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:10px;}
+        .income-table th{background:#f8fafc;padding:8px 10px;text-align:left;font-size:.73rem;font-weight:700;color:#64748b;text-transform:uppercase;border-bottom:2px solid var(--border);}
+        .income-table td{padding:7px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+        .income-table input{border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.82rem;font-family:inherit;width:90px;text-align:right;}
+        .income-table .row-total{font-weight:700;color:var(--accent);}
+
+        /* OCR */
+        .ocr-zone{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:.2s;background:#fafbfc;}
+        .ocr-zone:hover,.ocr-zone-hover{border-color:var(--accent);background:#eff6ff;}
+        .ocr-zone p{margin:8px 0 0;font-size:.78rem;color:#64748b;}
+        .ocr-progress{margin-top:12px;display:none;}
+        .ocr-bar{height:6px;background:#e2e8f0;border-radius:99px;overflow:hidden;}
+        .ocr-bar-fill{height:100%;background:var(--accent);border-radius:99px;transition:width .3s;}
+        .ocr-result-fields{margin-top:12px;display:none;}
+        .ocr-field-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:.82rem;}
+        .ocr-field-row label{flex:0 0 160px;font-weight:600;color:#374151;}
+        .ocr-field-row input{flex:1;padding:6px 10px;border:1.5px solid var(--success);border-radius:7px;font-family:inherit;background:#f0fdf4;}
+        .ocr-field-row button{padding:5px 10px;font-size:.75rem;border-radius:6px;border:none;background:var(--success);color:white;cursor:pointer;font-family:inherit;font-weight:600;}
+
+        /* Families list */
+        .list-controls{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap;}
+        .search-input{flex:1;min-width:200px;padding:9px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.85rem;}
+        .families-table{width:100%;border-collapse:collapse;font-size:.83rem;}
+        .families-table th{background:#f8fafc;padding:10px 12px;text-align:left;font-size:.73rem;font-weight:700;color:#64748b;text-transform:uppercase;border-bottom:2px solid var(--border);position:sticky;top:0;}
+        .families-table td{padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+        .families-table tr:hover td{background:#fafbff;}
+        .estat-badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.71rem;font-weight:700;}
+        .estat-actiu{background:#dcfce7;color:#15803d;}
+        .estat-pendent{background:#fef9c3;color:#92400e;}
+        .estat-baixa{background:#fee2e2;color:#b91c1c;}
+        .cumple-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;}
+        .dot-green{background:var(--success);}
+        .dot-red{background:var(--danger);}
+        .dot-grey{background:#94a3b8;}
+
+        /* Ajudes */
+        .ajudes-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+        .ajudes-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+        .ajudes-table th{background:#f8fafc;padding:9px 12px;text-align:left;font-size:.72rem;font-weight:700;color:#64748b;border-bottom:2px solid var(--border);}
+        .ajudes-table td{padding:9px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+
+        /* Documents */
+        .docs-upload-zone{border:2px dashed var(--border);border-radius:12px;padding:30px;text-align:center;cursor:pointer;margin-bottom:16px;}
+        .docs-upload-zone:hover{border-color:var(--accent);background:#eff6ff;}
+        .doc-list{display:grid;gap:8px;}
+        .doc-item{background:white;border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;}
+        .doc-icon{font-size:1.4rem;}
+        .doc-info{flex:1;}
+        .doc-name{font-weight:600;font-size:.85rem;color:var(--primary);}
+        .doc-meta{font-size:.73rem;color:#64748b;margin-top:2px;}
+
+        /* Modal */
+        .cpi-overlay{position:fixed;inset:0;background:rgba(0,0,0,.50);z-index:9000;display:none;align-items:center;justify-content:center;}
+        .cpi-overlay.open{display:flex;}
+        .cpi-dialog{background:white;border-radius:16px;padding:28px;width:min(640px,90vw);max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);position:relative;z-index:9001;}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+        .modal-title{font-size:1.1rem;font-weight:800;color:var(--primary);}
+        .modal-close{background:none;border:none;font-size:1.5rem;cursor:pointer;color:#94a3b8;line-height:1;}
+        .modal-footer{margin-top:20px;display:flex;justify-content:flex-end;gap:10px;}
+
+        /* Misc */
+        .empty-state{text-align:center;padding:40px;color:#94a3b8;}
+        .empty-state svg{display:block;margin:0 auto 12px;}
+        .tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:.7rem;font-weight:700;background:#e0e7ff;color:#3730a3;margin-right:4px;}
+        .tag.red{background:#fee2e2;color:#b91c1c;}
+        .separator{height:1px;background:var(--border);margin:14px 0;}
+        .text-muted{color:#94a3b8;font-size:.75rem;}
+        .chip{padding:3px 9px;border-radius:99px;font-size:.73rem;font-weight:700;background:#e2e8f0;color:#475569;}
+        .chip.blue{background:#dbeafe;color:#1d4ed8;}
+        .chip.green{background:#dcfce7;color:#15803d;}
+        .chip.orange{background:#ffedd5;color:#c2410c;}
+        .loading{text-align:center;padding:30px;color:#94a3b8;}
+    </style>
+</head>
+<body>
+<script type="module" src="./sidebar.js"></script>
+<!-- Tab switching available before module loads -->
+<script>
+function cpiTab(name, btn) {
+    document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('active'); });
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+    var pane = document.getElementById('tab-'+name);
+    if (pane) pane.classList.add('active');
+    if (btn) btn.classList.add('active');
+}
+</script>
+
+<div class="content-wrapper">
+    <!-- Header -->
+    <div class="page-header">
+        <h1>
+            <svg width="26" height="26" fill="none" stroke="#e8660d" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+            CaixaProinfància
+            <span class="cpi-badge">CPI</span>
+        </h1>
+        <button class="btn btn-cpi" onclick="window.cpiNouFamilia()">+ Nova família</button>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-grid">
+        <div class="summary-card"><div class="summary-label">Total famílies</div><div class="summary-value" id="stat-total">—</div></div>
+        <div class="summary-card green"><div class="summary-label">Compleixen requisits</div><div class="summary-value" id="stat-cumple">—</div></div>
+        <div class="summary-card red"><div class="summary-label">No compleixen</div><div class="summary-value" id="stat-nocumple">—</div></div>
+        <div class="summary-card orange"><div class="summary-label">Actives</div><div class="summary-value" id="stat-actiu">—</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="cpiTab('simulador',this)">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:5px"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7M17.5 14v7"/></svg>Simulador</button>
+        <button class="tab-btn" onclick="cpiTab('families',this)">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:5px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Famílies</button>
+        <button class="tab-btn" onclick="cpiTab('pressupost',this)">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:5px"><path d="M4 10h12M4 14h9M19 6a7 7 0 1 0 0 12"/></svg>Pressupost</button>
+        <button class="tab-btn" onclick="cpiTab('ajudes',this)">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:5px"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Ajudes</button>
+        <button class="tab-btn" onclick="cpiTab('documents',this)">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:5px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Documents</button>
+    </div>
+
+    <!-- ========== TAB: SIMULADOR ========== -->
+    <div id="tab-simulador" class="tab-pane active">
+
+        <!-- Intro banner -->
+        <div style="display:flex;align-items:flex-start;gap:14px;background:#fff7ed;border:1.5px solid #fed7aa;border-radius:12px;padding:14px 18px;margin-bottom:16px;">
+            <svg width="22" height="22" fill="none" stroke="#e8660d" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div>
+                <div style="font-weight:800;font-size:.9rem;color:#92400e;margin-bottom:3px;">Com funciona el simulador</div>
+                <div style="font-size:.82rem;color:#78350f;line-height:1.6;">El simulador compara els ingressos bruts anuals de la unitat familiar amb el límit establert per CaixaProinfància en funció de la composició familiar i la CCAA. Podeu introduir les dades manualment o carregar un document (nòmina, declaració renda) per extreure’ls automàticament.</div>
+            </div>
+        </div>
+
+        <!-- OCR full-width card -->
+        <div class="sim-card" id="ocr-card" style="margin-bottom:18px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <div class="sim-section-title" style="margin:0">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                    Llegir document &mdash; Nòmina / Declaració renda (OCR)
+                </div>
+                <button class="btn btn-outline btn-sm" id="ocr-toggle-btn" onclick="var b=document.getElementById('ocr-body');var open=b.style.display!=='none';b.style.display=open?'none':'block';this.textContent=open?'Mostrar':'Amagar'">Amagar</button>
+            </div>
+            <div id="ocr-body">
+                <p style="font-size:.78rem;color:#64748b;margin:0 0 12px;">Carrega una imatge (JPG/PNG) o PDF per extreure automàticament nom, NIF i ingressos. Verifica les dades i aplica-les al formulari.</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <!-- Left: drop zone + document preview -->
+                    <div>
+                        <div class="ocr-zone" id="ocr-zone"
+                             onclick="document.getElementById('ocr-file').click()"
+                             ondragover="event.preventDefault();this.classList.add('ocr-zone-hover')"
+                             ondragleave="this.classList.remove('ocr-zone-hover')"
+                             ondrop="event.preventDefault();this.classList.remove('ocr-zone-hover');window.cpiOCR(event.dataTransfer.files[0])">
+                            <svg width="36" height="36" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <p>Fes clic o arrossega el fitxer aquí</p>
+                            <p style="color:#94a3b8;font-size:.7rem;">JPG &middot; PNG &middot; PDF</p>
+                        </div>
+                        <input type="file" id="ocr-file" accept="image/*,.pdf" style="display:none" onchange="window.cpiOCR(this.files[0])">
+                        <div id="ocr-preview-wrap" style="display:none;margin-top:12px;">
+                            <div style="font-size:.72rem;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:.03em;">Document carregat:</div>
+                            <canvas id="ocr-canvas" style="max-width:100%;border:1px solid var(--border);border-radius:8px;display:none;"></canvas>
+                            <img id="ocr-img-preview" style="display:none;max-width:100%;border-radius:8px;border:1px solid var(--border);">
+                        </div>
+                    </div>
+                    <!-- Right: progress + extracted data + raw text -->
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                        <div class="ocr-progress" id="ocr-progress" style="display:none;">
+                            <div style="font-size:.78rem;color:#64748b;margin-bottom:5px;" id="ocr-status">Processant…</div>
+                            <div class="ocr-bar"><div class="ocr-bar-fill" id="ocr-bar-fill" style="width:0%"></div></div>
+                        </div>
+                        <div id="ocr-result-fields" style="display:none;">
+                            <div style="font-size:.78rem;font-weight:700;color:#374151;margin-bottom:10px;">Dades extretes &mdash; verifica i aplica al formulari:</div>
+                            <div class="ocr-field-row"><label>Nom / titular</label><input type="text" id="ocr-nom"><button onclick="cpiOcrApply('nom')">Aplicar</button></div>
+                            <div class="ocr-field-row"><label>NIF / NIE</label><input type="text" id="ocr-nif"><button onclick="cpiOcrApply('nif')">Aplicar</button></div>
+                            <div class="ocr-field-row"><label>Ingressos bruts anuals (&euro;)</label><input type="text" id="ocr-ingressos"><button onclick="cpiOcrApply('ingressos')">Aplicar</button></div>
+                            <div class="ocr-field-row"><label>Nòmina mensual (&euro;)</label><input type="text" id="ocr-nomina"><button onclick="cpiOcrApply('nomina')">Aplicar</button></div>
+                            <button class="btn btn-cpi btn-sm" style="margin-top:10px" onclick="['nom','nif','ingressos','nomina'].forEach(f=>cpiOcrApply(f))">
+                                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:4px"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                                Aplicar tot al formulari
+                            </button>
+                        </div>
+                        <div id="ocr-text-wrap" style="display:none;">
+                            <div style="font-size:.72rem;font-weight:700;color:#374151;margin-bottom:4px;text-transform:uppercase;letter-spacing:.03em;">Text extret del document:</div>
+                            <textarea id="ocr-raw-text" rows="9" readonly style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-family:monospace;font-size:.72rem;resize:vertical;background:#f8fafc;color:#374151;"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sim-grid">
+            <!-- LEFT: inputs -->
+            <div>
+                <div class="sim-card" style="margin-bottom:14px">
+                    <div class="sim-section-title">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        Unitat Familiar
+                    </div>
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label>Comunitat Autònoma</label>
+                            <select id="sim-ccaa" onchange="simCalc()">
+                                <option value="Nacional">Nacional (Base)</option>
+                                <option value="Andalucía">Andalucía</option>
+                                <option value="Aragón">Aragón</option>
+                                <option value="Asturias, Principado de">Asturias</option>
+                                <option value="Balears, Illes" selected>Illes Balears</option>
+                                <option value="Canarias">Canarias</option>
+                                <option value="Cantabria">Cantabria</option>
+                                <option value="Castilla y León">Castilla y León</option>
+                                <option value="Castilla - La Mancha">Castilla-La Mancha</option>
+                                <option value="Catalunya">Catalunya</option>
+                                <option value="Comunitat Valenciana">Comunitat Valenciana</option>
+                                <option value="Extremadura">Extremadura</option>
+                                <option value="Galicia">Galicia</option>
+                                <option value="Madrid, Comunidad de">Madrid</option>
+                                <option value="Murcia, Región de">Murcia</option>
+                                <option value="Navarra, Comunidad Foral de">Navarra</option>
+                                <option value="Euskadi">Euskadi (País Vasco)</option>
+                                <option value="Rioja, La">La Rioja</option>
+                                <option value="Ceuta">Ceuta</option>
+                                <option value="Melilla">Melilla</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>IPREM referència (€/any)</label>
+                            <input type="text" id="sim-iprem-display" readonly style="background:#f8fafc;font-weight:700;color:var(--cpi);">
+                        </div>
+                    </div>
+                    <div class="form-row c3">
+                        <div class="form-field">
+                            <label>Nº adults</label>
+                            <input type="number" id="sim-adults" min="1" max="10" value="2" oninput="simCalc()">
+                        </div>
+                        <div class="form-field">
+                            <label>Nº menors</label>
+                            <input type="number" id="sim-menors" min="0" max="15" value="1" oninput="simCalc()">
+                        </div>
+                        <div class="form-field">
+                            <label>Amb discapacitat</label>
+                            <input type="number" id="sim-discap" min="0" max="10" value="0" oninput="simCalc()">
+                        </div>
+                    </div>
+                    <div class="form-row c1">
+                        <div class="form-field">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                                <input type="checkbox" id="sim-mono" onchange="simCalc()" style="width:auto;padding:0;"> Família monoparental
+                            </label>
+                        </div>
+                    </div>
+                    <div style="background:#f8fafc;border-radius:8px;padding:10px 14px;font-size:.8rem;color:#475569;margin-top:4px;" id="sim-punts-detail">
+                        — introduïu dades per veure el càlcul —
+                    </div>
+                </div>
+
+                <!-- Income inputs -->
+                <div class="sim-card" style="margin-bottom:14px">
+                    <div class="sim-section-title">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        Ingressos bruts de la unitat familiar
+                    </div>
+
+                    <table class="income-table">
+                        <thead><tr><th>Font d'ingressos</th><th>Import 1</th><th>Import 2</th><th>Total anual</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td>Treballador/a compte aliè<br><span class="text-muted">Total meritació nòmina × nº pagues</span></td>
+                                <td>
+                                    <input type="number" id="inc-nom1" min="0" placeholder="€/mes" oninput="simCalcInc()">
+                                    <select id="inc-pag1" onchange="simCalcInc()" style="width:60px;padding:4px;border:1px solid var(--border);border-radius:5px;font-size:.75rem;">
+                                        <option>12</option><option>14</option><option>11</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" id="inc-nom2" min="0" placeholder="€/mes" oninput="simCalcInc()">
+                                    <select id="inc-pag2" onchange="simCalcInc()" style="width:60px;padding:4px;border:1px solid var(--border);border-radius:5px;font-size:.75rem;">
+                                        <option>12</option><option>14</option><option>11</option>
+                                    </select>
+                                </td>
+                                <td class="row-total" id="t-nom">0 €</td>
+                            </tr>
+                            <tr>
+                                <td>Treballador/a per compte propi (autònom/a)<br><span class="text-muted">Declaració trimestral × 4</span></td>
+                                <td><input type="number" id="inc-auto" min="0" placeholder="€/trim" oninput="simCalcInc()"></td>
+                                <td></td>
+                                <td class="row-total" id="t-auto">0 €</td>
+                            </tr>
+                            <tr>
+                                <td>Rendes declaració IRPF<br><span class="text-muted">Retribucions dineràries (rendiment treball)</span></td>
+                                <td><input type="number" id="inc-irpf" min="0" placeholder="€/any" oninput="simCalcInc()"></td>
+                                <td></td>
+                                <td class="row-total" id="t-irpf">0 €</td>
+                            </tr>
+                            <tr>
+                                <td>Prestació per desocupació / IMV<br><span class="text-muted">Import íntegre anual</span></td>
+                                <td><input type="number" id="inc-des" min="0" placeholder="€/any" oninput="simCalcInc()"></td>
+                                <td></td>
+                                <td class="row-total" id="t-des">0 €</td>
+                            </tr>
+                            <tr>
+                                <td>Altres prestacions públiques<br><span class="text-muted">Jubilació, incapacitat, viudetat, orfandat…</span></td>
+                                <td><input type="number" id="inc-prest" min="0" placeholder="€/any" oninput="simCalcInc()"></td>
+                                <td></td>
+                                <td class="row-total" id="t-prest">0 €</td>
+                            </tr>
+                            <tr>
+                                <td>Manutenció de menors (separació/divorci)<br><span class="text-muted">Import mensual resolució judicial × 12</span></td>
+                                <td><input type="number" id="inc-man" min="0" placeholder="€/mes" oninput="simCalcInc()"></td>
+                                <td></td>
+                                <td class="row-total" id="t-man">0 €</td>
+                            </tr>
+                            <tr style="background:#f8fafc;">
+                                <td colspan="3" style="font-weight:800;text-align:right;padding-right:16px;">TOTAL INGRESSOS ANUALS</td>
+                                <td class="row-total" id="t-total" style="font-size:1rem;color:var(--primary);">0 €</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+                        <button class="btn btn-outline btn-sm" onclick="simReset()">Reiniciar</button>
+                        <button class="btn btn-cpi btn-sm" onclick="window.cpiGuardarSim()">Desar família des del simulador</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Result + Notes -->
+            <div>
+                <!-- Result box -->
+                <div id="sim-result" class="result-box neutral">
+                    <div style="margin-bottom:8px">
+                        <svg width="32" height="32" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7M17.5 14v7"/></svg>
+                    </div>
+                    <div class="result-title" style="color:#94a3b8;">Introduïu les dades per calcular</div>
+                    <div class="result-detail">El simulador compara els ingressos bruts anuals de la unitat familiar amb el límit establert per CaixaProinfància en funció de la composició familiar i la CCAA.</div>
+                </div>
+
+                <!-- Notes saved from sim -->
+                <div class="sim-card" style="margin-top:14px">
+                    <div class="sim-section-title">Notes / observacions</div>
+                    <textarea id="sim-notes" rows="3" style="width:100%;box-sizing:border-box;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.83rem;resize:vertical;" placeholder="Notes de la família, documents pendents…"></textarea>
+                    <div class="form-row" style="margin-top:10px;">
+                        <div class="form-field"><label>Nom família</label><input type="text" id="sim-nom" placeholder="Familia García…"></div>
+                        <div class="form-field"><label>NIF referent</label><input type="text" id="sim-nif" placeholder="12345678A" style="text-transform:uppercase;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== TAB: FAMÍLIES ========== -->
+    <div id="tab-families" class="tab-pane">
+        <div class="list-controls">
+            <input class="search-input" type="text" placeholder="Cercar per nom, NIF…" id="fam-search" oninput="famFilter()">
+            <select id="fam-filter-estat" onchange="famFilter()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.85rem;">
+                <option value="">Tots els estats</option>
+                <option value="actiu">Actiu</option>
+                <option value="pendent">Pendent</option>
+                <option value="baixa">Baixa</option>
+            </select>
+            <select id="fam-filter-cumple" onchange="famFilter()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.85rem;">
+                <option value="">Tots els resultats</option>
+                <option value="si">Compleixen</option>
+                <option value="no">No compleixen</option>
+            </select>
+            <button class="btn btn-cpi" onclick="window.cpiNouFamilia()">+ Nova família</button>
+        </div>
+        <div id="fam-table-wrap">
+            <div class="loading">Carregant…</div>
+        </div>
+    </div>
+
+    <!-- ========== TAB: PRESSUPOST ========== -->
+    <div id="tab-pressupost" class="tab-pane">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <div class="form-field" style="margin:0">
+                    <label style="font-size:.78rem;font-weight:700;color:#374151;">Curs</label>
+                    <select id="pres-curs" onchange="window.presLoad()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.85rem;">
+                        <option>2024-25</option><option selected>2025-26</option><option>2026-27</option>
+                    </select>
+                </div>
+                <div style="padding-top:20px">
+                    <button class="btn btn-outline btn-sm" onclick="document.getElementById('pres-file').click()">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Importar fitxer CPI (Excel/CSV)
+                    </button>
+                    <input type="file" id="pres-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="window.presImport(this.files[0])">
+                </div>
+                <div style="padding-top:20px">
+                    <button class="btn btn-cpi btn-sm" onclick="window.presNovaLinia()">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:4px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Afegir línia manual
+                    </button>
+                </div>
+            </div>
+            <div style="padding-top:20px;display:flex;gap:8px">
+                <button class="btn btn-success btn-sm" onclick="window.presSave()">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:4px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Desar pressupost
+                </button>
+            </div>
+        </div>
+        <div id="pres-import-preview" style="display:none;margin-bottom:16px;background:#fffbeb;border:1.5px solid #f59e0b;border-radius:10px;padding:14px;">
+            <div style="font-size:.83rem;font-weight:700;color:#92400e;margin-bottom:8px;">Previsualització del fitxer importat — revisa les columnes detectades i confirma:</div>
+            <div id="pres-preview-table" style="overflow-x:auto"></div>
+            <div style="margin-top:10px;display:flex;gap:8px">
+                <button class="btn btn-success btn-sm" onclick="window.presConfirmImport()">Confirmar importació</button>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('pres-import-preview').style.display='none'">Cancel·lar</button>
+            </div>
+        </div>
+        <div id="pres-table-wrap">
+            <div class="loading">Carregant pressupost…</div>
+        </div>
+    </div>
+
+    <!-- ========== TAB: AJUDES ========== -->
+    <div id="tab-ajudes" class="tab-pane">
+        <!-- Global budget overview -->
+        <div id="aju-budget-overview" style="margin-bottom:18px;background:white;border:1px solid var(--border);border-radius:12px;padding:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px;">
+                <div style="font-weight:800;font-size:.9rem;color:var(--primary);display:flex;align-items:center;gap:7px;">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    Resum del pressupost
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <select id="aju-curs-filter" onchange="window.ajuLoadOverview()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.82rem;">
+                        <option>2024-25</option><option selected>2025-26</option><option>2026-27</option>
+                    </select>
+                </div>
+            </div>
+            <div id="aju-overview-content"><div style="font-size:.8rem;color:#94a3b8">Carregant…</div></div>
+        </div>
+        <!-- Per-family assignment -->
+        <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:16px;">
+            <div class="ajudes-header" style="margin-bottom:12px">
+                <div>
+                    <div style="font-size:.85rem;color:#64748b;margin-bottom:8px;">Família:</div>
+                    <select id="aju-fam-select" onchange="window.ajuLoad()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.85rem;min-width:280px;">
+                        <option value="">— Selecciona família —</option>
+                    </select>
+                </div>
+                <button class="btn btn-success btn-sm" onclick="window.ajuNova()" id="aju-nova-btn" style="display:none">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:4px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Nova ajuda
+                </button>
+            </div>
+            <div id="aju-content"><div class="empty-state"><svg width="40" height="40" fill="none" stroke="#cbd5e1" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div>Selecciona una família</div></div></div>
+        </div>
+    </div>
+
+    <!-- ========== TAB: DOCUMENTS ========== -->
+    <div id="tab-documents" class="tab-pane">
+        <div style="margin-bottom:12px;">
+            <div style="font-size:.85rem;color:#64748b;margin-bottom:8px;">Família:</div>
+            <select id="doc-fam-select" onchange="window.docLoad()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.85rem;min-width:280px;">
+                <option value="">— Selecciona família —</option>
+            </select>
+        </div>
+        <div id="doc-upload-area" style="display:none">
+            <div class="docs-upload-zone" onclick="document.getElementById('doc-file').click()">
+                <svg width="32" height="32" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <div style="margin-top:8px;font-size:.82rem;color:#64748b;">Puja nòmina, declaració de renda, certificats…</div>
+                <div style="font-size:.72rem;color:#94a3b8;">PDF · JPG · PNG · màx 5 MB</div>
+            </div>
+            <input type="file" id="doc-file" multiple accept=".pdf,image/*" style="display:none" onchange="window.docUpload(this.files)">
+        </div>
+        <div id="doc-list-wrap"><div class="empty-state"><svg width="40" height="40" fill="none" stroke="#cbd5e1" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><div>Selecciona una família</div></div></div>
+    </div>
+</div>
+
+<!-- ===== MODAL: Nova / Editar família ===== -->
+<div class="cpi-overlay" id="modal-familia">
+    <div class="cpi-dialog">
+        <div class="modal-header">
+            <div class="modal-title" id="modal-fam-title">Nova família CPI</div>
+            <button class="modal-close" onclick="document.getElementById('modal-familia').classList.remove('open')">×</button>
+        </div>
+        <div class="form-row c1">
+            <div class="form-field"><label>Nom de la família *</label><input type="text" id="mf-nom" placeholder="Familia García López"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-field"><label>NIF referent</label><input type="text" id="mf-nif" placeholder="12345678A" style="text-transform:uppercase;"></div>
+            <div class="form-field"><label>Curs</label>
+                <select id="mf-curs">
+                    <option>2024-25</option><option selected>2025-26</option><option>2026-27</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-field"><label>Comunitat Autònoma</label>
+                <select id="mf-ccaa">
+                    <option value="Nacional">Nacional</option>
+                    <option value="Andalucía">Andalucía</option>
+                    <option value="Aragón">Aragón</option>
+                    <option value="Asturias, Principado de">Asturias</option>
+                    <option value="Balears, Illes" selected>Illes Balears</option>
+                    <option value="Canarias">Canarias</option>
+                    <option value="Cantabria">Cantabria</option>
+                    <option value="Castilla y León">Castilla y León</option>
+                    <option value="Castilla - La Mancha">Castilla-La Mancha</option>
+                    <option value="Catalunya">Catalunya</option>
+                    <option value="Comunitat Valenciana">Comunitat Valenciana</option>
+                    <option value="Extremadura">Extremadura</option>
+                    <option value="Galicia">Galicia</option>
+                    <option value="Madrid, Comunidad de">Madrid</option>
+                    <option value="Murcia, Región de">Murcia</option>
+                    <option value="Navarra, Comunidad Foral de">Navarra</option>
+                    <option value="Euskadi">Euskadi</option>
+                    <option value="Rioja, La">La Rioja</option>
+                    <option value="Ceuta">Ceuta</option>
+                    <option value="Melilla">Melilla</option>
+                </select>
+            </div>
+            <div class="form-field"><label>Estat</label>
+                <select id="mf-estat">
+                    <option value="pendent">Pendent</option>
+                    <option value="actiu">Actiu</option>
+                    <option value="baixa">Baixa</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row c3">
+            <div class="form-field"><label>Nº adults</label><input type="number" id="mf-adults" min="1" max="10" value="2"></div>
+            <div class="form-field"><label>Nº menors</label><input type="number" id="mf-menors" min="0" max="15" value="1"></div>
+            <div class="form-field"><label>Discapacitat</label><input type="number" id="mf-discap" min="0" max="10" value="0"></div>
+        </div>
+        <div class="form-row c1">
+            <div class="form-field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="mf-mono" style="width:auto;padding:0;"> Família monoparental
+            </label></div>
+        </div>
+        <div class="form-row">
+            <div class="form-field"><label>Ingressos bruts anuals (€)</label><input type="number" id="mf-ingressos" min="0" placeholder="0"></div>
+            <div class="form-field"><label>Límit d'accés calculat (€)</label><input type="text" id="mf-limit" readonly style="background:#f8fafc;font-weight:700;"></div>
+        </div>
+        <div class="form-row c1">
+            <div id="mf-result-preview" style="padding:10px 14px;border-radius:8px;font-size:.82rem;font-weight:700;background:#f1f5f9;color:#64748b;">— Introduïu ingressos per veure el resultat —</div>
+        </div>
+        <div class="form-row c1">
+            <div class="form-field"><label>Notes</label><textarea id="mf-notes" rows="2" style="width:100%;box-sizing:border-box;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.83rem;resize:vertical;"></textarea></div>
+        </div>
+        <input type="hidden" id="mf-id">
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="document.getElementById('modal-familia').classList.remove('open')">Cancel·lar</button>
+            <button class="btn btn-cpi" onclick="window.cpiSaveFamilia()">Desar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL: Nova ajuda ===== -->
+<div class="cpi-overlay" id="modal-ajuda">
+    <div class="cpi-dialog" style="max-width:520px">
+        <div class="modal-header">
+            <div class="modal-title">Nova ajuda</div>
+            <button class="modal-close" onclick="document.getElementById('modal-ajuda').classList.remove('open')">×</button>
+        </div>
+        <div id="aju-budget-warning" style="display:none;background:#fff7ed;border:1.5px solid #fb923c;border-radius:8px;padding:10px 14px;font-size:.81rem;color:#c2410c;margin-bottom:12px;"></div>
+        <div class="form-row">
+            <div class="form-field"><label>Tipus d'ajuda</label>
+                <select id="aju-tipus" onchange="window.ajuCheckBudget()">
+                    <option value="">— Selecciona —</option>
+                    <option>Beca menjador</option>
+                    <option>Material escolar</option>
+                    <option>Activitats extraescolars</option>
+                    <option>Roba / calçat</option>
+                    <option>Suport educatiu</option>
+                    <option>Suport psicosocial</option>
+                    <option>Acció socioeducativa</option>
+                    <option>Altres</option>
+                </select>
+            </div>
+            <div class="form-field"><label>Import (€)</label><input type="number" id="aju-import" min="0" placeholder="0.00" step="0.01" oninput="window.ajuCheckBudget()"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-field"><label>Data inici</label><input type="date" id="aju-data-ini"></div>
+            <div class="form-field"><label>Data fi</label><input type="date" id="aju-data-fi"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-field"><label>Curs</label>
+                <select id="aju-curs"><option>2024-25</option><option selected>2025-26</option><option>2026-27</option></select>
+            </div>
+            <div class="form-field"><label>Estat</label>
+                <select id="aju-estat"><option value="activa">Activa</option><option value="finalitzada">Finalitzada</option><option value="pendent">Pendent</option></select>
+            </div>
+        </div>
+        <div class="form-row c1">
+            <div class="form-field"><label>Notes</label><textarea id="aju-notes" rows="2" style="width:100%;box-sizing:border-box;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.82rem;resize:vertical;"></textarea></div>
+        </div>
+        <input type="hidden" id="aju-id">
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="document.getElementById('modal-ajuda').classList.remove('open')">Cancel·lar</button>
+            <button class="btn btn-success" onclick="window.ajuSave()">Desar</button>
+        </div>
+    </div>
+</div>
+
+<!-- SheetJS for Excel parsing -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<!-- Tesseract CDN -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<!-- PDF.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<script type="module">
+import { db, auth } from './firebase-config.js';
+import { collection, addDoc, updateDoc, setDoc, deleteDoc, doc, getDocs, query, orderBy, serverTimestamp, getDoc, where, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
+
+// ─── IPREM per CCAA (CaixaProinfancia, gener 2023) ───────────────────────────
+const IPREM_CCAA = {
+    'Nacional': 8400, 'Andalucía': 8444.08, 'Aragón': 9251.72,
+    'Asturias, Principado de': 9219.46, 'Balears, Illes': 9607.60,
+    'Canarias': 8400, 'Cantabria': 8573.36, 'Castilla y León': 8667.69,
+    'Castilla - La Mancha': 8575.20, 'Catalunya': 9567.83,
+    'Comunitat Valenciana': 8400, 'Extremadura': 8495.99, 'Galicia': 8497.20,
+    'Madrid, Comunidad de': 9794.85, 'Murcia, Región de': 8443.06,
+    'Navarra, Comunidad Foral de': 10426.01, 'Euskadi': 10933.32,
+    'Rioja, La': 9243.58, 'Ceuta': 8400, 'Melilla': 8503.96
+};
+
+// ─── Càlcul límit d'accés ─────────────────────────────────────────────────────
+function calcLimit(ccaa, adults, menors, mono, discap) {
+    const iprem = IPREM_CCAA[ccaa] || 8400;
+    const nA = parseInt(adults) || 1;
+    const nM = parseInt(menors) || 0;
+    const nD = parseInt(discap) || 0;
+    const pAdults = nA === 1 ? 1 : 1 + (nA - 1) * 0.5;
+    const pMenors = nM * 0.3;
+    const pMono = (mono || nA === 1) ? 0.6 : 0;
+    const pDiscap = nD * 0.3;
+    const total = pAdults + pMenors + pMono + pDiscap;
+    return { iprem, pAdults, pMenors, pMono, pDiscap, total, limit: Math.round(iprem * total * 100) / 100 };
+}
+
+function fmt(n) { return n.toLocaleString('ca-ES', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' €'; }
+
+// ─── Simulador ────────────────────────────────────────────────────────────────
+window.simCalc = function() {
+    const ccaa = document.getElementById('sim-ccaa').value;
+    const adults = document.getElementById('sim-adults').value;
+    const menors = document.getElementById('sim-menors').value;
+    const mono = document.getElementById('sim-mono').checked;
+    const discap = document.getElementById('sim-discap').value;
+    document.getElementById('sim-iprem-display').value = fmt(IPREM_CCAA[ccaa] || 8400);
+    const r = calcLimit(ccaa, adults, menors, mono, discap);
+    document.getElementById('sim-punts-detail').innerHTML =
+        `Adults: <b>${r.pAdults}</b> pt &nbsp;|&nbsp; Menors: <b>${r.pMenors}</b> pt &nbsp;|&nbsp; ` +
+        `Monoparental: <b>${r.pMono}</b> pt &nbsp;|&nbsp; Discapacitat: <b>${r.pDiscap}</b> pt &nbsp;|&nbsp; ` +
+        `TOTAL PUNTS: <b>${r.total}</b> &nbsp;→&nbsp; IPREM ${fmt(r.iprem)} × ${r.total} = <b style="color:var(--cpi)">${fmt(r.limit)}</b>`;
+    simCalcInc();
+};
+
+window.simCalcInc = function() {
+    const v = id => parseFloat(document.getElementById(id).value) || 0;
+    const tNom = (v('inc-nom1') * parseInt(document.getElementById('inc-pag1').value)) +
+                 (v('inc-nom2') * parseInt(document.getElementById('inc-pag2').value));
+    const tAuto = v('inc-auto') * 4;
+    const tIrpf = v('inc-irpf');
+    const tDes = v('inc-des');
+    const tPrest = v('inc-prest');
+    const tMan = v('inc-man') * 12;
+    const total = tNom + tAuto + tIrpf + tDes + tPrest + tMan;
+    document.getElementById('t-nom').textContent = fmt(tNom);
+    document.getElementById('t-auto').textContent = fmt(tAuto);
+    document.getElementById('t-irpf').textContent = fmt(tIrpf);
+    document.getElementById('t-des').textContent = fmt(tDes);
+    document.getElementById('t-prest').textContent = fmt(tPrest);
+    document.getElementById('t-man').textContent = fmt(tMan);
+    document.getElementById('t-total').textContent = fmt(total);
+
+    const ccaa = document.getElementById('sim-ccaa').value;
+    const r = calcLimit(ccaa, document.getElementById('sim-adults').value,
+        document.getElementById('sim-menors').value,
+        document.getElementById('sim-mono').checked,
+        document.getElementById('sim-discap').value);
+
+    const box = document.getElementById('sim-result');
+    const diff = r.limit - total;
+    if (total === 0) {
+        box.className = 'result-box neutral';
+        box.innerHTML = `<div style="margin-bottom:8px"><svg width="32" height="32" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17h7M17.5 14v7"/></svg></div>
+            <div class="result-title" style="color:#94a3b8">Introduïu els ingressos per calcular</div>
+            <div class="result-detail">Límit d'accés calculat: <b>${fmt(r.limit)}</b></div>`;
+        return;
+    }
+    if (diff >= 0) {
+        box.className = 'result-box cumple';
+        box.innerHTML = `<div style="margin-bottom:8px"><svg width="32" height="32" fill="none" stroke="#16a34a" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="result-title cumple">Compleix els requisits econòmics</div>
+            <div class="result-num cumple">${fmt(total)}</div>
+            <div class="result-detail">Límit màxim: <b>${fmt(r.limit)}</b><br>Diferència: <b>+${fmt(diff)}</b> per sota del límit</div>`;
+    } else {
+        box.className = 'result-box nocumple';
+        box.innerHTML = `<div style="margin-bottom:8px"><svg width="32" height="32" fill="none" stroke="#dc2626" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+            <div class="result-title nocumple">NO compleix els requisits econòmics</div>
+            <div class="result-num nocumple">${fmt(total)}</div>
+            <div class="result-detail">Límit màxim: <b>${fmt(r.limit)}</b><br>Excedeix per: <b>${fmt(Math.abs(diff))}</b></div>`;
+    }
+};
+
+window.simReset = function() {
+    ['inc-nom1','inc-nom2','inc-auto','inc-irpf','inc-des','inc-prest','inc-man'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.value = '';
+    });
+    simCalcInc();
+};
+
+// Save simulated family
+window.cpiGuardarSim = async function() {
+    const nom = document.getElementById('sim-nom').value.trim();
+    if (!nom) { alert('Introduïu el nom de la família'); return; }
+    const ccaa = document.getElementById('sim-ccaa').value;
+    const adults = parseInt(document.getElementById('sim-adults').value)||1;
+    const menors = parseInt(document.getElementById('sim-menors').value)||0;
+    const mono = document.getElementById('sim-mono').checked;
+    const discap = parseInt(document.getElementById('sim-discap').value)||0;
+    const r = calcLimit(ccaa, adults, menors, mono, discap);
+    const totalInc = parseFloat(document.getElementById('t-total').textContent.replace(/[^0-9,]/g,'').replace(',','.')) || 0;
+    const compleix = totalInc <= r.limit;
+    await addDoc(collection(db,'cpi_familias'), {
+        nom, nif: document.getElementById('sim-nif').value.trim().toUpperCase(),
+        ccaa, curs: '2025-26', estat: 'pendent',
+        families_adults: adults, families_menors: menors,
+        monoparental: mono, discapacitat: discap,
+        ingressos_anuals: totalInc, limit_acces: r.limit, compleix,
+        notes: document.getElementById('sim-notes').value.trim(),
+        createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    });
+    alert('Família desada correctament.');
+    loadFamilies();
+};
+
+// ─── Modal helpers (modal input live update) ──────────────────────────────────
+['mf-adults','mf-menors','mf-discap','mf-mono','mf-ccaa','mf-ingressos'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', mfLiveCalc);
+    if (el) el.addEventListener('change', mfLiveCalc);
+});
+function mfLiveCalc() {
+    const ccaa = document.getElementById('mf-ccaa').value;
+    const r = calcLimit(ccaa,
+        document.getElementById('mf-adults').value,
+        document.getElementById('mf-menors').value,
+        document.getElementById('mf-mono').checked,
+        document.getElementById('mf-discap').value);
+    document.getElementById('mf-limit').value = fmt(r.limit);
+    const inc = parseFloat(document.getElementById('mf-ingressos').value) || 0;
+    const prev = document.getElementById('mf-result-preview');
+    if (inc === 0) {
+        prev.style.cssText = 'padding:10px 14px;border-radius:8px;font-size:.82rem;font-weight:700;background:#f1f5f9;color:#64748b;';
+        prev.textContent = '— Introduïu ingressos per veure el resultat —';
+        return;
+    }
+    if (inc <= r.limit) {
+        prev.style.cssText = 'padding:10px 14px;border-radius:8px;font-size:.82rem;font-weight:700;background:#dcfce7;color:#15803d;';
+        prev.textContent = `✅ Compleix — ${fmt(inc)} ≤ ${fmt(r.limit)} (diferència: +${fmt(r.limit-inc)})`;
+    } else {
+        prev.style.cssText = 'padding:10px 14px;border-radius:8px;font-size:.82rem;font-weight:700;background:#fee2e2;color:#b91c1c;';
+        prev.textContent = `❌ No compleix — ${fmt(inc)} > ${fmt(r.limit)} (excedeix: ${fmt(inc-r.limit)})`;
+    }
+}
+
+// ─── Open modal ───────────────────────────────────────────────────────────────
+window.cpiNouFamilia = function() {
+    document.getElementById('mf-id').value = '';
+    document.getElementById('modal-fam-title').textContent = 'Nova família CPI';
+    ['mf-nom','mf-nif','mf-notes','mf-ingressos'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('mf-adults').value = 2;
+    document.getElementById('mf-menors').value = 1;
+    document.getElementById('mf-discap').value = 0;
+    document.getElementById('mf-mono').checked = false;
+    document.getElementById('mf-estat').value = 'pendent';
+    mfLiveCalc();
+    document.getElementById('modal-familia').classList.add('open');
+};
+
+window.cpiEditFamilia = async function(id) {
+    const snap = await getDoc(doc(db,'cpi_familias',id));
+    if (!snap.exists()) return;
+    const d = snap.data();
+    document.getElementById('mf-id').value = id;
+    document.getElementById('modal-fam-title').textContent = 'Editar família';
+    document.getElementById('mf-nom').value = d.nom || '';
+    document.getElementById('mf-nif').value = d.nif || '';
+    document.getElementById('mf-ccaa').value = d.ccaa || 'Balears, Illes';
+    document.getElementById('mf-curs').value = d.curs || '2025-26';
+    document.getElementById('mf-estat').value = d.estat || 'pendent';
+    document.getElementById('mf-adults').value = d.families_adults || 2;
+    document.getElementById('mf-menors').value = d.families_menors || 1;
+    document.getElementById('mf-discap').value = d.discapacitat || 0;
+    document.getElementById('mf-mono').checked = !!d.monoparental;
+    document.getElementById('mf-ingressos').value = d.ingressos_anuals || '';
+    document.getElementById('mf-notes').value = d.notes || '';
+    mfLiveCalc();
+    document.getElementById('modal-familia').classList.add('open');
+};
+
+window.cpiSaveFamilia = async function() {
+    const nom = document.getElementById('mf-nom').value.trim();
+    if (!nom) { alert('El nom és obligatori'); return; }
+    const ccaa = document.getElementById('mf-ccaa').value;
+    const adults = parseInt(document.getElementById('mf-adults').value)||1;
+    const menors = parseInt(document.getElementById('mf-menors').value)||0;
+    const mono = document.getElementById('mf-mono').checked;
+    const discap = parseInt(document.getElementById('mf-discap').value)||0;
+    const r = calcLimit(ccaa, adults, menors, mono, discap);
+    const inc = parseFloat(document.getElementById('mf-ingressos').value)||0;
+    const payload = {
+        nom, nif: document.getElementById('mf-nif').value.trim().toUpperCase(),
+        ccaa, curs: document.getElementById('mf-curs').value,
+        estat: document.getElementById('mf-estat').value,
+        families_adults: adults, families_menors: menors,
+        monoparental: mono, discapacitat: discap,
+        ingressos_anuals: inc, limit_acces: r.limit, compleix: inc > 0 ? inc <= r.limit : null,
+        notes: document.getElementById('mf-notes').value.trim(),
+        updatedAt: serverTimestamp()
+    };
+    const id = document.getElementById('mf-id').value;
+    if (id) {
+        await updateDoc(doc(db,'cpi_familias',id), payload);
+    } else {
+        payload.createdAt = serverTimestamp();
+        await addDoc(collection(db,'cpi_familias'), payload);
+    }
+    document.getElementById('modal-familia').classList.remove('open');
+    loadFamilies();
+};
+
+window.cpiDeleteFamilia = async function(id, nom) {
+    if (!confirm(`Eliminar la família "${nom}"? Aquesta acció no es pot desfer.`)) return;
+    await deleteDoc(doc(db,'cpi_familias',id));
+    loadFamilies();
+};
+
+// ─── Load / render families ───────────────────────────────────────────────────
+let ALL_FAMILIES = [];
+let _unsubFamilies = null;
+function loadFamilies() {
+    if (_unsubFamilies) _unsubFamilies();
+    _unsubFamilies = onSnapshot(
+        query(collection(db,'cpi_familias'), orderBy('createdAt','desc')),
+        (snap) => {
+            ALL_FAMILIES = snap.docs.map(d => ({id:d.id,...d.data()}));
+            updateStats();
+            renderFamilies(ALL_FAMILIES);
+            populateFamSelects();
+        },
+        (e) => { console.warn('[cpi families]', e); }
+    );
+}
+window.addEventListener('beforeunload', () => { if (_unsubFamilies) _unsubFamilies(); });
+
+function updateStats() {
+    document.getElementById('stat-total').textContent = ALL_FAMILIES.length;
+    document.getElementById('stat-cumple').textContent = ALL_FAMILIES.filter(f=>f.compleix===true).length;
+    document.getElementById('stat-nocumple').textContent = ALL_FAMILIES.filter(f=>f.compleix===false).length;
+    document.getElementById('stat-actiu').textContent = ALL_FAMILIES.filter(f=>f.estat==='actiu').length;
+}
+
+function renderFamilies(list) {
+    const wrap = document.getElementById('fam-table-wrap');
+    if (!list.length) {
+        wrap.innerHTML = '<div class="empty-state"><div>No hi ha famílies registrades</div></div>';
+        return;
+    }
+    wrap.innerHTML = `<div style="overflow-x:auto"><table class="families-table">
+        <thead><tr>
+            <th>Família</th><th>NIF</th><th>CCAA</th><th>Composició</th>
+            <th>Ingressos</th><th>Límit</th><th>Resultat</th><th>Estat</th><th>Curs</th><th></th>
+        </tr></thead>
+        <tbody>${list.map(f => {
+            const cumpleDot = f.compleix===true
+                ? `<span class="cumple-dot dot-green"></span>Compleix`
+                : f.compleix===false
+                ? `<span class="cumple-dot dot-red"></span>No compleix`
+                : `<span class="cumple-dot dot-grey"></span>Pendent`;
+            const comp = [
+                f.families_adults ? `${f.families_adults}A` : '',
+                f.families_menors ? `${f.families_menors}M` : '',
+                f.monoparental ? 'Mono' : '',
+                f.discapacitat ? `${f.discapacitat}D` : ''
+            ].filter(Boolean).join(' · ');
+            return `<tr>
+                <td><b>${f.nom||'—'}</b></td>
+                <td><span class="chip">${f.nif||'—'}</span></td>
+                <td style="font-size:.75rem">${(f.ccaa||'—').replace(', Principado de','').replace(', Comunidad de','').replace(', Región de','').replace(', Comunitat','')}</td>
+                <td><span class="text-muted">${comp}</span></td>
+                <td>${f.ingressos_anuals ? fmt(f.ingressos_anuals) : '—'}</td>
+                <td>${f.limit_acces ? fmt(f.limit_acces) : '—'}</td>
+                <td>${cumpleDot}</td>
+                <td><span class="estat-badge estat-${f.estat||'pendent'}">${f.estat||'pendent'}</span></td>
+                <td>${f.curs||'—'}</td>
+                <td style="white-space:nowrap">
+                    <button class="btn btn-outline btn-sm" onclick="window.cpiEditFamilia('${f.id}')">Editar</button>
+                    <button class="btn btn-danger btn-sm" style="margin-left:4px" onclick="window.cpiDeleteFamilia('${f.id}','${(f.nom||'').replace(/'/g,'')}')">✕</button>
+                </td>
+            </tr>`;
+        }).join('')}</tbody>
+    </table></div>`;
+}
+
+window.famFilter = function() {
+    const q = document.getElementById('fam-search').value.toLowerCase();
+    const estat = document.getElementById('fam-filter-estat').value;
+    const cumple = document.getElementById('fam-filter-cumple').value;
+    const filtered = ALL_FAMILIES.filter(f => {
+        const matchText = !q || (f.nom||'').toLowerCase().includes(q) || (f.nif||'').toLowerCase().includes(q);
+        const matchEstat = !estat || f.estat === estat;
+        const matchCumple = !cumple || (cumple==='si' ? f.compleix===true : f.compleix===false);
+        return matchText && matchEstat && matchCumple;
+    });
+    renderFamilies(filtered);
+};
+
+// ─── Ajudes ───────────────────────────────────────────────────────────────────
+function populateFamSelects() {
+    const opts = ALL_FAMILIES.map(f => `<option value="${f.id}">${f.nom}${f.nif?' ('+f.nif+')':''}</option>`).join('');
+    ['aju-fam-select','doc-fam-select'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const cur = el.value;
+        el.innerHTML = `<option value="">— Selecciona família —</option>${opts}`;
+        if (cur) el.value = cur;
+    });
+}
+
+// ─── Pressupost ───────────────────────────────────────────────────────────────
+let PRES_LINES = []; // [{tipus, pressupost, places, import_unitari}]
+let PRES_IMPORT_DATA = null; // temp while confirming import
+
+window.presLoad = async function() {
+    const curs = document.getElementById('pres-curs').value;
+    const snap = await getDoc(doc(db,'cpi_pressupost',curs));
+    PRES_LINES = snap.exists() ? (snap.data().linies || []) : [];
+    presRender();
+    // also reload ajudes overview if visible
+    window.ajuLoadOverview && window.ajuLoadOverview();
+};
+
+function presRender() {
+    const wrap = document.getElementById('pres-table-wrap');
+    const curs = document.getElementById('pres-curs').value;
+    const totalPres = PRES_LINES.reduce((s,l)=>s+(parseFloat(l.pressupost)||0),0);
+    const totalPlaces = PRES_LINES.reduce((s,l)=>s+(parseInt(l.places)||0),0);
+    if (!PRES_LINES.length) {
+        wrap.innerHTML = `<div class="empty-state"><svg width="40" height="40" fill="none" stroke="#cbd5e1" stroke-width="1.5" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><div>Sense pressupost per al curs ${curs}</div><div style="font-size:.78rem;margin-top:6px">Importa el fitxer del CPI o afegeix línies manualment</div></div>`;
+        return;
+    }
+    wrap.innerHTML = `
+    <div style="margin-bottom:12px;display:flex;gap:14px;flex-wrap:wrap">
+        <div class="summary-card" style="flex:1;min-width:150px"><div class="summary-label">Pressupost total</div><div class="summary-value" style="font-size:1.2rem;color:var(--cpi)">${fmt(totalPres)}</div></div>
+        <div class="summary-card" style="flex:1;min-width:150px"><div class="summary-label">Places totals</div><div class="summary-value" style="font-size:1.2rem">${totalPlaces}</div></div>
+        <div class="summary-card" style="flex:1;min-width:150px"><div class="summary-label">Línies d'ajuda</div><div class="summary-value" style="font-size:1.2rem">${PRES_LINES.length}</div></div>
+    </div>
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.83rem">
+        <thead><tr style="background:#f8fafc">
+            <th style="padding:9px 12px;text-align:left;font-size:.72rem;font-weight:700;color:#64748b;border-bottom:2px solid var(--border)">Línia / Tipus d'ajuda</th>
+            <th style="padding:9px 12px;text-align:right;font-size:.72rem;font-weight:700;color:#64748b;border-bottom:2px solid var(--border)">Pressupost (€)</th>
+            <th style="padding:9px 12px;text-align:right;font-size:.72rem;font-weight:700;color:#64748b;border-bottom:2px solid var(--border)">Nº places</th>
+            <th style="padding:9px 12px;text-align:right;font-size:.72rem;font-weight:700;color:#64748b;border-bottom:2px solid var(--border)">Import/ajuda (€)</th>
+            <th style="padding:9px 12px;border-bottom:2px solid var(--border)"></th>
+        </tr></thead>
+        <tbody id="pres-tbody">
+        ${PRES_LINES.map((l,i) => `<tr>
+            <td style="padding:8px 12px"><input type="text" value="${(l.tipus||'').replace(/"/g,'&quot;')}" data-pi="${i}" data-pf="tipus" class="pres-input" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:.82rem"></td>
+            <td style="padding:8px 12px"><input type="number" value="${l.pressupost||''}" data-pi="${i}" data-pf="pressupost" class="pres-input" min="0" step="0.01" style="width:110px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:.82rem;text-align:right"></td>
+            <td style="padding:8px 12px"><input type="number" value="${l.places||''}" data-pi="${i}" data-pf="places" class="pres-input" min="0" style="width:80px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:.82rem;text-align:right"></td>
+            <td style="padding:8px 12px"><input type="number" value="${l.import_unitari||''}" data-pi="${i}" data-pf="import_unitari" class="pres-input" min="0" step="0.01" style="width:100px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:.82rem;text-align:right"></td>
+            <td style="padding:8px 12px"><button class="btn btn-danger btn-sm" onclick="window.presDeleteLinia(${i})">✕</button></td>
+        </tr>`).join('')}
+        </tbody>
+    </table></div>`;
+    // live edit
+    document.querySelectorAll('.pres-input').forEach(el => {
+        el.addEventListener('change', () => {
+            const i = parseInt(el.dataset.pi); const f = el.dataset.pf;
+            if (!PRES_LINES[i]) return;
+            PRES_LINES[i][f] = el.type==='number' ? (parseFloat(el.value)||0) : el.value;
+        });
+    });
+}
+
+window.presNovaLinia = function() {
+    PRES_LINES.push({tipus:'', pressupost:0, places:0, import_unitari:0});
+    presRender();
+};
+
+window.presDeleteLinia = function(i) {
+    PRES_LINES.splice(i, 1);
+    presRender();
+};
+
+window.presSave = async function() {
+    const curs = document.getElementById('pres-curs').value;
+    // sync from DOM before saving
+    document.querySelectorAll('.pres-input').forEach(el => {
+        const i = parseInt(el.dataset.pi); const f = el.dataset.pf;
+        if (!PRES_LINES[i]) return;
+        PRES_LINES[i][f] = el.type==='number' ? (parseFloat(el.value)||0) : el.value;
+    });
+    await setDoc(doc(db,'cpi_pressupost',curs), {
+        curs, linies: PRES_LINES, updatedAt: serverTimestamp()
+    });
+    alert(`Pressupost ${curs} desat correctament.`);
+    window.ajuLoadOverview();
+    // refresh ajudes tipus select
+    refreshAjuTipus();
+};
+
+// Import from Excel/CSV using SheetJS
+window.presImport = async function(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const wb = XLSX.read(e.target.result, {type:'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+        // Show preview
+        PRES_IMPORT_DATA = rows;
+        const preview = document.getElementById('pres-import-preview');
+        const tableWrap = document.getElementById('pres-preview-table');
+        const displayRows = rows.slice(0, Math.min(rows.length, 12));
+        tableWrap.innerHTML = `<table style="border-collapse:collapse;font-size:.76rem;width:100%">
+            ${displayRows.map((r,ri) => `<tr style="background:${ri===0?'#f8fafc':'white'}">${r.slice(0,8).map(c=>`<td style="border:1px solid #e2e8f0;padding:5px 8px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis">${String(c).substring(0,40)}</td>`).join('')}</tr>`).join('')}
+        </table>${rows.length>12?`<div style="font-size:.72rem;color:#94a3b8;margin-top:5px">(+${rows.length-12} files més)</div>`:''};
+        <div style="margin-top:10px;font-size:.8rem;color:#374151;font-weight:700">Assigna les columnes detectades:</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:8px">
+            ${['col-tipus:Línia/Tipus','col-pres:Pressupost (€)','col-places:Nº places','col-import:Import unitari (€)'].map(s=>{
+                const [id,lbl]=s.split(':');
+                const hdrs = rows[0]||[];
+                return `<div><label style="font-size:.72rem;font-weight:700;color:#374151">${lbl}</label><select id="${id}" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:.75rem;font-family:inherit"><option value="-1">— no disponible —</option>${hdrs.map((h,i)=>`<option value="${i}">${i}: ${String(h).substring(0,25)}</option>`).join('')}</select></div>`;
+            }).join('')}
+        </div>`;
+        preview.style.display = 'block';
+        document.getElementById('pres-file').value = '';
+    };
+    reader.readAsArrayBuffer(file);
+};
+
+window.presConfirmImport = function() {
+    if (!PRES_IMPORT_DATA) return;
+    const rows = PRES_IMPORT_DATA;
+    const ci = id => parseInt(document.getElementById(id)?.value ?? '-1');
+    const cTipus = ci('col-tipus'), cPres = ci('col-pres'), cPlaces = ci('col-places'), cImport = ci('col-import');
+    const dataRows = rows.slice(1).filter(r => r.some(c => c !== ''));
+    PRES_LINES = dataRows.map(r => ({
+        tipus: cTipus>=0 ? String(r[cTipus]||'').trim() : '',
+        pressupost: cPres>=0 ? (parseFloat(String(r[cPres]).replace(',','.'))||0) : 0,
+        places: cPlaces>=0 ? (parseInt(r[cPlaces])||0) : 0,
+        import_unitari: cImport>=0 ? (parseFloat(String(r[cImport]).replace(',','.'))||0) : 0
+    })).filter(l => l.tipus);
+    document.getElementById('pres-import-preview').style.display = 'none';
+    PRES_IMPORT_DATA = null;
+    presRender();
+    // auto-save
+    window.presSave();
+    refreshAjuTipus();
+};
+
+function refreshAjuTipus() {
+    const sel = document.getElementById('aju-tipus');
+    if (!sel) return;
+    const cur = sel.value;
+    const opts = PRES_LINES.length
+        ? PRES_LINES.filter(l=>l.tipus).map(l=>`<option value="${l.tipus.replace(/"/g,'&quot;')}">${l.tipus}</option>`).join('')
+        : ['Beca menjador','Material escolar','Activitats extraescolars','Roba / calçat','Suport educatiu','Suport psicosocial','Acció socioeducativa','Altres'].map(t=>`<option>${t}</option>`).join('');
+    sel.innerHTML = `<option value="">— Selecciona —</option>${opts}`;
+    if (cur) sel.value = cur;
+}
+
+// ─── Ajudes overview (global budget tracking) ─────────────────────────────────
+let ALL_AJUDES_GLOBAL = []; // flat list: {famId, famNom, ...ajuda fields}
+
+window.ajuLoadOverview = async function() {
+    const curs = document.getElementById('aju-curs-filter')?.value || '2025-26';
+    const wrap = document.getElementById('aju-overview-content');
+    if (!wrap) return;
+    wrap.innerHTML = '<div style="font-size:.8rem;color:#94a3b8">Carregant…</div>';
+    // Load pressupost for this curs
+    const presSnap = await getDoc(doc(db,'cpi_pressupost',curs));
+    const presLines = presSnap.exists() ? (presSnap.data().linies || []) : [];
+    // Load all ajudes for all families (for this curs)
+    const consumed = {}; // tipus -> {import, count}
+    ALL_AJUDES_GLOBAL = [];
+    for (const fam of ALL_FAMILIES) {
+        const snap = await getDocs(query(collection(db,'cpi_familias',fam.id,'ajudes')));
+        snap.docs.forEach(d => {
+            const a = {id:d.id,...d.data(),famId:fam.id,famNom:fam.nom};
+            if ((a.curs||'2025-26') === curs) {
+                ALL_AJUDES_GLOBAL.push(a);
+                const t = a.tipus_ajuda||'Altres';
+                if (!consumed[t]) consumed[t] = {import:0, count:0};
+                consumed[t].import += parseFloat(a.import_aju)||0;
+                consumed[t].count += 1;
+            }
+        });
+    }
+    if (!presLines.length && !Object.keys(consumed).length) {
+        wrap.innerHTML = `<div style="font-size:.8rem;color:#94a3b8">Sense pressupost ni ajudes per al curs ${curs}. Importa el pressupost a la pestanya <b>Pressupost</b>.</div>`;
+        return;
+    }
+    // Build merged table
+    const allTypes = [...new Set([...presLines.map(l=>l.tipus), ...Object.keys(consumed)])];
+    const totalPresTotal = presLines.reduce((s,l)=>s+(l.pressupost||0),0);
+    const totalConsumed = Object.values(consumed).reduce((s,v)=>s+v.import,0);
+    const totalPlaces = presLines.reduce((s,l)=>s+(l.places||0),0);
+    const totalAssigned = Object.values(consumed).reduce((s,v)=>s+v.count,0);
+    wrap.innerHTML = `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 16px;flex:1;min-width:120px">
+            <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase">Pressupost total</div>
+            <div style="font-size:1.2rem;font-weight:800;color:#15803d">${fmt(totalPresTotal)}</div>
+        </div>
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 16px;flex:1;min-width:120px">
+            <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase">Consumit</div>
+            <div style="font-size:1.2rem;font-weight:800;color:#c2410c">${fmt(totalConsumed)}</div>
+        </div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 16px;flex:1;min-width:120px">
+            <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase">Restant</div>
+            <div style="font-size:1.2rem;font-weight:800;color:#1d4ed8">${fmt(Math.max(0,totalPresTotal-totalConsumed))}</div>
+        </div>
+        <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px 16px;flex:1;min-width:120px">
+            <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase">Places restants</div>
+            <div style="font-size:1.2rem;font-weight:800;color:var(--primary)">${totalPlaces-totalAssigned} / ${totalPlaces}</div>
+        </div>
+    </div>
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.8rem">
+        <thead><tr style="background:#f8fafc">
+            <th style="padding:7px 10px;text-align:left;font-size:.7rem;font-weight:700;color:#64748b;border-bottom:2px solid var(--border)">Tipus</th>
+            <th style="padding:7px 10px;text-align:right;font-size:.7rem;font-weight:700;color:#64748b;border-bottom:2px solid var(--border)">Pressupost</th>
+            <th style="padding:7px 10px;text-align:right;font-size:.7rem;font-weight:700;color:#64748b;border-bottom:2px solid var(--border)">Consumit</th>
+            <th style="padding:7px 10px;text-align:right;font-size:.7rem;font-weight:700;color:#64748b;border-bottom:2px solid var(--border)">Restant</th>
+            <th style="padding:7px 10px;text-align:right;font-size:.7rem;font-weight:700;color:#64748b;border-bottom:2px solid var(--border)">Places</th>
+            <th style="padding:7px 10px;text-align:right;font-size:.7rem;font-weight:700;color:#64748b;border-bottom:2px solid var(--border)">Assignades</th>
+            <th style="padding:7px 10px;text-align:right;font-size:.7rem;font-weight:700;color:#64748b;border-bottom:2px solid var(--border)">Restants</th>
+            <th style="padding:7px 10px;font-size:.7rem;font-weight:700;color:#64748b;border-bottom:2px solid var(--border)">%</th>
+        </tr></thead>
+        <tbody>${allTypes.map(t => {
+            const pl = presLines.find(l=>l.tipus===t)||{};
+            const c = consumed[t]||{import:0,count:0};
+            const pres = pl.pressupost||0; const places = pl.places||0;
+            const restantEur = pres - c.import; const restantPl = places - c.count;
+            const pct = pres>0 ? Math.round(c.import/pres*100) : (c.import>0?100:0);
+            const overBudget = pres>0 && c.import>pres;
+            const overPlaces = places>0 && c.count>places;
+            return `<tr style="${overBudget||overPlaces?'background:#fff1f2':''}">
+                <td style="padding:7px 10px;font-weight:600">${t}</td>
+                <td style="padding:7px 10px;text-align:right">${pres?fmt(pres):'—'}</td>
+                <td style="padding:7px 10px;text-align:right;color:${overBudget?'#dc2626':'#059669'};font-weight:700">${fmt(c.import)}</td>
+                <td style="padding:7px 10px;text-align:right;font-weight:700;color:${restantEur<0?'#dc2626':'#374151'}">${pres?fmt(restantEur):'—'}</td>
+                <td style="padding:7px 10px;text-align:right">${places||'—'}</td>
+                <td style="padding:7px 10px;text-align:right;color:${overPlaces?'#dc2626':'#374151'};font-weight:700">${c.count}</td>
+                <td style="padding:7px 10px;text-align:right;font-weight:700;color:${restantPl<0?'#dc2626':'#374151'}">${places?(restantPl):' —'}</td>
+                <td style="padding:7px 10px">
+                    <div style="display:flex;align-items:center;gap:6px">
+                        <div style="flex:1;background:#e2e8f0;border-radius:99px;height:6px;min-width:60px"><div style="height:100%;border-radius:99px;background:${pct>=100?'#dc2626':pct>=80?'#f59e0b':'#10b981'};width:${Math.min(100,pct)}%"></div></div>
+                        <span style="font-size:.73rem;font-weight:700;color:${pct>=100?'#dc2626':pct>=80?'#92400e':'#374151'}">${pct}%</span>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('')}</tbody>
+    </table></div>`;
+};
+
+window.ajuLoad = async function() {
+    const famId = document.getElementById('aju-fam-select').value;
+    document.getElementById('aju-nova-btn').style.display = famId ? '' : 'none';
+    if (!famId) {
+        document.getElementById('aju-content').innerHTML = '<div class="empty-state"><div>Selecciona una família</div></div>';
+        return;
+    }
+    const snap = await getDocs(query(collection(db,'cpi_familias',famId,'ajudes'), orderBy('createdAt','desc')));
+    const ajudes = snap.docs.map(d => ({id:d.id,...d.data()}));
+    const total = ajudes.reduce((s,a) => s + (parseFloat(a.import_aju)||0), 0);
+    if (!ajudes.length) {
+        document.getElementById('aju-content').innerHTML = `<div class="empty-state"><div>Aquesta família no té ajudes registrades</div></div>`;
+        return;
+    }
+    document.getElementById('aju-content').innerHTML = `
+        <div style="margin-bottom:12px;font-size:.85rem;color:#475569">
+            Total assignat: <b style="color:var(--success)">${fmt(total)}</b>
+        </div>
+        <table class="ajudes-table">
+            <thead><tr><th>Tipus</th><th>Import</th><th>Curs</th><th>Període</th><th>Estat</th><th>Notes</th><th></th></tr></thead>
+            <tbody>${ajudes.map(a => `<tr>
+                <td><b>${a.tipus_ajuda||'—'}</b></td>
+                <td style="color:var(--success);font-weight:700">${a.import_aju ? fmt(parseFloat(a.import_aju)) : '—'}</td>
+                <td>${a.curs||'—'}</td>
+                <td style="font-size:.75rem">${a.data_ini||''}${a.data_fi?' → '+a.data_fi:''}</td>
+                <td><span class="chip ${a.estat_aju==='activa'?'green':a.estat_aju==='finalitzada'?'blue':''}">${a.estat_aju||'—'}</span></td>
+                <td style="font-size:.75rem;color:#64748b">${a.notes||''}</td>
+                <td><button class="btn btn-danger btn-sm" onclick="window.ajuDelete('${a.id}')">✕</button></td>
+            </tr>`).join('')}</tbody>
+        </table>`;
+};
+
+window.ajuNova = function() {
+    document.getElementById('aju-id').value = '';
+    document.getElementById('aju-import').value = '';
+    document.getElementById('aju-data-ini').value = '';
+    document.getElementById('aju-data-fi').value = '';
+    document.getElementById('aju-notes').value = '';
+    document.getElementById('aju-budget-warning').style.display = 'none';
+    refreshAjuTipus();
+    document.getElementById('modal-ajuda').classList.add('open');
+};
+
+window.ajuCheckBudget = function() {
+    const tipus = document.getElementById('aju-tipus').value;
+    const importVal = parseFloat(document.getElementById('aju-import').value)||0;
+    const curs = document.getElementById('aju-curs-filter')?.value || '2025-26';
+    const warn = document.getElementById('aju-budget-warning');
+    if (!tipus) { warn.style.display='none'; return; }
+    const pl = PRES_LINES.find(l=>l.tipus===tipus);
+    const consumed = ALL_AJUDES_GLOBAL.filter(a=>a.tipus_ajuda===tipus && (a.curs||'2025-26')===curs);
+    const consumedImport = consumed.reduce((s,a)=>s+(parseFloat(a.import_aju)||0),0);
+    const consumedCount = consumed.length;
+    const msgs = [];
+    if (pl?.pressupost && (consumedImport+importVal) > pl.pressupost) {
+        msgs.push(`⚠️ Pressupost insuficient: consumit ${fmt(consumedImport)} + ${fmt(importVal)} = ${fmt(consumedImport+importVal)} > ${fmt(pl.pressupost)} assignat`);
+    }
+    if (pl?.places && (consumedCount+1) > pl.places) {
+        msgs.push(`⚠️ Places exhaurides: ${consumedCount}/${pl.places} places assignades`);
+    }
+    if (pl?.import_unitari && importVal && importVal !== pl.import_unitari) {
+        msgs.push(`ℹ️ Import suggerit per pressupost: ${fmt(pl.import_unitari)}`);
+    }
+    if (msgs.length) { warn.style.display='block'; warn.innerHTML = msgs.join('<br>'); }
+    else { warn.style.display='none'; }
+};
+
+window.ajuSave = async function() {
+    const famId = document.getElementById('aju-fam-select').value;
+    if (!famId) { alert('Selecciona una família'); return; }
+    const tipus = document.getElementById('aju-tipus').value;
+    if (!tipus) { alert('Selecciona el tipus d\'ajuda'); return; }
+    const payload = {
+        tipus_ajuda: tipus,
+        import_aju: parseFloat(document.getElementById('aju-import').value)||0,
+        data_ini: document.getElementById('aju-data-ini').value,
+        data_fi: document.getElementById('aju-data-fi').value,
+        curs: document.getElementById('aju-curs').value,
+        estat_aju: document.getElementById('aju-estat').value,
+        notes: document.getElementById('aju-notes').value.trim(),
+        createdAt: serverTimestamp()
+    };
+    await addDoc(collection(db,'cpi_familias',famId,'ajudes'), payload);
+    document.getElementById('modal-ajuda').classList.remove('open');
+    window.ajuLoad();
+    window.ajuLoadOverview();
+};
+
+window.ajuDelete = async function(ajuId) {
+    if (!confirm('Eliminar aquesta ajuda?')) return;
+    const famId = document.getElementById('aju-fam-select').value;
+    await deleteDoc(doc(db,'cpi_familias',famId,'ajudes',ajuId));
+    window.ajuLoad();
+};
+
+// ─── Documents (Firebase Storage) ────────────────────────────────────────────
+const storage = getStorage();
+
+window.docLoad = async function() {
+    const famId = document.getElementById('doc-fam-select').value;
+    document.getElementById('doc-upload-area').style.display = famId ? '' : 'none';
+    if (!famId) {
+        document.getElementById('doc-list-wrap').innerHTML = '<div class="empty-state"><div>Selecciona una família</div></div>';
+        return;
+    }
+    const snap = await getDocs(collection(db,'cpi_familias',famId,'documents'));
+    const docs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    if (!docs.length) {
+        document.getElementById('doc-list-wrap').innerHTML = '<div class="empty-state"><div>Sense documents</div></div>';
+        return;
+    }
+    const ICONS = {
+        pdf: '<svg width="18" height="18" fill="none" stroke="#e8660d" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h6M9 17h4"/></svg>',
+        jpg: '<svg width="18" height="18" fill="none" stroke="#0ea5e9" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+        jpeg: '<svg width="18" height="18" fill="none" stroke="#0ea5e9" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+        png: '<svg width="18" height="18" fill="none" stroke="#0ea5e9" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+        default: '<svg width="18" height="18" fill="none" stroke="#64748b" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+    };
+    document.getElementById('doc-list-wrap').innerHTML = `<div class="doc-list">${docs.map(d => {
+        const ext = (d.nom||'').split('.').pop().toLowerCase();
+        const icon = ICONS[ext]||ICONS.default;
+        return `<div class="doc-item">
+            <div class="doc-icon">${icon}</div>
+            <div class="doc-info"><div class="doc-name">${d.nom||'Document'}</div>
+            <div class="doc-meta">${d.tipus||''} · ${d.data||''}</div></div>
+            <a href="${d.url}" target="_blank" class="btn btn-outline btn-sm">Obrir</a>
+            <button class="btn btn-danger btn-sm" onclick="window.docDelete('${d.id}','${d.path||''}')">✕</button>
+        </div>`;
+    }).join('')}</div>`;
+};
+
+window.docUpload = async function(files) {
+    const famId = document.getElementById('doc-fam-select').value;
+    if (!famId || !files.length) return;
+    for (const file of files) {
+        if (file.size > 5*1024*1024) { alert(`"${file.name}" supera 5 MB`); continue; }
+        const path = `cpi/${famId}/${Date.now()}_${file.name}`;
+        const storRef = sRef(storage, path);
+        await uploadBytes(storRef, file);
+        const url = await getDownloadURL(storRef);
+        const ext = file.name.split('.').pop().toLowerCase();
+        const tipusMap = {pdf:'PDF',jpg:'Imatge',jpeg:'Imatge',png:'Imatge'};
+        await addDoc(collection(db,'cpi_familias',famId,'documents'), {
+            nom: file.name, url, path, mida: file.size,
+            tipus: tipusMap[ext]||'Document',
+            data: new Date().toLocaleDateString('ca-ES'),
+            createdAt: serverTimestamp()
+        });
+    }
+    window.docLoad();
+    document.getElementById('doc-file').value = '';
+};
+
+window.docDelete = async function(docId, path) {
+    if (!confirm('Eliminar document?')) return;
+    const famId = document.getElementById('doc-fam-select').value;
+    if (path) { try { await deleteObject(sRef(storage,path)); } catch(e){} }
+    await deleteDoc(doc(db,'cpi_familias',famId,'documents',docId));
+    window.docLoad();
+};
+
+// ─── OCR (Tesseract.js + PDF.js) ─────────────────────────────────────────────
+window.cpiOCR = async function(file) {
+    if (!file) return;
+    const prog      = document.getElementById('ocr-progress');
+    const status    = document.getElementById('ocr-status');
+    const bar       = document.getElementById('ocr-bar-fill');
+    const resFields = document.getElementById('ocr-result-fields');
+    const textWrap  = document.getElementById('ocr-text-wrap');
+    const prevWrap  = document.getElementById('ocr-preview-wrap');
+    const canvas    = document.getElementById('ocr-canvas');
+    const imgPrev   = document.getElementById('ocr-img-preview');
+
+    // Reset UI
+    prog.style.display      = 'block';
+    resFields.style.display = 'none';
+    if (textWrap)  textWrap.style.display  = 'none';
+    if (prevWrap)  prevWrap.style.display  = 'none';
+    if (canvas)    canvas.style.display    = 'none';
+    if (imgPrev)   imgPrev.style.display   = 'none';
+    status.textContent = 'Processant fitxer…';
+    bar.style.width    = '5%';
+
+    try {
+        let text = '';
+
+        if (file.type === 'application/pdf') {
+            status.textContent = 'Llegint PDF…';
+            bar.style.width = '20%';
+            const buffer = await file.arrayBuffer();
+            pdfjsLib.GlobalWorkerOptions.workerSrc =
+                'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            const pdf  = await pdfjsLib.getDocument({data: buffer}).promise;
+            const page = await pdf.getPage(1);
+
+            // Render to canvas for preview
+            if (canvas && prevWrap) {
+                const vp = page.getViewport({scale: 1.3});
+                canvas.width  = vp.width;
+                canvas.height = vp.height;
+                await page.render({canvasContext: canvas.getContext('2d'), viewport: vp}).promise;
+                prevWrap.style.display = 'block';
+                canvas.style.display   = 'block';
+            }
+            bar.style.width = '50%';
+
+            // Extract embedded text
+            const tc = await page.getTextContent();
+            text = tc.items.map(i => i.str).join(' ');
+            bar.style.width = '70%';
+
+        } else {
+            // Image: show preview immediately
+            if (imgPrev && prevWrap) {
+                imgPrev.src = URL.createObjectURL(file);
+                imgPrev.style.display  = 'block';
+                prevWrap.style.display = 'block';
+            }
+            status.textContent = 'Executant OCR — pot trigar uns segons…';
+            bar.style.width = '10%';
+            const result = await Tesseract.recognize(file, 'spa+cat', {
+                logger: m => {
+                    if (m.status === 'recognizing text') {
+                        bar.style.width = Math.round(10 + m.progress * 80) + '%';
+                        status.textContent = `OCR: ${Math.round(m.progress*100)}%`;
+                    }
+                }
+            });
+            text = result.data.text;
+        }
+
+        bar.style.width    = '90%';
+        status.textContent = 'Analitzant text…';
+
+        // Show raw text so user can verify
+        if (textWrap) {
+            document.getElementById('ocr-raw-text').value = text;
+            textWrap.style.display = 'block';
+        }
+
+        // ── Extract fields ────────────────────────────────────────────────
+        // NIF / NIE
+        const nifMatch = text.match(/\b[0-9XYZ][0-9]{6,7}[A-Z]\b/);
+        const nifVal   = nifMatch ? nifMatch[0] : '';
+
+        // Name: "Nombre: GARCIA LOPEZ", "Trabajador/a: Juan…", "D./Dña. Juan…"
+        let nomVal = '';
+        const nomPat = text.match(
+            /(?:Nombre(?:\s+completo)?[:\s]+|Trabajador(?:\/a)?[:\s]+|Titular[:\s]+|D\.\s+|Dña\.\s+)([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ.,\- ]{3,50})/
+        );
+        if (nomPat) nomVal = nomPat[1].replace(/,\s*$/, '').trim();
+
+        // Annual gross — IRPF / payslip totals
+        let ingressosVal = '';
+        const incPats = [
+            /Rendimientos\s+dinerarios[^0-9]*([0-9]{1,3}(?:[.,][0-9]{3})*[.,][0-9]{2})/i,
+            /Base\s+imponible[^0-9]*([0-9]{1,3}(?:[.,][0-9]{3})*[.,][0-9]{2})/i,
+            /Total\s+ingresos[^0-9]*([0-9]{1,3}(?:[.,][0-9]{3})*[.,][0-9]{2})/i,
+            /Retribuciones\s+dinerarias[^0-9]*([0-9]{1,3}(?:[.,][0-9]{3})*[.,][0-9]{2})/i,
+        ];
+        for (const p of incPats) {
+            const m = text.match(p);
+            if (m) { ingressosVal = m[1].replace(/\./g,'').replace(',','.'); break; }
+        }
+
+        // Monthly gross — payslip "Total devengado" / "Importe bruto"
+        let nominaVal = '';
+        const nomPats = [
+            /Total\s+devengado[^0-9]*([0-9]{1,6}[.,][0-9]{2})/i,
+            /Importe\s+bruto[^0-9]*([0-9]{1,6}[.,][0-9]{2})/i,
+            /Salario\s+bruto[^0-9]*([0-9]{1,6}[.,][0-9]{2})/i,
+        ];
+        for (const p of nomPats) {
+            const m = text.match(p);
+            if (m) { nominaVal = m[1].replace(/\./g,'').replace(',','.'); break; }
+        }
+
+        document.getElementById('ocr-nom').value        = nomVal;
+        document.getElementById('ocr-nif').value        = nifVal;
+        document.getElementById('ocr-ingressos').value  = ingressosVal;
+        document.getElementById('ocr-nomina').value     = nominaVal;
+
+        bar.style.width    = '100%';
+        status.textContent = 'Completat';
+        resFields.style.display = 'block';
+
+    } catch(e) {
+        status.textContent = 'Error: ' + e.message;
+        bar.style.width = '0%';
+        console.error('cpiOCR error:', e);
+    }
+
+    document.getElementById('ocr-file').value = '';
+};
+
+window.cpiOcrApply = function(field) {
+    const map = {
+        nom: ['ocr-nom', 'sim-nom', 'mf-nom'],
+        nif: ['ocr-nif', 'sim-nif', 'mf-nif'],
+        ingressos: ['ocr-ingressos', 'mf-ingressos'],
+        nomina: ['ocr-nomina', 'inc-nom1']
+    };
+    const [srcId, ...dstIds] = map[field];
+    const val = document.getElementById(srcId).value;
+    dstIds.forEach(id => { const el = document.getElementById(id); if(el) el.value = val; });
+    if (field === 'ingressos') { mfLiveCalc(); }
+    if (field === 'nomina') { simCalcInc(); }
+};
+
+// ─── Tabs ──────────────────────────────────────────────────────────────────────
+window.cpiTab = function(name, btn) {
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('tab-'+name).classList.add('active');
+    btn.classList.add('active');
+};
+
+// ─── Init ──────────────────────────────────────────────────────────────────────
+simCalc();
+loadFamilies().then(() => {
+    presLoad();
+    window.ajuLoadOverview();
+});
+</script>
+</body>
+</html>

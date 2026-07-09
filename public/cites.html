@@ -1,0 +1,1540 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Agenda i Coordinació</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        .main-content { padding: 30px; box-sizing: border-box; background: #f8fafc; }
+        .icon { width: 18px; height: 18px; stroke-width: 2; stroke: currentColor; fill: none; vertical-align: middle; }
+        .icon-lg { width: 24px; height: 24px; }
+
+        /* Date navigator */
+        .date-nav { display: flex; align-items: center; gap: 16px; background: white; padding: 14px 20px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 24px; box-shadow: 0 2px 4px rgba(0,0,0,.04); }
+        .date-nav-label { font-weight: 800; font-size: 1.05rem; color: #1e293b; flex: 1; text-align: center; }
+        .btn-nav { background: #f1f5f9; border: none; border-radius: 10px; width: 38px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.15s; flex-shrink: 0; }
+        .btn-nav:hover { background: #e2e8f0; }
+        .btn-today { background: #3b82f6; color: white; padding: 8px 16px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; font-size: 0.82rem; white-space: nowrap; }
+        .btn-today:hover { background: #2563eb; }
+        .view-switch { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+        .view-btn { border:1px solid #dbe3ef; background:white; color:#475569; border-radius:10px; padding:7px 12px; font-size:0.8rem; font-weight:700; cursor:pointer; }
+        .view-btn.active { background:#1e40af; color:white; border-color:#1e40af; }
+        .btn-plan { background:#0f766e; color:white; border:none; border-radius:10px; padding:9px 14px; font-weight:700; cursor:pointer; font-size:0.82rem; }
+        .btn-plan:hover { background:#115e59; }
+
+        .sol-panel { background:white; border:1px solid #dbeafe; border-radius:14px; padding:14px; margin-bottom:14px; }
+        .sol-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+        .sol-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:10px; }
+        .sol-card {
+            border:1px solid #e2e8f0; border-radius:12px; padding:12px; background:#fff;
+        }
+        .sol-card.urgent { border-left:4px solid #ef4444; }
+        .sol-title { font-weight:800; color:#0f172a; font-size:0.9rem; margin-bottom:4px; }
+        .sol-meta { font-size:0.75rem; color:#64748b; margin-bottom:8px; }
+        .sol-actions { display:flex; gap:8px; }
+        .sol-btn {
+            flex:1; border:none; border-radius:8px; padding:8px 10px; font-weight:700; font-size:0.76rem; cursor:pointer;
+        }
+        .sol-btn-assign { background:#1d4ed8; color:white; }
+        .sol-btn-reject { background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; }
+
+        .sol-modal-overlay { position:fixed; inset:0; background:rgba(15,23,42,.72); display:none; align-items:center; justify-content:center; z-index:30020; }
+        .sol-modal-overlay.active { display:flex; }
+        .sol-modal {
+            width:min(470px,92vw); background:#fff; border-radius:18px; box-shadow:0 25px 50px rgba(0,0,0,.35); padding:20px;
+        }
+        .sol-modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+        /* Grid */
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .section-card { background: white; border-radius: 20px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; min-height: 480px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .card-header { padding: 18px 20px; border-bottom: 2px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .card-header h2 { margin: 0; font-size: 1.05rem; display: flex; align-items: center; gap: 10px; color: #1e293b; }
+        .list-container { padding: 14px; flex: 1; overflow-y: auto; }
+
+        /* Item rows */
+        .item-row { padding: 13px 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #f1f5f9; background: #fff; cursor: pointer; transition: 0.18s; }
+        .day-group-title { font-size:0.74rem; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:.06em; margin:12px 0 8px; }
+
+        /* Visualizer */
+        .visualizer-card { background:white; border:1px solid #e2e8f0; border-radius:18px; margin-top:20px; overflow:hidden; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); }
+        .visualizer-head { padding:14px 18px; border-bottom:1px solid #eef2f7; font-weight:800; color:#1e293b; display:flex; align-items:center; justify-content:space-between; }
+        .visualizer-wrap { padding: 12px; overflow:auto; }
+        .time-grid { width:100%; min-width:980px; border-collapse:collapse; }
+        .time-grid th, .time-grid td { border:1px solid #edf2f7; padding:6px; vertical-align:top; }
+        .time-grid th { background:#f8fafc; color:#334155; font-size:0.74rem; text-transform:uppercase; letter-spacing:.05em; }
+        .time-col { width:66px; background:#f8fafc; color:#64748b; font-size:0.72rem; font-weight:700; text-align:center; }
+        .grid-cell { min-height:28px; background:white; }
+        .cal-chip {
+            display:block; border-radius:7px; padding:4px 6px; margin-bottom:4px; font-size:0.7rem; font-weight:700; line-height:1.25;
+            border:1px solid transparent;
+        }
+        .cal-cita { background:#dcfce7; color:#166534; border-color:#86efac; }
+        .cal-reunio { background:#dbeafe; color:#1e40af; border-color:#93c5fd; }
+        .cal-slot { background:#f1f5f9; color:#334155; border-color:#cbd5e1; }
+
+        .month-grid { width:100%; min-width:980px; border-collapse:collapse; table-layout:fixed; }
+        .month-grid th, .month-grid td { border:1px solid #edf2f7; }
+        .month-grid th { background:#f8fafc; font-size:0.74rem; color:#334155; padding:8px 6px; text-transform:uppercase; }
+        .month-cell { height:118px; vertical-align:top; padding:6px; background:white; }
+        .month-day-num { font-size:0.78rem; font-weight:800; color:#0f172a; margin-bottom:6px; }
+        .month-day-num.muted { color:#94a3b8; }
+        .month-item { font-size:0.68rem; border-radius:6px; padding:3px 5px; margin-bottom:3px; font-weight:700; }
+        .month-item.cita { background:#dcfce7; color:#166534; }
+        .month-item.reunio { background:#dbeafe; color:#1e40af; }
+        .month-item.slot { background:#f1f5f9; color:#334155; }
+
+        /* Availability planner modal */
+        .planner-overlay { position:fixed; inset:0; background:rgba(15,23,42,.72); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:30010; }
+        .planner-overlay.active { display:flex; }
+        .planner-card { width:min(680px, 92vw); background:white; border-radius:22px; box-shadow:0 25px 50px -12px rgba(0,0,0,.5); padding:24px; max-height:90vh; overflow-y:auto; }
+        .planner-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .weekday-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+        .weekday-pill { border:1px solid #cbd5e1; background:#f8fafc; border-radius:999px; padding:6px 10px; font-size:0.78rem; font-weight:700; cursor:pointer; }
+        .weekday-pill.active { background:#1d4ed8; border-color:#1d4ed8; color:white; }
+        .item-row:hover { border-color: #3b82f6; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59,130,246,0.1); }
+        .item-row.cancelled { opacity: 0.5; pointer-events: none; }
+        .time-box { font-weight: 800; color: #3b82f6; font-size: 0.82rem; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+        .title-box { font-weight: 700; color: #1e293b; font-size: 0.93rem; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .meta-box { font-size: 0.76rem; color: #64748b; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; }
+
+        /* Badges */
+        .badge { padding: 3px 8px; border-radius: 6px; font-size: 0.67rem; font-weight: 800; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .badge-user    { background: #dcfce7; color: #166534; }
+        .badge-meeting { background: #dbeafe; color: #1e40af; }
+        .badge-extern  { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        .st-pendent      { background: #fef3c7; color: #92400e; }
+        .st-confirmat    { background: #dcfce7; color: #166534; }
+        .st-encurs       { background: #dbeafe; color: #1e40af; animation: pulse 2s infinite; }
+        .st-finalitzada  { background: #f1f5f9; color: #64748b; }
+        .st-cancellada   { background: #fee2e2; color: #991b1b; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+
+        /* Modal */
+        .modal-overlay { position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15,23,42,0.72); backdrop-filter:blur(8px); display:none; justify-content:center; align-items:center; z-index:30000; }
+        .modal-overlay.active { display:flex; }
+        .modal-content { background:white; padding:30px 32px; border-radius:24px; width:570px; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); position:relative; }
+
+        /* Form */
+        .form-group { margin-bottom: 14px; }
+        .form-label { display:flex; align-items:center; gap:6px; font-size:0.71rem; font-weight:800; color:#64748b; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em; }
+        .form-control { width:100%; padding:11px 13px; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; font-family:inherit; font-size:0.89rem; box-sizing:border-box; transition:0.15s; }
+        .form-control:focus { outline:none; border-color:#3b82f6; background:white; box-shadow:0 0 0 3px rgba(59,130,246,.12); }
+        .form-2col { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+        /* Autocomplete */
+        .autocomplete-wrap { position:relative; }
+        .autocomplete-list { position:absolute; top:calc(100% + 4px); left:0; right:0; background:white; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.12); z-index:10; max-height:220px; overflow-y:auto; display:none; }
+        .autocomplete-list.open { display:block; }
+        .autocomplete-item { padding:10px 14px; cursor:pointer; font-size:0.87rem; border-bottom:1px solid #f8fafc; }
+        .autocomplete-item:last-child { border-bottom:none; }
+        .autocomplete-item:hover { background:#eff6ff; color:#1e40af; }
+        .ac-sub { font-size:0.74rem; color:#94a3b8; margin-top:2px; }
+
+        /* Technicians */
+        .tec-list { max-height:160px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; }
+        .tec-item { display:flex; align-items:center; gap:10px; padding:9px 14px; border-bottom:1px solid #f1f5f9; cursor:pointer; font-size:0.87rem; color:#1e293b; }
+        .tec-item:last-child { border-bottom:none; }
+        .tec-item:hover { background:#eff6ff; }
+        .tec-item.selected { background:#eff6ff; }
+        .tec-item input[type=checkbox] { width:16px; height:16px; cursor:pointer; accent-color:#3b82f6; flex-shrink:0; }
+
+        /* Buttons */
+        .btn { padding:11px 18px; border-radius:12px; font-weight:700; cursor:pointer; border:none; display:inline-flex; align-items:center; gap:8px; transition:0.18s; justify-content:center; font-size:0.88rem; }
+        .btn:hover { filter:brightness(0.91); }
+        .btn-primary { background:#1e293b; color:white; width:100%; }
+        .btn-success { background:#10b981; color:white; width:100%; }
+        .btn-info    { background:#3b82f6; color:white; width:100%; }
+        .btn-danger  { background:#ef4444; color:white; width:100%; }
+        .btn-warning { background:#f59e0b; color:white; width:100%; }
+        .btn-ghost   { background:transparent; color:#64748b; width:100%; border:1px solid #e2e8f0; }
+        .btn-ghost:hover { background:#f8fafc; filter:none; }
+        .btn-plus { background:#1e293b; color:white; padding:9px 15px; font-size:0.83rem; border-radius:10px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:7px; font-weight:700; transition:0.15s; }
+        .btn-plus:hover { background:#0f172a; }
+        .btn-row { display:flex; flex-direction:column; gap:9px; margin-top:20px; }
+
+        /* Misc */
+        .modal-error { display:none; padding:10px 14px; background:#fee2e2; color:#991b1b; border-radius:10px; font-size:0.84rem; margin-top:12px; }
+        .empty-state { padding:38px 20px; text-align:center; color:#94a3b8; }
+        .loading-row { padding:20px; text-align:center; color:#94a3b8; font-size:0.86rem; }
+        .divider { border:none; border-top:1px solid #f1f5f9; margin:16px 0; }
+        #_agendaToast { position:fixed; bottom:28px; right:28px; z-index:40000; display:flex; align-items:center; gap:10px; padding:13px 20px; border-radius:12px; font-weight:600; font-size:0.9rem; box-shadow:0 8px 30px rgba(0,0,0,.22); transition:opacity .4s,transform .4s; max-width:360px; opacity:0; pointer-events:none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .st-arribat { background: #dcfce7; color: #166534; border: 2px solid #16a34a; animation: pulse 1.5s infinite; }
+        .loc-box { font-family: 'Courier New',monospace; font-size: 1.05rem; font-weight: 900; color: #1e293b; background: #f0fdf4; border: 2px dashed #16a34a; border-radius: 12px; padding: 10px 18px; text-align: center; letter-spacing: 0.18em; margin-bottom:10px; }
+        .qr-wrap { display:flex; gap:20px; align-items:center; padding:14px; background:#f8fafc; border-radius:14px; border:1px solid #e2e8f0; }
+        .btn-recepcio { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; background:#0f172a; color:white; border-radius:8px; font-size:0.78rem; font-weight:700; text-decoration:none; margin-top:8px; transition:0.15s; }
+        .btn-recepcio:hover { background:#1e293b; }
+
+        .top-sol-btn {
+            display:inline-flex; align-items:center; gap:8px; border:none; border-radius:10px;
+            background:#1e40af; color:white; padding:9px 12px; font-size:0.8rem; font-weight:800; cursor:pointer;
+        }
+        .top-sol-btn:hover { background:#1d4ed8; }
+        .top-sol-count {
+            min-width:20px; height:20px; border-radius:999px; background:#fef3c7; color:#92400e;
+            display:inline-flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:900; padding:0 6px;
+        }
+        .sol-alert {
+            display:none; align-items:center; justify-content:space-between; gap:10px;
+            background:#fff7ed; border:1.5px solid #fdba74; border-radius:12px; padding:10px 12px; margin-bottom:14px;
+        }
+        .sol-alert-text { color:#9a3412; font-size:0.82rem; font-weight:800; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+    <script type="module" src="sidebar.js"></script>
+
+    <main class="main-content">
+        <div class="header-flex">
+            <div>
+                <h1 style="margin:0; display:flex; align-items:center; gap:12px;">
+                    <svg class="icon icon-lg" style="color:#3b82f6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    Agenda i Coordinació
+                </h1>
+                <p style="color:#64748b; margin:4px 0 0;">Gestió d'intervencions i coordinació institucional.</p>
+            </div>
+            <button id="btn-top-pendents" class="top-sol-btn" type="button">
+                Pendents de gestionar
+                <span id="btn-top-pendents-count" class="top-sol-count">0</span>
+            </button>
+        </div>
+
+
+
+        <section id="sol-pending-panel" class="sol-panel" style="display:none;">
+            <div class="sol-head">
+                <div style="font-weight:800;color:#1e293b;font-size:0.92rem;">Sol·licituds pendents</div>
+                <span id="sol-pending-count" class="badge st-pendent">0</span>
+            </div>
+            <div id="sol-pending-list" class="sol-grid"></div>
+        </section>
+
+        <div class="view-switch">
+            <button class="view-btn active" data-view="daily">Diari</button>
+            <button class="view-btn" data-view="workweek">Dl-Dv</button>
+            <button class="view-btn" data-view="weekly">Setmanal</button>
+            <button class="view-btn" data-view="monthly">Mensual</button>
+            <button class="btn-plan" id="btn-print-weekly" style="background:#1d4ed8;">Imprimir Agenda</button>
+            <button class="btn-plan" id="btn-planificar">Disponibilitat cites</button>
+        </div>
+
+        <div class="date-nav">
+            <button class="btn-nav" id="btn-prev" title="Dia anterior">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <div class="date-nav-label" id="date-label">—</div>
+            <button class="btn-today" id="btn-today">Avui</button>
+            <button class="btn-nav" id="btn-next" title="Dia seguent">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+        </div>
+
+        <div class="dashboard-grid">
+            <section class="section-card">
+                <div class="card-header">
+                    <h2>
+                        <svg class="icon" style="color:#10b981" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        Cites amb Usuaris
+                    </h2>
+                    <button class="btn-plus" id="btn-nova-cita">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Nova Cita
+                    </button>
+                </div>
+                <div class="list-container" id="lista-cites"><div class="loading-row">Carregant...</div></div>
+            </section>
+
+            <section class="section-card">
+                <div class="card-header">
+                    <h2>
+                        <svg class="icon" style="color:#3b82f6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        Reunions i Coordinació
+                    </h2>
+                    <button class="btn-plus" id="btn-nova-reunio">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Nova Reunio
+                    </button>
+                </div>
+                <div class="list-container" id="lista-reunions"><div class="loading-row">Carregant...</div></div>
+            </section>
+        </div>
+
+        <section class="visualizer-card">
+            <div class="visualizer-head">
+                <span>Visualitzador de l'agenda</span>
+                <span id="visualizer-sub" style="font-size:0.76rem;color:#64748b;font-weight:700;">—</span>
+            </div>
+            <div class="visualizer-wrap" id="agenda-visualizer"></div>
+        </section>
+    </main>
+
+    <div id="modalAgenda" class="modal-overlay">
+        <div class="modal-content">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:18px;">
+                <div>
+                    <span id="modal-badge" class="badge st-pendent">NOVA</span>
+                    <h2 id="modal-titol" style="margin:8px 0 0; font-size:1.25rem; color:#1e293b;">Nova Cita</h2>
+                </div>
+                <button onclick="tancarModal()" style="background:none; border:none; cursor:pointer; padding:4px; color:#94a3b8; margin-top:2px;">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <div class="form-group" id="group-localizador" style="display:none;">
+                <div class="qr-wrap">
+                    <div style="flex:1;">
+                        <div class="form-label"><svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 20h3"></path></svg>Identificador de Cita</div>
+                        <div class="loc-box" id="loc-display">—</div>
+                        <a id="btn-recepcio" href="NexeAdmin/admin-recepcio.html" target="_blank" class="btn-recepcio"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>Obrir Recepcio</a>
+                    </div>
+                    <canvas id="qr-canvas" width="110" height="110" style="border-radius:10px;border:1px solid #e2e8f0;"></canvas>
+                </div>
+                <hr class="divider">
+            </div>
+
+            <div class="form-group" id="group-beneficiari">
+                <div class="form-label">
+                    <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    Beneficiari / Familia
+                </div>
+                <div class="autocomplete-wrap">
+                    <input type="text" id="f-beneficiari" class="form-control" placeholder="Cerca per nom o cognom..." autocomplete="off">
+                    <div id="beneficiari-dropdown" class="autocomplete-list"></div>
+                </div>
+                <input type="hidden" id="f-expedient-id">
+            </div>
+
+            <div class="form-group" id="group-departament">
+                <div class="form-label">
+                    <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    Departament
+                </div>
+                <select id="f-dept" class="form-control">
+                    <option value="CD">Centre de Dia (CD)</option>
+                    <option value="IC">Intervenció Comunitària (IC)</option>
+                    <option value="OL">Orientació Laboral (OL)</option>
+                    <option value="GE">General (GE)</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="group-titol" style="display:none;">
+                <div class="form-label">
+                    <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="14" y2="18"></line></svg>
+                    Titol de la Reunio
+                </div>
+                <input type="text" id="f-titol" class="form-control" placeholder="Ex: Coordinacio amb Serveis Socials...">
+            </div>
+
+            <div class="form-group">
+                <div class="form-label">
+                    <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    Motiu / Objectiu
+                </div>
+                <textarea id="f-motiu" class="form-control" rows="2" placeholder="Motiu de la cita o objectiu de la reunio..."></textarea>
+            </div>
+
+            <div class="form-2col">
+                <div class="form-group">
+                    <div class="form-label">
+                        <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        Data
+                    </div>
+                    <input type="date" id="f-data" class="form-control">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">
+                        <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        Hora
+                    </div>
+                    <input type="time" id="f-hora" class="form-control">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">
+                        <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                        Sala
+                    </div>
+                    <input type="text" id="f-sala" class="form-control" placeholder="Sala 1...">
+                </div>
+            </div>
+
+            <div class="form-group" id="group-externs" style="display:none;">
+                <div class="form-label">
+                    <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    Entitats Externes
+                </div>
+                <input type="text" id="f-externs" class="form-control" placeholder="Ex: Serveis Socials, CRAE...">
+            </div>
+
+            <div class="form-group">
+                <div class="form-label">
+                    <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    Tecnics Assignats
+                </div>
+                <div id="tec-list" class="tec-list"><div class="loading-row" style="padding:12px;">Carregant tecnics...</div></div>
+                <div id="availability-hint" style="margin-top:8px;font-size:0.78rem;color:#64748b;"></div>
+            </div>
+
+            <div class="form-group" id="group-notes" style="display:none;">
+                <hr class="divider">
+                <div class="form-label">
+                    <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Notes Internes (confidencials, xifrades)
+                </div>
+                <textarea id="f-notes" class="form-control" rows="3" placeholder="Observacions, derivacions, seguiment..."></textarea>
+            </div>
+
+            <div id="modal-error" class="modal-error"></div>
+            <div id="modal-actions" class="btn-row"></div>
+        </div>
+    </div>
+
+    <div id="_agendaToast"></div>
+
+    <!-- Assign solicitud modal -->
+    <div id="sol-assign-modal" class="sol-modal-overlay" onclick="if(event.target===this)window._closeAssignModal()">
+        <div class="sol-modal">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <div>
+                    <div style="font-weight:900;font-size:1.05rem;color:#1e293b;">Assignar sol·licitud</div>
+                    <div id="sol-assign-nom" style="font-size:0.82rem;color:#64748b;margin-top:2px;"></div>
+                </div>
+                <button onclick="window._closeAssignModal()" style="background:none;border:none;cursor:pointer;padding:4px;color:#94a3b8;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="sol-modal-grid">
+                <div class="form-group" style="margin:0;">
+                    <div class="form-label">Data</div>
+                    <input type="date" id="sol-assign-data" class="form-control">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <div class="form-label">Hora</div>
+                    <input type="time" id="sol-assign-hora" class="form-control">
+                </div>
+            </div>
+            <div class="form-group" style="margin-top:10px;">
+                <div class="form-label">Sala (opcional)</div>
+                <input type="text" id="sol-assign-sala" class="form-control" placeholder="Ex: Sala 1...">
+            </div>
+            <div id="sol-assign-err" style="display:none;color:#b91c1c;font-size:0.82rem;margin-top:8px;"></div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+                <button onclick="window._closeAssignModal()" style="background:#f1f5f9;border:none;border-radius:9px;padding:9px 18px;font-weight:700;cursor:pointer;">Cancel·lar</button>
+                <button id="sol-assign-confirm" onclick="window._confirmAssign()" style="background:#1d4ed8;color:white;border:none;border-radius:9px;padding:9px 18px;font-weight:700;cursor:pointer;">Confirmar cita</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="plannerModal" class="planner-overlay">
+        <div class="planner-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;">
+                <h3 style="margin:0;color:#0f172a;">Configurar disponibilitat de cites</h3>
+                <button id="planner-close" style="background:none;border:none;cursor:pointer;color:#94a3b8;">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <div class="planner-grid">
+                <div class="form-group">
+                    <div class="form-label">Tipus planificació</div>
+                    <select id="p-mode" class="form-control">
+                        <option value="weekly">Setmanal</option>
+                        <option value="monthly">Mensual</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Durada de cita (min)</div>
+                    <input id="p-duration" type="number" min="10" step="5" value="45" class="form-control">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Data inici</div>
+                    <input id="p-start" type="date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Data fi</div>
+                    <input id="p-end" type="date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Hora des de</div>
+                    <input id="p-from" type="time" class="form-control" value="09:00">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Hora fins</div>
+                    <input id="p-to" type="time" class="form-control" value="12:00">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="form-label">Dies de la setmana</div>
+                <div id="p-weekdays" class="weekday-row"></div>
+            </div>
+
+            <div id="planner-error" class="modal-error"></div>
+
+            <div style="display:flex;gap:10px;margin-top:8px;">
+                <button id="planner-generate" class="btn btn-primary" style="flex:1;">Generar espais de cites</button>
+                <button id="planner-cancel" class="btn btn-ghost" style="flex:1;">Tancar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, auth } from './firebase-config.js';
+        import {
+            collection, query, where, getDocs,
+            addDoc, updateDoc, doc, getDoc, serverTimestamp, onSnapshot, deleteDoc
+        } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+        import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+        import { waitForCrypto } from './vault-init.js';
+        import { encryptField, decryptField } from './crypto-utils.js';
+
+        const DIES  = ['Diumenge','Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte'];
+        const MESOS = ['Gener','Febrer','Marc','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
+        const ESTAT_LBL = { pendent:'Pendent', confirmat:'Confirmat', 'en-curs':'En Curs', finalitzada:'Finalitzada', cancellada:'Cancel.lada', arribat:'Ha Arribat' };
+
+        function toDateStr(d) {
+            return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        }
+        function parseDateStr(s) {
+            const [y,m,d] = String(s).split('-').map(Number);
+            return new Date(y, (m||1)-1, d||1, 0, 0, 0, 0);
+        }
+        function addDays(d, n) {
+            const r = new Date(d);
+            r.setDate(r.getDate()+n);
+            return r;
+        }
+        function startOfWeek(d) {
+            const r = new Date(d);
+            const wd = r.getDay();
+            const diff = wd === 0 ? -6 : (1 - wd); // Monday-based
+            r.setDate(r.getDate()+diff);
+            r.setHours(0,0,0,0);
+            return r;
+        }
+        function endOfWeek(d) {
+            return addDays(startOfWeek(d), 6);
+        }
+        function startOfMonth(d) {
+            return new Date(d.getFullYear(), d.getMonth(), 1);
+        }
+        function endOfMonth(d) {
+            return new Date(d.getFullYear(), d.getMonth()+1, 0);
+        }
+        function formatDateLabelFromRange(start, end, mode) {
+            const todayStr = toDateStr(new Date());
+            if (mode === 'daily') {
+                const isToday = toDateStr(start) === todayStr;
+                return DIES[start.getDay()] + ', ' + start.getDate() + ' ' + MESOS[start.getMonth()] + ' ' + start.getFullYear() + (isToday ? '  -  Avui' : '');
+            }
+            if (mode === 'monthly') {
+                return MESOS[start.getMonth()] + ' ' + start.getFullYear();
+            }
+            const left = start.getDate() + ' ' + MESOS[start.getMonth()].slice(0,3);
+            const right = end.getDate() + ' ' + MESOS[end.getMonth()].slice(0,3) + ' ' + end.getFullYear();
+            return left + '  -  ' + right;
+        }
+
+        function generarLocalizador() {
+            const yr = String(new Date().getFullYear()).slice(-2);
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let code = '';
+            for (let i=0; i<6; i++) code += chars[Math.floor(Math.random()*chars.length)];
+            return 'NX' + yr + code;
+        }
+
+        async function generarLocalizadorDept(dept) {
+            const prefix = dept || 'GE';
+            try {
+                const snap = await getDocs(query(
+                    collection(db, 'agenda'),
+                    where('localizador', '>=', prefix),
+                    where('localizador', '<=', prefix + '\uf8ff')
+                ));
+                let maxNum = 0;
+                snap.forEach(d => {
+                    const loc = (d.data().localizador || '');
+                    if (loc.startsWith(prefix)) {
+                        const num = parseInt(loc.slice(prefix.length), 10);
+                        if (!isNaN(num) && num > maxNum) maxNum = num;
+                    }
+                });
+                return prefix + String(maxNum + 1).padStart(3, '0');
+            } catch(e) {
+                // Fallback
+                return prefix + String(Math.floor(Math.random()*900)+100);
+            }
+        }
+
+        let _selDate    = new Date();
+        let _viewMode   = 'daily';
+        let _currentUid = null;
+        let _expedients = null;
+        let _tecnics    = null;
+        let _cache      = {};
+        let _cacheAll   = [];
+        let _slotCache  = [];
+        let _curId      = null;
+        let _curTipus   = null;
+        let _selTecs    = [];
+        let _selExpId   = null;
+        let _weekdaySel = new Set([1,2,3,4,5]);
+        let _userDeptKeys = [];
+        let _pendingMap = new Map();
+        let _cryptoReadyPromise = null;
+
+        function ensureCryptoReady() {
+            if (!_cryptoReadyPromise) _cryptoReadyPromise = waitForCrypto();
+            return _cryptoReadyPromise;
+        }
+
+        function currentRange() {
+            if (_viewMode === 'daily') return { start:new Date(_selDate), end:new Date(_selDate) };
+            if (_viewMode === 'workweek') {
+                const s = startOfWeek(_selDate);
+                return { start:s, end:addDays(s,4) };
+            }
+            if (_viewMode === 'weekly') return { start:startOfWeek(_selDate), end:endOfWeek(_selDate) };
+            return { start:startOfMonth(_selDate), end:endOfMonth(_selDate) };
+        }
+
+        function dayHeader(ds) {
+            const d = parseDateStr(ds);
+            return DIES[d.getDay()] + ' ' + d.getDate() + ' ' + MESOS[d.getMonth()];
+        }
+
+        function updateDateLabel() {
+            const r = currentRange();
+            document.getElementById('date-label').textContent = formatDateLabelFromRange(r.start, r.end, _viewMode);
+        }
+
+        // Toast
+        const _SVG_OK  = '<svg style="width:18px;height:18px;fill:white;flex-shrink:0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+        const _SVG_ERR = '<svg style="width:18px;height:18px;fill:white;flex-shrink:0" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
+        function showToast(msg, ok) {
+            const t = document.getElementById('_agendaToast');
+            t.innerHTML = (ok ? _SVG_OK : _SVG_ERR) + '<span>' + msg + '</span>';
+            t.style.background = ok ? '#10b981' : '#ef4444';
+            t.style.color = 'white'; t.style.opacity = '1'; t.style.transform = 'translateY(0)'; t.style.pointerEvents = 'auto';
+            clearTimeout(t._tmr);
+            t._tmr = setTimeout(() => { t.style.opacity='0'; t.style.transform='translateY(8px)'; t.style.pointerEvents='none'; }, 3500);
+        }
+
+        function normDept(v) {
+            return String(v || '').trim().toLowerCase();
+        }
+
+        function escHtml(v) {
+            return String(v || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+        }
+
+        async function loadUserDeptKeys(uid) {
+            try {
+                const snap = await getDoc(doc(db, 'usuarios', uid));
+                if (!snap.exists()) { _userDeptKeys = []; return; }
+                const u = snap.data() || {};
+                const keys = [
+                    u.departament, u.departamento, u.department,
+                    u.departamentNom, u.departamentoNom,
+                    ...(Array.isArray(u.departaments) ? u.departaments : []),
+                    ...(Array.isArray(u.departamentos) ? u.departamentos : [])
+                ].filter(Boolean).map(normDept);
+                _userDeptKeys = [...new Set(keys)];
+            } catch (_) {
+                _userDeptKeys = [];
+            }
+        }
+
+        function renderPendingSolicitudes(items) {
+            const panel = document.getElementById('sol-pending-panel');
+            const list = document.getElementById('sol-pending-list');
+            const count = document.getElementById('sol-pending-count');
+            _pendingMap = new Map(items.map(i => [i.id, i]));
+            count.textContent = String(items.length);
+            if (!items.length) {
+                panel.style.display = 'none';
+                return;
+            }
+            panel.style.display = '';
+            list.innerHTML = items.map(it => {
+                const urgent = (it.raw.prioritat || '') === 'urgent';
+                const dept = it.raw.departamentNom || it.raw.departament || it.raw.departamento || '—';
+                const tec = it.raw.tecnicNom || 'Sense tècnic assignat';
+                const motiu = it.motiu ? ('<div class="sol-meta" style="margin-top:4px;">Motiu: ' + escHtml(it.motiu).slice(0, 90) + (it.motiu.length > 90 ? '...' : '') + '</div>') : '';
+                return '<div class="sol-card ' + (urgent ? 'urgent' : '') + '">' +
+                    '<div class="sol-title">' + escHtml(it.nom || '(sense nom)') + '</div>' +
+                    '<div class="sol-meta">Dept: ' + escHtml(dept) + (urgent ? ' · URGENT' : '') + '</div>' +
+                    '<div class="sol-meta">Tècnic: ' + escHtml(tec) + '</div>' +
+                    motiu +
+                    '<div class="sol-actions">' +
+                        '<button class="sol-btn sol-btn-assign" type="button" onclick="window._assignSolicitud(\'' + it.id + '\')">Assignar</button>' +
+                        '<button class="sol-btn sol-btn-reject" type="button" onclick="window._rejectSolicitud(\'' + it.id + '\')">Rebutjar</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        window._focusPendingPanel = function() {
+            const panel = document.getElementById('sol-pending-panel');
+            if (!panel || panel.style.display === 'none') {
+                showToast('No hi ha pendents per gestionar ara mateix.', false);
+                return;
+            }
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            panel.style.boxShadow = '0 0 0 3px rgba(29,78,216,.2)';
+            setTimeout(() => { panel.style.boxShadow = ''; }, 1400);
+        };
+
+        let _assigningSolId = null;
+
+        window._assignSolicitud = function(id) {
+            _assigningSolId = id;
+            const item = _pendingMap.get(id);
+            document.getElementById('sol-assign-nom').textContent = item ? (item.nom || item.raw.nomBeneficiari || '') : '';
+            document.getElementById('sol-assign-data').value = '';
+            document.getElementById('sol-assign-hora').value = '';
+            document.getElementById('sol-assign-sala').value = '';
+            document.getElementById('sol-assign-err').style.display = 'none';
+            document.getElementById('sol-assign-modal').classList.add('active');
+        };
+
+        window._closeAssignModal = function() {
+            document.getElementById('sol-assign-modal').classList.remove('active');
+            _assigningSolId = null;
+        };
+
+        window._confirmAssign = async function() {
+            const data = document.getElementById('sol-assign-data').value;
+            const hora = document.getElementById('sol-assign-hora').value;
+            const sala = document.getElementById('sol-assign-sala').value.trim();
+            const errEl = document.getElementById('sol-assign-err');
+            if (!data || !hora) {
+                errEl.textContent = 'La data i l\'hora s\'ón obligatòries.';
+                errEl.style.display = 'block';
+                return;
+            }
+            const btn = document.getElementById('sol-assign-confirm');
+            btn.disabled = true;
+            btn.textContent = 'Guardant...';
+            errEl.style.display = 'none';
+            try {
+                await waitForCrypto();
+                const solSnap = await getDoc(doc(db, 'solicituds', _assigningSolId));
+                const solData = solSnap.data();
+                const dept = solData.departament || 'GE';
+
+                // Generate localizador
+                const agSnap = await getDocs(query(collection(db, 'agenda'),
+                    where('localizador', '>=', dept),
+                    where('localizador', '<=', dept + '\uf8ff')));
+                let maxNum = 0;
+                agSnap.forEach(d => {
+                    const loc = d.data().localizador || '';
+                    if (loc.startsWith(dept)) {
+                        const n = parseInt(loc.slice(dept.length), 10);
+                        if (!isNaN(n) && n > maxNum) maxNum = n;
+                    }
+                });
+                const localizador = dept + String(maxNum + 1).padStart(3, '0');
+
+                const citaRef = await addDoc(collection(db, 'agenda'), {
+                    tipus: 'CITA',
+                    data, hora,
+                    sala: sala || null,
+                    estat: 'pendent',
+                    localizador,
+                    departament: dept,
+                    nomBeneficiari: solData.nomBeneficiari,
+                    motiu: solData.motiu || null,
+                    tecnicsConvidats: solData.tecnicId ? [{ id: solData.tecnicId, nom: solData.tecnicNom }] : [],
+                    tecnicsIds: solData.tecnicId ? [solData.tecnicId] : [],
+                    expedientId: solData.expedientId || null,
+                    solicitudId: _assigningSolId,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+                await updateDoc(doc(db, 'solicituds', _assigningSolId), {
+                    estat: 'assignada',
+                    citaId: citaRef.id,
+                    citaData: data,
+                    citaHora: hora,
+                    updatedAt: serverTimestamp()
+                });
+                window._closeAssignModal();
+                showToast('Cita creada per al ' + data + ' a les ' + hora, true);
+            } catch(e) {
+                errEl.textContent = 'Error: ' + (e.message || e);
+                errEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Confirmar cita';
+            }
+        };
+
+        window._rejectSolicitud = async function(id) {
+            if (!confirm('Segur que vols rebutjar aquesta sol·licitud?')) return;
+            try {
+                await updateDoc(doc(db, 'solicituds', id), { estat: 'rebutjada', updatedAt: serverTimestamp() });
+                showToast('Sol·licitud rebutjada', true);
+            } catch(e) { showToast('Error: ' + (e.message || e), false); }
+        };
+
+        async function subscribeSolicitudes(user) {
+            if (!user) return;
+            onSnapshot(collection(db, 'solicituds'), async (snap) => {
+                let n = 0;
+                const pendingItems = [];
+                for (const d of snap.docs) {
+                    const raw = d.data() || {};
+                    if (raw.estat !== 'pendent') continue;
+                    n += 1;
+                    pendingItems.push({
+                        id: d.id,
+                        raw,
+                        nom: await decryptToString(raw.nomBeneficiari),
+                        motiu: await decryptToString(raw.motiu),
+                        telefon: await decryptToString(raw.telefon)
+                    });
+                }
+                const topCount = document.getElementById('btn-top-pendents-count');
+                const topBtn = document.getElementById('btn-top-pendents');
+                topCount.textContent = String(n);
+                topBtn.style.display = n ? '' : 'none';
+                renderPendingSolicitudes(pendingItems);
+            }, () => {});
+        }
+
+        // Date navigation
+        document.getElementById('btn-prev').addEventListener('click', () => {
+            if (_viewMode === 'monthly') _selDate = new Date(_selDate.getFullYear(), _selDate.getMonth()-1, 1);
+            else if (_viewMode === 'weekly' || _viewMode === 'workweek') _selDate = addDays(_selDate, -7);
+            else _selDate = addDays(_selDate, -1);
+            updateDateLabel(); carregarDia();
+        });
+        document.getElementById('btn-next').addEventListener('click', () => {
+            if (_viewMode === 'monthly') _selDate = new Date(_selDate.getFullYear(), _selDate.getMonth()+1, 1);
+            else if (_viewMode === 'weekly' || _viewMode === 'workweek') _selDate = addDays(_selDate, 7);
+            else _selDate = addDays(_selDate, 1);
+            updateDateLabel(); carregarDia();
+        });
+        document.getElementById('btn-today').addEventListener('click', () => { _selDate=new Date(); updateDateLabel(); carregarDia(); });
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                _viewMode = btn.dataset.view || 'daily';
+                document.querySelectorAll('.view-btn').forEach(x => x.classList.toggle('active', x===btn));
+                updateDateLabel();
+                carregarDia();
+            });
+        });
+        document.getElementById('btn-nova-cita').addEventListener('click',   () => obrirModalNou('CITA'));
+        document.getElementById('btn-nova-reunio').addEventListener('click', () => obrirModalNou('REUNIO'));
+        document.getElementById('btn-print-weekly').addEventListener('click', () => window.printWeeklyAgenda());
+        document.getElementById('btn-planificar').addEventListener('click', openPlanner);
+        document.getElementById('btn-top-pendents').addEventListener('click', () => window._focusPendingPanel());
+        document.getElementById('planner-close').addEventListener('click', closePlanner);
+        document.getElementById('planner-cancel').addEventListener('click', closePlanner);
+        document.getElementById('planner-generate').addEventListener('click', generateSlotsFromPlanner);
+        document.getElementById('plannerModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('plannerModal')) closePlanner();
+        });
+        document.getElementById('p-mode').addEventListener('change', () => {
+            const mode = document.getElementById('p-mode').value;
+            const base = parseDateStr(document.getElementById('p-start').value || toDateStr(new Date()));
+            if (mode === 'monthly') {
+                document.getElementById('p-start').value = toDateStr(startOfMonth(base));
+                document.getElementById('p-end').value = toDateStr(endOfMonth(base));
+            } else {
+                document.getElementById('p-start').value = toDateStr(startOfWeek(base));
+                document.getElementById('p-end').value = toDateStr(endOfWeek(base));
+            }
+        });
+
+        async function decryptToString(enc) {
+            if (!enc) return '';
+            try {
+                const dec = await decryptField(enc);
+                if (typeof dec === 'string') return dec;
+                if (dec && typeof dec === 'object') return dec.text || dec.value || JSON.stringify(dec);
+                return String(dec || '');
+            } catch(e) { return ''; }
+        }
+
+        async function carregarDia() {
+            const range = currentRange();
+            const dsStart = toDateStr(range.start);
+            const dsEnd = toDateStr(range.end);
+            document.getElementById('lista-cites').innerHTML    = '<div class="loading-row">Carregant...</div>';
+            document.getElementById('lista-reunions').innerHTML = '<div class="loading-row">Carregant...</div>';
+            document.getElementById('agenda-visualizer').innerHTML = '<div class="loading-row">Carregant visualitzador...</div>';
+            try {
+                await ensureCryptoReady();
+                const snap = await getDocs(query(
+                    collection(db, 'agenda'),
+                    where('data', '>=', dsStart),
+                    where('data', '<=', dsEnd)
+                ));
+                _cache = {};
+                _cacheAll = [];
+                const all = (await Promise.all(snap.docs.map(async (d) => {
+                    const raw = d.data();
+                    if (_currentUid && Array.isArray(raw.tecnicsIds) && !raw.tecnicsIds.includes(_currentUid)) return null;
+                    const [nomBeneficiari, motiu, notes] = await Promise.all([
+                        decryptToString(raw.nomBeneficiari),
+                        decryptToString(raw.motiu),
+                        decryptToString(raw.notes)
+                    ]);
+                    return {
+                        _id: d.id, tipus: raw.tipus, hora: raw.hora || '', sala: raw.sala || '',
+                        estat: raw.estat || 'pendent', titol: raw.titol || '', externs: raw.externs || '',
+                        expedientId: raw.expedientId || '', tecnicsConvidats: raw.tecnicsConvidats || [],
+                        localizador: raw.localizador || '', data: raw.data || '',
+                        _raw: raw,
+                        _nomBeneficiari: nomBeneficiari,
+                        _motiu: motiu,
+                        _notes: notes
+                    };
+                }))).filter(Boolean);
+                all.forEach((item) => {
+                    _cache[item._id] = item;
+                    _cacheAll.push(item);
+                });
+
+                // Availability slots generated by planner
+                const slotSnap = await getDocs(query(
+                    collection(db, 'agenda_slots'),
+                    where('data', '>=', dsStart),
+                    where('data', '<=', dsEnd)
+                ));
+                _slotCache = [];
+                slotSnap.forEach(d => {
+                    const raw = d.data() || {};
+                    if (_currentUid && raw.tecnicId && raw.tecnicId !== _currentUid) return;
+                    _slotCache.push({
+                        _id: d.id,
+                        data: raw.data || '',
+                        hora: raw.hora || '',
+                        minuts: Number(raw.minuts || 45),
+                        tecnicId: raw.tecnicId || '',
+                        estat: raw.estat || 'free'
+                    });
+                });
+
+                const ICON_CLK = '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
+                function renderList(elId, items, tipus) {
+                    const el = document.getElementById(elId);
+                    if (!items.length) {
+                        el.innerHTML = '<div class="empty-state"><svg width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="display:block;margin:0 auto 10px;opacity:.3"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>Cap ' + (tipus==='CITA'?'cita':'reunio') + ' per aquest dia.</div>';
+                        return;
+                    }
+                    let html = '';
+                    let currentDay = null;
+                    items.forEach(item => {
+                        if (_viewMode !== 'daily' && item.data !== currentDay) {
+                            currentDay = item.data;
+                            html += '<div class="day-group-title">' + dayHeader(item.data) + '</div>';
+                        }
+                        const estat = item.estat;
+                        const lbl   = ESTAT_LBL[estat] || estat;
+                        const estBadgeClass = estat==='cancellada' ? 'st-cancellada' : estat==='arribat' ? 'st-arribat' : ('st-' + estat.replace('-',''));
+                        const title = tipus==='CITA' ? (item._nomBeneficiari||'Beneficiari desconegut') : (item.titol||'Sense titol');
+                        const motiu = item._motiu ? '<div style="margin-bottom:4px;font-size:0.76rem;color:#64748b;">' + item._motiu.substring(0,60) + (item._motiu.length>60?'...':'') + '</div>' : '';
+                        const badge = tipus==='CITA' ? '<span class="badge badge-user">Intervencio</span>' : '<span class="badge badge-meeting">Reunio</span>';
+                        const ext   = item.externs ? '<span class="badge badge-extern">' + item.externs.substring(0,22) + '</span>' : '';
+                        const tecs  = item.tecnicsConvidats&&item.tecnicsConvidats.length ? '<span style="color:#94a3b8;font-size:0.75rem;">' + item.tecnicsConvidats.length + ' tecnic' + (item.tecnicsConvidats.length>1?'s':'') + '</span>' : '';
+                        const cancelled = estat==='cancellada' ? ' cancelled' : '';
+                    const locCode = item.localizador ? '<span style="font-family:monospace;font-size:0.68rem;background:#f1f5f9;padding:1px 5px;border-radius:4px;color:#94a3b8;letter-spacing:0.1em;margin-left:8px;">' + item.localizador + '</span>' : '';
+                        html += '<div class="item-row' + cancelled + '" onclick="_editarItem(\'' + item._id + '\')"><div class="time-box">' + ICON_CLK + ' ' + (item.hora||'--') + '  -  ' + (item.sala||'--') + locCode + '</div><div class="title-box">' + title + '</div>' + motiu + '<div class="meta-box">' + badge + ext + tecs + '<span class="badge ' + estBadgeClass + '">' + lbl + '</span></div></div>';
+                    });
+                    el.innerHTML = html;
+                }
+
+                const sortByDateHour = (a,b) => (a.data||'').localeCompare(b.data||'') || (a.hora||'').localeCompare(b.hora||'');
+                const cites    = all.filter(x=>x.tipus==='CITA').sort(sortByDateHour);
+                const reunions = all.filter(x=>x.tipus==='REUNIO').sort(sortByDateHour);
+                renderList('lista-cites',    cites,    'CITA');
+                renderList('lista-reunions', reunions, 'REUNIO');
+                renderVisualizer(range, cites, reunions, _slotCache);
+            } catch(e) {
+                console.error('Error agenda:', e);
+                document.getElementById('lista-cites').innerHTML    = '<div class="empty-state" style="color:#ef4444;">Error: ' + (e.message||'desconegut') + '</div>';
+                document.getElementById('lista-reunions').innerHTML = '<div class="empty-state" style="color:#ef4444;">Error al carregar.</div>';
+                document.getElementById('agenda-visualizer').innerHTML = '<div class="empty-state" style="color:#ef4444;">Error al carregar visualitzador.</div>';
+            }
+        }
+
+        function hourRows() {
+            const out = [];
+            for (let h=0; h<24; h++) out.push(String(h).padStart(2,'0') + ':00');
+            return out;
+        }
+
+        function rangeDates(start, end) {
+            const arr = [];
+            let cur = new Date(start);
+            while (cur <= end) {
+                arr.push(new Date(cur));
+                cur = addDays(cur, 1);
+            }
+            return arr;
+        }
+
+        function itemStartsAtHour(item, hh) {
+            const h = String(item.hora || '').slice(0,2);
+            return h === String(hh).padStart(2,'0');
+        }
+
+        function renderTimeGrid(days, cites, reunions, slots) {
+            const el = document.getElementById('agenda-visualizer');
+            const sub = document.getElementById('visualizer-sub');
+            sub.textContent = days.length + ' dies · 00:00-23:59';
+            const dayKeys = days.map(d => toDateStr(d));
+            const hours = hourRows();
+
+            let html = '<table class="time-grid"><thead><tr><th class="time-col">Hora</th>';
+            html += days.map(d => '<th>' + DIES[d.getDay()].slice(0,3) + ' ' + d.getDate() + '</th>').join('');
+            html += '</tr></thead><tbody>';
+
+            for (let i=0; i<hours.length; i++) {
+                const hh = i;
+                html += '<tr><td class="time-col">' + hours[i] + '</td>';
+                for (const ds of dayKeys) {
+                    const dayCites = cites.filter(x => x.data===ds && itemStartsAtHour(x, hh));
+                    const dayReus  = reunions.filter(x => x.data===ds && itemStartsAtHour(x, hh));
+                    const daySlots = slots.filter(x => x.data===ds && itemStartsAtHour(x, hh) && x.estat==='free');
+                    let cell = '';
+                    dayCites.forEach(x => { cell += '<span class="cal-chip cal-cita">' + (x.hora||'') + ' Cita · ' + (x._nomBeneficiari || 'Beneficiari') + '</span>'; });
+                    dayReus.forEach(x => { cell += '<span class="cal-chip cal-reunio">' + (x.hora||'') + ' Reunió · ' + (x.titol || '—') + '</span>'; });
+                    daySlots.forEach(x => { cell += '<span class="cal-chip cal-slot">' + (x.hora||'') + ' Espai lliure (' + x.minuts + 'm)</span>'; });
+                    html += '<td class="grid-cell">' + cell + '</td>';
+                }
+                html += '</tr>';
+            }
+
+            html += '</tbody></table>';
+            el.innerHTML = html;
+        }
+
+        function renderMonthGrid(baseDate, cites, reunions, slots) {
+            const el = document.getElementById('agenda-visualizer');
+            const sub = document.getElementById('visualizer-sub');
+            sub.textContent = 'Vista mensual tipus full';
+
+            const mStart = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+            const mEnd = new Date(baseDate.getFullYear(), baseDate.getMonth()+1, 0);
+            const gridStart = startOfWeek(mStart);
+            const gridEnd = endOfWeek(mEnd);
+            const days = rangeDates(gridStart, gridEnd);
+
+            let html = '<table class="month-grid"><thead><tr>';
+            html += ['Dl','Dt','Dc','Dj','Dv','Ds','Dg'].map(d => '<th>' + d + '</th>').join('');
+            html += '</tr></thead><tbody>';
+
+            for (let i=0; i<days.length; i+=7) {
+                html += '<tr>';
+                for (let j=0; j<7; j++) {
+                    const d = days[i+j];
+                    const ds = toDateStr(d);
+                    const inMonth = d.getMonth() === baseDate.getMonth();
+                    const dc = cites.filter(x => x.data===ds).slice(0,3);
+                    const dr = reunions.filter(x => x.data===ds).slice(0,3);
+                    const sl = slots.filter(x => x.data===ds && x.estat==='free').slice(0,2);
+                    html += '<td class="month-cell">';
+                    html += '<div class="month-day-num ' + (inMonth ? '' : 'muted') + '">' + d.getDate() + '</div>';
+                    dc.forEach(x => { html += '<div class="month-item cita">' + (x.hora||'') + ' Cita</div>'; });
+                    dr.forEach(x => { html += '<div class="month-item reunio">' + (x.hora||'') + ' Reunió</div>'; });
+                    sl.forEach(x => { html += '<div class="month-item slot">' + (x.hora||'') + ' Lliure</div>'; });
+                    html += '</td>';
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            el.innerHTML = html;
+        }
+
+        function renderVisualizer(range, cites, reunions, slots) {
+            if (_viewMode === 'monthly') {
+                renderMonthGrid(_selDate, cites, reunions, slots);
+                return;
+            }
+            const days = rangeDates(range.start, range.end);
+            renderTimeGrid(days, cites, reunions, slots);
+        }
+
+        window.printWeeklyAgenda = function() {
+            if (!['weekly', 'workweek'].includes(_viewMode)) {
+                showToast('Canvia a vista Setmanal o Dl-Dv per imprimir l\'agenda.', false);
+                return;
+            }
+            const container = document.getElementById('agenda-visualizer');
+            if (!container || !container.innerHTML.trim()) {
+                showToast('No hi ha dades a imprimir en aquesta vista.', false);
+                return;
+            }
+            const title = document.getElementById('date-label')?.textContent || 'Agenda setmanal';
+            const w = window.open('', '_blank', 'width=1280,height=840');
+            if (!w) {
+                showToast('No s\'ha pogut obrir la finestra d\'impressio.', false);
+                return;
+            }
+            w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>body{font-family:Arial,sans-serif;margin:18px;color:#0f172a}h1{font-size:18px;margin:0 0 14px}.time-grid,.month-grid{width:100%;border-collapse:collapse;font-size:12px}.time-grid th,.time-grid td,.month-grid th,.month-grid td{border:1px solid #cbd5e1;padding:6px;vertical-align:top}.time-col{width:80px;background:#f8fafc;font-weight:700}.cal-chip{display:block;margin:2px 0;padding:2px 6px;border-radius:8px}.cal-cita{background:#dbeafe}.cal-reunio{background:#fef3c7}.cal-slot{background:#e2e8f0}.month-day-num{font-weight:700;margin-bottom:6px}.month-item{margin:2px 0;padding:2px 6px;border-radius:6px}.month-item.cita{background:#dbeafe}.month-item.reunio{background:#fef3c7}.month-item.slot{background:#e2e8f0}</style></head><body><h1>${title}</h1>${container.innerHTML}</body></html>`);
+            w.document.close();
+            w.focus();
+            w.print();
+        };
+
+        // Beneficiari autocomplete
+        async function loadExpedients() {
+            if (_expedients !== null) return _expedients;
+            const snap = await getDocs(collection(db, 'expedientes'));
+            const arr = [];
+            for (const d of snap.docs) {
+                const raw = d.data();
+                const dp  = await decryptField(raw.dades_personals) || {};
+                arr.push({ id: d.id, nom: dp.nom||'', cognoms: dp.cognoms||'', exp: raw.numero_expediente||'' });
+            }
+            _expedients = arr;
+            return arr;
+        }
+
+        const fBen = document.getElementById('f-beneficiari');
+        const fDd  = document.getElementById('beneficiari-dropdown');
+
+        fBen.addEventListener('focus', async () => {
+            if (_expedients === null) {
+                fBen.placeholder = 'Carregant beneficiaris...';
+                fBen.disabled = true;
+                await loadExpedients();
+                fBen.disabled = false;
+                fBen.placeholder = 'Cerca per nom o cognom...';
+                fBen.focus();
+            }
+        });
+        fBen.addEventListener('input', () => {
+            const q = fBen.value.trim().toLowerCase();
+            _selExpId = null;
+            document.getElementById('f-expedient-id').value = '';
+            if (!q || !_expedients) { fDd.classList.remove('open'); return; }
+            const hits = _expedients.filter(e => (e.nom+' '+e.cognoms).toLowerCase().includes(q)).slice(0,9);
+            if (!hits.length) { fDd.classList.remove('open'); return; }
+            fDd.innerHTML = hits.map(e => '<div class="autocomplete-item" data-id="'+e.id+'" data-nom="'+(e.nom+' '+e.cognoms).trim()+'"><strong>'+e.nom+'</strong> '+e.cognoms+'<div class="ac-sub">'+e.exp+'</div></div>').join('');
+            fDd.classList.add('open');
+            fDd.querySelectorAll('.autocomplete-item').forEach(el => {
+                el.addEventListener('mousedown', ev => {
+                    ev.preventDefault();
+                    _selExpId = el.dataset.id;
+                    fBen.value = el.dataset.nom;
+                    document.getElementById('f-expedient-id').value = _selExpId;
+                    fDd.classList.remove('open');
+                });
+            });
+        });
+        document.addEventListener('click', e => { if (!e.target.closest('.autocomplete-wrap')) fDd.classList.remove('open'); });
+
+        // Technicians
+        async function loadTecnics() {
+            if (_tecnics !== null) return _tecnics;
+            const snap = await getDocs(collection(db, 'usuarios'));
+            _tecnics = snap.docs.map(d => {
+                const data = d.data();
+                return { id: d.id, nom: ((data.nombre||'')+' '+(data.apellidos||'')).trim() || data.email || d.id };
+            });
+            return _tecnics;
+        }
+
+        async function renderTecList() {
+            const listEl = document.getElementById('tec-list');
+            listEl.innerHTML = '<div class="loading-row" style="padding:12px;">Carregant tecnics...</div>';
+            const tecs = await loadTecnics();
+            if (!tecs.length) { listEl.innerHTML = '<div class="loading-row" style="padding:12px;color:#94a3b8;">Cap tecnic disponible</div>'; return; }
+            listEl.innerHTML = tecs.map(t => {
+                const checked = _selTecs.some(s => s.id === t.id);
+                return '<label class="tec-item'+(checked?' selected':'')+'"><input type="checkbox" value="'+t.id+'" data-nom="'+t.nom.replace(/"/g,'&quot;')+'" '+(checked?'checked':'')+' onchange="_toggleTec(this)"> '+t.nom+'</label>';
+            }).join('');
+        }
+
+        window._toggleTec = function(cb) {
+            const id=cb.value, nom=cb.dataset.nom;
+            if (cb.checked) { if (!_selTecs.some(t=>t.id===id)) _selTecs.push({id,nom}); cb.closest('.tec-item').classList.add('selected'); }
+            else            { _selTecs=_selTecs.filter(t=>t.id!==id); cb.closest('.tec-item').classList.remove('selected'); }
+            updateAvailabilityHint();
+        };
+
+        async function getConflictsFor(dateStr, hour, selectedTechIds, excludeId=null) {
+            if (!dateStr || !hour || !selectedTechIds.length) return [];
+            const snap = await getDocs(query(
+                collection(db, 'agenda'),
+                where('data', '==', dateStr),
+                where('hora', '==', hour)
+            ));
+            const conflicts = [];
+            snap.forEach(d => {
+                if (excludeId && d.id === excludeId) return;
+                const it = d.data();
+                if ((it.estat || 'pendent') === 'cancellada') return;
+                const ids = Array.isArray(it.tecnicsIds) ? it.tecnicsIds : [];
+                if (!ids.some(id => selectedTechIds.includes(id))) return;
+                conflicts.push({ id:d.id, tipus: it.tipus || 'CITA', titol: it.titol || it.nomBeneficiari || 'Bloqueig', tecnicsIds: ids });
+            });
+            return conflicts;
+        }
+
+        async function updateAvailabilityHint() {
+            const el = document.getElementById('availability-hint');
+            if (!el) return;
+            const dateStr = document.getElementById('f-data').value;
+            const hour = document.getElementById('f-hora').value.trim();
+            const ids = _selTecs.map(t => t.id);
+            if (!dateStr || !hour || !ids.length) {
+                el.textContent = 'Selecciona data, hora i almenys un tècnic per validar disponibilitat.';
+                el.style.color = '#64748b';
+                return;
+            }
+            try {
+                const conflicts = await getConflictsFor(dateStr, hour, ids, _curId);
+                if (!conflicts.length) {
+                    el.textContent = 'Franja disponible per als tècnics seleccionats.';
+                    el.style.color = '#16a34a';
+                    return;
+                }
+                el.textContent = 'Franja no disponible: hi ha una cita/reunió en aquest horari per algun tècnic.';
+                el.style.color = '#b91c1c';
+            } catch (_) {
+                el.textContent = 'No s\'ha pogut validar disponibilitat.';
+                el.style.color = '#b45309';
+            }
+        }
+
+        function timeToMin(hhmm) {
+            const [h,m] = String(hhmm||'').split(':').map(Number);
+            return (h||0)*60 + (m||0);
+        }
+        function minToTime(min) {
+            const h = Math.floor(min/60);
+            const m = min % 60;
+            return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+        }
+
+        function setupPlannerWeekdays() {
+            const wrap = document.getElementById('p-weekdays');
+            const labels = ['Dl','Dt','Dc','Dj','Dv','Ds','Dg'];
+            wrap.innerHTML = labels.map((l, idx) => '<button type="button" class="weekday-pill ' + (_weekdaySel.has(idx+1)?'active':'') + '" data-day="' + (idx+1) + '">' + l + '</button>').join('');
+            wrap.querySelectorAll('.weekday-pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const d = Number(btn.dataset.day);
+                    if (_weekdaySel.has(d)) _weekdaySel.delete(d); else _weekdaySel.add(d);
+                    btn.classList.toggle('active');
+                });
+            });
+        }
+
+        function openPlanner() {
+            const now = new Date();
+            document.getElementById('p-start').value = toDateStr(startOfWeek(now));
+            document.getElementById('p-end').value = toDateStr(endOfWeek(now));
+            document.getElementById('p-mode').value = 'weekly';
+            document.getElementById('p-duration').value = '45';
+            document.getElementById('p-from').value = '09:00';
+            document.getElementById('p-to').value = '12:00';
+            document.getElementById('planner-error').style.display = 'none';
+            setupPlannerWeekdays();
+            document.getElementById('plannerModal').classList.add('active');
+        }
+        function closePlanner() {
+            document.getElementById('plannerModal').classList.remove('active');
+        }
+
+        async function generateSlotsFromPlanner() {
+            const mode = document.getElementById('p-mode').value;
+            const dsStart = document.getElementById('p-start').value;
+            const dsEnd = document.getElementById('p-end').value;
+            const from = document.getElementById('p-from').value;
+            const to = document.getElementById('p-to').value;
+            const dur = Number(document.getElementById('p-duration').value || 45);
+            const err = document.getElementById('planner-error');
+            err.style.display = 'none';
+            if (!dsStart || !dsEnd || !from || !to || !dur) {
+                err.textContent = 'Completa tots els camps.';
+                err.style.display = 'block';
+                return;
+            }
+            if (!_weekdaySel.size) {
+                err.textContent = 'Selecciona almenys un dia de setmana.';
+                err.style.display = 'block';
+                return;
+            }
+            if (!_currentUid) {
+                err.textContent = 'No s\'ha pogut detectar el teu usuari.';
+                err.style.display = 'block';
+                return;
+            }
+
+            const start = parseDateStr(dsStart);
+            const end = parseDateStr(dsEnd);
+            if (end < start) {
+                err.textContent = 'La data fi ha de ser posterior o igual a la data inici.';
+                err.style.display = 'block';
+                return;
+            }
+            const fromMin = timeToMin(from);
+            const toMin = timeToMin(to);
+            if (toMin <= fromMin || dur < 10) {
+                err.textContent = 'Franja o durada no vàlida.';
+                err.style.display = 'block';
+                return;
+            }
+
+            // In monthly mode force range to selected month window
+            let iterStart = start;
+            let iterEnd = end;
+            if (mode === 'monthly') {
+                iterStart = startOfMonth(start);
+                iterEnd = endOfMonth(start);
+            }
+
+            try {
+                // Remove previous free slots in range for this worker, keep occupied ones
+                const old = await getDocs(query(
+                    collection(db, 'agenda_slots'),
+                    where('data', '>=', toDateStr(iterStart)),
+                    where('data', '<=', toDateStr(iterEnd))
+                ));
+                const delOps = [];
+                old.forEach(d => {
+                    if ((d.data()?.tecnicId || '') !== _currentUid) return;
+                    const st = d.data()?.estat || 'free';
+                    if (st === 'free') delOps.push(deleteDoc(doc(db, 'agenda_slots', d.id)));
+                });
+                await Promise.all(delOps);
+
+                const creates = [];
+                let day = new Date(iterStart);
+                while (day <= iterEnd) {
+                    let wd = day.getDay();
+                    wd = wd === 0 ? 7 : wd;
+                    if (_weekdaySel.has(wd)) {
+                        for (let t = fromMin; t + dur <= toMin; t += dur) {
+                            creates.push(addDoc(collection(db, 'agenda_slots'), {
+                                data: toDateStr(day),
+                                hora: minToTime(t),
+                                minuts: dur,
+                                tecnicId: _currentUid,
+                                estat: 'free',
+                                createdAt: serverTimestamp(),
+                                updatedAt: serverTimestamp()
+                            }));
+                        }
+                    }
+                    day = addDays(day, 1);
+                }
+
+                await Promise.all(creates);
+                closePlanner();
+                showToast('Disponibilitat generada: ' + creates.length + ' espais', true);
+                await carregarDia();
+            } catch (e) {
+                err.textContent = 'Error en generar espais: ' + (e.message || 'desconegut');
+                err.style.display = 'block';
+            }
+        }
+
+        function setTipusFields(t) {
+            document.getElementById('group-beneficiari').style.display = t==='CITA'   ? '' : 'none';
+            document.getElementById('group-departament').style.display = t==='CITA'   ? '' : 'none';
+            document.getElementById('group-titol').style.display       = t==='REUNIO' ? '' : 'none';
+            document.getElementById('group-externs').style.display     = t==='REUNIO' ? '' : 'none';
+        }
+        function showModalError(msg) { const el=document.getElementById('modal-error'); el.textContent=msg; el.style.display=msg?'':'none'; }
+
+        async function obrirModalNou(tipus) {
+            _curId=null; _curTipus=tipus; _selTecs=[]; _selExpId=null;
+            const badge = document.getElementById('modal-badge');
+            badge.className='badge st-pendent'; badge.textContent='NOVA';
+            document.getElementById('modal-titol').textContent = tipus==='CITA' ? 'Nova Cita' : 'Nova Reunio';
+            document.getElementById('group-notes').style.display='none';
+            document.getElementById('group-localizador').style.display='none';
+            showModalError(''); setTipusFields(tipus);
+            fBen.value=''; document.getElementById('f-expedient-id').value='';
+            document.getElementById('f-titol').value=''; document.getElementById('f-motiu').value='';
+            document.getElementById('f-data').value=toDateStr(_selDate);
+            document.getElementById('f-hora').value=''; document.getElementById('f-sala').value='';
+            document.getElementById('f-externs').value=''; document.getElementById('f-notes').value='';
+            document.getElementById('f-dept').value='CD';
+            fDd.classList.remove('open');
+            document.getElementById('modal-actions').innerHTML =
+                '<button class="btn btn-primary" onclick="_guardarNou()"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 12 7 12 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>Guardar '+(tipus==='CITA'?'Cita':'Reunio')+'</button>' +
+                '<button class="btn btn-ghost" onclick="tancarModal()">Cancel.lar</button>';
+            await renderTecList();
+            updateAvailabilityHint();
+            document.getElementById('modalAgenda').classList.add('active');
+        }
+
+        window._editarItem = async function(id) {
+            const item = _cache[id];
+            if (!item) { showToast('Element no trobat, recarrega la pagina.', false); return; }
+            _curId=id; _curTipus=item.tipus; _selTecs=[...(item.tecnicsConvidats||[])]; _selExpId=item.expedientId||null;
+            const estat = item.estat;
+            const badge = document.getElementById('modal-badge');
+            badge.className = 'badge st-'+(estat==='cancellada'?'cancellada':estat.replace('-',''));
+            badge.textContent = (ESTAT_LBL[estat]||estat).toUpperCase();
+            document.getElementById('modal-titol').textContent = item.tipus==='CITA' ? 'Gestionar Cita' : 'Gestionar Reunio';
+            showModalError(''); setTipusFields(item.tipus);
+            document.getElementById('group-notes').style.display='';
+            // Localizador + QR
+            const locStr = item.localizador || '';
+            document.getElementById('group-localizador').style.display = locStr ? '' : 'none';
+            if (locStr) {
+                document.getElementById('loc-display').textContent = locStr;
+                        document.getElementById('btn-recepcio').href = 'NexeAdmin/admin-recepcio.html?loc=' + locStr;
+                if (typeof QRCode !== 'undefined') {
+                    const canvas = document.getElementById('qr-canvas');
+                    const checkInUrl = location.origin + '/check-in.html?loc=' + encodeURIComponent(locStr);
+                    QRCode.toCanvas(canvas, checkInUrl, {width:110,margin:1,color:{dark:'#1e293b',light:'#ffffff'}}, function(){});
+                }
+            }
+            fBen.value = item._nomBeneficiari||'';
+            document.getElementById('f-expedient-id').value = item.expedientId||'';
+            document.getElementById('f-titol').value   = item.titol  ||'';
+            document.getElementById('f-motiu').value   = item._motiu ||'';
+            document.getElementById('f-data').value    = item.data || toDateStr(_selDate);
+            document.getElementById('f-hora').value    = item.hora   ||'';
+            document.getElementById('f-sala').value    = item.sala   ||'';
+            document.getElementById('f-externs').value = item.externs||'';
+            document.getElementById('f-notes').value   = item._notes ||'';
+            fDd.classList.remove('open');
+
+            const SVG_SAVE = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 12 7 12 7 21"></polyline></svg>';
+            let html = '';
+            if (estat==='pendent') {
+                html += '<button class="btn btn-success" onclick="_canviarEstat(\''+id+'\',\'confirmat\')"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>Confirmar recepcio</button>';
+                html += '<button class="btn btn-primary" onclick="_guardarEdicio()">'+SVG_SAVE+'Guardar canvis</button>';
+            } else if (estat==='confirmat') {
+                html += '<button class="btn btn-info" onclick="_canviarEstat(\''+id+'\',\'en-curs\')"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Iniciar ara</button>';
+                html += '<button class="btn btn-primary" onclick="_guardarEdicio()">'+SVG_SAVE+'Guardar canvis</button>';            } else if (estat==='arribat') {
+                html += '<div style="padding:12px 14px;background:#dcfce7;border:2px solid #16a34a;border-radius:10px;color:#166534;font-size:0.87rem;font-weight:700;display:flex;align-items:center;gap:10px;margin-bottom:4px;"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>El/La beneficiari/a ha arribat a recepcio</div>';
+                html += '<button class="btn btn-info" onclick="_canviarEstat(\'' + id + '\',\'en-curs\')"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Iniciar sessio</button>';
+                html += '<button class="btn btn-primary" onclick="_guardarEdicio()">'+SVG_SAVE+'Guardar notes</button>';            } else if (estat==='en-curs') {
+                html += '<button class="btn btn-danger" onclick="_canviarEstat(\''+id+'\',\'finalitzada\')"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>Finalitzar</button>';
+                html += '<button class="btn btn-primary" onclick="_guardarEdicio()">'+SVG_SAVE+'Guardar notes</button>';
+            } else if (estat==='finalitzada') {
+                html += '<div style="padding:10px 14px;background:#f1f5f9;border-radius:10px;color:#64748b;font-size:0.85rem;text-align:center;">Cita finalitzada - nomes lectura</div>';
+            }
+            if (!['finalitzada','cancellada'].includes(estat)) {
+                html += '<hr class="divider"><button class="btn btn-warning" onclick="_confirmarCancel()" style="font-size:0.83rem;"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Cancel.lar '+(item.tipus==='CITA'?'cita':'reunio')+'</button>';
+            }
+            html += '<button class="btn btn-ghost" onclick="tancarModal()">Tancar</button>';
+            document.getElementById('modal-actions').innerHTML = html;
+            await renderTecList();
+            updateAvailabilityHint();
+            document.getElementById('modalAgenda').classList.add('active');
+        };
+
+        window._guardarNou = async function() {
+            showModalError('');
+            const dataSel=document.getElementById('f-data').value.trim();
+            const tipus=_curTipus, hora=document.getElementById('f-hora').value.trim(), sala=document.getElementById('f-sala').value.trim();
+            const motiu=document.getElementById('f-motiu').value.trim(), titol=document.getElementById('f-titol').value.trim();
+            const externs=document.getElementById('f-externs').value.trim(), nomBen=fBen.value.trim();
+            const expId=document.getElementById('f-expedient-id').value||_selExpId||'';
+            if (!dataSel) { showModalError('Cal indicar una data.'); return; }
+            if (!hora) { showModalError('Cal indicar una hora.'); return; }
+            if (!_selTecs.length) { showModalError('Cal assignar almenys un tecnic.'); return; }
+            if (tipus==='CITA'   && !nomBen) { showModalError("Cal seleccionar un beneficiari de la llista."); return; }
+            if (tipus==='REUNIO' && !titol)  { showModalError("Cal indicar el titol de la reunio."); return; }
+            const btn=document.querySelector('#modal-actions .btn-primary');
+            const origHtml=btn.innerHTML; btn.disabled=true;
+            btn.innerHTML='<svg style="animation:spin 1s linear infinite;width:16px;height:16px;fill:none;stroke:white;stroke-width:2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity=".25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg> Guardant...';
+            try {
+                await waitForCrypto();
+                const conflicts = await getConflictsFor(dataSel, hora, _selTecs.map(t=>t.id), null);
+                if (conflicts.length) {
+                    showModalError('Franja no disponible: un tècnic ja té una cita/reunió a aquesta hora.');
+                    btn.innerHTML=origHtml; btn.disabled=false;
+                    return;
+                }
+                const dept = document.getElementById('f-dept').value || 'GE';
+                const localizador = tipus==='CITA' ? await generarLocalizadorDept(dept) : '';
+                const docData = { tipus, data:dataSel, hora, sala, estat:'pendent', localizador,
+                    departament: tipus==='CITA' ? dept : null,
+                    tecnicsConvidats:_selTecs, tecnicsIds:_selTecs.map(t=>t.id),
+                    motiu: motiu?await encryptField(motiu):null, notes:null, createdAt:serverTimestamp(), updatedAt:serverTimestamp() };
+                if (tipus==='CITA') { docData.expedientId=expId; docData.nomBeneficiari=nomBen?await encryptField(nomBen):null; }
+                else                { docData.titol=titol; docData.externs=externs; }
+                await addDoc(collection(db,'agenda'), docData);
+                tancarModal(); showToast('Entrada creada correctament', true); await carregarDia();
+            } catch(e) {
+                console.error(e); showModalError('Error al guardar: '+(e.message||e.code||'error'));
+                btn.innerHTML=origHtml; btn.disabled=false;
+            }
+        };
+
+        window._guardarEdicio = async function() {
+            showModalError('');
+            const dataSel=document.getElementById('f-data').value.trim();
+            const id=_curId, tipus=_curTipus, hora=document.getElementById('f-hora').value.trim(), sala=document.getElementById('f-sala').value.trim();
+            const motiu=document.getElementById('f-motiu').value.trim(), notes=document.getElementById('f-notes').value.trim();
+            const titol=document.getElementById('f-titol').value.trim(), externs=document.getElementById('f-externs').value.trim();
+            const nomBen=fBen.value.trim(), expId=document.getElementById('f-expedient-id').value||_selExpId||'';
+            if (!dataSel) { showModalError('Cal indicar una data.'); return; }
+            if (!hora) { showModalError('Cal indicar una hora.'); return; }
+            if (!_selTecs.length) { showModalError('Cal assignar almenys un tecnic.'); return; }
+            try {
+                await waitForCrypto();
+                const conflicts = await getConflictsFor(dataSel, hora, _selTecs.map(t=>t.id), id);
+                if (conflicts.length) { showModalError('Franja no disponible: un tècnic ja té una cita/reunió a aquesta hora.'); return; }
+                const upd = { hora, sala, tecnicsConvidats:_selTecs,
+                    data: dataSel,
+                    tecnicsIds: _selTecs.map(t=>t.id),
+                    motiu: motiu?await encryptField(motiu):null,
+                    notes: notes?await encryptField(notes):null,
+                    updatedAt:serverTimestamp() };
+                if (tipus==='CITA') { upd.expedientId=expId; upd.nomBeneficiari=nomBen?await encryptField(nomBen):null; }
+                else                { upd.titol=titol; upd.externs=externs; }
+                await updateDoc(doc(db,'agenda',id), upd);
+                tancarModal(); showToast('Canvis guardats', true); await carregarDia();
+            } catch(e) { console.error(e); showModalError('Error al guardar: '+(e.message||e.code)); }
+        };
+
+        window._canviarEstat = async function(id, nouEstat) {
+            try {
+                await updateDoc(doc(db,'agenda',id), { estat:nouEstat, updatedAt:serverTimestamp() });
+                tancarModal(); showToast('Estat actualitzat: '+(ESTAT_LBL[nouEstat]||nouEstat), true); await carregarDia();
+            } catch(e) { showModalError('Error: '+(e.message||e.code)); }
+        };
+
+        window._confirmarCancel = function() {
+            document.getElementById('modal-actions').innerHTML =
+                '<div style="padding:14px;background:#fff7ed;border:1px solid #fdba74;border-radius:12px;text-align:center;">' +
+                '<p style="margin:0 0 12px;font-weight:700;color:#9a3412;font-size:0.9rem;"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>Confirmes la cancel.lacio?</p>' +
+                '<div style="display:flex;gap:10px;">' +
+                '<button class="btn btn-danger" style="flex:1;" onclick="_canviarEstat(\''+_curId+'\',\'cancellada\')">Si, cancel.lar</button>' +
+                '<button class="btn btn-ghost" style="flex:1;" onclick="_editarItem(\''+_curId+'\')">No, tornar</button>' +
+                '</div></div>' +
+                '<button class="btn btn-ghost" onclick="tancarModal()">Tancar</button>';
+        };
+
+        window.tancarModal = function() { document.getElementById('modalAgenda').classList.remove('active'); fDd.classList.remove('open'); };
+        document.getElementById('modalAgenda').addEventListener('click', e => { if (e.target===document.getElementById('modalAgenda')) tancarModal(); });
+        document.getElementById('f-data').addEventListener('change', updateAvailabilityHint);
+        document.getElementById('f-hora').addEventListener('change', updateAvailabilityHint);
+
+        // Init
+        updateDateLabel();
+        ensureCryptoReady();
+
+        // Sol·licituds pendents per al treballador i/o departament (temps real)
+        onAuthStateChanged(auth, user => {
+            if (!user) return;
+            _currentUid = user.uid;
+            carregarDia();
+            subscribeSolicitudes(user);
+        });
+    </script>
+</body>
+</html>

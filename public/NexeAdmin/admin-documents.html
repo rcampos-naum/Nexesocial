@@ -1,0 +1,490 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" type="image/svg+xml" href="../img/nexeadmin-icon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0f172a; --accent: #3b82f6; --success: #10b981;
+            --warning: #f59e0b; --danger: #ef4444; --text-main: #1e293b;
+            --text-muted: #64748b; --bg-body: #f8fafc; --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg-body); color: var(--text-main); font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; }
+        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px 50px; }
+
+        /* KPI ALERTES */
+        .alert-banner { display: flex; align-items: center; gap: 14px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 14px; padding: 16px 20px; margin-bottom: 20px; }
+        .alert-banner.warn { background: #fffbeb; border-color: #fde68a; }
+        .alert-banner.ok { background: #f0fdf4; border-color: #bbf7d0; }
+        .alert-icon { font-size: 1.4rem; flex-shrink: 0; }
+
+        /* STATS GRID */
+        .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 15px; margin-bottom: 28px; }
+        .stat-card { background: white; padding: 20px; border-radius: 14px; border: 1px solid var(--border); text-align: center; }
+        .stat-val { font-size: 2rem; font-weight: 800; }
+        .stat-lbl { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
+
+        /* FILTRES */
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+        .filter-btn { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: white; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: 0.15s; }
+        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .search-input { flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
+
+        /* TAULA */
+        .content-card { background: white; border-radius: 16px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 28px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8fafc; text-align: left; padding: 13px 15px; font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+        td { padding: 14px 15px; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr.row-expired { background: #fff5f5; }
+        tr.row-soon { background: #fffcf0; }
+
+        /* BADGES */
+        .badge { display: inline-block; padding: 3px 9px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; white-space: nowrap; }
+        .badge-expired { background: #fee2e2; color: #991b1b; }
+        .badge-soon30 { background: #fee2e2; color: #991b1b; }
+        .badge-soon90 { background: #fef3c7; color: #92400e; }
+        .badge-valid { background: #dcfce7; color: #166534; }
+        .badge-nodate { background: #f1f5f9; color: #64748b; }
+        .badge-cat { background: #eff6ff; color: #1d4ed8; }
+        .cat-personal { background: #f5f3ff; color: #6d28d9; }
+        .cat-ass { background: #eff6ff; color: #1e40af; }
+        .cat-legal { background: #f0fdf4; color: #166534; }
+        .cat-contractes { background: #fff7ed; color: #9a3412; }
+
+        /* BOTONS */
+        .btn { padding: 9px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; font-size: 0.85rem; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: white; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-danger { background: #fee2e2; color: #991b1b; }
+        .btn-sm { padding: 5px 10px; font-size: 0.75rem; border-radius: 6px; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.45); backdrop-filter: blur(6px); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-box { background: white; padding: 36px; border-radius: 20px; width: 90%; max-width: 580px; max-height: 90vh; overflow-y: auto; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; font-family: inherit; }
+        .form-group textarea { resize: vertical; min-height: 70px; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+
+        /* PROGRESS BAR VENCIMENT */
+        .days-bar { height: 4px; border-radius: 4px; background: #e2e8f0; overflow: hidden; margin-top: 4px; }
+        .days-bar-fill { height: 100%; border-radius: 4px; }
+
+        /* SECCIÃ“ ALERTES */
+        .alerts-section { margin-bottom: 28px; }
+        .alerts-list { display: flex; flex-direction: column; gap: 8px; }
+        .alert-item { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 10px; border: 1px solid; }
+        .alert-item.red { background: #fff5f5; border-color: #fecaca; }
+        .alert-item.orange { background: #fffbeb; border-color: #fde68a; }
+        .alert-item-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .alert-item.red .alert-item-dot { background: var(--danger); }
+        .alert-item.orange .alert-item-dot { background: var(--warning); }
+    </style>
+    <script src="../security-check.js"></script>
+    <script type="module">
+        await window.checkModuleAccess('NexeAdmin');
+    </script>
+</head>
+<body>
+    <aside class="admin-sidebar"></aside>
+
+    <main class="main-content">
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+            <div>
+                <h1 style="margin:0; font-weight:800;">GestiÃ³ Documental i Venciments</h1>
+                <p style="color:var(--text-muted); margin:5px 0 0 0;">Control centralitzat de documents, pÃ²lisses i documentaciÃ³ del personal</p>
+            </div>
+            <button class="btn btn-primary" onclick="obrirModal()">+ Nou Document</button>
+        </header>
+
+        <!-- ALERTES ACTIVES -->
+        <div class="alerts-section" id="alerts-section" style="display:none;">
+            <h3 style="margin:0 0 12px; font-size:0.9rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); display:flex; align-items:center; gap:6px;"><svg style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Alertes de Venciment</h3>
+            <div class="alerts-list" id="alerts-list"></div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-val" id="kpi-total">â€”</div>
+                <div class="stat-lbl">Total Documents</div>
+            </div>
+            <div class="stat-card" style="border-color:#fecaca;">
+                <div class="stat-val" id="kpi-expired" style="color:var(--danger);">â€”</div>
+                <div class="stat-lbl">VenÃ§uts</div>
+            </div>
+            <div class="stat-card" style="border-color:#fde68a;">
+                <div class="stat-val" id="kpi-soon" style="color:var(--warning);">â€”</div>
+                <div class="stat-lbl">Vencen en 30 dies</div>
+            </div>
+            <div class="stat-card" style="border-color:#bbf7d0;">
+                <div class="stat-val" id="kpi-valid" style="color:var(--success);">â€”</div>
+                <div class="stat-lbl">Vigents</div>
+            </div>
+        </div>
+
+        <!-- FILTRES -->
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="setFilter('tots',this)">Tots</button>
+            <button class="filter-btn" onclick="setFilter('Personal',this)"><svg style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:middle;margin-right:4px;" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Personal</button>
+            <button class="filter-btn" onclick="setFilter('Assegurances',this)"><svg style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:middle;margin-right:4px;" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Assegurances</button>
+            <button class="filter-btn" onclick="setFilter('Legal',this)"><svg style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:middle;margin-right:4px;" viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7z"/><polyline points="9 12 11 14 15 10"/></svg>Legal</button>
+            <button class="filter-btn" onclick="setFilter('Contractes',this)"><svg style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:middle;margin-right:4px;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Contractes</button>
+            <button class="filter-btn" onclick="setFilter('Altres',this)"><svg style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:middle;margin-right:4px;" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>Altres</button>
+            <span style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+                <button class="filter-btn" id="btn-venciments" onclick="setFilterExpiry(this)"><svg style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:middle;margin-right:4px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Venciments urgents</button>
+                <input class="search-input" type="text" id="searchDoc" placeholder="Cercar per nom, responsable..." oninput="renderTable()">
+            </span>
+        </div>
+
+        <!-- TAULA -->
+        <div class="content-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Document</th>
+                        <th>Categoria</th>
+                        <th>Responsable</th>
+                        <th>Data pujada</th>
+                        <th>Venciment</th>
+                        <th>Estat</th>
+                        <th>Accions</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-docs">
+                    <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted);">Carregant documents...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- MODAL NOU DOCUMENT -->
+    <div class="modal-overlay" id="modalDoc" onclick="tancarModal()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <h2 style="margin:0 0 24px; font-weight:800;" id="modal-title">Nou Document</h2>
+
+            <div class="form-group">
+                <label>Nom del document *</label>
+                <input type="text" id="doc-nom" placeholder="Ex: PÃ²lissa RC Entitat 2026, Antecedents Joan Garcia...">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Categoria *</label>
+                    <select id="doc-cat">
+                        <option value="">â€” Seleccionar â€”</option>
+                        <option value="Personal">Personal (antecedents, titulaciÃ³, contractes laboral)</option>
+                        <option value="Assegurances">Assegurances (pÃ²lisses, RC, vehicles)</option>
+                        <option value="Legal">Legal (llicÃ¨ncies, estatuts, registres)</option>
+                        <option value="Contractes">Contractes (arrendament, serveis, proveÃ¯dors)</option>
+                        <option value="Altres">Altres</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Responsable</label>
+                    <input type="text" id="doc-responsable" placeholder="Nom de la persona responsable">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Data venciment</label>
+                    <input type="date" id="doc-venciment">
+                </div>
+                <div class="form-group">
+                    <label>AvÃ­s renovaciÃ³ (dies abans)</label>
+                    <select id="doc-avis">
+                        <option value="30">30 dies</option>
+                        <option value="60" selected>60 dies</option>
+                        <option value="90">90 dies</option>
+                        <option value="180">6 mesos</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="doc-notes" placeholder="Observacions, nÃºm. pÃ²lissa, referÃ¨ncia..."></textarea>
+            </div>
+
+            <div id="edit-doc-id" style="display:none;"></div>
+
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+                <button class="btn btn-secondary" onclick="tancarModal()">CancelÂ·lar</button>
+                <button class="btn btn-primary" onclick="abrirParaFirmarAdminDocs()" style="background:#10b981; border-color:#10b981;">Enviar a Firmar</button>
+                <button class="btn btn-primary" onclick="guardarDocument()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from '../firebase-config.js';
+        import {
+            collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy, query, onSnapshot
+        } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        const COL = 'documentos';
+        let allDocs = [];
+        let activeFilter = 'tots';
+        let expiryOnly = false;
+
+        function diffDays(venc) {
+            if (!venc) return null;
+            const dt = venc.toDate ? venc.toDate() : new Date(venc);
+            return Math.round((dt - Date.now()) / 86400000);
+        }
+
+        function fmtDate(ts) {
+            if (!ts) return 'â€”';
+            const d = ts.toDate ? ts.toDate() : new Date(ts);
+            return d.toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function expiryBadge(days) {
+            if (days === null) return `<span class="badge badge-nodate">Sense data</span>`;
+            if (days < 0) return `<span class="badge badge-expired">VenÃ§ut (${Math.abs(days)}d)</span>`;
+            if (days <= 30) return `<span class="badge badge-soon30">VenÃ§ en ${days}d</span>`;
+            if (days <= 90) return `<span class="badge badge-soon90">VenÃ§ en ${days}d</span>`;
+            return `<span class="badge badge-valid">Vigent</span>`;
+        }
+
+        function catBadge(cat) {
+            const cls = { Personal: 'cat-personal', Assegurances: 'cat-ass', Legal: 'cat-legal', Contractes: 'cat-contractes' }[cat] || '';
+            return `<span class="badge ${cls}">${cat || 'â€”'}</span>`;
+        }
+
+        function rowClass(days) {
+            if (days === null) return '';
+            if (days < 0 || days <= 30) return 'row-expired';
+            if (days <= 90) return 'row-soon';
+            return '';
+        }
+
+        function daysBarHtml(days) {
+            if (days === null) return '';
+            const pct = Math.max(0, Math.min(100, (days / 365) * 100));
+            const color = days < 0 ? '#ef4444' : days <= 30 ? '#ef4444' : days <= 90 ? '#f59e0b' : '#10b981';
+            return `<div class="days-bar"><div class="days-bar-fill" style="width:${pct}%;background:${color};"></div></div>`;
+        }
+
+        window.renderTable = function() {
+            const search = document.getElementById('searchDoc').value.toLowerCase();
+            let filtered = allDocs.filter(d => {
+                if (activeFilter !== 'tots' && d.categoria !== activeFilter) return false;
+                if (expiryOnly) {
+                    const dd = diffDays(d.dataVenciment);
+                    if (dd === null || dd > 90) return false;
+                }
+                if (search) {
+                    const txt = ((d.nom || '') + (d.responsable || '') + (d.notes || '')).toLowerCase();
+                    if (!txt.includes(search)) return false;
+                }
+                return true;
+            });
+
+            // Sort: expired first, then soonest
+            filtered.sort((a, b) => {
+                const da = diffDays(a.dataVenciment) ?? 9999;
+                const db2 = diffDays(b.dataVenciment) ?? 9999;
+                return da - db2;
+            });
+
+            const tbody = document.getElementById('tbody-docs');
+            if (!filtered.length) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted);">Cap document trobat</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(d => {
+                const days = diffDays(d.dataVenciment);
+                return `<tr class="${rowClass(days)}">
+                    <td><strong>${d.nom || 'â€”'}</strong>${d.notes ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">${d.notes}</div>` : ''}</td>
+                    <td>${catBadge(d.categoria)}</td>
+                    <td>${d.responsable || 'â€”'}</td>
+                    <td style="color:var(--text-muted);">${fmtDate(d.dataPujada)}</td>
+                    <td>${fmtDate(d.dataVenciment)}${daysBarHtml(days)}</td>
+                    <td>${expiryBadge(days)}</td>
+                    <td style="white-space:nowrap;">
+                        <button class="btn btn-secondary btn-sm" onclick="editarDoc('${d._id}')" title="Editar"><svg style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:middle;" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarDoc('${d._id}')" title="Eliminar"><svg style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:middle;" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4h6v2"/></svg></button>
+                    </td>
+                </tr>`;
+            }).join('');
+        };
+
+        function updateKPIs() {
+            const total = allDocs.length;
+            let expired = 0, soon = 0, valid = 0;
+            allDocs.forEach(d => {
+                const days = diffDays(d.dataVenciment);
+                if (days === null) { valid++; return; }
+                if (days < 0) expired++;
+                else if (days <= 30) soon++;
+                else valid++;
+            });
+            document.getElementById('kpi-total').textContent = total;
+            document.getElementById('kpi-expired').textContent = expired;
+            document.getElementById('kpi-soon').textContent = soon;
+            document.getElementById('kpi-valid').textContent = valid;
+
+            // Alertes
+            const urgent = allDocs.filter(d => {
+                const dd = diffDays(d.dataVenciment);
+                return dd !== null && dd <= 90;
+            }).sort((a, b) => (diffDays(a.dataVenciment) ?? 0) - (diffDays(b.dataVenciment) ?? 0));
+
+            const alertsSection = document.getElementById('alerts-section');
+            const alertsList = document.getElementById('alerts-list');
+            if (urgent.length) {
+                alertsSection.style.display = '';
+                alertsList.innerHTML = urgent.slice(0, 5).map(d => {
+                    const days = diffDays(d.dataVenciment);
+                    const cls = days < 0 || days <= 30 ? 'red' : 'orange';
+                    const msg = days < 0 ? `VenÃ§ut fa ${Math.abs(days)} dies` : `VenÃ§ en ${days} dies (${fmtDate(d.dataVenciment)})`;
+                    return `<div class="alert-item ${cls}">
+                        <div class="alert-item-dot"></div>
+                        <div style="flex:1;">
+                            <strong>${d.nom}</strong> <span class="badge cat-${(d.categoria||'').toLowerCase()}">${d.categoria || ''}</span>
+                            <div style="font-size:0.78rem;color:var(--text-muted);">${d.responsable ? `Responsable: ${d.responsable} â€” ` : ''}${msg}</div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="editarDoc('${d._id}')">Renovar</button>
+                    </div>`;
+                }).join('');
+            } else {
+                alertsSection.style.display = 'none';
+            }
+        }
+
+        let _unsubDocs = null;
+
+        function loadDocs() {
+            if (_unsubDocs) _unsubDocs();
+            _unsubDocs = onSnapshot(
+                query(collection(db, COL), orderBy('dataPujada', 'desc')),
+                (snap) => {
+                    allDocs = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+                    updateKPIs();
+                    renderTable();
+                },
+                (e) => { console.warn('[admin-documents]', e); }
+            );
+        }
+        window.addEventListener('beforeunload', () => { if (_unsubDocs) _unsubDocs(); });
+
+        window.setFilter = function(cat, btn) {
+            activeFilter = cat;
+            expiryOnly = false;
+            document.getElementById('btn-venciments').classList.remove('active');
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderTable();
+        };
+
+        window.setFilterExpiry = function(btn) {
+            expiryOnly = !expiryOnly;
+            btn.classList.toggle('active', expiryOnly);
+            renderTable();
+        };
+
+        window.obrirModal = function(id) {
+            const modal = document.getElementById('modalDoc');
+            document.getElementById('modal-title').textContent = id ? 'Editar Document' : 'Nou Document';
+            document.getElementById('edit-doc-id').textContent = id || '';
+            if (!id) {
+                ['doc-nom','doc-responsable','doc-venciment','doc-notes'].forEach(x => document.getElementById(x).value = '');
+                document.getElementById('doc-cat').value = '';
+                document.getElementById('doc-avis').value = '60';
+            }
+            modal.style.display = 'flex';
+        };
+
+        window.tancarModal = function() {
+            document.getElementById('modalDoc').style.display = 'none';
+        };
+
+        window.editarDoc = function(id) {
+            const d = allDocs.find(x => x._id === id);
+            if (!d) return;
+            document.getElementById('doc-nom').value = d.nom || '';
+            document.getElementById('doc-cat').value = d.categoria || '';
+            document.getElementById('doc-responsable').value = d.responsable || '';
+            document.getElementById('doc-notes').value = d.notes || '';
+            document.getElementById('doc-avis').value = d.avisRenovacio || '60';
+            if (d.dataVenciment) {
+                const dt = d.dataVenciment.toDate ? d.dataVenciment.toDate() : new Date(d.dataVenciment);
+                document.getElementById('doc-venciment').value = dt.toISOString().substring(0,10);
+            } else {
+                document.getElementById('doc-venciment').value = '';
+            }
+            obrirModal(id);
+        };
+
+        window.guardarDocument = async function() {
+            const nom = document.getElementById('doc-nom').value.trim();
+            const cat = document.getElementById('doc-cat').value;
+            if (!nom || !cat) { alert('Cal omplir el nom i la categoria.'); return; }
+
+            const vencStr = document.getElementById('doc-venciment').value;
+            const data = {
+                nom,
+                categoria: cat,
+                responsable: document.getElementById('doc-responsable').value.trim(),
+                notes: document.getElementById('doc-notes').value.trim(),
+                avisRenovacio: Number(document.getElementById('doc-avis').value),
+                dataVenciment: vencStr ? new Date(vencStr) : null,
+            };
+
+            const editId = document.getElementById('edit-doc-id').textContent.trim();
+            if (editId) {
+                await updateDoc(doc(db, COL, editId), data);
+            } else {
+                data.dataPujada = serverTimestamp();
+                await addDoc(collection(db, COL), data);
+            }
+            tancarModal();
+            await loadDocs();
+        };
+
+        window.eliminarDoc = async function(id) {
+            if (!confirm('Eliminar aquest document?')) return;
+            await deleteDoc(doc(db, COL, id));
+            await loadDocs();
+        };
+
+        // Función para abrir el flujo de firma desde admin-documents
+        window.abrirParaFirmarAdminDocs = async function() {
+            try {
+                import('../signature-flow.js').then(mod => {
+                    const SignatureFlow = mod.default;
+                    const docName = document.getElementById('edit-doc-name')?.value || 'Document';
+                    const docType = document.getElementById('edit-doc-type')?.value || 'Legal';
+                    
+                    SignatureFlow.openQuickSignFlow({
+                        documentTitle: `Document NexeAdmin - ${docName}`,
+                        documentText: `Document administratiu: ${docName} (${docType})`,
+                        sourceModule: 'admin-documents',
+                        metadata: {
+                            tipo: docType,
+                            nombre: docName,
+                        },
+                    });
+                });
+            } catch(e) {
+                console.error('Error obrint firma:', e);
+                alert('Error al obrir el flux de firma');
+            }
+        };
+
+        loadDocs();
+    </script>
+    <script src="nexeadmin-sidebar.js"></script>
+</body>
+</html>
+

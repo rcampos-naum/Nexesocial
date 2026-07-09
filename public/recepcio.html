@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recepcio - NexeSocial</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        body { background: #f1f5f9; }
+        .rec-wrap {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 24px 16px;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .rec-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        .rec-logo {
+            width: 46px; height: 46px;
+            background: #0f172a;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .rec-title { font-size: 1.4rem; font-weight: 900; color: #0f172a; margin: 0; }
+        .rec-sub   { font-size: 0.8rem; color: #64748b; margin: 2px 0 0; }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.06);
+            margin-bottom: 20px;
+        }
+        .card-title {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin: 0 0 18px;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            margin-bottom: 8px;
+        }
+        .search-row input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            outline: none;
+            text-transform: uppercase;
+            color: #0f172a;
+            transition: border-color .15s;
+        }
+        .search-row input::placeholder { font-family: inherit; font-weight: 400; letter-spacing: 0.04em; color: #94a3b8; text-transform: none; }
+        .search-row input:focus { border-color: #3b82f6; }
+        .btn-search {
+            padding: 12px 20px;
+            background: #0f172a;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            transition: background .15s;
+            white-space: nowrap;
+        }
+        .btn-search:hover { background: #1e293b; }
+
+        .qr-section {
+            border-top: 1px solid #f1f5f9;
+            margin-top: 18px;
+            padding-top: 18px;
+        }
+        .qr-section-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 12px;
+        }
+        .qr-video-wrap {
+            position: relative;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #0f172a;
+        }
+        #qr-video { width: 100%; max-height: 280px; object-fit: cover; display: block; }
+        #qr-canvas-scan { display: none; }
+        .qr-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none;
+        }
+        .qr-frame {
+            width: 160px; height: 160px;
+            border: 3px solid rgba(255,255,255,.7);
+            border-radius: 14px;
+            box-shadow: 0 0 0 9999px rgba(0,0,0,.35);
+        }
+        .btn-camera {
+            padding: 10px 18px;
+            background: #f8fafc;
+            color: #334155;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.83rem;
+            cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px;
+            transition: all .15s;
+        }
+        .btn-camera:hover { background: #f1f5f9; }
+
+        #result-box { display: none; }
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+        .result-badge {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+        .result-name { font-size: 1.25rem; font-weight: 900; color: #0f172a; margin: 0; }
+        .result-loc { font-family: 'Courier New',monospace; font-size: 0.85rem; color: #64748b; margin-top: 2px; }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .result-field { display: flex; flex-direction: column; gap: 3px; }
+        .result-field-label { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.08em; }
+        .result-field-value { font-size: 0.95rem; font-weight: 700; color: #1e293b; }
+
+        .btn-arrive {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.05rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: all .15s;
+            box-shadow: 0 4px 14px rgba(22,163,74,.35);
+        }
+        .btn-arrive:hover { background: linear-gradient(135deg, #15803d, #166534); transform: translateY(-1px); }
+        .btn-arrive:disabled { background: #94a3b8; box-shadow: none; cursor: default; transform: none; }
+
+        .arrived-banner {
+            display: flex; align-items: center; gap: 14px;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #16a34a;
+            border-radius: 14px;
+            color: #166534;
+        }
+        .arrived-banner-icon { flex-shrink: 0; }
+        .arrived-banner-title { font-size: 1rem; font-weight: 900; margin: 0 0 2px; }
+        .arrived-banner-sub { font-size: 0.82rem; font-weight: 500; margin: 0; opacity: .8; }
+
+        .error-box {
+            padding: 14px 16px;
+            background: #fef2f2;
+            border: 1.5px solid #fecaca;
+            border-radius: 10px;
+            color: #b91c1c;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: none;
+        }
+
+        .loading-spinner {
+            display: none;
+            padding: 24px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        #toast-rec {
+            position: fixed; bottom: 24px; right: 24px; z-index: 40000;
+            padding: 12px 18px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex; align-items: center; gap: 10px;
+            opacity: 0; transform: translateY(8px);
+            transition: all .3s;
+            pointer-events: none;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+    <script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"></script>
+</head>
+<body>
+    <script type="module">
+        import './auth-manager.js';
+    </script>
+
+    <div class="rec-wrap">
+        <div class="rec-header">
+            <div class="rec-logo">
+                <svg width="26" height="26" fill="none" stroke="white" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </div>
+            <div>
+                <p class="rec-title">Recepcio</p>
+                <p class="rec-sub">Registre d'arribades · NexeSocial</p>
+            </div>
+        </div>
+
+        <!-- Search card -->
+        <div class="card">
+            <p class="card-title">Buscar cita per localizador</p>
+            <div class="search-row">
+                <input type="text" id="input-loc" placeholder="Escriu el localizador (ex: NX26ABCD12)" maxlength="10" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
+                <button class="btn-search" onclick="_buscarCita()">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    Cercar
+                </button>
+            </div>
+            <p style="font-size:0.78rem;color:#94a3b8;margin:0;">Prem Enter o el botó per cercar la cita pel seu codi identificador.</p>
+
+            <!-- QR Scanner section -->
+            <div class="qr-section">
+                <p class="qr-section-title">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 20h3"></path></svg>
+                    O escaneja el QR de la cita
+                </p>
+                <button class="btn-camera" id="btn-cam" onclick="_toggleCamera()">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                    Obrir camara
+                </button>
+                <div id="cam-wrap" style="margin-top:14px;display:none;">
+                    <div class="qr-video-wrap">
+                        <video id="qr-video" autoplay muted playsinline></video>
+                        <div class="qr-overlay"><div class="qr-frame"></div></div>
+                    </div>
+                    <canvas id="qr-canvas-scan"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading-spinner" id="spinner">
+            <svg style="animation:spin 1s linear infinite;width:22px;height:22px;fill:none;stroke:#3b82f6;stroke-width:2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity=".2"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+            <span style="margin-top:6px;display:block;">Cercant...</span>
+        </div>
+
+        <!-- Error -->
+        <div class="error-box" id="error-box"></div>
+
+        <!-- Result -->
+        <div class="card" id="result-box">
+            <p class="card-title">Detall de la cita</p>
+            <div class="result-header">
+                <div style="flex:1;">
+                    <p class="result-name" id="res-nom">—</p>
+                    <p class="result-loc" id="res-loc">—</p>
+                </div>
+                <span class="result-badge" id="res-badge">—</span>
+            </div>
+            <div class="result-grid">
+                <div class="result-field">
+                    <span class="result-field-label">Hora</span>
+                    <span class="result-field-value" id="res-hora">—</span>
+                </div>
+                <div class="result-field">
+                    <span class="result-field-label">Sala</span>
+                    <span class="result-field-value" id="res-sala">—</span>
+                </div>
+                <div class="result-field">
+                    <span class="result-field-label">Data</span>
+                    <span class="result-field-value" id="res-data">—</span>
+                </div>
+                <div class="result-field">
+                    <span class="result-field-label">Estat</span>
+                    <span class="result-field-value" id="res-estat">—</span>
+                </div>
+                <div class="result-field" id="res-motiu-wrap" style="grid-column:1/-1;">
+                    <span class="result-field-label">Motiu</span>
+                    <span class="result-field-value" id="res-motiu">—</span>
+                </div>
+                <div class="result-field" id="res-tecnic-wrap" style="grid-column:1/-1;">
+                    <span class="result-field-label">Tecnics assignats</span>
+                    <span class="result-field-value" id="res-tecnic">—</span>
+                </div>
+            </div>
+
+            <div id="arrive-action">
+                <button class="btn-arrive" id="btn-arrive" onclick="_marcarArribat()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Ha Arribat
+                </button>
+            </div>
+
+            <div class="arrived-banner" id="arrived-banner" style="display:none;">
+                <div class="arrived-banner-icon">
+                    <svg width="32" height="32" fill="none" stroke="#16a34a" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div>
+                    <p class="arrived-banner-title">Arribada registrada!</p>
+                    <p class="arrived-banner-sub" id="arrived-time">—</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-rec"></div>
+
+    <script type="module">
+        import { db } from './firebase-config.js';
+        import {
+            collection, query, where, getDocs,
+            updateDoc, doc, serverTimestamp
+        } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+        import { waitForCrypto } from './vault-init.js';
+        import { decryptField } from './crypto-utils.js';
+
+        const ESTAT_LBL = { pendent:'Pendent', confirmat:'Confirmat', 'en-curs':'En Curs',
+            finalitzada:'Finalitzada', cancellada:'Cancel.lada', arribat:'Ha Arribat' };
+        const ESTAT_CLR = { pendent:'#f59e0b', confirmat:'#3b82f6', 'en-curs':'#8b5cf6',
+            finalitzada:'#10b981', cancellada:'#ef4444', arribat:'#16a34a' };
+
+        async function decryptStr(enc) {
+            if (!enc) return '';
+            try { return await decryptField(enc); } catch { return ''; }
+        }
+
+        let _curDocId = null;
+        let _curEstat = null;
+
+        function showToast(msg, ok) {
+            const t = document.getElementById('toast-rec');
+            const icon = ok
+                ? '<svg style="width:18px;height:18px;fill:white;flex-shrink:0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>'
+                : '<svg style="width:18px;height:18px;fill:white;flex-shrink:0" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
+            t.innerHTML = icon + '<span>' + msg + '</span>';
+            t.style.background = ok ? '#10b981' : '#ef4444';
+            t.style.opacity = '1'; t.style.transform = 'translateY(0)'; t.style.pointerEvents = 'auto';
+            clearTimeout(t._tmr);
+            t._tmr = setTimeout(() => { t.style.opacity='0'; t.style.transform='translateY(8px)'; t.style.pointerEvents='none'; }, 3500);
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('error-box');
+            el.textContent = msg;
+            el.style.display = msg ? 'block' : 'none';
+        }
+        function showSpinner(on) {
+            document.getElementById('spinner').style.display = on ? 'block' : 'none';
+        }
+
+        window._buscarCita = async function() {
+            const loc = document.getElementById('input-loc').value.trim().toUpperCase();
+            if (!loc) { showError('Introdueix un localizador per cercar.'); return; }
+            showError('');
+            document.getElementById('result-box').style.display = 'none';
+            showSpinner(true);
+
+            try {
+                await waitForCrypto();
+                const q = query(collection(db, 'agenda'), where('localizador', '==', loc));
+                const snap = await getDocs(q);
+                showSpinner(false);
+
+                if (snap.empty) {
+                    showError('No s\'ha trobat cap cita amb el localizador ' + loc + '.');
+                    return;
+                }
+
+                const docSnap = snap.docs[0];
+                const raw = docSnap.data();
+                _curDocId  = docSnap.id;
+                _curEstat  = raw.estat || 'pendent';
+
+                const nom    = await decryptStr(raw.nomBeneficiari) || raw.titol || 'Entrada sense nom';
+                const motiu  = await decryptStr(raw.motiu);
+                const tecs   = (raw.tecnicsConvidats || []).map(t => t.nom || t.id).join(', ') || '—';
+
+                document.getElementById('res-nom').textContent   = nom;
+                document.getElementById('res-loc').textContent   = raw.localizador || loc;
+                document.getElementById('res-hora').textContent  = raw.hora || '—';
+                document.getElementById('res-sala').textContent  = raw.sala || '—';
+                document.getElementById('res-data').textContent  = raw.data || '—';
+                document.getElementById('res-estat').textContent = ESTAT_LBL[_curEstat] || _curEstat;
+                document.getElementById('res-motiu').textContent = motiu || '—';
+                document.getElementById('res-tecnic').textContent = tecs;
+
+                const badge = document.getElementById('res-badge');
+                const col = ESTAT_CLR[_curEstat] || '#64748b';
+                badge.textContent = ESTAT_LBL[_curEstat] || _curEstat;
+                badge.style.background = col + '22';
+                badge.style.color = col;
+
+                // Show/hide arrive button
+                const arrivedAlready = _curEstat === 'arribat' || _curEstat === 'en-curs' || _curEstat === 'finalitzada';
+                document.getElementById('arrive-action').style.display = arrivedAlready ? 'none' : 'block';
+                document.getElementById('arrived-banner').style.display = arrivedAlready ? 'flex' : 'none';
+                if (arrivedAlready && raw.arrivedAt) {
+                    const ts = raw.arrivedAt.toDate ? raw.arrivedAt.toDate() : new Date(raw.arrivedAt.seconds * 1000);
+                    document.getElementById('arrived-time').textContent = 'Registrat a les ' + ts.toLocaleTimeString('ca-ES', {hour:'2-digit',minute:'2-digit'});
+                } else if (arrivedAlready) {
+                    document.getElementById('arrived-time').textContent = 'Arribada ja registrada';
+                }
+
+                document.getElementById('result-box').style.display = 'block';
+            } catch(e) {
+                showSpinner(false);
+                showError('Error en la cerca: ' + (e.message || e.code || 'error desconegut'));
+                console.error(e);
+            }
+        };
+
+        window._marcarArribat = async function() {
+            if (!_curDocId) return;
+            const btn = document.getElementById('btn-arrive');
+            btn.disabled = true;
+            btn.innerHTML = '<svg style="animation:spin 1s linear infinite;width:18px;height:18px;fill:none;stroke:white;stroke-width:2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity=".2"/><path d="M12 2a10 10 0 0 1 10 10"/></svg> Registrant...';
+            try {
+                await updateDoc(doc(db, 'agenda', _curDocId), {
+                    estat: 'arribat',
+                    arrivedAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+                _curEstat = 'arribat';
+                document.getElementById('res-estat').textContent = 'Ha Arribat';
+                const col = ESTAT_CLR['arribat'];
+                document.getElementById('res-badge').style.background = col + '22';
+                document.getElementById('res-badge').style.color = col;
+                document.getElementById('res-badge').textContent = 'Ha Arribat';
+
+                document.getElementById('arrive-action').style.display = 'none';
+                document.getElementById('arrived-banner').style.display = 'flex';
+                document.getElementById('arrived-time').textContent = 'Registrat a les ' + new Date().toLocaleTimeString('ca-ES', {hour:'2-digit',minute:'2-digit'});
+
+                showToast('Arribada registrada correctament', true);
+            } catch(e) {
+                btn.disabled = false;
+                btn.innerHTML = '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Ha Arribat';
+                showToast('Error en registrar: ' + (e.message || e.code), false);
+                console.error(e);
+            }
+        };
+
+        // Enter key on input
+        document.getElementById('input-loc').addEventListener('keydown', e => {
+            if (e.key === 'Enter') window._buscarCita();
+        });
+
+        // Pre-fill from URL ?loc=XXX
+        const urlLoc = new URLSearchParams(location.search).get('loc');
+        if (urlLoc) {
+            document.getElementById('input-loc').value = urlLoc.toUpperCase();
+            window._buscarCita();
+        }
+
+        // ─── QR Camera scanner ───────────────────────────────────────────────
+        let _camStream = null;
+        let _scanLoop  = null;
+        let _scanning  = false;
+
+        window._toggleCamera = async function() {
+            if (_scanning) {
+                _stopCamera();
+                return;
+            }
+            _scanning = true;
+            const btn = document.getElementById('btn-cam');
+            btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Tancar camara';
+            document.getElementById('cam-wrap').style.display = 'block';
+
+            try {
+                _camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                const video = document.getElementById('qr-video');
+                video.srcObject = _camStream;
+                video.play();
+                _scanLoop = requestAnimationFrame(_scanFrame);
+            } catch(e) {
+                _stopCamera();
+                showError('No s\'ha pogut accedir a la camara: ' + (e.message || 'permis denegat'));
+            }
+        };
+
+        function _stopCamera() {
+            _scanning = false;
+            if (_camStream) { _camStream.getTracks().forEach(t => t.stop()); _camStream = null; }
+            if (_scanLoop)  { cancelAnimationFrame(_scanLoop); _scanLoop = null; }
+            const btn = document.getElementById('btn-cam');
+            btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Obrir camara';
+            document.getElementById('cam-wrap').style.display = 'none';
+        }
+
+        function _scanFrame() {
+            const video  = document.getElementById('qr-video');
+            const canvas = document.getElementById('qr-canvas-scan');
+            if (!_scanning) return;
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.width  = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                if (typeof jsQR !== 'undefined') {
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+                    if (code && code.data) {
+                        const data = code.data.trim().toUpperCase();
+                        if (/^NX\d{2}[A-Z0-9]{6}$/.test(data)) {
+                            _stopCamera();
+                            document.getElementById('input-loc').value = data;
+                            showToast('QR detectat: ' + data, true);
+                            window._buscarCita();
+                            return;
+                        }
+                    }
+                }
+            }
+            _scanLoop = requestAnimationFrame(_scanFrame);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" type="image/svg+xml" href="../img/nexeadmin-icon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0f172a; 
+            --accent: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #f8fafc;
+            --border: #e2e8f0;
+        }
+
+        body { 
+            margin: 0; background: var(--bg-body); color: var(--text-main); 
+            font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; 
+        }
+
+        /* NAVEGACIÃ“ LATERAL REESTABLIDA */
+        .admin-sidebar {
+            width: 260px; background: white; border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; padding: 30px 20px; position: fixed; height: 100vh;
+        }
+        .logo-box { display: flex; align-items: center; justify-content: center; margin: -30px -20px 40px -20px; border-bottom: 1px solid var(--border); }
+        .logo-img { width: 100%; height: auto; }
+        .nav-group-label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin: 20px 0 10px 10px; letter-spacing: 1px; }
+        .nav-item {
+            padding: 12px 16px; border-radius: 10px; cursor: pointer;
+            font-weight: 600; color: var(--text-muted); transition: 0.2s;
+            display: flex; align-items: center; gap: 12px; margin-bottom: 4px; font-size: 0.9rem;
+        }
+        .nav-item svg { width: 18px; height: 18px; stroke-width: 2px; stroke: currentColor; fill: none; }
+        .nav-item:hover { background: #f1f5f9; color: var(--primary); }
+        .nav-item.active { background: var(--primary); color: white; }
+
+        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px 60px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ESTILS DE TAULES I CARDS */
+        .content-card { background: white; border-radius: 20px; border: 1px solid var(--border); padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        td { padding: 15px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+
+        .btn-action { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-main); }
+
+        /* MODALS (IGUALS AL ORIGINAL) */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-content { background: white; padding: 40px; border-radius: 24px; width: 90%; max-width: 800px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 0.75rem; font-weight: 800; margin-bottom: 5px; color: var(--text-muted); text-transform: uppercase; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; }
+
+        /* FILTRES D'ASSEGURANCES */
+        .filter-row { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn-status-selector { padding: 8px 15px; border-radius: 8px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 0.8rem; font-weight: 600; }
+        .btn-status-selector.selected { background: var(--accent); color: white; border-color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <aside class="admin-sidebar">
+        <div class="logo-box"><img src="../img/nexeadmin.svg" alt="NexeSocial" class="logo-img"></div>
+        <div class="nav-group-label">Principal</div>
+        <a href="nexeadmin.html" class="nav-item">Resum Executiu</a>
+        <div class="nav-group-label">GestiÃ³ Operativa</div>
+        <a href="admin-subvencions.html" class="nav-item">Subvencions (CrÃ­tic)</a>
+        <a href="admin-personal.html" class="nav-item">Entitat i accessos</a>
+        <a href="nexeadmin-ass.html" class="nav-item active">Assegurances</a>
+        <div class="nav-group-label">AdministraciÃ³</div>
+        <a href="admin-documents.html" class="nav-item">GestiÃ³ Documental</a>
+        <a href="admin-proveidors.html" class="nav-item">ProveÃ¯dors i Compres</a>
+    </aside>
+
+    <main class="main-content">
+        <section id="tab-seguros" class="tab-content active">
+            <div class="page-header">
+                <h1>Control d'Assegurances</h1>
+                <button class="btn-action" onclick="openModalSeguro()">+ Nova PÃ²lissa</button>
+            </div>
+
+            <div class="filter-row">
+                <button class="btn-status-selector selected" onclick="filtrar('TOTS', this)">Totes</button>
+                <button class="btn-status-selector" onclick="filtrar('GENERAL', this)">Generals</button>
+                <button class="btn-status-selector" onclick="filtrar('USUARIS', this)">Usuaris</button>
+                <button class="btn-status-selector" onclick="filtrar('FORMACIO', this)">FormaciÃ³ (PQI/SAIS)</button>
+            </div>
+
+            <div class="content-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>PÃ²lissa / Ref</th>
+                            <th>Aseguradora i Concepte</th>
+                            <th>Venciment</th>
+                            <th>Asegurats</th>
+                            <th>Avis RenovaciÃ³</th>
+                            <th>Estat</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bodySeguros">
+                        <tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8;">Carregant...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="tab-calendari" class="tab-content">
+            <div class="page-header"><h1>Calendari Global de Venciments</h1></div>
+            <div class="content-card">
+                <table>
+                    <thead><tr><th>Data</th><th>Concepte</th><th>Tipus</th><th>Responsable</th><th>Estat</th></tr></thead>
+                    <tbody id="tbody-renovacions"><tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8;">Cap renovaciÃ³ pendent</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="tab-personal" class="tab-content">
+            <div class="page-header"><h1>Personal Asegurat</h1></div>
+            <div class="content-card">
+                <table>
+                    <thead><tr><th>Nom</th><th>Tipus</th><th>Polissa</th><th>Cobertura</th><th>Estat</th></tr></thead>
+                    <tbody id="tbody-personal-ass"><tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8;">Sense dades de personal assegurat</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="tab-projectes" class="tab-content">
+            <div class="page-header"><h1>GestiÃ³ de Tasques de Seguros</h1></div>
+            <div class="content-card">
+                <table>
+                    <thead><tr><th>Tasca</th><th>Data LÃ­mit</th><th>Prioritat</th><th>Responsable</th><th>Estat</th></tr></thead>
+                    <tbody id="tbody-tasques-ass"><tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8;">Cap tasca pendent</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <div id="modalSeguro" class="modal-overlay" onclick="closeModalSeguro()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 style="margin-top:0">ConfiguraciÃ³ de PÃ²lissa</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div>
+                    <div class="form-group">
+                        <label>Tipus</label>
+                        <select>
+                            <option>RC General</option>
+                            <option>Usuaris</option>
+                            <option>PQI / SAIS</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Aseguradora</label>
+                        <input type="text" placeholder="Ex: AXA">
+                    </div>
+                    <div class="form-group">
+                        <label>NÂº PÃ²lissa</label>
+                        <input type="text">
+                    </div>
+                    <div class="form-group">
+                        <label>NÂº Asegurats</label>
+                        <input type="number" placeholder="Quantitat de persones">
+                    </div>
+                </div>
+                <div style="background:#f8fafc; padding:20px; border-radius:15px; border:1px solid var(--border);">
+                    <div class="form-group">
+                        <label>Data Venciment</label>
+                        <input type="date">
+                    </div>
+                    <label>Configurar Avis de RenovaciÃ³</label>
+                    <div style="display:flex; gap:10px; margin-top:5px;">
+                        <input type="number" placeholder="Temps" style="flex:1">
+                        <select style="flex:1">
+                            <option>Dies</option>
+                            <option>Setmanes</option>
+                            <option>Mesos</option>
+                        </select>
+                    </div>
+                    <p style="font-size:0.7rem; color:var(--text-muted); margin-top:10px;">L'administraciÃ³ rebrÃ  una alerta automÃ tica al resum executiu.</p>
+                </div>
+            </div>
+            <div style="margin-top:30px; display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn-action btn-outline" onclick="closeModalSeguro()">CancelÂ·lar</button>
+                <button class="btn-action">Guardar PÃ²lissa</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../security-check.js"></script>
+    <script>
+        // Verificar acceso al mÃ³dulo NexeAdmin
+        window.addEventListener('DOMContentLoaded', async () => {
+            await window.checkModuleAccess('NexeAdmin');
+        });
+
+        function switchTab(event, tabId) { event.preventDefault();
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function openModalSeguro() { document.getElementById('modalSeguro').style.display = 'flex'; }
+        function closeModalSeguro() { document.getElementById('modalSeguro').style.display = 'none'; }
+
+        function filtrar(cat, btn) {
+            document.querySelectorAll('.btn-status-selector').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        }
+    </script>
+    <script type="module">
+        import { db } from '../firebase-config.js';
+        import { collection, getDocs, addDoc, serverTimestamp, query, where, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        function diffDays(ts) {
+            if (!ts) return null;
+            const d = ts.toDate ? ts.toDate() : new Date(ts);
+            return Math.round((d - Date.now()) / 86400000);
+        }
+        function fmtDate(ts) {
+            if (!ts) return 'â€”';
+            const d = ts.toDate ? ts.toDate() : new Date(ts);
+            return d.toLocaleDateString('ca-ES');
+        }
+
+        let _unsubSeguros = null;
+        function loadSeguros() {
+            if (_unsubSeguros) _unsubSeguros();
+            _unsubSeguros = onSnapshot(query(collection(db, 'documentos'), where('categoria', '==', 'Assegurances')), (snap) => {
+            const docs = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+
+            // Tab principal: pÃ²lisses actives
+            const tbody = document.getElementById('bodySeguros');
+            if (!docs.length) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8;">Cap pÃ²lissa registrada. <a href="admin-documents.html" style="color:var(--accent);">Afegir des de GestiÃ³ Documental</a></td></tr>`;
+            } else {
+                tbody.innerHTML = docs.map(d => {
+                    const days = diffDays(d.dataVenciment);
+                    let estat = '', color = '';
+                    if (days === null) { estat = 'Sense data'; color = '#64748b'; }
+                    else if (days < 0) { estat = 'VenÃ§uda'; color = 'var(--danger)'; }
+                    else if (days <= 30) { estat = `VenÃ§ en ${days}d`; color = 'var(--danger)'; }
+                    else if (days <= 90) { estat = `VenÃ§ en ${days}d`; color = 'var(--warning)'; }
+                    else { estat = 'Activa'; color = 'var(--success)'; }
+                    return `<tr>
+                        <td><b>${d.nom || 'â€”'}</b>${d.notes ? `<div style="font-size:0.78rem;color:var(--text-muted);">${d.notes}</div>` : ''}</td>
+                        <td>${d.responsable || 'â€”'}</td>
+                        <td>${fmtDate(d.dataVenciment)}</td>
+                        <td><span class="badge badge-blue">Entitat</span></td>
+                        <td><span class="badge badge-warning">${d.avisRenovacio || 60} dies</span></td>
+                        <td style="font-weight:700;color:${color};">${estat}</td>
+                    </tr>`;
+                }).join('');
+            }
+
+            // Tab calendari: tots els venciments prÃ²xims
+            const renovacions = docs.filter(d => {
+                const dd = diffDays(d.dataVenciment);
+                return dd !== null && dd <= 90;
+            }).sort((a, b) => (diffDays(a.dataVenciment) ?? 0) - (diffDays(b.dataVenciment) ?? 0));
+            const tbodyRen = document.getElementById('tbody-renovacions');
+            tbodyRen.innerHTML = renovacions.length
+                ? renovacions.map(d => {
+                    const days = diffDays(d.dataVenciment);
+                    const cls = days < 0 ? 'badge-red' : days <= 30 ? 'badge-red' : 'badge-warning';
+                    return `<tr>
+                        <td>${fmtDate(d.dataVenciment)}</td>
+                        <td><b>${d.nom}</b></td>
+                        <td>AsseguranÃ§a</td>
+                        <td>${d.responsable || 'â€”'}</td>
+                        <td><span class="badge ${cls}">${days < 0 ? 'VenÃ§ut' : `${days} dies`}</span></td>
+                    </tr>`;
+                }).join('')
+                : `<tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8;">Cap renovaciÃ³ pendent en els prÃ²xims 90 dies</td></tr>`;
+            }, e => console.warn('[loadSeguros]', e));
+        }
+        window.addEventListener('beforeunload', () => { if (_unsubSeguros) _unsubSeguros(); });
+
+        // Guardar nova pÃ²lissa
+        document.querySelector('#modalSeguro .btn-action:last-child').addEventListener('click', async () => {
+            const inputs = document.querySelectorAll('#modalSeguro input, #modalSeguro select');
+            const tipus = inputs[0]?.value;
+            const asseguradora = inputs[1]?.value?.trim();
+            const polissa = inputs[2]?.value?.trim();
+            const vencDate = inputs[4]?.value;
+            if (!asseguradora || !polissa) { alert('Introdueix asseguradora i nÃºm. pÃ²lissa.'); return; }
+            await addDoc(collection(db, 'documentos'), {
+                nom: `${asseguradora} - ${polissa}`,
+                categoria: 'Assegurances',
+                responsable: '',
+                notes: `Tipus: ${tipus}. NÃºm pÃ²lissa: ${polissa}`,
+                dataVenciment: vencDate ? new Date(vencDate) : null,
+                avisRenovacio: 30,
+                dataPujada: serverTimestamp()
+            });
+            closeModalSeguro();
+        });
+
+        loadSeguros();
+    </script>
+    <script src="nexeadmin-sidebar.js"></script>
+</body>
+</html>
+
+

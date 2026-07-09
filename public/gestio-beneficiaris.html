@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexeSocial - Gestión de Beneficiarios</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        :root {
+            --primary: #0f172a; --accent: #3b82f6; --success: #10b981;
+            --warning: #f59e0b; --danger: #ef4444; --border: #e2e8f0;
+        }
+
+        body { margin: 0; background: #f8fafc; display: flex; flex-direction: column; height: 100vh; font-family: 'Inter', sans-serif; }
+        .content-wrapper { margin-left: 280px; margin-top: 60px; padding: 25px; transition: 0.3s; overflow-y: auto; flex-grow: 1; }
+        body.collapsed .content-wrapper { margin-left: 70px; }
+
+        /* Header */
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .page-header h1 { margin: 0; color: var(--primary); font-size: 1.8rem; }
+        .page-header p { margin: 5px 0 0 0; color: #64748b; }
+
+        /* Cards */
+        .nexe-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+
+        /* Tabla */
+        .nexe-table { width: 100%; border-collapse: collapse; }
+        .nexe-table th { background: #f1f5f9; padding: 12px; text-align: left; font-size: 0.75rem; color: #64748b; border-bottom: 2px solid var(--border); font-weight: 600; }
+        .nexe-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+        .nexe-table tr:hover { background: #f8fafc; }
+
+        /* Botones */
+        .btn { padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 0.8rem; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #1e293b; }
+        .btn-outline { background: white; border: 1px solid var(--border); color: var(--primary); }
+        .btn-outline:hover { background: #f1f5f9; }
+
+        .btn-accion { padding: 6px 12px; font-size: 0.75rem; margin-right: 5px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; }
+        .btn-eliminar { color: #ef4444; border-color: #ef4444; }
+        .btn-accion:hover { background: #f1f5f9; }
+
+        /* Badges */
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-warning { background: #fef3c7; color: #b45309; }
+
+        /* Form modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); z-index: 20000; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .modal.active { display: flex; }
+
+        .modal-content { background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; box-shadow: 0 20px 25px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        .modal-header h2 { margin: 0; color: var(--primary); }
+        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: 600; color: var(--primary); margin-bottom: 5px; font-size: 0.85rem; }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 25px; }
+
+        /* Empty state */
+        .empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 15px; }
+
+        /* Info box */
+        .info-box { background: #fef3c7; color: #92400e; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.85rem; border-left: 4px solid #f59e0b; }
+    </style>
+</head>
+<body>
+    <div id="sidebar"></div>
+    <div class="content-wrapper">
+        
+        <div class="page-header">
+            <div>
+                <h1 id="titulo-grupo"><svg style="display:inline-block; width:28px; height:28px; margin-right:8px; vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Gestión de Beneficiarios</h1>
+                <p id="subtitulo-grupo">Cargando detalles del grupo...</p>
+            </div>
+            <button class="btn btn-primary" onclick="abrirModalAgregar()">+ Agregar Beneficiario</button>
+        </div>
+
+        <div class="info-box">
+            <svg style="display:inline-block; width:16px; height:16px; margin-right:6px; vertical-align:middle;" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><text x="12" y="16" font-size="12" text-anchor="middle" fill="white" font-weight="bold">i</text></svg>
+            Los beneficiarios deben estar dados de alta en el departamento. Si están fuera del rango de edad, se requiere justificación.
+        </div>
+
+        <div class="nexe-card">
+            <div style="overflow-x: auto;">
+                <table class="nexe-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Edad</th>
+                            <th>Estado</th>
+                            <th>Observaciones</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-beneficiarios">
+                        <tr><td colspan="5" style="text-align: center; padding: 30px; color: #94a3b8;">Cargando beneficiarios...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="no-beneficiarios" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">
+                <svg style="width:60px; height:60px; opacity:0.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <h3>No hay beneficiarios en este grupo</h3>
+            <p>Haz clic en "Agregar Beneficiario" para comenzar.</p>
+        </div>
+
+    </div>
+
+    <!-- MODAL: Agregar Beneficiario -->
+    <div id="modal-agregar" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Agregar Beneficiario</h2>
+                <button class="modal-close" onclick="cerrarModal('modal-agregar')" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#64748b;">×</button>
+            </div>
+
+            <form id="form-agregar-beneficiario">
+                <div class="form-group">
+                    <label for="select-beneficiario"><svg style="display:inline-block; width:16px; height:16px; margin-right:4px; vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>Seleccionar Beneficiario*</label>
+                    <select id="select-beneficiario" required>
+                        <option value="">-- Cargando beneficiarios --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label id="label-edad-rango">Rango de edad para esta actividad</label>
+                    <div style="padding: 10px; background: #f1f5f9; border-radius: 8px; font-size: 0.85rem;">
+                        <span id="span-edad-rango">Selecciona departamento y actividad</span>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="cerrarModal('modal-agregar')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Agregar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { GruposLogic } from "./grupos-logic.js";
+        import { BeneficiariosGruposDB } from "./grupos-db.js";
+
+        let grupoActual = null;
+
+        // Inicializar
+        await GruposLogic.initUser();
+
+        // Obtener grupoId de la URL
+        const grupoId = new URLSearchParams(location.search).get("grupoId");
+        if (!grupoId) {
+            alert("Error: No se especificó el grupo");
+            window.location.href = "grups.html";
+        }
+
+        // Cargar datos del grupo
+        async function cargarDatos() {
+            grupoActual = await GruposLogic.obtenerDetallesGrupo(grupoId);
+            
+            if (grupoActual) {
+                document.getElementById("titulo-grupo").textContent = `👥 ${grupoActual.nombre}`;
+                document.getElementById("subtitulo-grupo").textContent = `ID: ${grupoActual.idGrupo} | Actividad: ${grupoActual.actividad?.nombre || "N/D"}`;
+                
+                if (grupoActual.actividad) {
+                    document.getElementById("span-edad-rango").textContent = `${grupoActual.actividad.edadMinima} - ${grupoActual.actividad.edadMaxima} años`;
+                }
+
+                GruposLogic.cargarBeneficiarios(grupoId, "tabla-beneficiarios");
+            }
+        }
+
+        await cargarDatos();
+
+        // Manejar formulario
+        document.getElementById("form-agregar-beneficiario").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const beneficiarioId = document.getElementById("select-beneficiario").value;
+            const selectElement = document.getElementById("select-beneficiario");
+            const beneficiarioNombre = selectElement.options[selectElement.selectedIndex].text;
+            const nacimiento = selectElement.options[selectElement.selectedIndex].dataset.nacimiento;
+
+            if (!beneficiarioId) {
+                GruposLogic.mostrarNotificacion("Por favor selecciona un beneficiario", "warning");
+                return;
+            }
+
+            await GruposLogic.agregarBeneficiario(grupoId, beneficiarioId, beneficiarioNombre, nacimiento);
+            cerrarModal("modal-agregar");
+            await cargarDatos();
+        });
+
+        // Funciones globales
+        window.abrirModalAgregar = function() {
+            document.getElementById("modal-agregar").classList.add("active");
+            // Cargar beneficiarios excluyendo los ya añadidos al grupo
+            const yaEnGrupo = (grupoActual?.beneficiarios || []).map(b => b.beneficiarioId);
+            GruposLogic.cargarBeneficiariosPorDepartamento(
+                grupoActual?.departamentoId,
+                "select-beneficiario",
+                yaEnGrupo
+            );
+        };
+
+        window.cerrarModal = function(modalId) {
+            document.getElementById(modalId).classList.remove("active");
+        };
+
+        window.eliminarBeneficiario = (idBen, beneficiarioId) => {
+            GruposLogic.eliminarBeneficiario(grupoId, idBen, beneficiarioId);
+        };
+    </script>
+
+    <!-- Indicador psicosocial per beneficiari (control accés NexePsy) -->
+    <script type="module">
+        import { ExpedientPsyDB } from './NexePsy/nexepsy-db.js';
+
+        const perms = JSON.parse(localStorage.getItem('userPermissions') || '{}');
+        const teAccesPsy = perms.psy && perms.psy !== 'none';
+
+        // Afegim columna "Psicosocial" a la capçalera de la taula
+        document.addEventListener('DOMContentLoaded', () => {
+            const thead = document.querySelector('.nexe-table thead tr');
+            if (thead) {
+                const th = document.createElement('th');
+                th.textContent = 'Psicosocial';
+                // Insertar before Acciones
+                const acciones = thead.querySelector('th:last-child');
+                thead.insertBefore(th, acciones);
+            }
+        });
+
+        // Observer: quan la taula es renderitzi, afegim les cel·les psicosocials
+        const observer = new MutationObserver(async () => {
+            const rows = document.querySelectorAll('#tabla-beneficiarios tr[data-ben-id]:not([data-psy-checked])');
+            for (const row of rows) {
+                row.setAttribute('data-psy-checked', '1');
+                const bid = row.getAttribute('data-ben-id');
+                if (!bid) continue;
+
+                const td = document.createElement('td');
+                try {
+                    const resum = await ExpedientPsyDB.resumPublic(bid);
+                    if (resum.teAtencio) {
+                        if (teAccesPsy) {
+                            td.innerHTML = `<a href="NexePsy/nexepsy-individu.html?id=${bid}" style="display:inline-flex;align-items:center;gap:5px;background:#ede9fe;color:#4f46e5;padding:4px 10px;border-radius:999px;font-size:.72rem;font-weight:700;text-decoration:none;">🧠 ${resum.totalIntervencions} activa${resum.totalIntervencions !== 1 ? 'es' : ''}</a>`;
+                        } else {
+                            td.innerHTML = `<span style="background:#ede9fe;color:#5b21b6;padding:4px 10px;border-radius:999px;font-size:.72rem;font-weight:700;">🧠 Psicosocial</span>`;
+                        }
+                    } else {
+                        td.innerHTML = `<span style="color:#cbd5e1;font-size:.75rem;">—</span>`;
+                    }
+                } catch { td.innerHTML = `<span style="color:#cbd5e1;font-size:.75rem;">—</span>`; }
+
+                // Insertar before darrera cel·la (Acciones)
+                const lastTd = row.querySelector('td:last-child');
+                if (lastTd) row.insertBefore(td, lastTd);
+            }
+        });
+
+        observer.observe(document.getElementById('tabla-beneficiarios') || document.body, { childList: true, subtree: true });
+    </script>
+
+    <script type="module" src="sidebar.js"></script>
+</body>
+</html>

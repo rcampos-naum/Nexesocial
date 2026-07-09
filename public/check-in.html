@@ -1,0 +1,400 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Check-in · NexeSocial</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .shell {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .logo-wrap {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .logo-icon {
+            width: 64px; height: 64px;
+            background: rgba(255,255,255,.12);
+            border-radius: 20px;
+            display: inline-flex; align-items: center; justify-content: center;
+            margin-bottom: 12px;
+        }
+        .logo-icon svg { width: 34px; height: 34px; fill: none; stroke: white; stroke-width: 1.8; }
+        .logo-title { color: white; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+        .logo-sub   { color: rgba(255,255,255,.55); font-size: 0.85rem; margin-top: 4px; }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 32px 28px;
+            box-shadow: 0 24px 60px rgba(0,0,0,.35);
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+        .card-sub {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        /* Input */
+        .input-group { margin-bottom: 16px; }
+        .input-label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+        .loc-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            font-size: 1.5rem;
+            font-family: 'Courier New', monospace;
+            font-weight: 900;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            text-align: center;
+            color: #0f172a;
+            outline: none;
+            transition: border-color .15s;
+        }
+        .loc-input::placeholder { font-size: 1rem; font-weight: 400; letter-spacing: 0.04em; color: #94a3b8; }
+        .loc-input:focus { border-color: #3b82f6; }
+
+        /* Button */
+        .btn-main {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: all .15s;
+            margin-top: 8px;
+        }
+        .btn-main svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.5; flex-shrink: 0; }
+        .btn-search-main  { background: #0f172a; color: white; }
+        .btn-search-main:hover  { background: #1e293b; }
+        .btn-arrive-main  { background: linear-gradient(135deg, #16a34a, #15803d); color: white; box-shadow: 0 4px 18px rgba(22,163,74,.35); }
+        .btn-arrive-main:hover  { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(22,163,74,.45); }
+        .btn-arrive-main:disabled { background: #94a3b8; box-shadow: none; transform: none; cursor: default; }
+        .btn-back { background: #f1f5f9; color: #64748b; font-size: 0.85rem; margin-top: 12px; }
+        .btn-back:hover { background: #e2e8f0; }
+
+        /* Appointment info */
+        #apt-info { display: none; }
+        .divider { border: none; border-top: 1px solid #f1f5f9; margin: 20px 0; }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f8fafc;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: #eff6ff;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .info-icon svg { width: 18px; height: 18px; fill: none; stroke: #3b82f6; stroke-width: 2; }
+        .info-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.06em; }
+        .info-value { font-size: 0.97rem; font-weight: 700; color: #1e293b; margin-top: 1px; }
+
+        /* Success */
+        #success-box { display: none; text-align: center; }
+        .success-icon {
+            width: 72px; height: 72px;
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 16px;
+        }
+        .success-icon svg { width: 36px; height: 36px; fill: none; stroke: #16a34a; stroke-width: 2.5; }
+        .success-title { font-size: 1.4rem; font-weight: 900; color: #166534; margin-bottom: 8px; }
+        .success-sub { font-size: 0.88rem; color: #4ade80; line-height: 1.5; }
+
+        /* States */
+        #error-msg { display: none; padding: 12px 16px; background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 10px; color: #b91c1c; font-size: 0.85rem; font-weight: 700; margin-bottom: 14px; }
+        #spinner-box { display: none; padding: 16px; text-align: center; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Already arrived state */
+        .already-arrived {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #16a34a;
+            border-radius: 12px;
+            margin-top: 4px;
+        }
+        .already-arrived svg { width: 22px; height: 22px; fill: none; stroke: #16a34a; stroke-width: 2.5; flex-shrink: 0; }
+        .already-arrived span { font-size: 0.88rem; font-weight: 700; color: #166534; }
+
+        .cancelled-box {
+            padding: 14px 16px; background: #fef2f2; border: 1.5px solid #fecaca;
+            border-radius: 12px; color: #b91c1c; font-size: 0.88rem; font-weight: 700; margin-top: 4px;
+            text-align: center;
+        }
+
+        .footer-note { text-align: center; color: rgba(255,255,255,.35); font-size: 0.75rem; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="shell">
+        <div class="logo-wrap">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <div class="logo-title">NexeSocial</div>
+            <div class="logo-sub">Check-in de cita</div>
+        </div>
+
+        <div class="card">
+            <!-- Search panel -->
+            <div id="search-panel">
+                <p class="card-title">Confirma la teva arribada</p>
+                <p class="card-sub">Introdueix el codi de la teva cita per confirmar que has arribat.</p>
+
+                <div id="error-msg"></div>
+
+                <div class="input-group">
+                    <label class="input-label">Codi de cita</label>
+                    <input type="text" id="input-loc" class="loc-input"
+                        placeholder="CD001" maxlength="10"
+                        autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+                </div>
+
+                <div id="spinner-box">
+                    <svg style="animation:spin 1s linear infinite;width:28px;height:28px;fill:none;stroke:#3b82f6;stroke-width:2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity=".2"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+                </div>
+
+                <button class="btn-main btn-search-main" id="btn-find" onclick="_buscar()">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    Cercar cita
+                </button>
+            </div>
+
+            <!-- Appointment info + arrive button -->
+            <div id="apt-info">
+                <hr class="divider">
+                <p style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;margin-bottom:12px;">La teva cita</p>
+
+                <div class="info-row">
+                    <div class="info-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+                    <div><div class="info-label">Hora</div><div class="info-value" id="apt-hora">—</div></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
+                    <div><div class="info-label">Data</div><div class="info-value" id="apt-data">—</div></div>
+                </div>
+                <div class="info-row" id="row-sala">
+                    <div class="info-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></div>
+                    <div><div class="info-label">Sala</div><div class="info-value" id="apt-sala">—</div></div>
+                </div>
+
+                <div id="action-area" style="margin-top:18px;"></div>
+
+                <button class="btn-main btn-back" onclick="_tornar()">
+                    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    Tornar
+                </button>
+            </div>
+
+            <!-- Success -->
+            <div id="success-box">
+                <div class="success-icon">
+                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <p class="success-title">Gràcies!</p>
+                <p class="success-sub" id="success-sub">La teva arribada ha estat registrada. Et demanarem que esperis uns moments.</p>
+                <button class="btn-main btn-back" style="margin-top:24px;" onclick="_tornar()">
+                    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    Nova consulta
+                </button>
+            </div>
+        </div>
+
+        <p class="footer-note">nexesocial-bc6c4.web.app</p>
+    </div>
+
+    
+    <script type="module">
+        import { auth, db } from './firebase-config.js';
+        import { signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+        import { collection, query, where, getDocs, updateDoc, doc, serverTimestamp }
+            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        // Sign in anonymously so Firestore rules (isSignedIn) pass
+        let _authReady = false;
+        signInAnonymously(auth).then(() => { _authReady = true; }).catch(e => {
+            console.warn('Anonymous sign-in failed:', e);
+            _authReady = true; // Try anyway
+        });
+
+        let _curDocId = null;
+        let _curEstat = null;
+
+        function formatData(str) {
+            if (!str) return '—';
+            const parts = str.split('-');
+            if (parts.length !== 3) return str;
+            const months = ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
+            return parts[2] + ' ' + months[parseInt(parts[1])-1] + ' ' + parts[0];
+        }
+
+        function setErr(msg) {
+            const el = document.getElementById('error-msg');
+            el.textContent = msg; el.style.display = msg ? 'block' : 'none';
+        }
+        function setSpin(on) {
+            document.getElementById('spinner-box').style.display = on ? 'block' : 'none';
+            document.getElementById('btn-find').style.display    = on ? 'none'  : 'flex';
+        }
+
+        window._buscar = async function() {
+            const loc = document.getElementById('input-loc').value.trim().toUpperCase();
+            if (!loc) { setErr('Introdueix el codi de la teva cita.'); return; }
+            setErr('');
+            setSpin(true);
+
+            // Wait up to 3s for anonymous auth
+            let waited = 0;
+            while (!_authReady && waited < 3000) { await new Promise(r => setTimeout(r,100)); waited += 100; }
+
+            if (!auth.currentUser) {
+                setSpin(false);
+                setErr('No s\'ha pogut validar la sessió. Recarrega la pàgina o avisa recepció.');
+                return;
+            }
+
+            try {
+                const snap = await getDocs(query(
+                    collection(db, 'agenda'),
+                    where('localizador', '==', loc)
+                ));
+                setSpin(false);
+
+                if (snap.empty) {
+                    setErr('No s\'hem trobat cap cita amb el codi «' + loc + '». Comprova el codi i torna a intentar-ho.');
+                    return;
+                }
+
+                const docSnap = snap.docs[0];
+                const raw = docSnap.data();
+                _curDocId = docSnap.id;
+                _curEstat = raw.estat || 'pendent';
+
+                document.getElementById('apt-hora').textContent = raw.hora || '—';
+                document.getElementById('apt-data').textContent = formatData(raw.data);
+                const salaRow = document.getElementById('row-sala');
+                if (raw.sala) {
+                    document.getElementById('apt-sala').textContent = raw.sala;
+                    salaRow.style.display = '';
+                } else {
+                    salaRow.style.display = 'none';
+                }
+
+                const action = document.getElementById('action-area');
+                if (_curEstat === 'cancellada') {
+                    action.innerHTML = '<div class="cancelled-box">Aquesta cita ha estat cancel·lada. Si us plau, contacta amb la recepció.</div>';
+                } else if (_curEstat === 'finalitzada') {
+                    action.innerHTML = '<div class="cancelled-box">Aquesta cita ja ha finalitzat.</div>';
+                } else if (_curEstat === 'arribat' || _curEstat === 'en-curs') {
+                    action.innerHTML = '<div class="already-arrived"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span>La teva arribada ja ha estat registrada. Et demanarem que esperis.</span></div>';
+                } else {
+                    action.innerHTML = '<button class="btn-main btn-arrive-main" id="btn-arrive" onclick="_marcarArribat()">' +
+                        '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>' +
+                        'Confirmo que he arribat</button>';
+                }
+
+                document.getElementById('search-panel').style.display = 'none';
+                document.getElementById('apt-info').style.display = 'block';
+            } catch(e) {
+                setSpin(false);
+                setErr('Hi ha hagut un error en la cerca. Torna a intentar-ho.');
+                console.error(e);
+            }
+        };
+
+        window._marcarArribat = async function() {
+            if (!_curDocId) return;
+            const btn = document.getElementById('btn-arrive');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<svg style="animation:spin 1s linear infinite;width:20px;height:20px;fill:none;stroke:white;stroke-width:2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity=".2"/><path d="M12 2a10 10 0 0 1 10 10"/></svg> Registrant...';
+            }
+            try {
+                await updateDoc(doc(db, 'agenda', _curDocId), {
+                    estat: 'arribat',
+                    arrivedAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+                document.getElementById('apt-info').style.display = 'none';
+                document.getElementById('success-box').style.display = 'block';
+            } catch(e) {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Confirmo que he arribat';
+                }
+                document.getElementById('action-area').innerHTML = '<div class="cancelled-box">Error en registrar. Si us plau, avisa a la recepció.</div>';
+                console.error(e);
+            }
+        };
+
+        window._tornar = function() {
+            _curDocId = null; _curEstat = null;
+            document.getElementById('input-loc').value = '';
+            document.getElementById('search-panel').style.display = 'block';
+            document.getElementById('apt-info').style.display = 'none';
+            document.getElementById('success-box').style.display = 'none';
+            setErr('');
+        };
+
+        // Enter key
+        document.getElementById('input-loc').addEventListener('keydown', e => {
+            if (e.key === 'Enter') window._buscar();
+        });
+
+        // Pre-fill from URL ?loc=XXX
+        const urlLoc = new URLSearchParams(location.search).get('loc');
+        if (urlLoc) {
+            document.getElementById('input-loc').value = urlLoc.toUpperCase();
+            setTimeout(() => window._buscar(), 600);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexeSocial - Pasar Lista</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        :root {
+            --primary: #0f172a; --accent: #3b82f6; --success: #10b981;
+            --warning: #f59e0b; --danger: #ef4444; --border: #e2e8f0;
+        }
+
+        body { margin: 0; background: #f8fafc; display: flex; flex-direction: column; height: 100vh; font-family: 'Inter', sans-serif; }
+        .content-wrapper { margin-left: 280px; margin-top: 60px; padding: 25px; transition: 0.3s; overflow-y: auto; flex-grow: 1; }
+        body.collapsed .content-wrapper { margin-left: 70px; }
+
+        /* Header */
+        .page-header { margin-bottom: 25px; }
+        .page-header h1 { margin: 0 0 5px 0; color: var(--primary); font-size: 1.8rem; }
+        .page-header p { margin: 0; color: #64748b; font-size: 0.9rem; }
+
+        /* Card */
+        .nexe-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+
+        /* Controles superiores */
+        .controles-asistencia {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.85rem;
+        }
+
+        .control-group input,
+        .control-group select {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        .control-group input:focus,
+        .control-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Tabla de asistencia */
+        .nexe-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .nexe-table th { background: #f1f5f9; padding: 12px; text-align: left; font-size: 0.75rem; color: #64748b; border-bottom: 2px solid var(--border); font-weight: 600; }
+        .nexe-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+        .nexe-table tr:hover { background: #f8fafc; }
+
+        .celda-checkbox { text-align: center; }
+        .checkbox-asistencia { width: 20px; height: 20px; cursor: pointer; }
+
+        /* Botones */
+        .btn { padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 0.8rem; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #1e293b; }
+        .btn-secondary { background: var(--accent); color: white; }
+        .btn-secondary:hover { background: #2563eb; }
+        .btn-outline { background: white; border: 1px solid var(--border); color: var(--primary); }
+        .btn-outline:hover { background: #f1f5f9; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Acciones */
+        .acciones-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .acciones-derecha {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Estadísticas */
+        .estadisticas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-box.asistencias { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .stat-box.faltas { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .stat-box.total { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+
+        .stat-numero { font-size: 1.8rem; font-weight: bold; margin: 5px 0; }
+        .stat-label { font-size: 0.8rem; opacity: 0.9; }
+
+        /* Info box */
+        .info-box { background: #dbeafe; color: #1e40af; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.85rem; border-left: 4px solid #3b82f6; }
+
+        /* Empty state */
+        .empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 15px; }
+
+        /* Loading spinner */
+        .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #f1f5f9; border-top: 2px solid var(--primary); border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; vertical-align: middle; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 768px) {
+            .controles-asistencia {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .control-group {
+                flex: 1;
+            }
+            .acciones-footer {
+                flex-direction: column;
+            }
+            .acciones-derecha {
+                flex-direction: column;
+                width: 100%;
+            }
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar"></div>
+    <div class="content-wrapper">
+        
+        <div class="page-header">
+            <h1><svg style="display:inline-block; width:28px; height:28px; margin-right:8px; vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 1 0 4 0M9 5a2 2 0 1 0 4 0m-3 7h6m-6 4h6m-5-10v10"></path></svg>Pasar Lista</h1>
+            <p id="subtitulo">Cargando información del grupo...</p>
+        </div>
+
+        <div class="info-box">
+            <svg style="display:inline-block; width:16px; height:16px; margin-right:6px; vertical-align:middle;" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><text x="12" y="16" font-size="12" text-anchor="middle" fill="white" font-weight="bold">i</text></svg>
+            Marca los asistentes que acudieron a la actividad. Los registros se guardan automáticamente.
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="estadisticas" id="estadisticas-container" style="display: none;">
+            <div class="stat-box total">
+                <div class="stat-label">Total Beneficiarios</div>
+                <div class="stat-numero" id="stat-total">0</div>
+            </div>
+            <div class="stat-box" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <div class="stat-label">Presentes (P)</div>
+                <div class="stat-numero" id="stat-presentes">0</div>
+            </div>
+            <div class="stat-box" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                <div class="stat-label">Faltas (F)</div>
+                <div class="stat-numero" id="stat-faltas">0</div>
+            </div>
+            <div class="stat-box" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                <div class="stat-label">Justificadas (FJ)</div>
+                <div class="stat-numero" id="stat-justificadas">0</div>
+            </div>
+        </div>
+
+        <div class="nexe-card">
+            <!-- Controles -->
+            <div class="controles-asistencia">
+                <div class="control-group">
+                    <label for="input-fecha"><svg style="display:inline-block; width:16px; height:16px; margin-right:4px; vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>Fecha*</label>
+                    <input type="date" id="input-fecha" required>
+                </div>
+                <button class="btn btn-secondary" onclick="cargarListaDelGrupo()">Cargar Lista</button>
+            </div>
+
+            <!-- Tabla de asistencia -->
+            <div style="overflow-x: auto;">
+                <table class="nexe-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre del Beneficiario</th>
+                            <th style="text-align: center;">Asistencia</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-asistencia-items">
+                        <tr><td colspan="2" style="text-align: center; padding: 40px; color: #94a3b8;">Selecciona una fecha y haz clic en "Cargar Lista"</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Acciones -->
+            <div class="acciones-footer">
+                <div class="acciones-derecha">
+                    <button class="btn btn-outline" onclick="marcarOpcion('P')" style="padding: 10px 14px; font-size: 0.75rem;"><span style="background: #10b981; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold;">P</span> Todos Presentes</button>
+                    <button class="btn btn-outline" onclick="marcarOpcion('F')" style="padding: 10px 14px; font-size: 0.75rem;"><span style="background: #ef4444; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold;">F</span> Todos Faltas</button>
+                    <button class="btn btn-outline" onclick="marcarOpcion('FJ')" style="padding: 10px 14px; font-size: 0.75rem;"><span style="background: #f59e0b; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold;">FJ</span> Todos Justificadas</button>
+                    <button class="btn btn-outline" onclick="marcarOpcion('')" style="padding: 10px 14px; font-size: 0.75rem;"><svg style="display:inline-block; width:14px; height:14px; margin-right:2px; vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line></svg>Limpiar</button>
+                </div>
+                <div class="acciones-derecha">
+                    <button class="btn btn-outline" onclick="window.history.back()"><svg style="display:inline-block; width:16px; height:16px; margin-right:4px; vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Atrás</button>
+                    <button class="btn btn-primary" id="btn-guardar" onclick="guardarAsistencia()"><svg style="display:inline-block; width:16px; height:16px; margin-right:4px; vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>Guardar Asistencia</button>
+                    <button class="btn btn-outline" onclick="abrirParaFirmarPassarLlista()" style="background: #10b981; color: white; border: none;"><svg style="display:inline-block; width:16px; height:16px; margin-right:4px; vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M12 11h8M12 15h8M12 19h4"></path></svg>Enviar a Firmar</button>
+                    <button class="btn btn-outline" onclick="abrirModalReporte()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;"><svg style="display:inline-block; width:16px; height:16px; margin-right:4px; vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Exportar Lista</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty state -->
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">
+                <svg style="width:60px; height:60px; opacity:0.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+            </div>
+            <h3>No hay beneficiarios en este grupo</h3>
+            <p>No es posible pasar lista sin beneficiarios asignados.</p>
+        </div>
+
+    </div>
+
+    <!-- MODAL: Exportar Asistencia -->
+    <div id="modal-reporte" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); z-index: 20000; justify-content: center; align-items: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 20px; font-family: 'Inter', sans-serif;">
+        <div style="background: white; border-radius: 14px; width: 100%; max-width: 950px; padding: 0; box-shadow: 0 25px 50px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease-out;">
+            <!-- Header Modal -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 25px; border-bottom: 2px solid #e2e8f0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 14px 14px 0 0;">
+                <div>
+                    <h2 style="margin: 0; color: white; font-size: 1.5rem; font-weight: 700;">Exportar Asistencia Mensual</h2>
+                    <p style="margin: 5px 0 0 0; color: rgba(255,255,255,0.8); font-size: 0.9rem;">Reporte detallado con porcentajes</p>
+                </div>
+                <button onclick="cerrarModalReporte()" style="background: rgba(255,255,255,0.2); border: none; font-size: 2rem; cursor: pointer; color: white; width: 40px; height: 40px; border-radius: 50%; transition: 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">×</button>
+            </div>
+
+            <!-- Contenido del Reporte -->
+            <div id="contenido-reporte" style="padding: 40px; min-height: 200px;">
+                <div style="text-align: center; color: #94a3b8;">
+                    <svg style="width:40px; height:40px; opacity:0.5; margin-bottom: 10px; display: inline-block; animation: spin 1s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8"></path></svg>
+                    <p>Generando reporte...</p>
+                </div>
+            </div>
+
+            <!-- Footer Modal -->
+            <div style="display: flex; gap: 12px; justify-content: flex-end; padding: 25px; border-top: 1px solid #e2e8f0; background: #f8fafc; border-radius: 0 0 14px 14px; flex-wrap: wrap;">
+                <button onclick="cerrarModalReporte()" class="btn btn-outline" style="padding: 12px 24px; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'">Cerrar</button>
+                <button onclick="imprimirReporte()" class="btn btn-secondary" style="background: #3b82f6; color: white; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; border: none; transition: 0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'"><svg style="display:inline-block; width:18px; height:18px; margin-right:6px; vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>Imprimir</button>
+                <button onclick="exportarExcel()" style="background: #16a34a; color: white; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; border: none; transition: 0.2s;" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'"><svg style="display:inline-block; width:18px; height:18px; margin-right:6px; vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg>Excel (.csv)</button>
+                <button onclick="exportarPDF()" style="background: #dc2626; color: white; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; border: none; transition: 0.2s;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'"><svg style="display:inline-block; width:18px; height:18px; margin-right:6px; vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="15" x2="15" y2="15"></line><line x1="9" y1="18" x2="15" y2="18"></line><polyline points="9 11 12 14 15 11"></polyline></svg>PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { GruposLogic } from "./grupos-logic.js";
+        import { initModalReporte } from "./reporte-asistencia-modal.js";
+
+        let grupoActual = null;
+
+        // Inicializar
+        await GruposLogic.initUser();
+
+        // Obtener grupoId de la URL
+        const grupoId = new URLSearchParams(location.search).get("grupoId");
+        if (!grupoId) {
+            alert("Error: No se especificó el grupo");
+            window.location.href = "grups.html";
+            throw new Error("No grupoId specified");
+        }
+
+        // Cargar datos del grupo
+        async function cargarDatos() {
+            try {
+                grupoActual = await GruposLogic.obtenerDetallesGrupo(grupoId);
+                
+                if (!grupoActual) {
+                    document.getElementById("empty-state").style.display = "block";
+                    document.getElementById("empty-state").innerHTML = `
+                        <div class="empty-state-icon">
+                            <svg style="width:60px; height:60px; opacity:0.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                        <h3>Error al cargar el grupo</h3>
+                        <p>No se encontraron datos del grupo.</p>
+                    `;
+                    document.querySelector(".nexe-card").style.display = "none";
+                    return;
+                }
+
+                if (!grupoActual.beneficiarios || grupoActual.beneficiarios.length === 0) {
+                    document.getElementById("empty-state").style.display = "block";
+                    document.querySelector(".acciones-footer").style.display = "none";
+                    document.querySelector(".nexe-card").style.display = "none";
+                    return;
+                }
+
+                document.getElementById("subtitulo").textContent = `${grupoActual.nombre} (ID: ${grupoActual.idGrupo})`;
+                
+                // Mostrar estadísticas
+                document.getElementById("stat-total").textContent = grupoActual.beneficiarios.length || 0;
+                document.getElementById("estadisticas-container").style.display = "grid";
+
+                // Establecer fecha de hoy
+                const hoy = new Date();
+                const fechaHoy = hoy.toISOString().split('T')[0];
+                document.getElementById("input-fecha").value = fechaHoy;
+            } catch (error) {
+                console.error("Error al cargar datos:", error);
+                GruposLogic.mostrarNotificacion("Error al cargar los datos del grupo", "error");
+                document.getElementById("empty-state").style.display = "block";
+                document.getElementById("empty-state").innerHTML = `
+                    <h3>Error al cargar</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+
+        // Cargar lista del grupo
+        window.cargarListaDelGrupo = async function() {
+            const fecha = document.getElementById("input-fecha").value;
+            if (!fecha) {
+                GruposLogic.mostrarNotificacion("Por favor selecciona una fecha", "warning");
+                return;
+            }
+
+            const tabla = document.getElementById("tabla-asistencia-items");
+            tabla.innerHTML = '';
+
+            try {
+                const beneficiarios = grupoActual.beneficiarios || [];
+                
+                // Obtener asistencia existente para el día
+                const asistenciaDelDia = await GruposLogic.obtenerAsistenciasDelDia(grupoId, fecha);
+                const mapaAsistencia = {};
+                asistenciaDelDia.forEach(reg => {
+                    mapaAsistencia[reg.beneficiarioId] = reg.estado; // estado: 'P', 'F', 'FJ'
+                });
+
+                // Renderizar lista
+                beneficiarios.forEach(ben => {
+                    const estado = mapaAsistencia[ben.beneficiarioId] || '';
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${ben.nombre}</td>
+                        <td style="text-align: center;">
+                            <select data-beneficiario-id="${ben.beneficiarioId}" class="selector-asistencia" style="padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem;">
+                                <option value="">-- No marcado --</option>
+                                <option value="P" ${estado === 'P' ? 'selected' : ''}>🟢 Presente (P)</option>
+                                <option value="F" ${estado === 'F' ? 'selected' : ''}>🔴 Falta (F)</option>
+                                <option value="FJ" ${estado === 'FJ' ? 'selected' : ''}>🟡 Justificada (FJ)</option>
+                            </select>
+                        </td>
+                    `;
+                    tabla.appendChild(tr);
+                });
+
+                actualizarEstadisticas();
+            } catch (error) {
+                console.error("Error cargar lista:", error);
+                GruposLogic.mostrarNotificacion("Error al cargar la lista", "error");
+            }
+        };
+
+        // Marcar todos con una opción
+        window.marcarOpcion = function(opcion) {
+            const selectores = document.querySelectorAll(".selector-asistencia");
+            selectores.forEach(select => {
+                select.value = opcion;
+            });
+            actualizarEstadisticas();
+        };
+
+        // Actualizar estadísticas
+        function actualizarEstadisticas() {
+            const selectores = document.querySelectorAll(".selector-asistencia");
+            let presentes = 0;
+            let faltas = 0;
+            let justificadas = 0;
+
+            selectores.forEach(select => {
+                switch(select.value) {
+                    case 'P': presentes++; break;
+                    case 'F': faltas++; break;
+                    case 'FJ': justificadas++; break;
+                }
+            });
+
+            document.getElementById("stat-presentes").textContent = presentes;
+            document.getElementById("stat-faltas").textContent = faltas;
+            document.getElementById("stat-justificadas").textContent = justificadas;
+        }
+
+        // Actualizar estadísticas cuando cambia selección
+        document.addEventListener("change", function(e) {
+            if (e.target.classList.contains("selector-asistencia")) {
+                actualizarEstadisticas();
+            }
+        });
+
+        // Guardar asistencia
+        window.guardarAsistencia = async function() {
+            const fecha = document.getElementById("input-fecha").value;
+            if (!fecha) {
+                GruposLogic.mostrarNotificacion("Por favor selecciona una fecha", "warning");
+                return;
+            }
+
+            const btnGuardar = document.getElementById("btn-guardar");
+            btnGuardar.disabled = true;
+            btnGuardar.innerHTML = '<span class="spinner"></span>Guardando...';
+
+            try {
+                const selectores = document.querySelectorAll(".selector-asistencia");
+                const usuarioId = GruposLogic.usuarioActual?.id || GruposLogic.usuarioActual?.uid;
+                const usuarioNombre = GruposLogic.usuarioActual?.nombre || "Usuario";
+
+                let contadorGuardados = 0;
+
+                for (const select of selectores) {
+                    const beneficiarioId = select.dataset.beneficiarioId;
+                    const estado = select.value; // 'P', 'F', 'FJ' o vacío
+
+                    if (estado) { // Solo guardar si tiene valor
+                        await GruposLogic.guardarAsistenciaConEstado(
+                            grupoId,
+                            beneficiarioId,
+                            fecha,
+                            estado,
+                            usuarioId,
+                            usuarioNombre
+                        );
+                        contadorGuardados++;
+                    }
+                }
+
+                GruposLogic.mostrarNotificacion(`✓ Asistencia guardada (${contadorGuardados} registros)`);
+                
+            } catch (error) {
+                console.error("Error:", error);
+                GruposLogic.mostrarNotificacion("Error al guardar asistencia", "error");
+            } finally {
+                btnGuardar.disabled = false;
+                btnGuardar.innerHTML = '<svg style="display:inline-block; width:16px; height:16px; margin-right:4px; vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>Guardar Asistencia';
+            }
+        };
+
+        // ========== MODAL DE REPORTE — inicializar con acceso a datos ==========
+        initModalReporte(
+            function() { return grupoActual; },
+            function() { return grupoId; }
+        );
+
+        // Exportar a global
+        window.GruposLogic = GruposLogic;
+
+        // Cargar datos iniciales
+        await cargarDatos();
+
+        // Función para abrir el flujo de firma desde passar-llista
+        window.abrirParaFirmarPassarLlista = async function() {
+            try {
+                import('./signature-flow.js').then(mod => {
+                    const SignatureFlow = mod.default;
+                    const grupName = window._grupoActual?.name || 'Grup';
+                    const dataStr = new Date().toLocaleDateString('ca-ES');
+                    
+                    SignatureFlow.openQuickSignFlow({
+                        documentTitle: `Passar Llista - ${grupName} (${dataStr})`,
+                        documentText: `Registre de assistència del grup ${grupName} en data ${dataStr}`,
+                        sourceModule: 'passar-llista',
+                        metadata: {
+                            tipo: 'lista-asistencia',
+                            grupo: grupName,
+                            fecha: dataStr,
+                        },
+                    });
+                });
+            } catch(e) {
+                console.error('Error obrint firma:', e);
+                alert('Error al obrir el flux de firma');
+            }
+        };
+    </script>
+    
+    <script type="module" src="sidebar.js"></script>
+</body>
+</html>

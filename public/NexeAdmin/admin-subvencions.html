@@ -1,0 +1,384 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" type="image/svg+xml" href="../img/nexeadmin-icon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0f172a; --accent: #3b82f6; --success: #10b981;
+            --warning: #f59e0b; --danger: #ef4444; --text-main: #1e293b;
+            --text-muted: #64748b; --bg-body: #f8fafc; --border: #e2e8f0;
+        }
+
+        body { margin: 0; background: var(--bg-body); color: var(--text-main); font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; }
+
+        .admin-sidebar { width: 260px; background: white; border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 30px 20px; position: fixed; height: 100vh; }
+        .logo-box { margin-bottom: 40px; text-align: center; }
+        .logo-img { width: 180px; }
+        .nav-group-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin: 20px 0 10px 10px; letter-spacing: 1px; }
+        .nav-item { padding: 12px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: 0.2s; display: flex; align-items: center; gap: 12px; margin-bottom: 4px; font-size: 0.85rem; text-decoration: none; }
+        .nav-item:hover, .nav-item.active { background: var(--primary); color: white; }
+
+        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px 50px; }
+        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .btn-add { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+
+        .content-card { background: white; border-radius: 16px; border: 1px solid var(--border); padding: 0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8fafc; text-align: left; padding: 15px; font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+        td { padding: 18px 15px; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; }
+        
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+        .st-presentada { background: #dbeafe; color: #1e40af; }
+        .st-concedida { background: #dcfce7; color: #166534; }
+        .st-requeriment { background: #fee2e2; color: #991b1b; animation: pulse 2s infinite; }
+        
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        .import-text { font-family: 'Monaco', monospace; font-weight: 700; color: var(--primary); }
+
+        /* MODAL ESTILS */
+        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.8); z-index:1000; align-items:center; justify-content:center; }
+        .modal-card { background:white; padding:30px; border-radius:20px; width:550px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:20px; }
+        input, select { width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; box-sizing: border-box; }
+        label { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block; }
+    </style>
+</head>
+<body>
+
+    <aside class="admin-sidebar">
+        <div class="logo-box"><img src="../img/nexeadmin.svg" alt="NexeSocial" class="logo-img"></div>
+        <div class="nav-group-label">Principal</div>
+        <a href="nexeadmin.html" class="nav-item">Resum Executiu</a>
+        <div class="nav-group-label">GestiÃ³ Operativa</div>
+        <a href="admin-subvencions.html" class="nav-item active">Subvencions (CrÃ­tic)</a>
+        <a href="admin-personal.html" class="nav-item">Entitat i accessos</a>
+        <a href="nexeadmin-ass.html" class="nav-item">Assegurances</a>
+        <div class="nav-group-label">AdministraciÃ³</div>
+        <a href="admin-documents.html" class="nav-item">GestiÃ³ Documental</a>
+        <a href="admin-proveidors.html" class="nav-item">ProveÃ¯dors i Compres</a>
+    </aside>
+
+    <main class="main-content">
+        <header class="header-flex">
+            <div>
+                <h1 style="margin:0; font-weight:800;">GestiÃ³ de Subvencions</h1>
+                <p style="color:var(--text-muted); margin:5px 0 0 0;">Control de convocatÃ²ries, justificacions i alertes (MÃ“DULO CRÃTICO)</p>
+            </div>
+            <button class="btn-add" onclick="abrirModal()">+ Nova ConvocatÃ²ria</button>
+        </header>
+
+        <!-- KPIs DASHBOARD -->
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:15px; margin-bottom:30px;">
+            <div style="background:white; padding:20px; border-radius:14px; border:1px solid var(--border); text-align:center;">
+                <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:10px;">Total Subvencions</div>
+                <div id="kpi-total-sub" style="font-size:1.8rem; font-weight:800; color:var(--primary);">â€”</div>
+            </div>
+            <div style="background:white; padding:20px; border-radius:14px; border:1px solid var(--border); text-align:center;">
+                <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:10px;">Taxa ConcessiÃ³</div>
+                <div id="kpi-taxa" style="font-size:1.8rem; font-weight:800; color:var(--success);">â€”</div>
+            </div>
+            <div style="background:white; padding:20px; border-radius:14px; border:1px solid var(--border); text-align:center;">
+                <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:10px;">Import SolÂ·licitat</div>
+                <div id="kpi-import" style="font-size:1.8rem; font-weight:800; color:var(--primary);">â€”</div>
+            </div>
+            <div style="background:white; padding:20px; border-radius:14px; border:1px solid var(--border); text-align:center;">
+                <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:10px;">Alertes Actives</div>
+                <div id="kpi-alertes" style="font-size:1.8rem; font-weight:800; color:var(--danger);">â€”</div>
+            </div>
+        </div>
+
+        <!-- ALERTES CRÃTICAS -->
+        <div id="alertas-container" style="margin-bottom:30px;"></div>
+
+        <!-- TABLA PRINCIPAL -->
+        <div class="content-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ConvocatÃ²ria / Projecte</th>
+                        <th>Organisme</th>
+                        <th>Import (â‚¬)</th>
+                        <th>Concedido / Solicitado</th>
+                        <th>JustificaciÃ³ LÃ­mit</th>
+                        <th>Estat</th>
+                        <th>Accions</th>
+                    </tr>
+                </thead>
+                <tbody id="subvenciones-tbody">
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding:30px; color:var(--text-muted);">Carregant...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- RESUMEN POR ORGANISMO -->
+        <div class="content-card" style="margin-top:30px;">
+            <h3 style="margin-top:0;">Resum per Organisme</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Organisme</th>
+                        <th>Actives</th>
+                        <th>Concedies</th>
+                        <th>Justificades</th>
+                        <th>Total Concedit</th>
+                    </tr>
+                </thead>
+                <tbody id="organismos-tbody">
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">Cal carrega dades</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- MODAL NUEVA SUBVENCIÃ“N -->
+    <div id="modalSub" class="modal-overlay" onclick="tancarModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()" style="max-width:800px;">
+            <h2 style="margin:0 0 20px 0;">Nova SubvenciÃ³</h2>
+            
+            <form id="formSubvencion" onsubmit="guardarSubvencion(event)">
+                <div class="form-grid">
+                    <div style="grid-column:span 2;">
+                        <label>TÃ­tol de la ConvocatÃ²ria *</label>
+                        <input type="text" id="nombreSubvencion" required placeholder="Ex: Projecte SAIS 2026">
+                    </div>
+                    <div>
+                        <label>Organisme *</label>
+                        <select id="organismo" required>
+                            <option value="">Selecciona...</option>
+                            <option value="GENCAT - Treball">GENCAT - Treball</option>
+                            <option value="GENCAT - Joventut">GENCAT - Joventut</option>
+                            <option value="Ajuntament BCN">Ajuntament Barcelona</option>
+                            <option value="DiputaciÃ³ Barcelona">DiputaciÃ³ Barcelona</option>
+                            <option value="IRPF">IRPF (Fons Amic)</option>
+                            <option value="FundaciÃ³ Privada">FundaciÃ³ Privada</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Estat Inicial *</label>
+                        <select id="estado" required>
+                            <option value="Borrador">Borrador</option>
+                            <option value="En preparaciÃ³n">En preparaciÃ³n</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Import Solicitado (â‚¬) *</label>
+                        <input type="number" id="importeSolicitado" step="100" required placeholder="0.00">
+                    </div>
+                    <div>
+                        <label>Data Cierre ConvocatÃ²ria *</label>
+                        <input type="date" id="fechaCierre" required>
+                    </div>
+                    <div>
+                        <label>Responsable *</label>
+                        <input type="text" id="responsable" required placeholder="Nom del coordinador">
+                    </div>
+                    <div style="grid-column:span 2;">
+                        <label>DescripciÃ³ del Projecte</label>
+                        <textarea id="descripcion" style="height:100px; resize:none;" placeholder="ExplicaciÃ³ breu del projecte..."></textarea>
+                    </div>
+                </div>
+
+                <div style="margin-top:30px; display:flex; justify-content:flex-end; gap:10px;">
+                    <button type="button" onclick="window.closeModalSub()" style="background:#f1f5f9; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">CancelÂ·lar</button>
+                    <button type="submit" style="background:var(--success); color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:700; cursor:pointer;">Guardar SubvenciÃ³</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DETALLES SUBVENCIÃ“N -->
+    <div id="modalDetalles" class="modal-overlay" onclick="tancarModalDetalles(event)">
+        <div class="modal-card" onclick="event.stopPropagation()" style="max-width:900px; max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="margin:0;" id="detalles-titulo">Detalles SubvenciÃ³</h2>
+                <button onclick="tancarModalDetalles()" style="border:none; background:none; font-size:1.5rem; cursor:pointer;">Ã—</button>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+                <div style="background:#f1f5f9; padding:15px; border-radius:8px;">
+                    <small style="color:var(--text-muted); font-weight:700; text-transform:uppercase;">Import Concedit</small>
+                    <div style="font-size:1.5rem; font-weight:800; color:var(--success);">375.000â‚¬</div>
+                </div>
+                <div style="background:#f1f5f9; padding:15px; border-radius:8px;">
+                    <small style="color:var(--text-muted); font-weight:700; text-transform:uppercase;">% Concedit</small>
+                    <div style="font-size:1.5rem; font-weight:800; color:var(--accent);">83.3%</div>
+                </div>
+                <div style="background:#f1f5f9; padding:15px; border-radius:8px;">
+                    <small style="color:var(--text-muted); font-weight:700; text-transform:uppercase;">Cobrat</small>
+                    <div style="font-size:1.5rem; font-weight:800; color:var(--primary);">262.500â‚¬ (70%)</div>
+                </div>
+                <div style="background:#f1f5f9; padding:15px; border-radius:8px;">
+                    <small style="color:var(--text-muted); font-weight:700; text-transform:uppercase;">LÃ­mit JustificaciÃ³</small>
+                    <div style="font-size:1.5rem; font-weight:800; color:var(--danger);">20/05/2026</div>
+                </div>
+            </div>
+
+            <h3 style="margin:20px 0 10px 0;">DocumentaciÃ³ Associada</h3>
+            <table style="width:100%; font-size:0.9rem;">
+                <thead>
+                    <tr style="background:#f1f5f9;">
+                        <th style="padding:10px; text-align:left;">Tipus Document</th>
+                        <th style="padding:10px; text-align:left;">Estat</th>
+                        <th style="padding:10px;">Accions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom:1px solid var(--border);">
+                        <td style="padding:10px;">MemÃ²ria TÃ¨cnica</td>
+                        <td style="padding:10px;"><span class="badge" style="background:#dcfce7; color:#166534;"><svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;vertical-align:middle;margin-right:3px;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Pujat</span></td>
+                        <td style="padding:10px; text-align:center;"><a href="#" style="color:var(--accent); text-decoration:none;">Descarregar</a></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid var(--border);">
+                        <td style="padding:10px;">Pressupost</td>
+                        <td style="padding:10px;"><span class="badge" style="background:#dcfce7; color:#166534;"><svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;vertical-align:middle;margin-right:3px;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Pujat</span></td>
+                        <td style="padding:10px; text-align:center;"><a href="#" style="color:var(--accent); text-decoration:none;">Descarregar</a></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid var(--border);">
+                        <td style="padding:10px;">Factures Justificatives</td>
+                        <td style="padding:10px;"><span class="badge" style="background:#fee2e2; color:#991b1b;"><svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:middle;margin-right:3px;" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Pendent</span></td>
+                        <td style="padding:10px; text-align:center;"><a href="#" style="color:var(--danger); text-decoration:none;">Pujar</a></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+                <button onclick="window.closeModalDetalles()" style="background:#f1f5f9; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:600;">Tancar</button>
+                <button onclick="editarSubvencion()" style="background:var(--accent); color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:600;">Editar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../security-check.js"></script>
+    <script type="module">
+        await window.checkModuleAccess('NexeAdmin');
+        const { AdminLogic } = await import("./admin-logic.js");
+
+        // Inicializar
+        await AdminLogic.inicializar();
+
+        // Cargar datos
+        cargarSubvenciones();
+
+        async function cargarSubvenciones() {
+            const subvenciones = await AdminLogic.obtenerSubvenciones();
+            renderizarTabla(subvenciones);
+            generarAlertas(subvenciones);
+            // â”€â”€ KPIs des de dades reals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            const total = subvenciones.length;
+            const concedides = subvenciones.filter(s => s.estado === 'Concedida' || s.estado === 'Aprovada').length;
+            const importSol = subvenciones.reduce((a, s) => a + Number(s.importeSolicitado || 0), 0);
+            const alertes = subvenciones.filter(s => {
+                if (!s.fechaJustificacion) return false;
+                const dt = s.fechaJustificacion.toDate ? s.fechaJustificacion.toDate() : new Date(s.fechaJustificacion);
+                return (dt - Date.now()) / 86400000 <= 30;
+            }).length;
+            document.getElementById('kpi-total-sub').textContent = total;
+            document.getElementById('kpi-taxa').textContent = total > 0 ? Math.round(concedides / total * 100) + '%' : 'â€”';
+            document.getElementById('kpi-import').textContent = importSol.toLocaleString('ca-ES') + ' â‚¬';
+            document.getElementById('kpi-alertes').textContent = alertes;
+        }
+
+        function renderizarTabla(subvenciones) {
+            if (!subvenciones || subvenciones.length === 0) {
+                document.getElementById('subvenciones-tbody').innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">Cap registre</td></tr>`;
+                return;
+            }
+
+            const html = subvenciones.map(s => {
+                const estadoClases = {
+                    'Presentada': 'st-presentada',
+                    'Concedida': 'st-concedida',
+                    'Requerimiento': 'st-requerimento'
+                };
+                
+                return `<tr>
+                    <td><b>${s.nombre || ""}</b></td>
+                    <td>${s.organismo || ""}</td>
+                    <td class="import-text">${(s.importeSolicitado || 0).toLocaleString('es-ES', {minimumFractionDigits:2})}</td>
+                    <td>${s.importeConcedido ? `${s.importeConcedido.toLocaleString()} / ${s.importeSolicitado.toLocaleString()}` : "Pendent"}</td>
+                    <td><b style="${s.diasRestantes && s.diasRestantes < 7 ? 'color:var(--danger)' : ''}">${s.fechaJustificacion || "-"}</b></td>
+                    <td><span class="badge ${estadoClases[s.estado] || ''}">${s.estado}</span></td>
+                    <td><button style="border:none; background:none; color:var(--accent); cursor:pointer; font-weight:700;" onclick="verDetalles('${s.id}')">Detalls â†—</button></td>
+                </tr>`;
+            }).join("");
+
+            document.getElementById('subvenciones-tbody').innerHTML = html;
+        }
+
+        function generarAlertas(subvenciones) {
+            const alertas = subvenciones.filter(s => s.estado === "Requerimiento" || (s.diasRestantes && s.diasRestantes < 7));
+            
+            if (alertas.length === 0) {
+                document.getElementById('alertas-container').innerHTML = '';
+                return;
+            }
+
+            const html = alertas.map(a => `
+                <div style="background:#fff1f2; border:1px solid #fda4af; padding:15px; border-radius:12px; display:flex; gap:12px; align-items:flex-start; margin-bottom:10px;">
+                    <div style="background:var(--danger); color:white; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">!</div>
+                    <div>
+                        <h4 style="margin:0; color:var(--danger); display:flex; align-items:center; gap:5px;"><svg style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Alerta: ${a.nombre}</h4>
+                        <p style="margin:5px 0 0 0; font-size:0.9rem; color:#991b1b;">
+                            ${a.estado === 'Requerimiento' ? 'Requeriment pendent' : `Venciment en ${a.diasRestantes} dies`} - 
+                            <strong>Responsable: ${a.responsable}</strong>
+                        </p>
+                    </div>
+                </div>
+            `).join("");
+
+            document.getElementById('alertas-container').innerHTML = html;
+        }
+
+        window.abrirModal = function() {
+            document.getElementById('formSubvencion').reset();
+            document.getElementById('modalSub').style.display = 'flex';
+        };
+
+        window.tancarModal = function(event) {
+            if (event && event.target !== document.getElementById('modalSub')) return;
+            document.getElementById('modalSub').style.display = '';
+        };
+        window.closeModalSub = function() { document.getElementById('modalSub').style.display = ''; };
+
+        window.tancarModalDetalles = function(event) {
+            if (event && event.target !== document.getElementById('modalDetalles')) return;
+            document.getElementById('modalDetalles').style.display = '';
+        };
+        window.closeModalDetalles = function() { document.getElementById('modalDetalles').style.display = ''; };
+
+        window.verDetalles = function(id) {
+            document.getElementById('modalDetalles').style.display = 'flex';
+        };
+
+        window.guardarSubvencion = async function(event) {
+            event.preventDefault();
+            const datos = {
+                nombre: document.getElementById('nombreSubvencion').value,
+                organismo: document.getElementById('organismo').value,
+                estado: document.getElementById('estado').value,
+                importeSolicitado: parseFloat(document.getElementById('importeSolicitado').value),
+                fechaCierre: document.getElementById('fechaCierre').value,
+                responsable: document.getElementById('responsable').value,
+                descripcion: document.getElementById('descripcion').value
+            };
+            
+            await AdminLogic.crearSubvencion(datos);
+            window.tancarModal();
+            cargarSubvenciones();
+        };
+
+        window.editarSubvencion = function() {
+            alert("Funcionalidad en desarrollo");
+        };
+    </script>
+    <script src="nexeadmin-sidebar.js"></script>
+</body>
+</html>

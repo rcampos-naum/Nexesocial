@@ -1,0 +1,406 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" type="image/svg+xml" href="../img/nexeadmin-icon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0f172a; --accent: #3b82f6; --success: #10b981;
+            --warning: #f59e0b; --danger: #ef4444; --text-main: #1e293b;
+            --text-muted: #64748b; --bg-body: #f8fafc; --border: #e2e8f0;
+        }
+
+        body { margin: 0; background: var(--bg-body); color: var(--text-main); font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; }
+
+        .admin-sidebar {
+            width: 260px; background: white; border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; padding: 30px 20px; position: fixed; height: 100vh;
+            overflow-y: auto;
+        }
+        .logo-box { margin-bottom: 40px; text-align: center; }
+        .logo-img { width: 180px; }
+        .nav-group-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin: 20px 0 10px 10px; letter-spacing: 1px; }
+        .nav-item {
+            padding: 12px 16px; border-radius: 10px; cursor: pointer; font-weight: 600;
+            color: var(--text-muted); transition: 0.2s; display: flex; align-items: center; gap: 12px;
+            margin-bottom: 4px; font-size: 0.85rem; text-decoration: none;
+        }
+        .nav-item:hover, .nav-item.active { background: var(--primary); color: white; }
+
+        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px 50px; overflow-y: auto; }
+
+        /* CONTROLES */
+        .report-controls {
+            background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--border);
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px;
+        }
+        .control-group { display: flex; flex-direction: column; gap: 5px; }
+        .control-group label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .control-group input, .control-group select { padding: 10px; border: 1px solid var(--border); border-radius: 8px; }
+
+        /* BUTTONS */
+        .btn-group { display: flex; gap: 12px; }
+        .btn { border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-secondary { background: white; border: 1px solid var(--border); color: var(--text-main); }
+
+        /* CARDS */
+        .content-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; margin-bottom: 20px; }
+
+        /* TABLAS */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f1f5f9; text-align: left; padding: 12px; font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+        td { padding: 12px; font-size: 0.9rem; border-bottom: 1px solid #f1f5f9; }
+
+        /* CHARTS PLACEHOLDER */
+        .chart-placeholder { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); height: 300px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-weight: 600; }
+
+        /* GRID KPIS */
+        .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
+        .kpi-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
+        .kpi-value { font-size: 2rem; font-weight: 800; color: var(--primary); }
+        .kpi-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-top: 8px; }
+
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; }
+        .badge-ok { background: #dcfce7; color: #166534; }
+        .badge-alert { background: #fee2e2; color: #991b1b; }
+        .executive-alerts { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+    </style>
+</head>
+<body>
+
+    <aside class="admin-sidebar">
+        <div class="logo-box">
+            <img src="../img/nexeadmin.svg" alt="NexeSocial" class="logo-img">
+        </div>
+
+        <div class="nav-group-label">Principal</div>
+        <a href="nexeadmin.html" class="nav-item">Resum Executiu</a>
+
+        <div class="nav-group-label">Gestió Operativa</div>
+        <a href="admin-subvencions.html" class="nav-item">Subvencions (Crític)</a>
+        <a href="admin-personal.html" class="nav-item">Entitat i accessos</a>
+        <a href="nexeadmin-ass.html" class="nav-item">Assegurances</a>
+
+        <div class="nav-group-label">Administració</div>
+        <a href="admin-documents.html" class="nav-item">Gestió Documental</a>
+        <a href="admin-proveidors.html" class="nav-item">Proveïdors i Compres</a>
+
+        <div class="nav-group-label">Analítica</div>
+        <a href="nexeadmin-reportes.html" class="nav-item active">Reportes i KPIs</a>
+
+        <div style="margin-top: auto;">
+            <div class="nav-item" style="color: var(--danger);">
+                <svg style="width:16px; height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                </svg>
+                Tancar Sessió
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <div>
+                <h1 style="margin: 0; font-weight: 800;">Reportes i Analítica</h1>
+                <p style="color: var(--text-muted); margin: 5px 0 0 0;">Dashboard executiu amb KPIs i tendències</p>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="exportarExcel()"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:middle;margin-right:5px;" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>Excel</button>
+                <button class="btn btn-secondary" onclick="exportarPDF()"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:middle;margin-right:5px;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+                <button class="btn btn-primary" onclick="generarReporte()">Generar Reporte</button>
+            </div>
+        </header>
+
+        <!-- FILTROS -->
+        <div class="report-controls">
+            <div class="control-group">
+                <label>Per Mes</label>
+                <select id="selectMes">
+                    <option value="">Tots els mesos</option>
+                    <option value="01">Gener</option>
+                    <option value="02">Febrer</option>
+                    <option value="03">Març</option>
+                    <option value="04">Abril</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Per Projecte</label>
+                <select id="selectProyecto">
+                    <option value="">Tots</option>
+                    <option value="pqi">PQI Formació</option>
+                    <option value="escola">Escola d'Estiu</option>
+                    <option value="sais">SAIS</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Per Tipus Informe</label>
+                <select id="selectTipo">
+                    <option value="">Resum General</option>
+                    <option value="personal">Personal i Hores</option>
+                    <option value="subvenciones">Subvencions</option>
+                    <option value="documentos">Documentació</option>
+                </select>
+            </div>
+            <div class="control-group" style="justify-content: flex-end;">
+                <button class="btn btn-primary" onclick="aplicarFiltros()" style="margin-top: auto;">Aplicar Filtres</button>
+            </div>
+        </div>
+
+        <!-- KPIs PRINCIPALES -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-value" id="report-kpi-departments" style="color: var(--success);">0</div>
+                <div class="kpi-label">Departaments actius</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value" id="report-kpi-staff" style="color: var(--warning);">0</div>
+                <div class="kpi-label">Personal actiu</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value" id="report-kpi-funding" style="color: var(--accent);">0 €</div>
+                <div class="kpi-label">Import total subvencions</div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h3 style="margin-top:0;">Prioritats executives</h3>
+            <div id="admin-executive-alerts" class="executive-alerts"></div>
+        </div>
+
+        <!-- TABS -->
+        <div style="display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 20px;">
+            <button onclick="cambiarTab('general')" class="tab-btn active" style="padding: 12px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid var(--accent); color: var(--accent);">General</button>
+            <button onclick="cambiarTab('personal')" class="tab-btn" style="padding: 12px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent; color: var(--text-muted);">Personal i Hores</button>
+            <button onclick="cambiarTab('subvenciones')" class="tab-btn" style="padding: 12px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent; color: var(--text-muted);">Subvencions</button>
+            <button onclick="cambiarTab('documentos')" class="tab-btn" style="padding: 12px 20px; border: none; background: none; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent; color: var(--text-muted);">Documentació</button>
+        </div>
+
+        <!-- TAB: GENERAL -->
+        <div id="tab-general" class="tab-content" style="display: block;">
+            <div class="content-card" style="padding:24px;">
+                <h3 style="margin:0 0 16px;">Activitat Mensual (Expedients creats)</h3>
+                <div style="position:relative;height:260px;"><canvas id="chart-monthly-admin"></canvas></div>
+            </div>
+
+            <div class="content-card">
+                <h3 style="padding:20px 20px 0;">Resum Executiu</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Indicador</th>
+                            <th>Valor</th>
+                            <th>Target</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dynamic-summary-body">
+                        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);">Carregant...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB: PERSONAL -->
+        <div id="tab-personal" class="tab-content" style="display: none;">
+            <div class="content-card">
+                <h3 style="padding:20px 20px 0;">Personal actiu</h3>
+                <table>
+                    <thead><tr><th>Nom</th><th>Càrrec</th><th>Departament</th><th>Estat</th><th>Data Incorporació</th></tr></thead>
+                    <tbody id="tbody-personal"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Carregant...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB: SUBVENCIONES -->
+        <div id="tab-subvenciones" class="tab-content" style="display: none;">
+            <div class="content-card">
+                <h3 style="padding:20px 20px 0;">Estat de Subvencions</h3>
+                <table>
+                    <thead><tr><th>Convocatòria</th><th>Organisme</th><th>Import Sol·licitat</th><th>Import Concedit</th><th>% Concedit</th><th>Estat</th></tr></thead>
+                    <tbody id="tbody-subvencions"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);">Carregant...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB: DOCUMENTACIÓN -->
+        <div id="tab-documentos" class="tab-content" style="display: none;">
+            <div class="content-card">
+                <h3 style="padding:20px 20px 0;">Documentació pròxima a vèncer (90 dies)</h3>
+                <table>
+                    <thead><tr><th>Document</th><th>Tipus</th><th>Responsable</th><th>Venciment</th><th>Dies restants</th></tr></thead>
+                    <tbody id="tbody-docs"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Carregant...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="../security-check.js"></script>
+    <script type="module">
+        import '../entity-dashboard.js';
+        // Verificar acceso al módulo NexeAdmin
+        window.addEventListener('DOMContentLoaded', async () => {
+            await window.checkModuleAccess('NexeAdmin');
+            await window.EntityDashboard?.initAdminReportsDashboard?.();
+        });
+
+        // Tab switching
+        window.cambiarTab = function(tab) {
+            document.querySelectorAll('.tab-content').forEach(tc => tc.style.display = 'none');
+            document.getElementById(`tab-${tab}`).style.display = 'block';
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.style.color = '';
+                btn.style.borderBottomColor = 'transparent';
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if ((btn.getAttribute('onclick') || '').includes(`'${tab}'`)) {
+                    btn.style.color = 'var(--accent)';
+                    btn.style.borderBottomColor = 'var(--accent)';
+                }
+            });
+        }
+
+        window.aplicarFiltros = async function() {
+            await window.EntityDashboard?.initAdminReportsDashboard?.();
+            alert("Filtres aplicats sobre el resum executiu actual.");
+        }
+
+        window.exportarExcel = async function() {
+            const snapshot = await window.EntityDashboard?.getSnapshot?.();
+            if (!snapshot) return;
+            const rows = [
+                ['Indicador','Valor'],
+                ['Departaments actius', snapshot.summary.departments],
+                ['Personal actiu', snapshot.summary.staff],
+                ['Activitats', snapshot.summary.activities],
+                ['Grups', snapshot.summary.groups],
+                ['Expedients', snapshot.summary.cases],
+                ['Sol·licituds pendents', snapshot.summary.pendingRequests],
+                ['Import subvencions', snapshot.summary.requestedAmount]
+            ];
+            const csv = rows.map((row) => row.join(';')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'resum_entitat.csv';
+            link.click();
+        }
+
+        window.exportarPDF = function() {
+            window.print();
+        }
+
+        window.generarReporte = async function() {
+            await window.EntityDashboard?.initAdminReportsDashboard?.();
+            await loadTabData('general');
+            alert('Reporte ejecutivo actualizado con datos reales de la entidad.');
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script type="module">
+        import { db } from '../firebase-config.js';
+        import { collection, getDocs, orderBy, query, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        const MESOS = ['Gen','Feb','Mar','Abr','Mai','Jun','Jul','Ago','Set','Oct','Nov','Des'];
+        function fmtDate(ts) {
+            if (!ts) return '—';
+            const d = ts.toDate ? ts.toDate() : new Date(ts);
+            return d.toLocaleDateString('ca-ES', { day:'2-digit', month:'short', year:'numeric' });
+        }
+        function fmtEur(n) { return Number(n || 0).toLocaleString('ca-ES') + ' €'; }
+        function diffDays(ts) {
+            if (!ts) return null;
+            const d = ts.toDate ? ts.toDate() : new Date(ts);
+            return Math.round((d - Date.now()) / 86400000);
+        }
+
+        const _rtSubs = {};
+        let _rtData = { expedients: [], subvencions: [], personal: [], documentos: [] };
+        let _chartMonthly = null;
+
+        function _renderGeneral() {
+            const year = new Date().getFullYear();
+            const perMes = Array(12).fill(0);
+            _rtData.expedients.forEach(e => {
+                const ts = e.data_alta || e.fechaCreacion;
+                if (!ts) return;
+                const dt = ts.toDate ? ts.toDate() : new Date(ts);
+                if (dt.getFullYear() === year) perMes[dt.getMonth()]++;
+            });
+            const ctx = document.getElementById('chart-monthly-admin')?.getContext('2d');
+            if (ctx) {
+                if (_chartMonthly) { try { _chartMonthly.destroy(); } catch {} }
+                _chartMonthly = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels: MESOS, datasets: [{ label: 'Expedients creats', data: perMes, backgroundColor: '#3b82f688', borderColor: '#2563eb', borderWidth: 2, borderRadius: 8 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Inter', size: 11 } }, grid: { color: '#f1f5f9' } }, x: { ticks: { font: { family: 'Inter', size: 11 } }, grid: { display: false } } } }
+                });
+            }
+            const totalConcedit = _rtData.subvencions.reduce((s, sub) => s + Number(sub.importeConcedit || sub.importeConcedido || 0), 0);
+            const tbody = document.getElementById('dynamic-summary-body');
+            if (tbody) tbody.innerHTML = [
+                ['Total expedients', _rtData.expedients.length, '—'],
+                ['Expedients actius', _rtData.expedients.filter(e => e.estat !== 'Baixa' && e.estado !== 'Inactivo').length, '—'],
+                ['Total subvencions', _rtData.subvencions.length, '—'],
+                ['Import total concedit', fmtEur(totalConcedit), '—'],
+                ['Subvencions actives', _rtData.subvencions.filter(s => s.estado && !['Arxivada','Tancada'].includes(s.estado)).length, '—']
+            ].map(([ind, val, target]) => `<tr><td><strong>${ind}</strong></td><td>${val}</td><td style="color:var(--text-muted);">${target}</td></tr>`).join('');
+        }
+
+        function loadTabData(tab) {
+            if (tab === 'general') {
+                if (!_rtSubs.expedients) _rtSubs.expedients = onSnapshot(collection(db, 'expedientes'), s => { _rtData.expedients = s.docs.map(d => d.data()); _renderGeneral(); }, e => console.warn('[rep exp]',e));
+                if (!_rtSubs.subvencions) _rtSubs.subvencions = onSnapshot(collection(db, 'subvenciones'), s => { _rtData.subvencions = s.docs.map(d => d.data()); _renderGeneral(); }, e => console.warn('[rep sub]',e));
+            }
+            if (tab === 'personal' && !_rtSubs.personal) {
+                _rtSubs.personal = onSnapshot(collection(db, 'personal'), (snap) => {
+                    const rows = snap.docs.map(d => {
+                        const p = d.data();
+                        const nom = `${p.nombre || p.nom || ''} ${p.apellidos || p.cognoms || ''}`.trim() || '—';
+                        return `<tr><td><strong>${nom}</strong></td><td>${p.cargo || p.carrec || '—'}</td><td>${p.departamento || p.departament || '—'}</td><td><span class="badge ${p.estado === 'Actiu' || p.estat === 'Actiu' ? 'badge-ok' : ''}">${p.estado || p.estat || '—'}</span></td><td>${fmtDate(p.fechaIncorporacion || p.dataIncorporacio)}</td></tr>`;
+                    }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Sense dades de personal.</td></tr>';
+                    const el = document.getElementById('tbody-personal'); if (el) el.innerHTML = rows;
+                }, e => console.warn('[rep pers]',e));
+            }
+            if (tab === 'subvenciones' && !_rtSubs.subvenciones) {
+                _rtSubs.subvenciones = onSnapshot(collection(db, 'subvenciones'), (snap) => {
+                    const rows = snap.docs.map(d => {
+                        const s = d.data(); const sol = Number(s.importeSolicitado || 0); const con = Number(s.importeConcedit || s.importeConcedido || 0);
+                        const pct = sol > 0 ? Math.round(con / sol * 100) + '%' : '—'; const estat = s.estado || '—';
+                        const cls = estat.includes('oncedit') || estat.includes('Aprovat') ? 'badge-ok' : estat.includes('equeri') || estat.includes('aler') ? 'badge-alert' : '';
+                        return `<tr><td><strong>${s.nombre || s.titulo || '—'}</strong></td><td>${s.organismo || '—'}</td><td>${fmtEur(sol)}</td><td>${fmtEur(con)}</td><td>${pct}</td><td><span class="badge ${cls}">${estat}</span></td></tr>`;
+                    }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">Sense subvencions registrades.</td></tr>';
+                    const el = document.getElementById('tbody-subvencions'); if (el) el.innerHTML = rows;
+                }, e => console.warn('[rep subv]',e));
+            }
+            if (tab === 'documentos' && !_rtSubs.docs) {
+                _rtSubs.docs = onSnapshot(collection(db, 'documentos'), (snap) => {
+                    const now = Date.now(); const rows = [];
+                    snap.docs.forEach(d => {
+                        const doc = d.data(); const venc = doc.fechaVencimiento || doc.dataVenciment; if (!venc) return;
+                        const dt = venc.toDate ? venc.toDate() : new Date(venc); const diff = Math.round((dt - now) / 86400000);
+                        if (diff <= 90) { const cls = diff < 0 ? 'badge-alert' : diff <= 30 ? 'badge-warn' : 'badge-ok';
+                            rows.push(`<tr><td><strong>${doc.nombre || doc.nom || '—'}</strong></td><td>${doc.tipo || doc.tipus || '—'}</td><td>${doc.responsable || '—'}</td><td>${fmtDate(venc)}</td><td><span class="badge ${cls}">${diff < 0 ? 'Vençut' : diff + ' dies'}</span></td></tr>`); }
+                    });
+                    const el = document.getElementById('tbody-docs'); if (el) el.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Cap document pròxim a vèncer en els pròxims 90 dies.</td></tr>';
+                }, e => console.warn('[rep docs]',e));
+            }
+        }
+        window.addEventListener('beforeunload', () => Object.values(_rtSubs).forEach(u => u()));
+
+        // Override tab switching to trigger data load        // Override tab switching to trigger data load
+        const origCambiarTab = window.cambiarTab;
+        window.cambiarTab = function(tab) {
+            origCambiarTab?.(tab);
+            loadTabData(tab);
+        };
+
+        // Load general tab on init
+        loadTabData('general');
+    </script>
+    <script src="nexeadmin-sidebar.js"></script>
+</body>
+</html>
+

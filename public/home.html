@@ -1,0 +1,613 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Inici</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        .main-content { padding: 20px; box-sizing: border-box; }
+        
+        /* Estils per al Tauler d'Avisos */
+        .aviso-banner { 
+            padding: 15px; border-radius: 8px; border: 1px solid #facc15; background: #fef08a; 
+            display: flex; flex-direction: column; gap: 5px; box-shadow: 2px 2px 8px rgba(0,0,0,0.1); 
+        }
+        .prio-alta { border-left: 8px solid #ef4444; }
+        .prio-mitja { border-left: 8px solid #f59e0b; }
+        .prio-baixa { border-left: 8px solid #2563eb; }
+        
+        /* --- NOU: Estils per al Mòdul de Cites --- */
+        .agenda-section {
+            display: grid;
+            grid-template-columns: 1fr 350px; /* Columna principal i barra lateral d'accions */
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .agenda-card {
+            background: white;
+            border-radius: 15px;
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .cita-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.2s;
+        }
+
+        .cita-item:hover { background: #f8fafc; }
+
+        .cita-hora {
+            font-weight: 800;
+            color: #3b82f6;
+            min-width: 70px;
+        }
+
+        .cita-info { flex-grow: 1; margin-left: 15px; }
+
+        .cita-badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-reunio { background: #dbeafe; color: #1e40af; }
+        .badge-cita { background: #dcfce7; color: #15803d; }
+
+        .btn-crear {
+            background: #1e293b;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            width: 100%;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-crear:hover { background: #334155; }
+
+        .entity-kpi-grid {
+            display:grid;
+            grid-template-columns:repeat(4, minmax(0, 1fr));
+            gap:15px;
+            margin: 10px 10px 25px 10px;
+        }
+        .entity-kpi-card {
+            background:white;
+            border:1px solid #e2e8f0;
+            border-radius:14px;
+            padding:18px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .entity-kpi-label { font-size:0.72rem; color:#64748b; text-transform:uppercase; font-weight:800; }
+        .entity-kpi-value { font-size:1.7rem; color:#0f172a; font-weight:800; margin-top:8px; }
+
+        .entity-management-grid {
+            display:grid;
+            grid-template-columns:1.4fr 1fr;
+            gap:20px;
+            margin: 0 10px 20px 10px;
+        }
+        .quick-links { display:grid; gap:10px; }
+        .quick-link {
+            display:flex; align-items:center; justify-content:center; text-decoration:none;
+            background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:10px;
+            padding:12px; font-weight:700;
+        }
+        .quick-link:hover { background:#dbeafe; }
+
+        @media (max-width: 900px) {
+            .agenda-section, .entity-management-grid, .entity-kpi-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Arrival animations */
+        @keyframes pulse-green {
+            0%   { box-shadow: 0 0 0 0 rgba(22,163,74,.6), 0 0 0 0 rgba(22,163,74,.3); }
+            70%  { box-shadow: 0 0 0 14px rgba(22,163,74,0), 0 0 0 28px rgba(22,163,74,0); }
+            100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); }
+        }
+        @keyframes wave-sweep {
+            0%   { transform: translateX(-120%); opacity: .7; }
+            100% { transform: translateX(120%);  opacity: 0; }
+        }
+        .cita-arribada {
+            position: relative; overflow: hidden;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7) !important;
+            border: 2px solid #16a34a !important;
+            border-bottom: none !important;
+            animation: pulse-green 1.5s infinite;
+        }
+        .cita-arribada::after {
+            content: '';
+            position: absolute; top: 0; left: 0;
+            width: 55%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(22,163,74,.22), transparent);
+            animation: wave-sweep 1.8s infinite;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import './sidebar.js';
+        import './auth-manager.js';
+        import './entity-dashboard.js';
+    </script>
+
+    <main class="main-content">
+        <section id="seccio-avisos" style="width: 100%; margin-bottom: 20px; padding: 0 10px; box-sizing: border-box;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                <h3 style="margin:0; color: #1e293b; display: flex; align-items: center; gap: 10px;"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"></path></svg> Tauler d'Anuncis</h3>
+                <span id="contador-avisos" style="background: #1e293b; color: white; padding: 2px 12px; border-radius: 20px; font-size: 0.8rem;">0 avisos</span>
+            </div>
+            <div id="contenedor-avisos-home" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;"></div>
+        </section>
+
+        <!-- Sol·licituds de cita pendents per al treballador -->
+        <section id="seccio-solicituds" style="width:100%;margin-bottom:20px;padding:0 10px;box-sizing:border-box;display:none;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <h3 style="margin:0;color:#1e293b;display:flex;align-items:center;gap:10px;">
+                    <svg width="18" height="18" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                    Sol·licituds de Cita Pendents
+                </h3>
+                <span id="badge-sol-count" style="background:#ef4444;color:white;padding:2px 12px;border-radius:20px;font-size:0.8rem;font-weight:700;">0</span>
+            </div>
+            <div id="contenedor-solicituds" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;"></div>
+        </section>
+
+        <!-- Autoritzacions d'edat pendents â€” visible only to admin/direccio -->
+        <section id="seccio-autoritzacions" style="width:100%;margin-bottom:20px;padding:0 10px;box-sizing:border-box;display:none;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <h3 style="margin:0;color:#1e293b;display:flex;align-items:center;gap:10px;">
+                    <svg width="18" height="18" fill="none" stroke="#d97706" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    Autoritzacions d'Edat Pendents
+                </h3>
+                <span id="badge-aut-count" style="background:#d97706;color:white;padding:2px 12px;border-radius:20px;font-size:0.8rem;font-weight:700;">0</span>
+            </div>
+            <div id="contenedor-autoritzacions" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;"></div>
+        </section>
+
+        <!-- Alertes de Manteniment Preventiu -->
+        <section id="seccio-manteniment" style="width:100%;margin-bottom:20px;padding:0 10px;box-sizing:border-box;display:none;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <h3 style="margin:0;color:#1e293b;display:flex;align-items:center;gap:10px;">
+                    <svg width="18" height="18" fill="none" stroke="#f59e0b" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                    Manteniment Preventiu Pendent
+                </h3>
+                <a href="manteniment.html" style="font-size:0.8rem;color:#3b82f6;font-weight:700;text-decoration:none;">Veure tot â†’</a>
+            </div>
+            <div id="contenedor-manteniment" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;"></div>
+        </section>
+
+        <section style="padding:0 10px; box-sizing:border-box; margin-bottom:10px;">
+            <div class="entity-kpi-grid">
+                <div class="entity-kpi-card"><div class="entity-kpi-label">Departaments</div><div class="entity-kpi-value" id="kpi-departments">0</div></div>
+                <div class="entity-kpi-card"><div class="entity-kpi-label">Personal actiu</div><div class="entity-kpi-value" id="kpi-staff">0</div></div>
+                <div class="entity-kpi-card"><div class="entity-kpi-label">Activitats / grups</div><div class="entity-kpi-value"><span id="kpi-activities">0</span> / <span id="kpi-groups">0</span></div></div>
+                <div class="entity-kpi-card"><div class="entity-kpi-label">Expedients / pendents</div><div class="entity-kpi-value"><span id="kpi-cases">0</span> / <span id="kpi-pending">0</span></div></div>
+            </div>
+
+            <div class="entity-management-grid">
+                <div class="agenda-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <h3 style="margin:0;">Visió global de l'entitat</h3>
+                        <span style="font-size:0.8rem; color:#64748b;">Sales reservades avui: <strong id="kpi-room-usage">0</strong></span>
+                    </div>
+                    <div id="prioritats-entitat"></div>
+                </div>
+                <div class="agenda-card" style="background:#f8fafc;">
+                    <h4 style="margin-top:0;">Sales i reunions</h4>
+                    <div id="room-reservations-home"></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="agenda-section">
+            <div class="agenda-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin:0;"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:8px;margin-top:-2px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>La meva Agenda d'Avui</h3>
+                    <span style="font-size: 0.9rem; color: #64748b;" id="data-avui"></span>
+                </div>
+                
+                <div id="llista-cites-avui">
+                    <div style="text-align:center; padding:20px; color:#94a3b8; border:1px dashed #e2e8f0; border-radius:12px; background:#fff;">
+                        No hi ha cites ni reunions registrades per avui.
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="agenda-card" style="background: #f8fafc;">
+                    <h4 style="margin-top:0;">Accions</h4>
+                    <button class="btn-crear" onclick="window.location.href='cites.html'">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Nova Cita o Reunió
+                    </button>
+                    <button class="btn-crear" style="margin-top:10px;background:#dc2626;" onclick="window.location.href='reportar-incidencia.html'">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Reportar Incidència
+                    </button>
+                    <p style="font-size: 0.8rem; color: #64748b; margin-top: 15px;">
+                        Les cites creades aquí s'incidiran automàticament al calendari global.
+                    </p>
+                </div>
+                
+                <div class="agenda-card">
+                    <h4 style="margin-top:0; color: #ef4444;">Avisos Urgents</h4>
+                    <div id="avisos-urgents-global" style="font-size: 0.85rem;"></div>
+                </div>
+            </div>
+        </div>
+
+        <section class="welcome-section" style="text-align: center; margin-top: 30px;">
+            <h1 style="font-size: 1.8rem; color: #1e293b; margin-top: 0;">Benvinguts a NexeSocial</h1>
+            <p style="color: #64748b; font-size: 1rem;">Gestió integral per a l'acció social.</p>
+        </section>
+    </main>
+
+    <script type="module" src="database.js"></script>
+    <script type="module">
+        import { db, auth } from './firebase-config.js';
+        import {
+            collection, query, where, onSnapshot,
+            doc, updateDoc, setDoc, serverTimestamp, arrayUnion, getDoc
+        } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+        import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+        import { waitForCrypto } from './vault-init.js';
+        import { decryptField } from './crypto-utils.js';
+
+        const ESTAT_LBL = { pendent:'Pendent', confirmat:'Confirmat', 'en-curs':'En Curs',
+            finalitzada:'Finalitzada', cancellada:'Cancel.lada', arribat:'Ha Arribat' };
+        const ESTAT_CLR = { pendent:'#f59e0b', confirmat:'#3b82f6', 'en-curs':'#8b5cf6',
+            finalitzada:'#10b981', cancellada:'#94a3b8', arribat:'#16a34a' };
+
+        async function decryptStr(enc) {
+            if (!enc) return '';
+            try { return await decryptField(enc); } catch { return ''; }
+        }
+        function toDateStr(d) {
+            return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        }
+
+        let _unsubAgenda = null;
+        let _unsubSolicituds = null;
+        let _unsubAut = null;
+        let _cryptoReadyPromise = null;
+
+        function ensureCryptoReady() {
+            if (!_cryptoReadyPromise) _cryptoReadyPromise = waitForCrypto();
+            return _cryptoReadyPromise;
+        }
+
+        function renderSolicituds(items) {
+            const sec  = document.getElementById('seccio-solicituds');
+            const cont = document.getElementById('contenedor-solicituds');
+            const badge = document.getElementById('badge-sol-count');
+            if (!items.length) { sec.style.display = 'none'; return; }
+            sec.style.display = 'block';
+            badge.textContent = items.length;
+            cont.innerHTML = items.map(item => {
+                const urgent = item.prioritat === 'urgent';
+                const ts = item.createdAt?.toDate ? item.createdAt.toDate() : null;
+                const timeStr = ts ? ts.toLocaleTimeString('ca-ES', {hour:'2-digit',minute:'2-digit'}) : '';
+                return `<div style="background:white;border:${urgent?'2px solid #ef4444':'1px solid #e2e8f0'};border-radius:14px;padding:16px;cursor:pointer;display:flex;flex-direction:column;gap:8px;" onclick="window.location.href='NexeAdmin/admin-solicituds.html'">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                        <span style="font-weight:800;font-size:0.9rem;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.nom||'(sense nom)'}</span>
+                        ${urgent?'<span style="background:#fef2f2;color:#b91c1c;font-size:0.65rem;font-weight:900;padding:2px 8px;border-radius:99px;flex-shrink:0;">URGENT</span>':''}
+                    </div>
+                    <div style="font-size:0.76rem;color:#64748b;">${item.dept}${timeStr?' Â· '+timeStr:''}</div>
+                    <div style="font-size:0.72rem;color:#3b82f6;font-weight:700;display:flex;align-items:center;gap:4px;">
+                        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        Gestionar solÂ·licitud
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // Alertes de Manteniment Preventiu
+        let _unsubMant = null;
+        function loadMantenimentAlerts() {
+            if (_unsubMant) _unsubMant();
+            _unsubMant = onSnapshot(collection(db, 'rmt_actius'), (snap) => {
+                const actius = snap.docs.map(d => ({id:d.id,...d.data()})).filter(a => a.actiu !== false && a.tipusMant && a.tipusMant !== 'none');
+                const alerts = actius.filter(a => {
+                    if (!a.proximMant) return false;
+                    const d = a.proximMant.toDate ? a.proximMant.toDate() : new Date(a.proximMant);
+                    return Math.floor((d - new Date()) / 86400000) <= 7;
+                }).sort((a,b) => {
+                    const da = a.proximMant.toDate ? a.proximMant.toDate() : new Date(a.proximMant);
+                    const db2 = b.proximMant.toDate ? b.proximMant.toDate() : new Date(b.proximMant);
+                    return da - db2;
+                });
+                if (!alerts.length) return;
+                const sec = document.getElementById('seccio-manteniment');
+                const cont = document.getElementById('contenedor-manteniment');
+                sec.style.display = 'block';
+                cont.innerHTML = alerts.map(a => {
+                    const d = a.proximMant.toDate ? a.proximMant.toDate() : new Date(a.proximMant);
+                    const diff = Math.floor((d - new Date()) / 86400000);
+                    const isOver = diff < 0;
+                    const bg = isOver ? '#fef2f2' : '#fffbeb';
+                    const bc = isOver ? '#fecaca' : '#fde68a';
+                    const cc = isOver ? '#b91c1c' : '#92400e';
+                    const label = isOver ? `VenÃ§ut fa ${Math.abs(diff)} dies` : diff === 0 ? 'Venca avui!' : `${diff} dies restants`;
+                    const tipos = {extintor:'ðŸ”¥',climatitzador:'â„ï¸',ascensor:'ðŸ›—',electricitat:'âš¡',generic:'ðŸ”§'};
+                    return `<a href="manteniment.html" style="display:block;background:${bg};border:1px solid ${bc};border-left:4px solid ${isOver?'#ef4444':'#f59e0b'};border-radius:12px;padding:13px 15px;text-decoration:none;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                            <span style="font-weight:800;font-size:0.88rem;color:#1e293b;">${tipos[a.tipusEquip]||'ðŸ”§'} ${a.nom}</span>
+                            <span style="font-size:0.68rem;font-weight:800;background:${isOver?'#fee2e2':'#fef3c7'};color:${cc};padding:2px 8px;border-radius:20px;">${isOver?'VENÃ‡UT':'URGENT'}</span>
+                        </div>
+                        <div style="font-size:0.78rem;color:#64748b;">${a.codi} Â· ${a.salaNom||a.salaId||'â€”'}</div>
+                        <div style="font-size:0.78rem;font-weight:700;color:${cc};margin-top:4px;">${label}</div>
+                    </a>`;
+                }).join('');
+            }, (e) => { console.warn('[manteniment alerts]', e); });
+        }
+        window.addEventListener('beforeunload', () => { if (_unsubMant) _unsubMant(); });
+
+        onAuthStateChanged(auth, async user => {
+            if (!user) {
+                window.location.replace('index.html');
+                return;
+            }
+            const today = toDateStr(new Date());
+            await ensureCryptoReady();
+            if (_unsubAgenda) _unsubAgenda();
+            if (_unsubSolicituds) _unsubSolicituds();
+            if (_unsubAut) _unsubAut();
+
+            const q = query(
+                collection(db, 'agenda'),
+                where('data', '==', today),
+                where('tecnicsIds', 'array-contains', user.uid)
+            );
+
+            _unsubAgenda = onSnapshot(q, async snapshot => {
+                const items = await Promise.all(snapshot.docs.map(async (d) => {
+                    const raw = d.data();
+                    const [nomBeneficiari, motiu] = await Promise.all([
+                        decryptStr(raw.nomBeneficiari),
+                        decryptStr(raw.motiu)
+                    ]);
+                    return {
+                        id: d.id,
+                        tipus: raw.tipus || 'CITA',
+                        hora: raw.hora || '',
+                        sala: raw.sala || '',
+                        estat: raw.estat || 'pendent',
+                        localizador: raw.localizador || '',
+                        titol: raw.titol || '',
+                        nomBeneficiari,
+                        motiu
+                    };
+                }));
+                items.sort((a, b) => a.hora.localeCompare(b.hora));
+                renderAgendaAvui(items);
+            }, err => {
+                console.warn('[agenda onSnapshot]', err);
+                if (err.code === 'failed-precondition') {
+                    document.getElementById('llista-cites-avui').innerHTML =
+                        '<div style="padding:14px;background:#fef3c7;border-radius:10px;font-size:0.82rem;color:#92400e;">S\'ha de crear l\'index de Firestore per a la vista d\'agenda. Consulta la consola per al link.</div>';
+                }
+            });
+
+            // Solicituds pendents per a aquest treballador (real-time)
+            const qSol = query(
+                collection(db, 'solicituds'),
+                where('estat', '==', 'pendent'),
+                where('tecnicsIds', 'array-contains', user.uid)
+            );
+            _unsubSolicituds = onSnapshot(qSol, async snap => {
+                const items = [];
+                for (const d of snap.docs) {
+                    const raw = d.data();
+                    items.push({
+                        id: d.id,
+                        nom: await decryptStr(raw.nomBeneficiari),
+                        dept: raw.departamentNom || raw.departament || 'â€”',
+                        prioritat: raw.prioritat || 'normal',
+                        createdAt: raw.createdAt
+                    });
+                }
+                renderSolicituds(items);
+            }, err => { console.warn('[solicituds]', err); });
+
+            // Autoritzacions d'edat â€” only visible to admin/superadmin/direccio
+            const role = localStorage.getItem('userRole') || '';
+            const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+            if (['admin','superadmin','direccio'].includes(role) || userRoles.includes('admin_sistema') || userRoles.includes('direccio')) {
+                const qAut = query(
+                    collection(db, 'autoritzacions_edat'),
+                    where('estat', '==', 'pendent')
+                );
+                _unsubAut = onSnapshot(qAut, snap => {
+                    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    renderAutoritzacions(items, user.uid);
+                }, err => { console.warn('[autoritzacions]', err); });
+            }
+        });
+
+        function renderAutoritzacions(items, uid) {
+            const sec = document.getElementById('seccio-autoritzacions');
+            const cont = document.getElementById('contenedor-autoritzacions');
+            const badge = document.getElementById('badge-aut-count');
+            if (!sec || !cont) return;
+            if (!items.length) { sec.style.display = 'none'; return; }
+            sec.style.display = 'block';
+            if (badge) badge.textContent = items.length;
+            cont.innerHTML = items.map(item => {
+                const ts = item.createdAt?.toDate ? item.createdAt.toDate() : null;
+                const dateStr = ts ? ts.toLocaleDateString('ca-ES') + ' ' + ts.toLocaleTimeString('ca-ES',{hour:'2-digit',minute:'2-digit'}) : '';
+                return `<div style="background:white;border:2px solid #fbbf24;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px;">
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+                        <div>
+                            <div style="font-weight:800;font-size:0.95rem;color:#1e293b;">${item.beneficiariNom||'â€”'}</div>
+                            <div style="font-size:0.76rem;color:#92400e;font-weight:700;margin-top:2px;">${item.edat} anys Â· Rang: ${item.edatMin}â€“${item.edatMax} anys</div>
+                        </div>
+                        <span style="background:#fef3c7;color:#92400e;font-size:0.65rem;font-weight:900;padding:2px 8px;border-radius:99px;flex-shrink:0;white-space:nowrap;">EXCEPCIÃ“ EDAT</span>
+                    </div>
+                    <div style="font-size:0.78rem;color:#475569;line-height:1.4;">
+                        <strong>Activitat:</strong> ${item.activityNom||'â€”'} Â· <strong>Grup:</strong> ${item.grupoNom||'â€”'}<br>
+                        <strong>Departament:</strong> ${item.departmentNom||'â€”'}<br>
+                        <strong>SolÂ·licitant:</strong> ${item.solicitantNom||'â€”'}${dateStr?' Â· '+dateStr:''}
+                    </div>
+                    <div style="background:#f8fafc;border-radius:8px;padding:10px;font-size:0.82rem;color:#374151;border-left:3px solid #d97706;">
+                        <strong>Motiu:</strong> ${item.motiu||'â€”'}
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:4px;">
+                        <button onclick="window._autoritz.approve('${item.id}')" style="flex:1;background:#10b981;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:0.82rem;font-weight:700;cursor:pointer;">
+                            Aprovar
+                        </button>
+                        <button onclick="window._autoritz.reject('${item.id}')" style="flex:1;background:#ef4444;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:0.82rem;font-weight:700;cursor:pointer;">
+                            Rebutjar
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // Expose approve/reject to onclick handlers
+        window._autoritz = {
+            approve: async function(autId) {
+                try {
+                    const autSnap = await getDoc(doc(db, 'autoritzacions_edat', autId));
+                    if (!autSnap.exists()) return;
+                    const aut = autSnap.data();
+                    const uid = auth.currentUser?.uid || '';
+                    const unom = localStorage.getItem('userName') || '';
+                    // Add to beneficiarios_grupos with Excepcio status
+                    const bgRef = doc(collection(db, 'beneficiarios_grupos'));
+                    await setDoc(bgRef, {
+                        id: bgRef.id,
+                        grupoId: aut.grupoId,
+                        beneficiarioId: aut.beneficiariId,
+                        nombre: aut.beneficiariNom,
+                        edad: aut.edat,
+                        estado: 'Excepcio',
+                        motivoExcepcion: aut.motiu,
+                        usuarioExcepcion: unom + ' (direccio)',
+                        autoritzacioId: autId,
+                        fechaAgregado: serverTimestamp()
+                    });
+                    // Update group beneficiarios array
+                    await updateDoc(doc(db, 'grupos', aut.grupoId), {
+                        beneficiarios: arrayUnion(aut.beneficiariId)
+                    }).catch(() => {});
+                    // Mark authorization as approved
+                    await updateDoc(doc(db, 'autoritzacions_edat', autId), {
+                        estat: 'aprovada',
+                        resolvedAt: serverTimestamp(),
+                        resolvedBy: uid,
+                        resolvedByNom: unom
+                    });
+                    alert('SolÂ·licitud aprovada. El participant ha estat afegit al grup amb excepciÃ³ d\'edat.');
+                } catch(e) { console.error(e); alert('Error aprovant la solÂ·licitud: ' + e.message); }
+            },
+            reject: async function(autId) {
+                const comment = prompt('Motiu del rebuig (opcional):') || '';
+                try {
+                    const uid = auth.currentUser?.uid || '';
+                    const unom = localStorage.getItem('userName') || '';
+                    await updateDoc(doc(db, 'autoritzacions_edat', autId), {
+                        estat: 'rebutjada',
+                        resolvedAt: serverTimestamp(),
+                        resolvedBy: uid,
+                        resolvedByNom: unom,
+                        resolvedComment: comment
+                    });
+                } catch(e) { console.error(e); alert('Error rebutjant: ' + e.message); }
+            }
+        };
+
+        function renderAgendaAvui(items) {
+            const el = document.getElementById('llista-cites-avui');
+            if (!items.length) {
+                el.innerHTML = '<div style="text-align:center;padding:28px;color:#94a3b8;border:1px dashed #e2e8f0;border-radius:12px;background:#fff;">No tens cites ni reunions registrades per avui.</div>';
+                return;
+            }
+            el.innerHTML = items.map(item => {
+                const isArribat = item.estat === 'arribat';
+                const label = ESTAT_LBL[item.estat] || item.estat;
+                const color = ESTAT_CLR[item.estat] || '#64748b';
+                const title = item.tipus === 'CITA'
+                    ? (item.nomBeneficiari || 'Beneficiari desconegut')
+                    : (item.titol || 'Reunio');
+                const motiu = item.motiu ? '<div style="font-size:0.76rem;color:#64748b;margin-top:2px;">' + item.motiu.substring(0,55) + (item.motiu.length>55?'...':'') + '</div>' : '';
+                const locBadge = item.localizador ? '<span style="font-family:monospace;font-size:0.68rem;background:#f1f5f9;padding:1px 5px;border-radius:4px;color:#94a3b8;letter-spacing:0.1em;margin-left:6px;">' + item.localizador + '</span>' : '';
+                const arrivedBanner = isArribat
+                    ? '<div style="padding:8px 14px;background:#dcfce7;border-top:1px solid #86efac;font-size:0.79rem;font-weight:700;color:#166534;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>Ha arribat a recepcio â€” Iniciala</div>'
+                    : '';
+                const cardClass = isArribat ? 'cita-item cita-arribada' : 'cita-item';
+                return '<div class="' + cardClass + '" style="flex-direction:column;align-items:stretch;padding:0;border-bottom:1px solid #f1f5f9;cursor:pointer;" onclick="window.location.href=\'cites.html\'">' +
+                    '<div style="display:flex;align-items:center;padding:12px;">' +
+                    '<div class="cita-hora">' + (item.hora||'--') + '</div>' +
+                    '<div class="cita-info">' +
+                    '<div style="font-weight:700;color:#1e293b;">' + title + locBadge + '</div>' +
+                    '<div style="font-size:0.75rem;color:#64748b;">' + (item.sala ? 'Sala: ' + item.sala : '') + '</div>' +
+                    motiu + '</div>' +
+                    '<span class="cita-badge" style="background:' + color + '20;color:' + color + ';">' + label + '</span>' +
+                    '</div>' + arrivedBanner + '</div>';
+            }).join('');
+        }
+    </script>
+    <script>
+        // FunciÃ³ per carregar avisos (existent)
+        function carregarAvisosPrioritaris() {
+            const cont = document.getElementById('contenedor-avisos-home');
+            const countLabel = document.getElementById('contador-avisos');
+            const avisos = JSON.parse(localStorage.getItem('nexe_avisos')) || [];
+            countLabel.innerText = `${avisos.length} avisos actius`;
+            if (avisos.length === 0) {
+                cont.style.display = "block";
+                cont.innerHTML = "<div style='text-align:center; padding:20px; color:#94a3b8; border: 1px dashed #e2e8f0; border-radius:12px; background: white;'>No hi ha avisos pendents.</div>";
+                return;
+            }
+            cont.style.display = "grid";
+            cont.innerHTML = avisos.slice().reverse().map(a => `
+                <div class="aviso-banner prio-${a.prioritat}">
+                    <div class="aviso-meta">
+                        <span>PRIORITAT ${a.prioritat.toUpperCase()}</span>
+                        <span>${a.data}</span>
+                    </div>
+                    <div class="aviso-titol">${a.titol}</div>
+                    <div style="font-size: 0.9rem; color: #1e293b; line-height: 1.4;">${a.missatge}</div>
+                </div>
+            `).join('');
+        }
+
+        // FunciÃ³ per posar la data actual
+        function carregarDataAgenda() {
+            const opcions = { weekday: 'long', day: 'numeric', month: 'long' };
+            document.getElementById('data-avui').innerText = new Date().toLocaleDateString('ca-ES', opcions);
+        }
+
+        window.addEventListener('focus', carregarAvisosPrioritaris);
+        document.addEventListener('DOMContentLoaded', async () => {
+            carregarAvisosPrioritaris();
+            carregarDataAgenda();
+
+            const startDeferredHomeTasks = () => {
+                if (!_unsubMant) loadMantenimentAlerts();
+                window.EntityDashboard?.initHomeDashboard?.();
+            };
+
+            if (typeof window.requestIdleCallback === 'function') {
+                window.requestIdleCallback(startDeferredHomeTasks, { timeout: 1500 });
+            } else {
+                setTimeout(startDeferredHomeTasks, 300);
+            }
+        });
+    </script>
+</body>
+</html>
+

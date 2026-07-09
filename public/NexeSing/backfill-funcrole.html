@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexeSing - Backfill Rol Funcional</title>
+    <link rel="stylesheet" href="../style-dashboard.css">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #f8fafc; margin: 0; padding: 24px; }
+        .container { max-width: 980px; margin: 0 auto; }
+        .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 22px; margin-bottom: 18px; }
+        h1 { margin: 0 0 8px; color: #0f172a; }
+        p { margin: 0; color: #64748b; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-top: 18px; }
+        .stat { background: #f8fafc; border-left: 4px solid #2563eb; border-radius: 10px; padding: 12px; }
+        .stat .v { font-size: 1.45rem; font-weight: 800; color: #0f172a; }
+        .stat .l { font-size: .82rem; color: #64748b; }
+        .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+        label { font-size: .85rem; color: #334155; font-weight: 700; }
+        select, button { border-radius: 8px; font-weight: 600; }
+        select { border: 1px solid #cbd5e1; padding: 9px 10px; background: #fff; }
+        button { border: 0; padding: 10px 14px; cursor: pointer; }
+        .btn-primary { background: #2563eb; color: #fff; }
+        .btn-success { background: #10b981; color: #fff; }
+        .btn-muted { background: #e2e8f0; color: #334155; }
+        .log { margin-top: 16px; background: #0f172a; color: #e2e8f0; border-radius: 10px; padding: 14px; max-height: 320px; overflow: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .8rem; }
+        .log .ok { color: #10b981; }
+        .log .warn { color: #f59e0b; }
+        .log .err { color: #ef4444; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { padding: 9px; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: .85rem; }
+        th { color: #334155; background: #f8fafc; }
+        .pill { display: inline-block; padding: 3px 8px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: .75rem; font-weight: 700; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h1>Backfill de funcRole</h1>
+        <p>Aquesta eina omple el camp <strong>funcRole</strong> als documents de <strong>usuarios</strong> que el tenguin buit o absent.</p>
+        <div class="stats">
+            <div class="stat"><div class="v" id="st-total">0</div><div class="l">Usuaris totals</div></div>
+            <div class="stat"><div class="v" id="st-complete">0</div><div class="l">Ja amb funcRole</div></div>
+            <div class="stat"><div class="v" id="st-missing">0</div><div class="l">Pendents de backfill</div></div>
+            <div class="stat"><div class="v" id="st-updated">0</div><div class="l">Actualitzats en sessió</div></div>
+        </div>
+        <div class="row">
+            <label for="defaultRole">Rol per defecte si no es pot inferir:</label>
+            <select id="defaultRole">
+                <option value="tecnic_projectes">tecnic_projectes</option>
+                <option value="coordinador">coordinador</option>
+                <option value="administracio" selected>administracio</option>
+                <option value="direccio">direccio</option>
+                <option value="admin_sistema">admin_sistema</option>
+            </select>
+            <button class="btn-primary" id="btn-preview">Recarrega previsio</button>
+            <button class="btn-success" id="btn-apply">Aplicar backfill</button>
+            <button class="btn-muted" id="btn-clear">Neteja log</button>
+        </div>
+        <div id="log" class="log"></div>
+    </div>
+
+    <div class="card">
+        <h2 style="margin:0; color:#0f172a; font-size:1.05rem;">Previsio de canvis</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Usuari</th>
+                    <th>Email</th>
+                    <th>Rol actual</th>
+                    <th>funcRole actual</th>
+                    <th>funcRole proposat</th>
+                </tr>
+            </thead>
+            <tbody id="previewBody">
+                <tr><td colspan="5" style="color:#64748b;">Carregant...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script type="module">
+    import { db } from '../firebase-config.js';
+    import { collection, getDocs, doc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    const KNOWN = ['tecnic_projectes', 'coordinador', 'administracio', 'direccio', 'admin_sistema'];
+    const state = { users: [], missing: [], updated: 0 };
+
+    const logEl = document.getElementById('log');
+    const previewBody = document.getElementById('previewBody');
+
+    function log(msg, type = 'ok') {
+        const t = new Date().toLocaleTimeString('ca-ES');
+        const div = document.createElement('div');
+        div.className = type;
+        div.textContent = `[${t}] ${msg}`;
+        logEl.appendChild(div);
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function setStats() {
+        const total = state.users.length;
+        const complete = state.users.filter(u => u.funcRole && KNOWN.includes(u.funcRole)).length;
+        const missing = total - complete;
+        document.getElementById('st-total').textContent = total;
+        document.getElementById('st-complete').textContent = complete;
+        document.getElementById('st-missing').textContent = missing;
+        document.getElementById('st-updated').textContent = state.updated;
+    }
+
+    function inferRole(user, fallback) {
+        if (user.funcRole && KNOWN.includes(user.funcRole)) return user.funcRole;
+        if (Array.isArray(user.roles)) {
+            const fromArray = user.roles.find(r => KNOWN.includes(r));
+            if (fromArray) return fromArray;
+        }
+        const permisos = user.permisos || {};
+        if (user.role === 'admin' || permisos.admin === 'all') return 'admin_sistema';
+        if (permisos.audit && permisos.audit !== 'none') return 'coordinador';
+        if (permisos.psy && permisos.psy !== 'none') return 'tecnic_projectes';
+        if (typeof user.nombre === 'string' && /direcci|director|directora/i.test(user.nombre)) return 'direccio';
+        return fallback;
+    }
+
+    function renderPreview() {
+        if (!state.missing.length) {
+            previewBody.innerHTML = '<tr><td colspan="5" style="color:#10b981;">No hi ha usuaris pendents de backfill.</td></tr>';
+            return;
+        }
+        previewBody.innerHTML = state.missing.map(u => `
+            <tr>
+                <td>${u.nombre || 'Sense nom'}</td>
+                <td>${u.email || '-'}</td>
+                <td>${u.role || '-'}</td>
+                <td>${u.funcRole || '<span class="pill">absent</span>'}</td>
+                <td><span class="pill">${u._proposed}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    async function loadPreview() {
+        const fallback = document.getElementById('defaultRole').value;
+        const snap = await getDocs(collection(db, 'usuarios'));
+        state.users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        state.missing = state.users
+            .map(u => ({ ...u, _proposed: inferRole(u, fallback) }))
+            .filter(u => !u.funcRole || !KNOWN.includes(u.funcRole));
+
+        setStats();
+        renderPreview();
+        log(`Previsio carregada: ${state.missing.length} usuaris pendents`, state.missing.length ? 'warn' : 'ok');
+    }
+
+    async function applyBackfill() {
+        if (!state.missing.length) {
+            log('No hi ha canvis per aplicar.', 'warn');
+            return;
+        }
+
+        const ok = confirm(`S'actualitzaran ${state.missing.length} usuaris sense funcRole. Vols continuar?`);
+        if (!ok) {
+            log('Operacio cancel-lada per l\'usuari.', 'warn');
+            return;
+        }
+
+        let updates = 0;
+        for (const u of state.missing) {
+            try {
+                await updateDoc(doc(db, 'usuarios', u.id), {
+                    funcRole: u._proposed,
+                    roles: Array.isArray(u.roles) && u.roles.length ? u.roles : [u._proposed],
+                    ultimaModificacion: serverTimestamp()
+                });
+                updates++;
+                log(`Actualitzat ${u.email || u.id} -> funcRole=${u._proposed}`, 'ok');
+            } catch (e) {
+                log(`Error actualitzant ${u.email || u.id}: ${e.message}`, 'err');
+            }
+        }
+
+        state.updated += updates;
+        setStats();
+        await loadPreview();
+        log(`Backfill completat: ${updates} actualitzacions aplicades.`, 'ok');
+    }
+
+    document.getElementById('btn-preview').addEventListener('click', loadPreview);
+    document.getElementById('btn-apply').addEventListener('click', applyBackfill);
+    document.getElementById('btn-clear').addEventListener('click', () => { logEl.innerHTML = ''; });
+
+    loadPreview().catch(e => log(`Error carregant dades: ${e.message}`, 'err'));
+</script>
+</body>
+</html>

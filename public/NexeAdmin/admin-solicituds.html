@@ -1,0 +1,574 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" type="image/svg+xml" href="../img/nexeadmin-icon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0f172a; --accent: #3b82f6; --success: #10b981;
+            --warning: #f59e0b; --danger: #ef4444; --text-main: #1e293b;
+            --text-muted: #64748b; --bg-body: #f8fafc; --border: #e2e8f0;
+        }
+        body { margin: 0; background: var(--bg-body); color: var(--text-main); font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; }
+        .content-wrapper { padding: 40px 50px; }
+        .page-header { margin-bottom: 32px; }
+        .page-header h1 { margin: 0 0 4px; font-weight: 800; font-size: 1.6rem; color: var(--primary); }
+        .page-header p  { margin: 0; color: var(--text-muted); font-size: 0.88rem; }
+
+        /* Filters bar */
+        .filters-bar {
+            display: flex; gap: 10px; align-items: center; margin-bottom: 24px; flex-wrap: wrap;
+        }
+        .filter-select {
+            padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+            font-size: 0.85rem; font-family: inherit; outline: none; color: var(--text-main);
+            background: white; cursor: pointer;
+        }
+        .filter-select:focus { border-color: var(--accent); }
+        .filter-btn {
+            padding: 9px 18px; border: 1.5px solid var(--border); border-radius: 10px;
+            background: white; font-size: 0.83rem; font-weight: 700; cursor: pointer; color: var(--text-muted);
+            display: flex; align-items: center; gap: 7px; transition: all .15s;
+        }
+        .filter-btn.active, .filter-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        .filter-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+        .badge-count { background: #ef4444; color: white; font-size: 0.65rem; font-weight: 900; padding: 2px 6px; border-radius: 99px; margin-left: 2px; }
+
+        /* Cards grid */
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; }
+
+        .sol-card {
+            background: white; border: 1.5px solid var(--border); border-radius: 16px; padding: 22px 24px;
+            transition: box-shadow .15s, transform .15s; position: relative; overflow: hidden;
+        }
+        .sol-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.1); transform: translateY(-2px); }
+        .sol-card.urgent { border-left: 4px solid #ef4444; }
+        .sol-card.assignada { opacity: .6; }
+
+        .card-top { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+        .card-avatar {
+            width: 44px; height: 44px; border-radius: 12px; background: #eff6ff;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .card-avatar svg { width: 22px; height: 22px; fill: none; stroke: #3b82f6; stroke-width: 2; }
+        .card-avatar.urgent-av { background: #fef2f2; }
+        .card-avatar.urgent-av svg { stroke: #ef4444; }
+
+        .card-name  { font-size: 1.05rem; font-weight: 800; color: var(--primary); margin: 0 0 3px; }
+        .card-meta  { font-size: 0.78rem; color: var(--text-muted); margin: 0; display: flex; gap: 8px; flex-wrap: wrap; }
+        .card-meta span { display: flex; align-items: center; gap: 4px; }
+        .card-meta svg  { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+
+        .pill {
+            display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 99px;
+            font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .pill-urgent  { background: #fef2f2; color: #b91c1c; }
+        .pill-normal  { background: #f1f5f9; color: #475569; }
+        .pill-pendent { background: #fef3c7; color: #92400e; }
+        .pill-assignada { background: #dcfce7; color: #166534; }
+        .pill-rebutjada { background: #fef2f2; color: #991b1b; }
+
+        .card-dept-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .dept-chip {
+            padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 800;
+            background: #eff6ff; color: #1d4ed8;
+        }
+        .tecnic-chip {
+            padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 700;
+            background: #f8fafc; color: var(--text-muted); border: 1px solid var(--border);
+        }
+
+        .card-motiu {
+            font-size: 0.83rem; color: #475569; line-height: 1.5;
+            background: #f8fafc; border-radius: 10px; padding: 10px 12px; margin-bottom: 16px;
+        }
+
+        .card-actions { display: flex; gap: 8px; }
+        .btn-assign {
+            flex: 1; padding: 10px 14px; background: var(--primary); color: white; border: none;
+            border-radius: 10px; font-weight: 800; font-size: 0.83rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px; transition: background .15s;
+        }
+        .btn-assign:hover { background: #1e293b; }
+        .btn-assign svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+        .btn-rebutjar {
+            padding: 10px 14px; background: white; color: var(--danger); border: 1.5px solid #fecaca;
+            border-radius: 10px; font-weight: 700; font-size: 0.83rem; cursor: pointer; transition: all .15s;
+        }
+        .btn-rebutjar:hover { background: #fef2f2; }
+
+        /* Done state */
+        .done-banner {
+            display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+            background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 10px;
+            font-size: 0.82rem; font-weight: 700; color: #166534;
+        }
+        .done-banner svg { width: 16px; height: 16px; fill: none; stroke: #16a34a; stroke-width: 2.5; flex-shrink: 0; }
+
+        /* Empty state */
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .empty-state svg { width: 48px; height: 48px; fill: none; stroke: #cbd5e1; stroke-width: 1.5; margin-bottom: 16px; }
+        .empty-state p { font-size: 0.9rem; margin: 0; }
+
+        /* Loading */
+        #loading-box { text-align: center; padding: 48px; color: var(--text-muted); font-size: 0.9rem; }
+
+        /* â”€â”€ MODAL â”€â”€ */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(15,23,42,.75);
+            z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: white; border-radius: 20px; padding: 32px; width: 100%; max-width: 480px;
+            box-shadow: 0 24px 60px rgba(0,0,0,.3);
+        }
+        .modal-title { font-size: 1.1rem; font-weight: 900; color: var(--primary); margin: 0 0 6px; }
+        .modal-sub   { font-size: 0.82rem; color: var(--text-muted); margin: 0 0 24px; }
+        .modal-field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }
+        .modal-field label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+        .modal-field input, .modal-field select, .modal-field textarea {
+            padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+            font-size: 0.95rem; font-family: inherit; outline: none; color: var(--text-main);
+            transition: border-color .15s;
+        }
+        .modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus { border-color: var(--accent); }
+        .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+        .btn-modal-confirm {
+            flex: 1; padding: 13px; background: var(--success); color: white; border: none;
+            border-radius: 11px; font-weight: 900; font-size: 0.9rem; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; gap: 8px; transition: background .15s;
+        }
+        .btn-modal-confirm:hover { background: #059669; }
+        .btn-modal-confirm:disabled { background: #94a3b8; cursor: default; }
+        .btn-modal-confirm svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+        .btn-modal-cancel {
+            padding: 13px 20px; background: #f1f5f9; color: var(--text-muted); border: none;
+            border-radius: 11px; font-weight: 700; font-size: 0.9rem; cursor: pointer;
+        }
+        .modal-err { padding: 10px 14px; background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 9px; color: #b91c1c; font-size: 0.82rem; font-weight: 700; margin-bottom: 12px; display: none; }
+
+        /* Toast */
+        #toast-sol { position: fixed; bottom: 24px; right: 24px; z-index: 40000; padding: 12px 18px; border-radius: 12px; color: white; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateY(8px); transition: all .3s; pointer-events: none; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+    <script src="../security-check.js"></script>
+    <script type="module">await window.checkModuleAccess('NexeAdmin');</script>
+</head>
+<body>
+
+    <aside class="admin-sidebar"></aside>
+
+    <main class="content-wrapper">
+        <div class="page-header">
+            <h1>SolÂ·licituds de Cita</h1>
+            <p>Gestiona les solÂ·licituds d'atenciÃ³ rebudes a recepciÃ³</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-bar">
+            <button class="filter-btn active" id="f-pendent" onclick="_setFilter('pendent')">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                Pendents <span id="badge-pendent" class="badge-count" style="display:none;">0</span>
+            </button>
+            <button class="filter-btn" id="f-assignada" onclick="_setFilter('assignada')">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Assignades
+            </button>
+            <button class="filter-btn" id="f-rebutjada" onclick="_setFilter('rebutjada')">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                Rebutjades
+            </button>
+            <select class="filter-select" id="f-dept" onchange="_renderList()">
+                <option value="">Tots els departaments</option>
+            </select>
+        </div>
+
+        <div id="loading-box">
+            <svg style="animation:spin 1s linear infinite;width:28px;height:28px;fill:none;stroke:#3b82f6;stroke-width:2.5;margin-bottom:12px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity=".2"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+            <br>Carregant solÂ·licituds...
+        </div>
+
+        <div id="cards-grid" class="cards-grid" style="display:none;"></div>
+    </main>
+
+    <!-- Assign date modal -->
+    <div class="modal-overlay" id="modal-assign">
+        <div class="modal-box">
+            <p class="modal-title">Assignar data i hora</p>
+            <p class="modal-sub" id="modal-sub-nom">Cita per a ...</p>
+            <div class="modal-err" id="modal-err"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div class="modal-field">
+                    <label>Data</label>
+                    <input type="date" id="modal-data">
+                </div>
+                <div class="modal-field">
+                    <label>Hora</label>
+                    <input type="time" id="modal-hora">
+                </div>
+            </div>
+            <div class="modal-field">
+                <label>Sala / UbicaciÃ³ (opcional)</label>
+                <input type="text" id="modal-sala" placeholder="Ex: Sala A, Despatx 2...">
+            </div>
+            <div class="modal-field">
+                <label>Departament</label>
+                <select id="modal-dept"></select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" onclick="_closeModal()">CancelÂ·lar</button>
+                <button class="btn-modal-confirm" id="btn-confirm-assign" onclick="_confirmarAssignacio()">
+                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Confirmar i crear cita
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-sol"></div>
+
+    <script src="./nexeadmin-sidebar.js"></script>
+    <script type="module">
+        import '../auth-manager.js';
+        import { db } from '../firebase-config.js';
+        import {
+            collection, query, where, getDocs, getDoc,
+            updateDoc, addDoc, doc, serverTimestamp, orderBy, onSnapshot
+        } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+        import { waitForCrypto } from '../vault-init.js';
+        import { decryptField, encryptField } from '../crypto-utils.js';
+
+        let _allDocs   = [];
+        let _curFilter = 'pendent';
+        let _curDocId  = null;
+        let _curNomDec = '';
+        let _depts     = [];  // { id, codigo, nombre }
+
+        function _deptNom(codigo) {
+            const d = _depts.find(x => x.codigo === codigo);
+            return d ? d.nombre : (codigo || 'â€”');
+        }
+
+        async function _loadDepts() {
+            try {
+                const snap = await getDocs(query(collection(db, 'departamentos'), where('estado', '==', 'Activo')));
+                _depts = [];
+                snap.forEach(d => {
+                    const data = d.data();
+                    _depts.push({ id: d.id, codigo: data.codigo || d.id.slice(0,4).toUpperCase(), nombre: data.nombre || d.id });
+                });
+                _depts.sort((a,b) => a.nombre.localeCompare(b.nombre));
+            } catch(e) { console.warn('No s\'han pogut carregar departaments:', e); }
+
+            const fSel = document.getElementById('f-dept');
+            fSel.innerHTML = '<option value="">Tots els departaments</option>' +
+                _depts.map(d => `<option value="${d.codigo}">${d.nombre}</option>`).join('');
+
+            const mSel = document.getElementById('modal-dept');
+            mSel.innerHTML = _depts.length
+                ? _depts.map(d => `<option value="${d.codigo}">${d.nombre} (${d.codigo})</option>`).join('')
+                : '<option value="GE">General (GE)</option>';
+        }
+
+        async function dec(enc) {
+            if (!enc) return '';
+            try { return await decryptField(enc); } catch { return ''; }
+        }
+        function toDateStr(d) {
+            return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        }
+        function relDate(ts) {
+            if (!ts) return '';
+            const d = ts.toDate ? ts.toDate() : new Date(ts.seconds * 1000);
+            const diff = Math.floor((Date.now() - d.getTime()) / 60000);
+            if (diff < 1) return 'Ara mateix';
+            if (diff < 60) return `Fa ${diff} min`;
+            const hours = Math.floor(diff / 60);
+            if (hours < 24) return `Fa ${hours}h`;
+            const days = Math.floor(hours / 24);
+            if (days < 7) return `Fa ${days} dies`;
+            return d.toLocaleDateString('ca-ES');
+        }
+
+        // â”€â”€ Load all solicituds â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        let _unsubSolicituds = null;
+
+        async function _load() {
+            await _loadDepts();
+            document.getElementById('loading-box').style.display = 'block';
+            document.getElementById('cards-grid').style.display = 'none';
+            try {
+                await waitForCrypto();
+                if (_unsubSolicituds) _unsubSolicituds();
+                _unsubSolicituds = onSnapshot(
+                    query(collection(db, 'solicituds'), orderBy('createdAt', 'desc')),
+                    async (snap) => {
+                        _allDocs = [];
+                        for (const d of snap.docs) {
+                            const raw = d.data();
+                            const nom   = await dec(raw.nomBeneficiari);
+                            const motiu = await dec(raw.motiu);
+                            const tel   = await dec(raw.telefon);
+                            _allDocs.push({ id: d.id, raw, nom, motiu, tel });
+                        }
+                        const pendCount = _allDocs.filter(x => x.raw.estat === 'pendent').length;
+                        const badge = document.getElementById('badge-pendent');
+                        if (pendCount > 0) { badge.textContent = pendCount; badge.style.display = 'inline'; }
+                        else badge.style.display = 'none';
+                        document.getElementById('loading-box').style.display = 'none';
+                        _renderList();
+                    },
+                    (e) => { console.error('[solicituds rt]', e); }
+                );
+            } catch(e) {
+                console.error(e);
+                document.getElementById('loading-box').style.display = 'none';
+            }
+        }
+        window.addEventListener('beforeunload', () => { if (_unsubSolicituds) _unsubSolicituds(); });
+
+        // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        window._renderList = function() {
+            const dept  = document.getElementById('f-dept').value;
+            const items = _allDocs.filter(x =>
+                x.raw.estat === _curFilter &&
+                (!dept || x.raw.departament === dept)
+            );
+            const grid = document.getElementById('cards-grid');
+            grid.style.display = '';
+            if (!items.length) {
+                grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">' +
+                    '<svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>' +
+                    '<p>Cap solÂ·licitud en aquest estat</p></div>';
+                return;
+            }
+            grid.innerHTML = items.map(item => _renderCard(item)).join('');
+        };
+
+        function _renderCard(item) {
+            const r = item.raw;
+            const urgent  = r.prioritat === 'urgent';
+            const dept    = _deptNom(r.departament);
+            const tecNom  = r.tecnicNom || null;
+            const created = relDate(r.createdAt);
+            const assignada = r.estat === 'assignada';
+            const rebutjada = r.estat === 'rebutjada';
+
+            const pillEstat = assignada
+                ? '<span class="pill pill-assignada">Assignada</span>'
+                : rebutjada
+                ? '<span class="pill pill-rebutjada">Rebutjada</span>'
+                : '<span class="pill pill-pendent">Pendent</span>';
+
+            const urgentPill = urgent ? '<span class="pill pill-urgent" style="margin-left:4px;">Urgent</span>' : '';
+
+            const motiu = item.motiu
+                ? `<div class="card-motiu">"${item.motiu}"</div>`
+                : '';
+
+            const phone = item.tel
+                ? `<span><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.4 2 2 0 0 1 3.6 2.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81A2 2 0 0 1 8.85 8.7L7.5 9.56A15.31 15.31 0 0 0 12 16l.85-1.34A2 2 0 0 1 15.1 14a12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2.02z"></path></svg>${item.tel}</span>`
+                : '';
+
+            const actions = assignada || rebutjada
+                ? `<div class="done-banner"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>${assignada ? 'Cita assignada' : 'SolÂ·licitud rebutjada'}</div>`
+                : `<div class="card-actions">
+                    <button class="btn-assign" onclick="_openModal('${item.id}', '${_esc(item.nom)}', '${r.departament}')">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        Assignar data i hora
+                    </button>
+                    <button class="btn-rebutjar" onclick="_rebutjar('${item.id}')">Rebutjar</button>
+                   </div>`;
+
+            return `<div class="sol-card ${urgent ? 'urgent' : ''} ${assignada ? 'assignada' : ''}">
+                <div class="card-top">
+                    <div class="card-avatar ${urgent ? 'urgent-av' : ''}">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    </div>
+                    <div style="flex:1;">
+                        <p class="card-name">${_esc(item.nom) || '(sense nom)'}</p>
+                        <div class="card-meta">
+                            <span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>${created}</span>
+                            ${phone}
+                        </div>
+                    </div>
+                    <div>${pillEstat}${urgentPill}</div>
+                </div>
+                <div class="card-dept-row">
+                    <span class="dept-chip">${dept}</span>
+                    ${tecNom ? `<span class="tecnic-chip"><svg style="width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.5;margin-right:4px;" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>${_esc(tecNom)}</span>` : ''}
+                </div>
+                ${motiu}
+                ${actions}
+            </div>`;
+        }
+
+        function _esc(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
+        // â”€â”€ Filter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        window._setFilter = function(f) {
+            _curFilter = f;
+            ['pendent','assignada','rebutjada'].forEach(k => {
+                document.getElementById('f-'+k).classList.toggle('active', k === f);
+            });
+            _renderList();
+        };
+
+        // â”€â”€ Modal: Assign date â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        window._openModal = function(docId, nom, dept) {
+            _curDocId  = docId;
+            _curNomDec = nom;
+            document.getElementById('modal-sub-nom').textContent = 'Cita per a: ' + nom;
+            document.getElementById('modal-data').value = toDateStr(new Date());
+            document.getElementById('modal-hora').value = '';
+            document.getElementById('modal-sala').value = '';
+            const mSel = document.getElementById('modal-dept');
+            if (dept && Array.from(mSel.options).some(o => o.value === dept)) mSel.value = dept;
+            document.getElementById('modal-err').style.display = 'none';
+            document.getElementById('modal-assign').classList.add('active');
+        };
+        window._closeModal = function() {
+            document.getElementById('modal-assign').classList.remove('active');
+            _curDocId = null;
+        };
+
+        window._confirmarAssignacio = async function() {
+            const data = document.getElementById('modal-data').value;
+            const hora = document.getElementById('modal-hora').value;
+            const sala = document.getElementById('modal-sala').value.trim();
+            const dept = document.getElementById('modal-dept').value;
+            const errEl = document.getElementById('modal-err');
+
+            if (!data) { errEl.textContent = 'Cal seleccionar una data.'; errEl.style.display = 'block'; return; }
+            if (!hora) { errEl.textContent = 'Cal indicar una hora.'; errEl.style.display = 'block'; return; }
+            errEl.style.display = 'none';
+
+            const btn = document.getElementById('btn-confirm-assign');
+            btn.disabled = true;
+            btn.innerHTML = '<svg style="animation:spin 1s linear infinite;width:17px;height:17px;fill:none;stroke:white;stroke-width:2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-opacity=".2"/><path d="M12 2a10 10 0 0 1 10 10"/></svg> Creant cita...';
+
+            try {
+                await waitForCrypto();
+                // Find original solicitud for encrypted data
+                const solSnap = await getDoc(doc(db, 'solicituds', _curDocId));
+                const solData = solSnap.data();
+
+                // Generate localizador
+                const prefix = dept;
+                const agSnap = await getDocs(query(collection(db,'agenda'),
+                    where('localizador','>=', prefix),
+                    where('localizador','<=', prefix + '\uf8ff')));
+                let maxNum = 0;
+                agSnap.forEach(d => {
+                    const loc = d.data().localizador || '';
+                    if (loc.startsWith(prefix)) {
+                        const n = parseInt(loc.slice(prefix.length), 10);
+                        if (!isNaN(n) && n > maxNum) maxNum = n;
+                    }
+                });
+                const localizador = prefix + String(maxNum + 1).padStart(3, '0');
+
+                // Create CITA in agenda
+                const citaRef = await addDoc(collection(db, 'agenda'), {
+                    tipus:       'CITA',
+                    data,
+                    hora,
+                    sala:        sala || null,
+                    estat:       'pendent',
+                    localizador,
+                    departament: dept,
+                    nomBeneficiari: solData.nomBeneficiari,
+                    motiu:          solData.motiu || null,
+                    tecnicsConvidats: solData.tecnicId
+                        ? [{ id: solData.tecnicId, nom: solData.tecnicNom }]
+                        : [],
+                    tecnicsIds: solData.tecnicId ? [solData.tecnicId] : [],
+                    solicitudId: _curDocId,
+                    createdAt:  serverTimestamp(),
+                    updatedAt:  serverTimestamp()
+                });
+
+                // Update solicitud
+                await updateDoc(doc(db, 'solicituds', _curDocId), {
+                    estat:     'assignada',
+                    citaId:    citaRef.id,
+                    citaData:  data,
+                    citaHora:  hora,
+                    updatedAt: serverTimestamp()
+                });
+
+                // Update local state
+                const item = _allDocs.find(x => x.id === _curDocId);
+                if (item) {
+                    item.raw.estat    = 'assignada';
+                    item.raw.citaId   = citaRef.id;
+                }
+
+                _closeModal();
+                showToast('Cita creada: ' + localizador + ' Â· ' + data + ' ' + hora, true);
+                // Re-count
+                const pendCount = _allDocs.filter(x => x.raw.estat === 'pendent').length;
+                const badge = document.getElementById('badge-pendent');
+                if (pendCount > 0) { badge.textContent = pendCount; badge.style.display = 'inline'; }
+                else badge.style.display = 'none';
+                _renderList();
+            } catch(e) {
+                errEl.textContent = 'Error: ' + (e.message || e.code || 'error desconegut');
+                errEl.style.display = 'block';
+                console.error(e);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Confirmar i crear cita';
+            }
+        };
+
+        // â”€â”€ Reject â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        window._rebutjar = async function(docId) {
+            if (!confirm('Segur que vols rebutjar aquesta solÂ·licitud?')) return;
+            try {
+                await updateDoc(doc(db, 'solicituds', docId), {
+                    estat: 'rebutjada', updatedAt: serverTimestamp()
+                });
+                const item = _allDocs.find(x => x.id === docId);
+                if (item) item.raw.estat = 'rebutjada';
+                showToast('SolÂ·licitud rebutjada', false);
+                _renderList();
+            } catch(e) {
+                console.error(e);
+                showToast('Error: ' + (e.message || e.code), false);
+            }
+        };
+
+        // â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        function showToast(msg, ok) {
+            const t = document.getElementById('toast-sol');
+            t.innerHTML = '<span>' + msg + '</span>';
+            t.style.background = ok ? '#10b981' : '#ef4444';
+            t.style.opacity = '1'; t.style.transform = 'translateY(0)'; t.style.pointerEvents = 'auto';
+            clearTimeout(t._tmr);
+            t._tmr = setTimeout(() => { t.style.opacity='0'; t.style.transform='translateY(8px)'; t.style.pointerEvents='none'; }, 4000);
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('modal-assign').addEventListener('click', e => {
+            if (e.target === e.currentTarget) _closeModal();
+        });
+
+        // Default date to today
+        document.getElementById('modal-data').value = toDateStr(new Date());
+
+        // Load on init
+        _load();
+    </script>
+</body>
+</html>
+

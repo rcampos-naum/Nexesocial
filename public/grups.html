@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexeSocial - Gestión de Grupos</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        :root {
+            --primary: #0f172a; --accent: #3b82f6; --success: #10b981;
+            --warning: #f59e0b; --danger: #ef4444; --border: #e2e8f0;
+        }
+
+        body { margin: 0; background: #f8fafc; display: flex; flex-direction: column; height: 100vh; font-family: 'Inter', sans-serif; }
+        .content-wrapper { margin-left: 280px; margin-top: 60px; padding: 25px; transition: 0.3s; overflow-y: auto; flex-grow: 1; }
+        body.collapsed .content-wrapper { margin-left: 70px; }
+
+        /* Header */
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .page-header h1 { margin: 0; color: var(--primary); font-size: 1.8rem; }
+
+        .summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .summary-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .summary-label { color: #64748b; font-size: 0.78rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; }
+        .summary-value { color: var(--primary); font-size: 1.7rem; font-weight: 800; margin-top: 8px; }
+
+        .filters-bar { display: grid; grid-template-columns: 1fr 1fr auto; gap: 14px; align-items: end; }
+        .filter-group label { display: block; margin-bottom: 6px; color: var(--primary); font-size: 0.85rem; font-weight: 600; }
+        .filter-group select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: white; font-family: inherit; }
+
+        /* Cards y Tablas */
+        .nexe-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .nexe-table { width: 100%; border-collapse: collapse; }
+        .nexe-table th { background: #f1f5f9; padding: 12px; text-align: left; font-size: 0.75rem; color: #64748b; border-bottom: 2px solid var(--border); font-weight: 600; }
+        .nexe-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+        .nexe-table tr:hover { background: #f8fafc; }
+
+        /* Botones */
+        .btn { padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 0.8rem; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #1e293b; }
+        .btn-outline { background: white; border: 1px solid var(--border); color: var(--primary); }
+        .btn-outline:hover { background: #f1f5f9; }
+
+        .btn-accion { padding: 6px 12px; font-size: 0.75rem; margin-right: 5px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; }
+        .btn-beneficiarios { color: #2563eb; border-color: #2563eb; }
+        .btn-asistencia { color: #16a34a; border-color: #16a34a; }
+        .btn-editar { color: #7c3aed; border-color: #7c3aed; }
+        .btn-eliminar { color: #ef4444; border-color: #ef4444; }
+
+        .btn-accion:hover { background: #f1f5f9; }
+
+        /* Badges */
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-warning { background: #fef3c7; color: #b45309; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+
+        /* Estados */
+        .estado { display: flex; align-items: center; gap: 8px; }
+        .estado-punto { width: 8px; height: 8px; border-radius: 50%; }
+        .estado-activo { background: #10b981; }
+        .estado-inactivo { background: #94a3b8; }
+
+        /* Empty State */
+        .empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 15px; }
+
+        /* Tabla responsiva */
+        @media (max-width: 1024px) {
+            .content-wrapper { margin-left: 70px; padding: 15px; }
+            .nexe-table { font-size: 0.75rem; }
+            .btn-accion { padding: 4px 8px; font-size: 0.7rem; margin-right: 3px; }
+            .summary-grid, .filters-bar { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar"></div>
+    <div class="content-wrapper">
+        
+        <div class="page-header">
+            <div>
+                <h1><svg style="display:inline-block; width:28px; height:28px; margin-right:8px; vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 1 0 4 0M9 5a2 2 0 1 0 4 0m-3 7h6m-6 4h6m-5-10v10"></path></svg>Gestión de Grupos</h1>
+                <p style="margin: 5px 0 0 0; color: #64748b; font-size: 0.9rem;">Sistema de grupos y control de asistencia</p>
+            </div>
+            <button class="btn btn-primary" onclick="window.location.href='crear-grup.html'">+ Crear Grupo</button>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-label">Departamentos activos</div>
+                <div class="summary-value" id="total-departamentos">0</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Actividades creadas</div>
+                <div class="summary-value" id="total-actividades">0</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Grupos visibles</div>
+                <div class="summary-value" id="total-grupos">0</div>
+            </div>
+        </div>
+
+        <div class="nexe-card">
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label for="filtro-departamento">Departamento</label>
+                    <select id="filtro-departamento">
+                        <option value="">Todos los departamentos</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filtro-actividad">Actividad</label>
+                    <select id="filtro-actividad">
+                        <option value="">Todas las actividades</option>
+                    </select>
+                </div>
+                <button class="btn btn-outline" id="btn-limpiar-filtros">Limpiar filtros</button>
+            </div>
+        </div>
+
+        <div class="nexe-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0;">Listado de Grupos</h3>
+                <button class="btn btn-outline" onclick="location.reload()"><svg style="display:inline-block; width:16px; height:16px; margin-right:4px; vertical-align:middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 2.2"/></svg>Actualizar</button>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="nexe-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre del Grupo</th>
+                            <th>Departamento</th>
+                            <th>Actividad</th>
+                            <th>Tipo de Actividad</th>
+                            <th>Responsable</th>
+                            <th>Turnos</th>
+                            <th>Beneficiarios</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-grupos">
+                        <tr><td colspan="9" style="text-align: center; padding: 30px; color: #94a3b8;">Cargando grupos, departamentos y actividades...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="no-grupos" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">
+                <svg style="width:60px; height:60px; opacity:0.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+            </div>
+            <h3>No hay grupos creados</h3>
+            <p>Crea tu primer grupo para comenzar a gestionar beneficiarios y asistencia.</p>
+            <button class="btn btn-primary" onclick="window.location.href='crear-grup.html'" style="margin-top: 15px;">+ Crear Primer Grupo</button>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { GruposLogic } from "./grupos-logic.js";
+
+        await GruposLogic.initUser();
+
+        const refreshView = async () => {
+            await GruposLogic.configurarVistaGrupos({
+                departmentSelectId: 'filtro-departamento',
+                activitySelectId: 'filtro-actividad',
+                totalDepartmentsId: 'total-departamentos',
+                totalActivitiesId: 'total-actividades'
+            });
+
+            await GruposLogic.cargarGrupos("tabla-grupos", {
+                departmentId: document.getElementById('filtro-departamento')?.value || '',
+                activityId: document.getElementById('filtro-actividad')?.value || ''
+            });
+        };
+
+        await refreshView();
+
+        document.getElementById('filtro-departamento')?.addEventListener('change', async () => {
+            await GruposLogic.configurarVistaGrupos({
+                departmentSelectId: 'filtro-departamento',
+                activitySelectId: 'filtro-actividad',
+                totalDepartmentsId: 'total-departamentos',
+                totalActivitiesId: 'total-actividades'
+            });
+            await refreshView();
+        });
+
+        document.getElementById('filtro-actividad')?.addEventListener('change', refreshView);
+        document.getElementById('btn-limpiar-filtros')?.addEventListener('click', async () => {
+            document.getElementById('filtro-departamento').value = '';
+            document.getElementById('filtro-actividad').value = '';
+            await refreshView();
+        });
+
+        setInterval(refreshView, 30000);
+    </script>
+    
+    <script type="module" src="sidebar.js"></script>
+</body>
+</html>

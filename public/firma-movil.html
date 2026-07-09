@@ -1,0 +1,307 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>NexeSocial – Firma Digital</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        html, body { height: 100%; overflow: hidden; background: #f0f9ff; font-family: -apple-system, 'Inter', sans-serif; color: #1e293b; }
+        #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+        .top-bar { background: white; border-bottom: 1px solid #e2e8f0; padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+        .logo-badge { background: #3b82f6; width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .logo-badge svg { width: 20px; height: 20px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .top-bar-title { font-size: 0.95rem; font-weight: 800; }
+        .top-bar-sub   { font-size: 0.72rem; color: #64748b; }
+        .info-strip { background: #eff6ff; border-bottom: 1px solid #bfdbfe; padding: 10px 16px; flex-shrink: 0; }
+        .info-strip p { font-size: 0.82rem; color: #1e40af; margin: 1px 0; }
+        .info-strip strong { color: #1e3a8a; }
+        .name-row { background: white; border-bottom: 1px solid #e2e8f0; padding: 10px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+        .name-row label { font-size: 0.78rem; font-weight: 700; color: #475569; flex-shrink: 0; white-space: nowrap; }
+        .name-row input { flex: 1; padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.88rem; font-family: inherit; color: #1e293b; background: #f8fafc; min-width: 0; }
+        .name-row input:not([readonly]):focus { outline: none; border-color: #3b82f6; background: white; }
+        .name-row input[readonly] { color: #1e293b; border-color: #e2e8f0; font-weight: 600; }
+        .canvas-wrap { flex: 1; position: relative; background: white; min-height: 0; }
+        .canvas-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #cbd5e1; pointer-events: none; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 0.88rem; }
+        .canvas-hint svg { width: 48px; height: 48px; stroke: #cbd5e1; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+        canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; display: block; }
+        .bottom-bar { background: white; border-top: 1px solid #e2e8f0; padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); display: flex; gap: 10px; flex-shrink: 0; }
+        button { padding: 13px 16px; border-radius: 12px; border: none; font-weight: 700; font-size: 0.92rem; cursor: pointer; font-family: inherit; flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; }
+        button svg { width: 18px; height: 18px; flex-shrink: 0; stroke-linecap: round; stroke-linejoin: round; }
+        .btn-clear   { background: #f1f5f9; color: #64748b; flex: 0 0 auto; padding: 13px 20px; }
+        .btn-clear svg { stroke: #64748b; fill: none; stroke-width: 2; }
+        .btn-confirm { background: #10b981; color: white; }
+        .btn-confirm svg { stroke: white; fill: none; stroke-width: 2.5; }
+        .btn-confirm:disabled { background: #a7f3d0; color: #065f46; cursor: not-allowed; }
+        .btn-confirm:disabled svg { stroke: #065f46; }
+        .overlay { position: fixed; inset: 0; background: white; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; padding: 24px; z-index: 100; text-align: center; }
+        .overlay.hidden { display: none; }
+        .spinner { width: 48px; height: 48px; border: 4px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .done-icon svg { width: 72px; height: 72px; stroke: #10b981; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+        .done-title { font-size: 1.4rem; font-weight: 800; color: #065f46; }
+        .done-sub   { color: #64748b; font-size: 0.9rem; }
+        .err-icon svg { width: 64px; height: 64px; stroke: #f59e0b; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+        .err-msg  { color: #ef4444; font-size: 0.9rem; }
+        .err-sub  { color: #94a3b8; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="top-bar">
+        <div class="logo-badge">
+            <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        </div>
+        <div>
+            <div class="top-bar-title">Firma Digital RMT</div>
+            <div class="top-bar-sub">NexeSocial · Manteniment Tècnic</div>
+        </div>
+    </div>
+
+    <div class="info-strip">
+        <p><strong>Equip:</strong> <span id="info-codi">-</span></p>
+        <p><span id="info-nom">-</span></p>
+    </div>
+
+    <div class="name-row">
+        <label>Signat per:</label>
+        <input type="text" id="nom-tecnic" placeholder="Nom i cognoms" autocomplete="name" autocorrect="off">
+    </div>
+
+    <div class="canvas-wrap" id="canvas-wrap">
+        <div class="canvas-hint" id="canvas-hint">
+            <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <div>Firma aquí</div>
+        </div>
+        <canvas id="sig-canvas"></canvas>
+    </div>
+
+    <div class="bottom-bar">
+        <button class="btn-clear" onclick="clearSig()">
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            Esborrar
+        </button>
+        <button class="btn-confirm" id="btn-confirm" onclick="confirmar()">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Confirmar Firma
+        </button>
+    </div>
+</div>
+
+<div class="overlay" id="scr-loading">
+    <div class="spinner"></div>
+    <p style="color:#64748b;">Carregant sessió...</p>
+</div>
+
+<div class="overlay hidden" id="scr-done">
+    <div class="done-icon">
+        <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
+    <p class="done-title">Firma enviada!</p>
+    <p class="done-sub">La teva firma s'ha registrat correctament.<br>Pots tancar aquesta pàgina.</p>
+</div>
+
+<div class="overlay hidden" id="scr-error">
+    <div class="err-icon">
+        <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <p class="err-msg" id="error-msg">Sessió no vàlida o expirada.</p>
+    <p class="err-sub">Si creus que és un error, demana un nou codi QR.</p>
+</div>
+
+<script type="module">
+    import { auth, db } from './firebase-config.js';
+    import SignatureFlow from './signature-flow.js';
+    import { signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+    import { doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    const params = new URLSearchParams(window.location.search);
+    const sid = params.get('sid');
+    const flow = params.get('flow') || 'legacy';
+    let sigPad = null;
+    let hasSig = false;
+    let unifiedSession = null;
+    let authReady = false;
+
+    signInAnonymously(auth)
+        .then(() => { authReady = true; })
+        .catch(() => { authReady = true; });
+
+    function showOverlay(id) {
+        ['scr-loading','scr-done','scr-error'].forEach(s => {
+            document.getElementById(s).classList.toggle('hidden', s !== id);
+        });
+    }
+
+    function resizeCanvas() {
+        const canvas = document.getElementById('sig-canvas');
+        const wrap   = document.getElementById('canvas-wrap');
+        const ratio  = window.devicePixelRatio || 1;
+        const w = wrap.offsetWidth, h = wrap.offsetHeight;
+        const data = sigPad && !sigPad.isEmpty() ? sigPad.toDataURL() : null;
+        canvas.width  = w * ratio;
+        canvas.height = h * ratio;
+        canvas.getContext('2d').scale(ratio, ratio);
+        if (sigPad) {
+            sigPad = new SignaturePad(canvas, { backgroundColor: 'rgba(0,0,0,0)', penColor: '#1e293b', minWidth: 1.5, maxWidth: 3 });
+            if (data) sigPad.fromDataURL(data, { ratio: 1, width: w, height: h });
+        }
+    }
+
+    async function init() {
+        if (!sid) {
+            document.getElementById('error-msg').textContent = 'URL no vàlida: falta el paràmetre de sessió.';
+            showOverlay('scr-error'); return;
+        }
+
+        let waited = 0;
+        while (!authReady && waited < 3000) {
+            await new Promise((r) => setTimeout(r, 100));
+            waited += 100;
+        }
+
+        if (!auth.currentUser) {
+            document.getElementById('error-msg').textContent = 'No s\'ha pogut validar la sessió. Torna a escanejar el QR.';
+            showOverlay('scr-error');
+            return;
+        }
+
+        if (flow === 'unified') {
+            return initUnified();
+        }
+
+        return initLegacy();
+    }
+
+    async function initUnified() {
+        try {
+            const session = await SignatureFlow.getMobileSession(sid);
+            unifiedSession = session;
+
+            if (session.status === 'done') {
+                showOverlay('scr-done');
+                return;
+            }
+
+            if (session.expiresAtISO && new Date(session.expiresAtISO).getTime() < Date.now()) {
+                document.getElementById('error-msg').textContent = 'Sessió expirada. Demana un nou QR.';
+                showOverlay('scr-error');
+                return;
+            }
+
+            document.querySelector('.top-bar-title').textContent = 'Firma Digital';
+            document.querySelector('.top-bar-sub').textContent = 'Flux unificat de firmes';
+            document.getElementById('info-codi').textContent = session.requestId || '-';
+            document.getElementById('info-nom').textContent = 'Solicitud de firma';
+
+            const nomInput = document.getElementById('nom-tecnic');
+            nomInput.value = session.signerName || '';
+            nomInput.readOnly = !!session.signerName;
+
+            showOverlay(null);
+            initSignaturePad();
+            window.addEventListener('resize', resizeCanvas);
+        } catch (e) {
+            document.getElementById('error-msg').textContent = 'Error de sessió: ' + e.message;
+            showOverlay('scr-error');
+        }
+    }
+
+    async function initLegacy() {
+        try {
+            const snap = await getDoc(doc(db, 'rmt_firmes', sid));
+            if (!snap.exists()) {
+                document.getElementById('error-msg').textContent = 'Sessió no trobada o expirada.';
+                showOverlay('scr-error'); return;
+            }
+            const data = snap.data();
+            if (data.status === 'done') { showOverlay('scr-done'); return; }
+
+            document.getElementById('info-codi').textContent = data.activCodi || '-';
+            document.getElementById('info-nom').textContent  = data.activNom  || '-';
+
+            const nomInput = document.getElementById('nom-tecnic');
+            if (data.signant) {
+                nomInput.value    = data.signant;
+                nomInput.readOnly = true;
+            }
+
+            showOverlay(null);
+
+            initSignaturePad();
+
+            window.addEventListener('resize', resizeCanvas);
+
+        } catch (e) {
+            document.getElementById('error-msg').textContent = 'Error de connexió: ' + e.message;
+            showOverlay('scr-error');
+        }
+    }
+
+    function initSignaturePad() {
+        const canvas = document.getElementById('sig-canvas');
+        const wrap = document.getElementById('canvas-wrap');
+        const ratio = window.devicePixelRatio || 1;
+
+        requestAnimationFrame(() => {
+            canvas.width = wrap.offsetWidth * ratio;
+            canvas.height = wrap.offsetHeight * ratio;
+            canvas.getContext('2d').scale(ratio, ratio);
+
+            sigPad = new SignaturePad(canvas, {
+                backgroundColor: 'rgba(0,0,0,0)',
+                penColor: '#1e293b',
+                minWidth: 1.5,
+                maxWidth: 3.5
+            });
+
+            canvas.addEventListener('pointerup', () => {
+                hasSig = !sigPad.isEmpty();
+                document.getElementById('canvas-hint').style.display = hasSig ? 'none' : '';
+            });
+        });
+    }
+
+    window.clearSig = function() {
+        if (sigPad) {
+            sigPad.clear();
+            hasSig = false;
+            document.getElementById('canvas-hint').style.display = '';
+        }
+    };
+
+    window.confirmar = async function() {
+        const nom = document.getElementById('nom-tecnic').value.trim();
+        if (!nom) { alert('El nom del tècnic és obligatori.'); document.getElementById('nom-tecnic').focus(); return; }
+        if (!sigPad || sigPad.isEmpty()) { alert('Realitza la firma abans de confirmar.'); return; }
+
+        const btn = document.getElementById('btn-confirm');
+        btn.disabled = true;
+
+        try {
+            if (flow === 'unified') {
+                await SignatureFlow.completeMobileSession(sid, {
+                    signerName: nom,
+                    signatureDataUrl: sigPad.toDataURL('image/png')
+                });
+            } else {
+                await updateDoc(doc(db, 'rmt_firmes', sid), {
+                    status:    'done',
+                    signatura: sigPad.toDataURL('image/png'),
+                    signant:   nom,
+                    signedAt:  new Date().toISOString()
+                });
+            }
+            showOverlay('scr-done');
+        } catch (e) {
+            btn.disabled = false;
+            alert('Error en enviar la firma: ' + e.message);
+        }
+    };
+
+    init();
+</script>
+</body>
+</html>

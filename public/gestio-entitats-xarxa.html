@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Gestio Entitats Xarxa - NexeSocial</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <style>
+        :root { --primary:#1d4ed8; --border:#dbe3ef; --bg:#f8fafc; --text:#0f172a; --muted:#64748b; }
+        * { box-sizing:border-box; }
+        body { margin:0; font-family:Inter,system-ui,sans-serif; background:var(--bg); color:var(--text); }
+        .main-wrapper { padding:26px; }
+        .head { display:flex; justify-content:space-between; align-items:flex-end; gap:12px; margin-bottom:18px; }
+        h1 { margin:0; font-size:1.45rem; }
+        .muted { color:var(--muted); font-size:.9rem; }
+        .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; margin-bottom:14px; }
+        .kpi { background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px 14px; }
+        .kpi strong { display:block; font-size:1.35rem; margin-top:4px; }
+        .card { background:#fff; border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:14px; }
+        .grid { display:grid; grid-template-columns:repeat(2,minmax(220px,1fr)); gap:10px; }
+        .field { display:flex; flex-direction:column; gap:6px; }
+        .field label { font-size:.8rem; color:#334155; font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
+        input, select, textarea, button { font:inherit; }
+        input, select, textarea { border:1px solid var(--border); border-radius:10px; padding:10px 12px; background:#fff; }
+        textarea { min-height:92px; resize:vertical; }
+        .full { grid-column:1/-1; }
+        .row { display:flex; gap:10px; }
+        .btn { border:none; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; }
+        .btn-primary { background:var(--primary); color:white; }
+        .btn-sec { background:#e2e8f0; color:#0f172a; }
+        table { width:100%; border-collapse:collapse; }
+        th, td { border-bottom:1px solid #eef2f7; text-align:left; padding:10px 8px; font-size:.88rem; vertical-align:top; }
+        th { color:#475569; font-size:.78rem; text-transform:uppercase; letter-spacing:.4px; }
+        .tag { display:inline-block; border-radius:999px; padding:3px 9px; font-size:.72rem; font-weight:800; }
+        .tag.ok { background:#dcfce7; color:#166534; }
+        .tag.warn { background:#fee2e2; color:#991b1b; }
+        @media (max-width: 860px) { .grid { grid-template-columns:1fr; } .main-wrapper { padding:16px; } }
+    </style>
+</head>
+<body>
+    <main class="main-wrapper">
+        <div class="head">
+            <div>
+                <h1>Gestio d'Entitats i Xarxa</h1>
+                <div class="muted">Registre de serveis, associacions i aliances, amb professional de referencia i notes de cooperacio.</div>
+            </div>
+        </div>
+
+        <section class="kpis">
+            <div class="kpi"><span class="muted">Totals</span><strong id="kpi-total">0</strong></div>
+            <div class="kpi"><span class="muted">Actives</span><strong id="kpi-active">0</strong></div>
+            <div class="kpi"><span class="muted">Amb professional</span><strong id="kpi-linked">0</strong></div>
+        </section>
+
+        <section class="card">
+            <form id="entity-form">
+                <input type="hidden" id="entity-id">
+                <div class="grid">
+                    <div class="field"><label>Nom *</label><input id="f-name" required></div>
+                    <div class="field"><label>Tipus</label><select id="f-type"><option>Entitat</option><option>Associacio</option><option>Servei public</option><option>Servei privat</option><option>Altres</option></select></div>
+                    <div class="field"><label>Ambit</label><input id="f-scope" placeholder="Infancia, salut, ocupacio..."></div>
+                    <div class="field"><label>Professional referencia</label><input id="f-pro" placeholder="Nom i carrec"></div>
+                    <div class="field"><label>Telefon</label><input id="f-phone"></div>
+                    <div class="field"><label>Email</label><input id="f-email" type="email"></div>
+                    <div class="field"><label>Estat</label><select id="f-status"><option value="Activa">Activa</option><option value="Inactiva">Inactiva</option></select></div>
+                    <div class="field full"><label>Notes cooperacio</label><textarea id="f-notes" placeholder="Acords, seguiment i observacions de treball en xarxa"></textarea></div>
+                </div>
+                <div class="row" style="margin-top:10px;">
+                    <button class="btn btn-primary" type="submit">Guardar entitat</button>
+                    <button class="btn btn-sec" type="button" id="btn-reset">Netejar</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Entitat</th>
+                        <th>Tipus / Ambit</th>
+                        <th>Professional</th>
+                        <th>Contacte</th>
+                        <th>Estat</th>
+                        <th>Accions</th>
+                    </tr>
+                </thead>
+                <tbody id="entity-tbody">
+                    <tr><td colspan="6" class="muted">Carregant...</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="security-check.js"></script>
+    <script type="module">
+        import { db } from './firebase-config.js';
+        import { collection, getDocs, doc, setDoc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        await window.checkModuleAccess('NexeAdmin');
+
+        const STATE = { rows: [] };
+        const $ = (id) => document.getElementById(id);
+
+        function esc(v = '') {
+            return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function mkId() {
+            return 'ENT-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+        }
+
+        function resetForm() {
+            $('entity-id').value = '';
+            $('entity-form').reset();
+            $('f-status').value = 'Activa';
+        }
+
+        function fillForm(row) {
+            $('entity-id').value = row.id || '';
+            $('f-name').value = row.name || '';
+            $('f-type').value = row.type || 'Entitat';
+            $('f-scope').value = row.scope || '';
+            $('f-pro').value = row.professionalRef || '';
+            $('f-phone').value = row.phone || '';
+            $('f-email').value = row.email || '';
+            $('f-status').value = row.status || 'Activa';
+            $('f-notes').value = row.cooperationNotes || '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function render() {
+            const rows = STATE.rows.slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            $('kpi-total').textContent = String(rows.length);
+            $('kpi-active').textContent = String(rows.filter(r => r.status !== 'Inactiva').length);
+            $('kpi-linked').textContent = String(rows.filter(r => (r.professionalRef || '').trim()).length);
+
+            const tb = $('entity-tbody');
+            if (!rows.length) {
+                tb.innerHTML = '<tr><td colspan="6" class="muted">Sense entitats registrades.</td></tr>';
+                return;
+            }
+            tb.innerHTML = rows.map((r) => `
+                <tr>
+                    <td><strong>${esc(r.name)}</strong><div class="muted">${esc((r.cooperationNotes || '').slice(0, 70))}${(r.cooperationNotes || '').length > 70 ? '...' : ''}</div></td>
+                    <td>${esc(r.type || '-')}<div class="muted">${esc(r.scope || '-')}</div></td>
+                    <td>${esc(r.professionalRef || '-')}</td>
+                    <td>${esc(r.phone || '-')}<div class="muted">${esc(r.email || '-')}</div></td>
+                    <td><span class="tag ${r.status === 'Inactiva' ? 'warn' : 'ok'}">${esc(r.status || 'Activa')}</span></td>
+                    <td>
+                        <button class="btn btn-sec" type="button" data-act="edit" data-id="${esc(r.id)}" style="padding:6px 10px;">Editar</button>
+                        <button class="btn btn-sec" type="button" data-act="del" data-id="${esc(r.id)}" style="padding:6px 10px;background:#fee2e2;color:#991b1b;">Eliminar</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadAll() {
+            const snap = await getDocs(collection(db, 'entitats_xarxa'));
+            STATE.rows = snap.docs.map((d) => ({ id: d.id, ...(d.data() || {}) }));
+            render();
+        }
+
+        async function saveForm(event) {
+            event.preventDefault();
+            const id = $('entity-id').value || mkId();
+            const payload = {
+                id,
+                name: $('f-name').value.trim(),
+                type: $('f-type').value,
+                scope: $('f-scope').value.trim(),
+                professionalRef: $('f-pro').value.trim(),
+                phone: $('f-phone').value.trim(),
+                email: $('f-email').value.trim(),
+                status: $('f-status').value,
+                cooperationNotes: $('f-notes').value.trim(),
+                updatedAt: serverTimestamp()
+            };
+            if (!payload.name) return;
+            await setDoc(doc(db, 'entitats_xarxa', id), payload, { merge: true });
+            await loadAll();
+            resetForm();
+        }
+
+        async function deleteRow(id) {
+            if (!id) return;
+            if (!confirm('Eliminar aquesta entitat de la xarxa?')) return;
+            await deleteDoc(doc(db, 'entitats_xarxa', id));
+            await loadAll();
+        }
+
+        $('entity-form').addEventListener('submit', saveForm);
+        $('btn-reset').addEventListener('click', resetForm);
+        $('entity-tbody').addEventListener('click', async (e) => {
+            const target = e.target.closest('button[data-id]');
+            if (!target) return;
+            const id = target.dataset.id;
+            const row = STATE.rows.find((x) => String(x.id) === String(id));
+            if (target.dataset.act === 'edit' && row) fillForm(row);
+            if (target.dataset.act === 'del') await deleteRow(id);
+        });
+
+        await loadAll();
+        resetForm();
+    </script>
+    <script type="module" src="sidebar.js"></script>
+</body>
+</html>

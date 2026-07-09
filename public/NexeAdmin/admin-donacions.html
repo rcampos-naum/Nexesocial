@@ -1,0 +1,1148 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" type="image/svg+xml" href="../img/nexeadmin-icon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary:#0f172a; --accent:#3b82f6; --success:#10b981;
+            --warning:#f59e0b; --danger:#ef4444; --text-main:#1e293b;
+            --text-muted:#64748b; --bg-body:#f8fafc; --border:#e2e8f0;
+        }
+        body { margin:0; background:var(--bg-body); color:var(--text-main); font-family:'Inter',sans-serif; display:flex; min-height:100vh; }
+
+        /* ── LAYOUT ──────────────────────────────────────────────── */
+        .admin-sidebar { width:260px; }
+        .main-content { margin-left:var(--admin-sidebar-width,270px); flex-grow:1; padding:40px 50px; max-width:1400px; }
+
+        /* ── KPI GRID ────────────────────────────────────────────── */
+        .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+        .kpi-card { background:white; border:1px solid var(--border); border-radius:14px; padding:20px; }
+        .kpi-label { font-size:0.68rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; letter-spacing:.5px; }
+        .kpi-value { font-size:1.7rem; font-weight:800; color:var(--primary); line-height:1; }
+        .kpi-sub { font-size:0.75rem; color:var(--text-muted); margin-top:5px; }
+
+        /* ── TABS ────────────────────────────────────────────────── */
+        .tab-nav { display:flex; gap:4px; background:white; border:1px solid var(--border); border-radius:12px; padding:6px; margin-bottom:24px; width:fit-content; }
+        .tab-btn { padding:9px 20px; border-radius:8px; border:none; background:transparent; font-family:inherit; font-size:0.85rem; font-weight:600; color:var(--text-muted); cursor:pointer; transition:.15s; }
+        .tab-btn.active { background:var(--primary); color:white; }
+        .tab-panel { display:none; }
+        .tab-panel.active { display:block; }
+
+        /* ── TABLE CARD ──────────────────────────────────────────── */
+        .table-card { background:white; border-radius:14px; border:1px solid var(--border); overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.04); margin-bottom:28px; }
+        .table-header { padding:16px 22px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); gap:12px; flex-wrap:wrap; }
+        table { width:100%; border-collapse:collapse; }
+        th { background:#f8fafc; text-align:left; padding:11px 14px; font-size:0.65rem; font-weight:800; text-transform:uppercase; color:var(--text-muted); border-bottom:1px solid var(--border); letter-spacing:.5px; white-space:nowrap; }
+        td { padding:13px 14px; font-size:0.85rem; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+        tr:last-child td { border-bottom:none; }
+        tr:hover td { background:#fafafa; }
+        .empty-row td { text-align:center; color:var(--text-muted); padding:50px; }
+
+        /* ── BADGES ──────────────────────────────────────────────── */
+        .badge { padding:4px 10px; border-radius:20px; font-size:0.68rem; font-weight:700; text-transform:uppercase; white-space:nowrap; }
+        .badge-fisica { background:#dbeafe; color:#1e40af; }
+        .badge-juridica { background:#ede9fe; color:#5b21b6; }
+        .badge-donant { background:#dcfce7; color:#166534; }
+        .badge-soci { background:#fff7ed; color:#9a3412; }
+        .badge-ambdos { background:#fef3c7; color:#92400e; }
+        .badge-diner { background:#dcfce7; color:#166534; }
+        .badge-especie { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
+        .badge-actiu { background:#dcfce7; color:#166534; }
+        .badge-baixa { background:#fee2e2; color:#991b1b; }
+        .badge-certif-ok { background:#dcfce7; color:#166534; }
+        .badge-certif-pend { background:#fef3c7; color:#92400e; }
+
+        /* ── IMPORT CELL ─────────────────────────────────────────── */
+        .import-cell { font-family:'Monaco',monospace; font-weight:700; color:var(--primary); }
+
+        /* ── FILTERS ─────────────────────────────────────────────── */
+        .filters-bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        .filter-input, .filter-select { padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:0.85rem; background:white; color:var(--text-main); }
+        .filter-input:focus, .filter-select:focus { outline:none; border-color:var(--accent); }
+
+        /* ── CERT CARDS (Certificates tab) ───────────────────────── */
+        .cert-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:16px; margin-bottom:20px; }
+        .cert-card { background:white; border:1px solid var(--border); border-radius:14px; padding:22px; transition:.15s; }
+        .cert-card:hover { border-color:#93c5fd; box-shadow:0 4px 12px rgba(59,130,246,.1); }
+        .cert-card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+        .cert-card-name { font-weight:700; font-size:1rem; color:var(--primary); margin-bottom:2px; }
+        .cert-card-nif { font-size:0.78rem; color:var(--text-muted); }
+        .cert-card-amount { font-size:1.4rem; font-weight:800; color:var(--success); }
+        .cert-card-body { font-size:0.8rem; color:var(--text-muted); margin-bottom:14px; }
+        .cert-card-actions { display:flex; gap:8px; }
+
+        /* ── BTNS ────────────────────────────────────────────────── */
+        .btn { border:none; padding:10px 18px; border-radius:10px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:7px; font-size:0.875rem; transition:.15s; }
+        .btn-primary { background:var(--accent); color:white; }
+        .btn-primary:hover { background:#2563eb; }
+        .btn-success { background:var(--success); color:white; }
+        .btn-success:hover { background:#059669; }
+        .btn-secondary { background:#f1f5f9; color:var(--text-main); }
+        .btn-secondary:hover { background:#e2e8f0; }
+        .btn-danger { background:var(--danger); color:white; }
+        .btn-danger:hover { background:#dc2626; }
+        .btn-sm { padding:6px 12px; font-size:0.78rem; border-radius:7px; }
+        .btn:disabled { opacity:.5; cursor:not-allowed; }
+        .icon-btn { background:none; border:none; cursor:pointer; padding:5px; border-radius:6px; color:var(--text-muted); transition:.15s; }
+        .icon-btn:hover { background:#f1f5f9; color:var(--text-main); }
+        .icon-btn svg { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+
+        /* ── MODAL ───────────────────────────────────────────────── */
+        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,.8); z-index:5000; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+        .modal-overlay.open { display:flex; }
+        .modal-box { background:white; border-radius:20px; width:95%; max-width:640px; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px rgba(0,0,0,.3); }
+        .modal-box.wide { max-width:760px; }
+        .modal-head { padding:22px 28px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:white; z-index:1; }
+        .modal-head h2 { margin:0; font-size:1.1rem; font-weight:800; }
+        .modal-body { padding:22px 28px 28px; }
+
+        /* ── FORM ────────────────────────────────────────────────── */
+        .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .form-grid.cols-3 { grid-template-columns:1fr 1fr 1fr; }
+        .form-group { display:flex; flex-direction:column; }
+        .form-group.full { grid-column:span 2; }
+        .form-group.full3 { grid-column:span 3; }
+        label { font-size:0.65rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:5px; letter-spacing:.5px; }
+        .form-control { padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:0.875rem; box-sizing:border-box; width:100%; transition:border-color .2s; }
+        .form-control:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,246,.1); }
+        select.form-control { cursor:pointer; }
+        textarea.form-control { resize:vertical; min-height:70px; }
+        .section-divider { font-size:0.65rem; font-weight:800; text-transform:uppercase; color:var(--text-muted); letter-spacing:1px; border-bottom:1px solid var(--border); padding-bottom:8px; margin:18px 0 14px; grid-column:span 2; }
+        .section-divider.cols3 { grid-column:span 3; }
+
+        /* ── CONDITIONAL FIELDS ──────────────────────────────────── */
+        .field-fisica, .field-juridica { display:none; }
+        .field-diner, .field-especie { display:none; }
+        .field-soci { display:none; }
+
+        /* ── PRINT CERTIFICATE ───────────────────────────────────── */
+        @media screen { #print-zone { display:none; } }
+        @media print {
+            body > * { display:none !important; }
+            #print-zone { display:block !important; position:static; width:100%; }
+            #print-zone * { font-family:'Times New Roman',serif; }
+            .cert-print { padding:40px; max-width:800px; margin:0 auto; }
+            .cert-print-logo { font-size:1.3rem; font-weight:bold; text-transform:uppercase; letter-spacing:2px; margin-bottom:6px; }
+            .cert-print-entity { font-size:0.85rem; color:#555; margin-bottom:30px; border-bottom:2px solid #000; padding-bottom:16px; }
+            .cert-print-title { font-size:1.4rem; font-weight:bold; text-align:center; text-transform:uppercase; margin:30px 0; letter-spacing:3px; }
+            .cert-print-num { text-align:center; font-size:0.85rem; color:#555; margin-bottom:30px; }
+            .cert-print-body { font-size:0.95rem; line-height:1.8; margin-bottom:24px; text-align:justify; }
+            .cert-print-table { width:100%; border-collapse:collapse; margin:20px 0; font-size:0.9rem; }
+            .cert-print-table th { border:1px solid #ccc; padding:8px 12px; background:#f5f5f5; font-weight:bold; text-align:left; }
+            .cert-print-table td { border:1px solid #ccc; padding:8px 12px; }
+            .cert-print-total { text-align:right; font-weight:bold; font-size:1rem; margin-top:12px; border-top:2px solid #000; padding-top:10px; }
+            .cert-print-legal { font-size:0.78rem; color:#444; margin-top:30px; border-top:1px solid #ccc; padding-top:16px; line-height:1.6; }
+            .cert-print-sign { margin-top:60px; display:flex; justify-content:space-between; }
+            .cert-print-sign-box { text-align:center; }
+            .cert-print-sign-line { border-top:1px solid #000; width:200px; margin:0 auto 8px; padding-top:8px; font-size:0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+<aside class="admin-sidebar"></aside>
+
+<main class="main-content">
+
+    <!-- HEADER -->
+    <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">
+        <div>
+            <h1 style="margin:0;font-weight:800;">Donacions i Socis</h1>
+            <p style="color:var(--text-muted);margin:5px 0 0 0;">Gestió de donants, socis, donacions i certificats fiscals</p>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button class="btn btn-secondary" onclick="window.openDonacioModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Nova Donació
+            </button>
+            <button class="btn btn-primary" onclick="window.openDonantModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Nou Donant / Soci
+            </button>
+        </div>
+    </header>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Donants Actius</div>
+            <div class="kpi-value" id="kpi-donants">—</div>
+            <div class="kpi-sub">persones i empreses</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Socis Actius</div>
+            <div class="kpi-value" id="kpi-socis">—</div>
+            <div class="kpi-sub">membres amb quota</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Donacions Any Actual</div>
+            <div class="kpi-value" id="kpi-import" style="color:var(--success)">—</div>
+            <div class="kpi-sub" id="kpi-import-sub">import dinerari total</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Certificats Pendents</div>
+            <div class="kpi-value" id="kpi-certif" style="color:var(--warning)">—</div>
+            <div class="kpi-sub">any anterior sense emetre</div>
+        </div>
+    </div>
+
+    <!-- TAB NAV -->
+    <script>
+    function switchTab(tab) {
+        ['donants','donacions','certificats'].forEach(function(t) {
+            document.getElementById('panel-' + t).classList.toggle('active', t === tab);
+            document.getElementById('tab-btn-' + t).classList.toggle('active', t === tab);
+        });
+    }
+    </script>
+    <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('donants')" id="tab-btn-donants">Donants i Socis</button>
+        <button class="tab-btn" onclick="switchTab('donacions')" id="tab-btn-donacions">Donacions</button>
+        <button class="tab-btn" onclick="switchTab('certificats')" id="tab-btn-certificats">Certificats Fiscals</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 1: DONANTS I SOCIS
+    ═══════════════════════════════════════════════════════ -->
+    <div class="tab-panel active" id="panel-donants">
+        <div class="table-card">
+            <div class="table-header">
+                <strong style="font-size:.95rem;">Registre de Donants i Socis</strong>
+                <div class="filters-bar">
+                    <input class="filter-input" id="f-cerca-donant" placeholder="Cerca nom, NIF, email…" oninput="renderDonants()" style="width:220px;">
+                    <select class="filter-select" id="f-tipus-donant" onchange="renderDonants()">
+                        <option value="">Tots els tipus</option>
+                        <option value="fisica">Persona Física</option>
+                        <option value="juridica">Empresa / Entitat</option>
+                    </select>
+                    <select class="filter-select" id="f-relacio" onchange="renderDonants()">
+                        <option value="">Totes les relacions</option>
+                        <option value="donant">Donant Puntual</option>
+                        <option value="soci">Soci</option>
+                        <option value="ambdos">Ambdós</option>
+                    </select>
+                </div>
+            </div>
+            <div id="taula-donants">
+                <table>
+                    <thead><tr>
+                        <th>Nom / Raó Social</th>
+                        <th>NIF / CIF</th>
+                        <th>Tipus</th>
+                        <th>Relació</th>
+                        <th>Email</th>
+                        <th>Quota Soci</th>
+                        <th>Estat</th>
+                        <th>Accions</th>
+                    </tr></thead>
+                    <tbody id="tbody-donants"><tr class="empty-row"><td colspan="8">Carregant…</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 2: DONACIONS
+    ═══════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="panel-donacions">
+        <div class="table-card">
+            <div class="table-header">
+                <strong style="font-size:.95rem;">Registre de Donacions</strong>
+                <div class="filters-bar">
+                    <input class="filter-input" id="f-cerca-donacio" placeholder="Cerca donant, descripció…" oninput="renderDonacions()" style="width:200px;">
+                    <select class="filter-select" id="f-any-donacio" onchange="renderDonacions()">
+                        <!-- filled dynamically -->
+                    </select>
+                    <select class="filter-select" id="f-tipus-donacio" onchange="renderDonacions()">
+                        <option value="">Tots els tipus</option>
+                        <option value="dineraria">Dinerària</option>
+                        <option value="en_especie">En Espècie</option>
+                    </select>
+                </div>
+            </div>
+            <div id="taula-donacions">
+                <table>
+                    <thead><tr>
+                        <th>Data</th>
+                        <th>Donant</th>
+                        <th>Tipus</th>
+                        <th>Import / Valoració</th>
+                        <th>Descripció</th>
+                        <th>Any Fiscal</th>
+                        <th>Certificat</th>
+                        <th>Accions</th>
+                    </tr></thead>
+                    <tbody id="tbody-donacions"><tr class="empty-row"><td colspan="8">Carregant…</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 3: CERTIFICATS FISCALS
+    ═══════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="panel-certificats">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+            <div>
+                <h3 style="margin:0;font-size:1rem;font-weight:800;">Certificats de Donació per Any Fiscal</h3>
+                <p style="margin:4px 0 0;color:var(--text-muted);font-size:0.85rem;">Genera i emet certificats per a la Declaració de la Renda (IRPF) i Impost de Societats (IS)</p>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;">
+                <label style="margin:0;text-transform:none;font-size:0.85rem;font-weight:600;color:var(--text-main);">Any:</label>
+                <select class="filter-select" id="certif-any" onchange="renderCertificats()" style="font-weight:700;">
+                    <!-- filled dynamically -->
+                </select>
+            </div>
+        </div>
+        <div class="cert-grid" id="cert-grid">
+            <div style="color:var(--text-muted);font-size:0.9rem;grid-column:span 4;">Carregant dades…</div>
+        </div>
+    </div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL: DONANT / SOCI
+═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-donant">
+    <div class="modal-box wide">
+        <div class="modal-head">
+            <h2 id="modal-donant-title">Nou Donant / Soci</h2>
+            <button class="icon-btn" onclick="closeDonantModal()">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="form-donant" onsubmit="saveDonant(event)">
+                <input type="hidden" id="donant-id">
+                <div class="form-grid">
+
+                    <div class="form-group full">
+                        <label>Tipus de Persona *</label>
+                        <select class="form-control" id="d-tipus-persona" onchange="updatePersonaFields()" required>
+                            <option value="">— Selecciona —</option>
+                            <option value="fisica">Persona Física</option>
+                            <option value="juridica">Empresa / Entitat Jurídica</option>
+                        </select>
+                    </div>
+
+                    <!-- PERSONA FÍSICA -->
+                    <div class="form-group field-fisica" id="f-nom-wrap">
+                        <label>Nom *</label>
+                        <input class="form-control" id="d-nom" type="text" placeholder="Nom">
+                    </div>
+                    <div class="form-group field-fisica" id="f-cognoms-wrap">
+                        <label>Cognoms *</label>
+                        <input class="form-control" id="d-cognoms" type="text" placeholder="Primer i segon cognom">
+                    </div>
+
+                    <!-- PERSONA JURÍDICA -->
+                    <div class="form-group full field-juridica" id="f-raosocial-wrap">
+                        <label>Raó Social *</label>
+                        <input class="form-control" id="d-rao-social" type="text" placeholder="Nom de l'empresa o entitat">
+                    </div>
+
+                    <div class="form-group">
+                        <label>NIF / CIF *</label>
+                        <input class="form-control" id="d-nif" type="text" placeholder="12345678A / B12345678">
+                    </div>
+                    <div class="form-group">
+                        <label>Relació *</label>
+                        <select class="form-control" id="d-relacio" onchange="updateSociFields()" required>
+                            <option value="">— Selecciona —</option>
+                            <option value="donant">Donant Puntual</option>
+                            <option value="soci">Soci / Membre</option>
+                            <option value="ambdos">Donant + Soci</option>
+                        </select>
+                    </div>
+
+                    <!-- SOCI fields -->
+                    <div class="form-group field-soci">
+                        <label>Quota Anual (€)</label>
+                        <input class="form-control" id="d-quota" type="number" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="form-group field-soci">
+                        <label>Data Alta Soci</label>
+                        <input class="form-control" id="d-data-alta" type="date">
+                    </div>
+
+                    <div class="section-divider">Adreça Fiscal</div>
+
+                    <div class="form-group" style="grid-column:span 2;display:grid;grid-template-columns:1fr auto;gap:12px;">
+                        <div class="form-group">
+                            <label>Carrer / Via *</label>
+                            <input class="form-control" id="d-carrer" type="text" placeholder="Carrer Major, Avinguda…">
+                        </div>
+                        <div class="form-group" style="width:90px;">
+                            <label>Núm.</label>
+                            <input class="form-control" id="d-numero" type="text" placeholder="12">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Pis / Porta</label>
+                        <input class="form-control" id="d-pis" type="text" placeholder="3r 2a">
+                    </div>
+                    <div class="form-group">
+                        <label>Codi Postal *</label>
+                        <input class="form-control" id="d-cp" type="text" placeholder="08001">
+                    </div>
+                    <div class="form-group">
+                        <label>Municipi *</label>
+                        <input class="form-control" id="d-municipi" type="text" placeholder="Barcelona">
+                    </div>
+                    <div class="form-group">
+                        <label>Província *</label>
+                        <input class="form-control" id="d-provincia" type="text" placeholder="Barcelona">
+                    </div>
+                    <div class="form-group">
+                        <label>País</label>
+                        <input class="form-control" id="d-pais" type="text" value="Espanya">
+                    </div>
+
+                    <div class="section-divider">Contacte</div>
+
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input class="form-control" id="d-email" type="email" placeholder="email@exemple.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Telèfon</label>
+                        <input class="form-control" id="d-telefon" type="tel" placeholder="612 345 678">
+                    </div>
+                    <div class="form-group">
+                        <label>Estat</label>
+                        <select class="form-control" id="d-estat">
+                            <option value="Actiu">Actiu</option>
+                            <option value="Baixa">Baixa</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Persona de Contacte <small style="text-transform:none;">(empreses)</small></label>
+                        <input class="form-control" id="d-contacte" type="text" placeholder="Nom del responsable">
+                    </div>
+                    <div class="form-group full">
+                        <label>Observacions</label>
+                        <textarea class="form-control" id="d-notes" placeholder="Notes internes…"></textarea>
+                    </div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:22px;padding-top:16px;border-top:1px solid var(--border);">
+                    <button type="button" class="btn btn-secondary" onclick="closeDonantModal()">Cancel·lar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-donant">Desar Donant</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL: DONACIÓ
+═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-donacio">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h2 id="modal-donacio-title">Nova Donació</h2>
+            <button class="icon-btn" onclick="closeDonacioModal()">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="form-donacio" onsubmit="saveDonacio(event)">
+                <input type="hidden" id="donacio-id">
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label>Donant *</label>
+                        <select class="form-control" id="dn-donant" required onchange="autofillTipusCertif()">
+                            <option value="">— Selecciona un donant —</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Data Donació *</label>
+                        <input class="form-control" id="dn-data" type="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Any Fiscal *</label>
+                        <input class="form-control" id="dn-any" type="number" min="2000" max="2099" required>
+                    </div>
+                    <div class="form-group full">
+                        <label>Tipus de Donació *</label>
+                        <select class="form-control" id="dn-tipus" required onchange="updateDonacioFields()">
+                            <option value="">— Selecciona —</option>
+                            <option value="dineraria">Dinerària (diners en efectiu, transferència…)</option>
+                            <option value="en_especie">En Espècie (béns, productes, serveis…)</option>
+                        </select>
+                    </div>
+
+                    <!-- DINERARIA fields -->
+                    <div class="form-group field-diner">
+                        <label>Import (€) *</label>
+                        <input class="form-control" id="dn-import" type="number" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="form-group field-diner">
+                        <label>Mètode de Pagament</label>
+                        <select class="form-control" id="dn-metode">
+                            <option value="Transferència">Transferència Bancària</option>
+                            <option value="Efectiu">Efectiu</option>
+                            <option value="Targeta">Targeta</option>
+                            <option value="Xec">Xec</option>
+                        </select>
+                    </div>
+
+                    <!-- EN ESPECIE fields -->
+                    <div class="form-group full field-especie">
+                        <label>Descripció dels Béns / Serveis *</label>
+                        <textarea class="form-control" id="dn-bens" placeholder="Descriu els béns, productes o serveis donats…"></textarea>
+                    </div>
+                    <div class="form-group field-especie">
+                        <label>Valoració Estimada (€)</label>
+                        <input class="form-control" id="dn-valoracio" type="number" step="0.01" min="0" placeholder="Valor de mercat aproximat">
+                    </div>
+
+                    <div class="form-group full">
+                        <label>Notes internes</label>
+                        <textarea class="form-control" id="dn-notes" placeholder="Observacions, referència de transferència…" style="min-height:55px;"></textarea>
+                    </div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:22px;padding-top:16px;border-top:1px solid var(--border);">
+                    <button type="button" class="btn btn-secondary" onclick="closeDonacioModal()">Cancel·lar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-donacio">Registrar Donació</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PRINT CERTIFICATE ZONE
+═══════════════════════════════════════════════════════ -->
+<div id="print-zone">
+    <div class="cert-print">
+        <div class="cert-print-logo" id="cp-entitat-nom">NEXESOCIAL</div>
+        <div class="cert-print-entity" id="cp-entitat-info"></div>
+        <div class="cert-print-title">CERTIFICAT DE DONACIÓ</div>
+        <div class="cert-print-num" id="cp-num"></div>
+        <div class="cert-print-body" id="cp-body"></div>
+        <table class="cert-print-table">
+            <thead><tr>
+                <th>Data</th><th>Tipus</th><th>Descripció / Concepte</th><th style="text-align:right;">Import / Valoració</th>
+            </tr></thead>
+            <tbody id="cp-tbody"></tbody>
+        </table>
+        <div class="cert-print-total" id="cp-total"></div>
+        <div class="cert-print-body" id="cp-body2"></div>
+        <div class="cert-print-legal" id="cp-legal"></div>
+        <div class="cert-print-sign">
+            <div class="cert-print-sign-box">
+                <div class="cert-print-sign-line" id="cp-sign-lloc">Lloc i Data</div>
+                <div style="font-size:0.8rem;">Lloc i data</div>
+            </div>
+            <div class="cert-print-sign-box">
+                <div class="cert-print-sign-line">Signatura del/la President/a</div>
+                <div style="font-size:0.8rem;">Representant legal de l'entitat</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     TOAST
+═══════════════════════════════════════════════════════ -->
+<div id="toast" style="position:fixed;bottom:28px;right:28px;background:var(--primary);color:white;padding:12px 22px;border-radius:12px;font-size:0.875rem;font-weight:600;z-index:9999;opacity:0;transform:translateY(10px);transition:.3s;pointer-events:none;"></div>
+
+<script src="../security-check.js"></script>
+<script type="module">await window.checkModuleAccess('NexeAdmin');</script>
+<script type="module">
+    import { db } from '../firebase-config.js';
+    import {
+        collection, onSnapshot, addDoc, updateDoc, deleteDoc,
+        doc, serverTimestamp, query, orderBy
+    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    // ── STATE ─────────────────────────────────────────────────────────────
+    let _donants = [];
+    let _donacions = [];
+    const _unsubs = [];
+    let _editDonantId = null;
+    let _editDonacioId = null;
+
+    // ── RT LISTENERS ──────────────────────────────────────────────────────
+    function loadDonants() {
+        return new Promise(resolve => {
+            let done = false;
+            const u = onSnapshot(query(collection(db, 'donants'), orderBy('createdAt', 'desc')), snap => {
+                _donants = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                if (!done) { done = true; resolve(); }
+                else { renderKPIs(); renderDonants(); renderCertificats(); populateDonantSelect(); }
+            }, e => { console.warn(e); if (!done) { done = true; resolve(); } });
+            _unsubs.push(u);
+        });
+    }
+
+    function loadDonacions() {
+        return new Promise(resolve => {
+            let done = false;
+            const u = onSnapshot(query(collection(db, 'donacions'), orderBy('data', 'desc')), snap => {
+                _donacions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                if (!done) { done = true; resolve(); }
+                else { renderKPIs(); renderDonacions(); renderCertificats(); fillYearFilters(); }
+            }, e => { console.warn(e); if (!done) { done = true; resolve(); } });
+            _unsubs.push(u);
+        });
+    }
+
+    window.addEventListener('beforeunload', () => _unsubs.forEach(u => u()));
+
+    // ── KPIs ──────────────────────────────────────────────────────────────
+    function renderKPIs() {
+        const thisYear = new Date().getFullYear();
+        const prevYear = thisYear - 1;
+
+        const actius = _donants.filter(d => d.estat !== 'Baixa').length;
+        const socis = _donants.filter(d => d.estat !== 'Baixa' && (d.tipus_relacio === 'soci' || d.tipus_relacio === 'ambdos')).length;
+
+        const importAny = _donacions
+            .filter(d => d.any_fiscal === thisYear && d.tipus === 'dineraria')
+            .reduce((s, d) => s + (Number(d.import) || 0), 0);
+
+        const certifPend = _donacions.filter(d => d.any_fiscal === prevYear && d.tipus === 'dineraria' && !d.certif_emes).length;
+
+        document.getElementById('kpi-donants').textContent = actius;
+        document.getElementById('kpi-socis').textContent = socis;
+        document.getElementById('kpi-import').textContent = formatEur(importAny);
+        document.getElementById('kpi-import-sub').textContent = `any ${thisYear} — dinerari`;
+        document.getElementById('kpi-certif').textContent = certifPend;
+    }
+
+    // ── TAB SWITCH (defined as plain script above)
+    window.switchTab = window.switchTab;
+
+    // ── YEAR FILTERS ──────────────────────────────────────────────────────
+    function fillYearFilters() {
+        const years = [...new Set(_donacions.map(d => d.any_fiscal).filter(Boolean))].sort((a, b) => b - a);
+        if (!years.length) years.push(new Date().getFullYear());
+
+        ['f-any-donacio', 'certif-any'].forEach(id => {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            const cur = sel.value;
+            const defaultYear = id === 'certif-any' ? new Date().getFullYear() - 1 : '';
+            const allOpt = id === 'f-any-donacio' ? '<option value="">Tots els anys</option>' : '';
+            sel.innerHTML = allOpt + years.map(y => `<option value="${y}">${y}</option>`).join('');
+            if (cur && years.includes(Number(cur))) sel.value = cur;
+            else sel.value = id === 'certif-any' ? String(new Date().getFullYear() - 1) : '';
+        });
+    }
+
+    // ── RENDER DONANTS ────────────────────────────────────────────────────
+    window.renderDonants = function() {
+        const cerca = (document.getElementById('f-cerca-donant').value || '').toLowerCase();
+        const filtTipus = document.getElementById('f-tipus-donant').value;
+        const filtRelacio = document.getElementById('f-relacio').value;
+
+        let list = _donants.filter(d => {
+            const nom = nomComplet(d).toLowerCase();
+            const nif = (d.nif_cif || '').toLowerCase();
+            const email = (d.email || '').toLowerCase();
+            if (cerca && !nom.includes(cerca) && !nif.includes(cerca) && !email.includes(cerca)) return false;
+            if (filtTipus && d.tipus_persona !== filtTipus) return false;
+            if (filtRelacio && d.tipus_relacio !== filtRelacio) return false;
+            return true;
+        });
+
+        const tbody = document.getElementById('tbody-donants');
+        if (!list.length) {
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Cap donant coincideix amb els filtres</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = list.map(d => {
+            const quota = (d.tipus_relacio === 'soci' || d.tipus_relacio === 'ambdos') && d.quota ? formatEur(d.quota) + '/any' : '—';
+            return `<tr>
+                <td><strong>${esc(nomComplet(d))}</strong></td>
+                <td style="font-family:monospace;font-size:0.82rem;">${esc(d.nif_cif || '—')}</td>
+                <td><span class="badge badge-${d.tipus_persona || 'fisica'}">${d.tipus_persona === 'juridica' ? 'Empresa' : 'Pers. Física'}</span></td>
+                <td><span class="badge badge-${d.tipus_relacio || 'donant'}">${labelRelacio(d.tipus_relacio)}</span></td>
+                <td style="font-size:0.82rem;">${esc(d.email || '—')}</td>
+                <td class="import-cell" style="font-size:0.82rem;">${quota}</td>
+                <td><span class="badge badge-${(d.estat || 'Actiu').toLowerCase()}">${esc(d.estat || 'Actiu')}</span></td>
+                <td>
+                    <div style="display:flex;gap:4px;">
+                        <button class="icon-btn" title="Editar" onclick="window.editDonant('${d.id}')">
+                            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 013 3L12 15l-4 1 1-4z"/></svg>
+                        </button>
+                        <button class="icon-btn" title="Eliminar" onclick="window.delDonant('${d.id}')" style="color:var(--danger)">
+                            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                        </button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    };
+
+    // ── RENDER DONACIONS ──────────────────────────────────────────────────
+    window.renderDonacions = function() {
+        const cerca = (document.getElementById('f-cerca-donacio').value || '').toLowerCase();
+        const filtAny = document.getElementById('f-any-donacio').value;
+        const filtTipus = document.getElementById('f-tipus-donacio').value;
+
+        let list = _donacions.filter(d => {
+            const nom = (d.donantNom || '').toLowerCase();
+            const desc = (d.descripcio || '').toLowerCase();
+            if (cerca && !nom.includes(cerca) && !desc.includes(cerca)) return false;
+            if (filtAny && String(d.any_fiscal) !== filtAny) return false;
+            if (filtTipus && d.tipus !== filtTipus) return false;
+            return true;
+        });
+
+        const tbody = document.getElementById('tbody-donacions');
+        if (!list.length) {
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Cap donació coincideix amb els filtres</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = list.map(d => {
+            const importShow = d.tipus === 'dineraria'
+                ? `<span class="import-cell">${formatEur(d.import)}</span>`
+                : `<span style="color:var(--text-muted);font-size:0.82rem;">${d.valoracio ? '~' + formatEur(d.valoracio) : '—'}</span>`;
+            const certBadge = d.certif_emes
+                ? `<span class="badge badge-certif-ok">Emès</span>`
+                : d.tipus === 'dineraria'
+                    ? `<span class="badge badge-certif-pend">Pendent</span>`
+                    : `<span style="color:var(--text-muted);font-size:0.78rem;">N/A</span>`;
+            return `<tr>
+                <td style="font-size:0.82rem;white-space:nowrap;">${esc(formatDate(d.data))}</td>
+                <td><strong>${esc(d.donantNom || '—')}</strong></td>
+                <td><span class="badge badge-${d.tipus === 'dineraria' ? 'diner' : 'especie'}">${d.tipus === 'dineraria' ? 'Dinerària' : 'Espècie'}</span></td>
+                <td>${importShow}</td>
+                <td style="font-size:0.82rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(d.descripcio || '')}">${esc(d.descripcio || '—')}</td>
+                <td style="font-size:0.82rem;">${d.any_fiscal || '—'}</td>
+                <td>${certBadge}</td>
+                <td>
+                    <div style="display:flex;gap:4px;">
+                        <button class="icon-btn" title="Editar" onclick="window.editDonacio('${d.id}')">
+                            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 013 3L12 15l-4 1 1-4z"/></svg>
+                        </button>
+                        ${d.tipus === 'dineraria' && !d.certif_emes ? `<button class="icon-btn" title="Marcar certif. emès" onclick="window.markCertifEmes('${d.id}')" style="color:var(--success)"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>` : ''}
+                        <button class="icon-btn" title="Eliminar" onclick="window.delDonacio('${d.id}')" style="color:var(--danger)">
+                            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                        </button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    };
+
+    // ── RENDER CERTIFICATS ────────────────────────────────────────────────
+    window.renderCertificats = function() {
+        const year = Number(document.getElementById('certif-any').value);
+        if (!year) return;
+
+        // Group dineraria donations by donor for that year
+        const donsDany = _donacions.filter(d => d.any_fiscal === year && d.tipus === 'dineraria');
+        const byDonant = {};
+        donsDany.forEach(d => {
+            if (!byDonant[d.donantId]) byDonant[d.donantId] = { donantId: d.donantId, donantNom: d.donantNom, donacions: [], total: 0, allEmesos: true };
+            byDonant[d.donantId].donacions.push(d);
+            byDonant[d.donantId].total += Number(d.import) || 0;
+            if (!d.certif_emes) byDonant[d.donantId].allEmesos = false;
+        });
+
+        const entries = Object.values(byDonant).sort((a, b) => b.total - a.total);
+        const grid = document.getElementById('cert-grid');
+
+        if (!entries.length) {
+            grid.innerHTML = `<div style="color:var(--text-muted);font-size:0.9rem;grid-column:span 4;text-align:center;padding:40px;">
+                Cap donació dinerària registrada per a l'any ${year}.</div>`;
+            return;
+        }
+
+        grid.innerHTML = entries.map(e => {
+            const donant = _donants.find(d => d.id === e.donantId) || {};
+            const isJuridica = donant.tipus_persona === 'juridica';
+            const tipusCertif = isJuridica ? 'IS (Impost de Societats)' : 'IRPF (Declaració Renda)';
+            const numDons = e.donacions.length;
+            return `<div class="cert-card">
+                <div class="cert-card-header">
+                    <div>
+                        <div class="cert-card-name">${esc(e.donantNom || '—')}</div>
+                        <div class="cert-card-nif">${esc(donant.nif_cif || 'NIF/CIF no informat')} · ${tipusCertif}</div>
+                    </div>
+                    <div class="cert-card-amount">${formatEur(e.total)}</div>
+                </div>
+                <div class="cert-card-body">
+                    ${numDons} donació${numDons !== 1 ? 'ns' : ''} · 
+                    ${e.allEmesos ? '<span style="color:var(--success);font-weight:600;">✓ Certificat emès</span>' : '<span style="color:var(--warning);font-weight:600;">⚠ Pendent d\'emissió</span>'}
+                </div>
+                <div class="cert-card-actions">
+                    <button class="btn btn-sm btn-primary" onclick="window.generateCertificate('${e.donantId}', ${year})">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5h20v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        Generar Certificat
+                    </button>
+                    ${!e.allEmesos ? `<button class="btn btn-sm btn-success" onclick="window.markAllCertifEmes('${e.donantId}', ${year})">
+                        Marcar com Emès
+                    </button>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    };
+
+    // ── DONOR SELECT ──────────────────────────────────────────────────────
+    function populateDonantSelect() {
+        const sel = document.getElementById('dn-donant');
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">— Selecciona un donant —</option>' +
+            _donants.filter(d => d.estat !== 'Baixa').map(d =>
+                `<option value="${d.id}" data-tipus="${d.tipus_persona || 'fisica'}">${esc(nomComplet(d))} (${esc(d.nif_cif || 'sense NIF')})</option>`
+            ).join('');
+        if (cur) sel.value = cur;
+    }
+
+    // ── OPEN / CLOSE MODALS ───────────────────────────────────────────────
+    window.openDonantModal = function(id = null) {
+        _editDonantId = id;
+        const form = document.getElementById('form-donant');
+        form.reset();
+        document.getElementById('d-pais').value = 'Espanya';
+        document.getElementById('d-estat').value = 'Actiu';
+        hideConditionalFields();
+
+        if (id) {
+            const d = _donants.find(x => x.id === id);
+            if (!d) return;
+            document.getElementById('modal-donant-title').textContent = 'Editar Donant / Soci';
+            document.getElementById('donant-id').value = id;
+            document.getElementById('d-tipus-persona').value = d.tipus_persona || '';
+            updatePersonaFields();
+            document.getElementById('d-nom').value = d.nom || '';
+            document.getElementById('d-cognoms').value = d.cognoms || '';
+            document.getElementById('d-rao-social').value = d.rao_social || '';
+            document.getElementById('d-nif').value = d.nif_cif || '';
+            document.getElementById('d-relacio').value = d.tipus_relacio || '';
+            updateSociFields();
+            document.getElementById('d-quota').value = d.quota || '';
+            document.getElementById('d-data-alta').value = d.data_alta || '';
+            document.getElementById('d-carrer').value = d.adreca_carrer || '';
+            document.getElementById('d-numero').value = d.adreca_numero || '';
+            document.getElementById('d-pis').value = d.adreca_pis || '';
+            document.getElementById('d-cp').value = d.adreca_cp || '';
+            document.getElementById('d-municipi').value = d.adreca_municipi || '';
+            document.getElementById('d-provincia').value = d.adreca_provincia || '';
+            document.getElementById('d-pais').value = d.adreca_pais || 'Espanya';
+            document.getElementById('d-email').value = d.email || '';
+            document.getElementById('d-telefon').value = d.telefon || '';
+            document.getElementById('d-contacte').value = d.contacte || '';
+            document.getElementById('d-estat').value = d.estat || 'Actiu';
+            document.getElementById('d-notes').value = d.notes || '';
+        } else {
+            document.getElementById('modal-donant-title').textContent = 'Nou Donant / Soci';
+            document.getElementById('donant-id').value = '';
+        }
+        document.getElementById('modal-donant').classList.add('open');
+    };
+    window.editDonant = id => window.openDonantModal(id);
+
+    window.closeDonantModal = function() {
+        document.getElementById('modal-donant').classList.remove('open');
+    };
+
+    window.openDonacioModal = function(id = null) {
+        _editDonacioId = id;
+        const form = document.getElementById('form-donacio');
+        form.reset();
+        document.getElementById('dn-data').value = new Date().toISOString().split('T')[0];
+        document.getElementById('dn-any').value = new Date().getFullYear();
+        hideConditionalFieldsDonacio();
+        populateDonantSelect();
+
+        if (id) {
+            const d = _donacions.find(x => x.id === id);
+            if (!d) return;
+            document.getElementById('modal-donacio-title').textContent = 'Editar Donació';
+            document.getElementById('donacio-id').value = id;
+            document.getElementById('dn-donant').value = d.donantId || '';
+            document.getElementById('dn-data').value = d.data || '';
+            document.getElementById('dn-any').value = d.any_fiscal || new Date().getFullYear();
+            document.getElementById('dn-tipus').value = d.tipus || '';
+            updateDonacioFields();
+            document.getElementById('dn-import').value = d.import || '';
+            document.getElementById('dn-metode').value = d.metode_pagament || 'Transferència';
+            document.getElementById('dn-bens').value = d.descripcio || '';
+            document.getElementById('dn-valoracio').value = d.valoracio || '';
+            document.getElementById('dn-notes').value = d.notes || '';
+        } else {
+            document.getElementById('modal-donacio-title').textContent = 'Nova Donació';
+            document.getElementById('donacio-id').value = '';
+        }
+        document.getElementById('modal-donacio').classList.add('open');
+    };
+    window.editDonacio = id => window.openDonacioModal(id);
+
+    window.closeDonacioModal = function() {
+        document.getElementById('modal-donacio').classList.remove('open');
+    };
+
+    // ── CONDITIONAL FIELD TOGGLES ─────────────────────────────────────────
+    function hideConditionalFields() {
+        document.querySelectorAll('.field-fisica, .field-juridica, .field-soci').forEach(el => el.style.display = 'none');
+    }
+    function hideConditionalFieldsDonacio() {
+        document.querySelectorAll('.field-diner, .field-especie').forEach(el => el.style.display = 'none');
+    }
+
+    window.updatePersonaFields = function() {
+        const v = document.getElementById('d-tipus-persona').value;
+        document.querySelectorAll('.field-fisica').forEach(el => el.style.display = v === 'fisica' ? '' : 'none');
+        document.querySelectorAll('.field-juridica').forEach(el => el.style.display = v === 'juridica' ? '' : 'none');
+    };
+
+    window.updateSociFields = function() {
+        const v = document.getElementById('d-relacio').value;
+        const show = v === 'soci' || v === 'ambdos';
+        document.querySelectorAll('.field-soci').forEach(el => el.style.display = show ? '' : 'none');
+    };
+
+    window.updateDonacioFields = function() {
+        const v = document.getElementById('dn-tipus').value;
+        document.querySelectorAll('.field-diner').forEach(el => el.style.display = v === 'dineraria' ? '' : 'none');
+        document.querySelectorAll('.field-especie').forEach(el => el.style.display = v === 'en_especie' ? '' : 'none');
+    };
+
+    window.autofillTipusCertif = function() { /* no-op — donor already determines */ };
+
+    // ── SAVE DONANT ───────────────────────────────────────────────────────
+    window.saveDonant = async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btn-save-donant');
+        btn.disabled = true;
+        const tipusPersona = document.getElementById('d-tipus-persona').value;
+
+        try {
+            const payload = {
+                tipus_persona: tipusPersona,
+                nom: tipusPersona === 'fisica' ? document.getElementById('d-nom').value.trim() : '',
+                cognoms: tipusPersona === 'fisica' ? document.getElementById('d-cognoms').value.trim() : '',
+                rao_social: tipusPersona === 'juridica' ? document.getElementById('d-rao-social').value.trim() : '',
+                nif_cif: document.getElementById('d-nif').value.trim().toUpperCase(),
+                tipus_relacio: document.getElementById('d-relacio').value,
+                quota: Number(document.getElementById('d-quota').value) || null,
+                data_alta: document.getElementById('d-data-alta').value || null,
+                adreca_carrer: document.getElementById('d-carrer').value.trim(),
+                adreca_numero: document.getElementById('d-numero').value.trim(),
+                adreca_pis: document.getElementById('d-pis').value.trim(),
+                adreca_cp: document.getElementById('d-cp').value.trim(),
+                adreca_municipi: document.getElementById('d-municipi').value.trim(),
+                adreca_provincia: document.getElementById('d-provincia').value.trim(),
+                adreca_pais: document.getElementById('d-pais').value.trim() || 'Espanya',
+                email: document.getElementById('d-email').value.trim().toLowerCase(),
+                telefon: document.getElementById('d-telefon').value.trim(),
+                contacte: document.getElementById('d-contacte').value.trim(),
+                estat: document.getElementById('d-estat').value,
+                notes: document.getElementById('d-notes').value.trim(),
+                updatedAt: serverTimestamp()
+            };
+
+            if (_editDonantId) {
+                await updateDoc(doc(db, 'donants', _editDonantId), payload);
+                toast('Donant actualitzat correctament', 'ok');
+            } else {
+                payload.createdAt = serverTimestamp();
+                await addDoc(collection(db, 'donants'), payload);
+                toast('Donant registrat correctament', 'ok');
+            }
+            window.closeDonantModal();
+        } catch (err) {
+            console.error(err);
+            toast('Error en desar: ' + err.message, 'err');
+        } finally {
+            btn.disabled = false;
+        }
+    };
+
+    // ── SAVE DONACIÓ ──────────────────────────────────────────────────────
+    window.saveDonacio = async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btn-save-donacio');
+        btn.disabled = true;
+
+        try {
+            const donantId = document.getElementById('dn-donant').value;
+            const donant = _donants.find(d => d.id === donantId);
+            const tipus = document.getElementById('dn-tipus').value;
+
+            const payload = {
+                donantId,
+                donantNom: donant ? nomComplet(donant) : '—',
+                data: document.getElementById('dn-data').value,
+                any_fiscal: Number(document.getElementById('dn-any').value),
+                tipus,
+                import: tipus === 'dineraria' ? (Number(document.getElementById('dn-import').value) || 0) : null,
+                metode_pagament: tipus === 'dineraria' ? document.getElementById('dn-metode').value : null,
+                descripcio: document.getElementById('dn-bens').value.trim() || (tipus === 'dineraria' ? 'Donació dinerària' : ''),
+                valoracio: tipus === 'en_especie' ? (Number(document.getElementById('dn-valoracio').value) || null) : null,
+                notes: document.getElementById('dn-notes').value.trim(),
+                certif_emes: false,
+                updatedAt: serverTimestamp()
+            };
+
+            if (_editDonacioId) {
+                const existing = _donacions.find(d => d.id === _editDonacioId);
+                if (existing?.certif_emes) payload.certif_emes = true;
+                await updateDoc(doc(db, 'donacions', _editDonacioId), payload);
+                toast('Donació actualitzada correctament', 'ok');
+            } else {
+                payload.createdAt = serverTimestamp();
+                await addDoc(collection(db, 'donacions'), payload);
+                toast('Donació registrada correctament', 'ok');
+            }
+            window.closeDonacioModal();
+        } catch (err) {
+            console.error(err);
+            toast('Error en desar: ' + err.message, 'err');
+        } finally {
+            btn.disabled = false;
+        }
+    };
+
+    // ── DELETE ────────────────────────────────────────────────────────────
+    window.delDonant = async function(id) {
+        const d = _donants.find(x => x.id === id);
+        if (!d) return;
+        if (!confirm(`Eliminar el donant "${nomComplet(d)}"? Aquesta acció no es pot desfer.`)) return;
+        try {
+            await deleteDoc(doc(db, 'donants', id));
+            toast('Donant eliminat', 'ok');
+        } catch (err) { toast('Error: ' + err.message, 'err'); }
+    };
+
+    window.delDonacio = async function(id) {
+        if (!confirm('Eliminar aquesta donació? Aquesta acció no es pot desfer.')) return;
+        try {
+            await deleteDoc(doc(db, 'donacions', id));
+            toast('Donació eliminada', 'ok');
+        } catch (err) { toast('Error: ' + err.message, 'err'); }
+    };
+
+    window.markCertifEmes = async function(id) {
+        try {
+            await updateDoc(doc(db, 'donacions', id), { certif_emes: true, certif_data: serverTimestamp() });
+            toast('Certificat marcat com emès', 'ok');
+        } catch (err) { toast('Error: ' + err.message, 'err'); }
+    };
+
+    window.markAllCertifEmes = async function(donantId, year) {
+        const pending = _donacions.filter(d => d.donantId === donantId && d.any_fiscal === year && !d.certif_emes);
+        try {
+            await Promise.all(pending.map(d => updateDoc(doc(db, 'donacions', d.id), { certif_emes: true, certif_data: serverTimestamp() })));
+            toast('Tots els certificats marcats com emesos', 'ok');
+        } catch (err) { toast('Error: ' + err.message, 'err'); }
+    };
+
+    // ── GENERATE CERTIFICATE ──────────────────────────────────────────────
+    window.generateCertificate = function(donantId, year) {
+        const donant = _donants.find(d => d.id === donantId);
+        if (!donant) return;
+
+        const donacionsAny = _donacions.filter(d => d.donantId === donantId && d.any_fiscal === year)
+            .sort((a, b) => (a.data || '').localeCompare(b.data || ''));
+
+        const totalDiner = donacionsAny.filter(d => d.tipus === 'dineraria').reduce((s, d) => s + (Number(d.import) || 0), 0);
+        const isJuridica = donant.tipus_persona === 'juridica';
+        const nomDonant = nomComplet(donant);
+        const adreca = [donant.adreca_carrer, donant.adreca_numero, donant.adreca_pis].filter(Boolean).join(', ');
+        const adreca2 = [donant.adreca_cp, donant.adreca_municipi, donant.adreca_provincia].filter(Boolean).join(' ');
+        const today = new Date();
+        const certNum = `CERT-${year}-${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}-${String(Math.floor(Math.random()*9000)+1000)}`;
+
+        // Fill entity info (generic — can be customized)
+        document.getElementById('cp-entitat-nom').textContent = 'NEXESOCIAL';
+        document.getElementById('cp-entitat-info').innerHTML =
+            'Associació NexeSocial · CIF: G12345678<br>' +
+            'Carrer Exemple, 1, 1r · 08001 Barcelona<br>' +
+            'Tel. 930 000 000 · info@nexesocial.org<br>' +
+            'Entitat acollida a la Llei 49/2002, de règim fiscal de les entitats sense fins lucratius';
+
+        document.getElementById('cp-num').textContent = `Núm. de Certificat: ${certNum}  ·  Any Fiscal: ${year}`;
+
+        const nifLabel = isJuridica ? 'CIF' : 'NIF';
+        document.getElementById('cp-body').innerHTML =
+            `L'entitat <strong>NEXESOCIAL</strong>, certifica que <strong>${nomDonant}</strong> ` +
+            `(${nifLabel}: ${donant.nif_cif || '—'}), amb domicili fiscal a ${adreca}, ${adreca2}, ` +
+            `ha realitzat les següents donacions durant l'exercici fiscal <strong>${year}</strong>:`;
+
+        // Table
+        document.getElementById('cp-tbody').innerHTML = donacionsAny.map(d => {
+            const imp = d.tipus === 'dineraria' ? formatEur(d.import) : `En Espècie (valoració: ${d.valoracio ? formatEur(d.valoracio) : 'N/D'})`;
+            const tipusLabel = d.tipus === 'dineraria' ? 'Dinerària' : 'En Espècie';
+            const desc = d.descripcio || (d.tipus === 'dineraria' ? 'Donació dinerària' : 'Donació en espècie');
+            return `<tr><td>${formatDate(d.data)}</td><td>${tipusLabel}</td><td>${desc}</td><td style="text-align:right;">${imp}</td></tr>`;
+        }).join('');
+
+        document.getElementById('cp-total').textContent = `Total donació dinerària deduïble: ${formatEur(totalDiner)}`;
+
+        document.getElementById('cp-body2').innerHTML =
+            `D'acord amb la normativa vigent, el donant pot deduir-se les quantitats donades en la seva declaració de l'${isJuridica ? 'Impost sobre Societats (IS)' : 'IRPF (Declaració de la Renda)'} corresponent a l'exercici ${year}.`;
+
+        const legalText = isJuridica
+            ? `Base legal: Art. 20 i 21 de la Llei 49/2002, de 23 de desembre, de règim fiscal de les entitats sense fins lucratius i dels incentius fiscals al mecenatge. Les donacions a entitats incloses en la Llei 49/2002 donen dret a deducció en la quota de l'IS (art. 20 Llei 49/2002). Deducció del 35% de la base de deducció (40% si la donació s'ha mantingut o incrementat respecte als 2 exercicis anteriors).`
+            : `Base legal: Art. 19 de la Llei 49/2002. Les donacions a entitats incloses en la Llei 49/2002 donen dret a deducció en la quota de l'IRPF. Deducció del 80% dels primers 250€ i del 35% (o 40% si la donació s'ha mantingut 3 o més anys consecutius) de la resta.`;
+
+        document.getElementById('cp-legal').textContent = legalText;
+        document.getElementById('cp-sign-lloc').textContent = `Barcelona, ${today.getDate()} de ${['gener','febrer','març','abril','maig','juny','juliol','agost','setembre','octubre','novembre','desembre')[today.getMonth()]} de ${today.getFullYear()}`;
+
+        window.print();
+    };
+
+    // ── HELPERS ───────────────────────────────────────────────────────────
+    function nomComplet(d) {
+        if (d.tipus_persona === 'juridica') return d.rao_social || '—';
+        return [d.nom, d.cognoms].filter(Boolean).join(' ') || '—';
+    }
+    function labelRelacio(r) {
+        return { donant: 'Donant', soci: 'Soci', ambdos: 'Donant + Soci' }[r] || r || '—';
+    }
+    function formatDate(s) {
+        if (!s) return '—';
+        try { return new Date(s + 'T00:00:00').toLocaleDateString('ca-ES'); } catch { return s; }
+    }
+    function formatEur(n) {
+        return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(Number(n) || 0);
+    }
+    function esc(s) {
+        return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── TOAST ─────────────────────────────────────────────────────────────
+    function toast(msg, type = 'ok') {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.style.background = type === 'err' ? 'var(--danger)' : type === 'warn' ? 'var(--warning)' : 'var(--success)';
+        el.style.opacity = '1'; el.style.transform = 'translateY(0)';
+        clearTimeout(el._t);
+        el._t = setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(10px)'; }, 3200);
+    }
+
+    // ── CLOSE ON BACKDROP ─────────────────────────────────────────────────
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+        m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+    });
+
+    // ── INIT ──────────────────────────────────────────────────────────────
+    async function init() {
+        await Promise.all([loadDonants(), loadDonacions()]);
+        renderKPIs();
+        renderDonants();
+        fillYearFilters();
+        renderDonacions();
+        renderCertificats();
+        populateDonantSelect();
+    }
+
+    init();
+</script>
+<script src="nexeadmin-sidebar.js"></script>
+</body>
+</html>
+

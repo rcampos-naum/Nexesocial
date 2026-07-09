@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>NexeSocial - Expedient Familiar</title>
+    <link rel="stylesheet" href="style-dashboard.css">
+    <script src="printer.js"></script> 
+    <script src="autofirma.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        .fam-header {
+            background: white; padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;
+        }
+        .member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+        .member-card { 
+            background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; 
+            display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;
+        }
+        .member-card:hover { border-color: #2563eb; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .member-avatar { width: 45px; height: 45px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #2563eb; }
+
+        .btn-flex { display: flex; align-items: center; gap: 8px; font-weight: 600; padding: 10px 18px; border-radius: 8px; cursor: pointer; border: none; transition: 0.2s; font-family: inherit; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-secondary { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .btn-flex svg { width: 18px; height: 18px; stroke-width: 2.5; }
+
+        .tab-nav { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
+        .tab-link { padding: 10px 20px; cursor: pointer; font-weight: 600; color: #64748b; border-bottom: 2px solid transparent; }
+        .tab-link.active { color: #2563eb; border-bottom-color: #2563eb; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        
+        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 20000; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 600px; border-radius: 15px; padding: 30px; position: relative; }
+        
+        .sign-option { border: 1px solid #e2e8f0; padding: 15px; border-radius: 10px; cursor: pointer; transition: 0.2s; text-align: left; margin-top: 10px; display: flex; align-items: center; gap: 15px; }
+        .sign-option:hover { border-color: #2563eb; background: #eff6ff; }
+        .sign-option svg { width: 24px; height: 24px; color: #2563eb; stroke: currentColor; fill: none; }
+        
+        #signature-pad { border: 2px dashed #cbd5e1; background: #f8fafc; cursor: crosshair; touch-action: none; }
+        .program-tag { background: #f0fdf4; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; border: 1px solid #bbf7d0; margin-right: 5px; }
+    </style>
+</head>
+<body>
+    <script type="module" src="sidebar.js"></script>
+
+    <div id="modalUser" class="modal-overlay">
+        <div class="modal-content">
+            <span style="position:absolute; top:15px; right:20px; cursor:pointer; font-size:1.5rem;" onclick="closeUserModal()">&times;</span>
+            <div id="modalUserData"></div>
+        </div>
+    </div>
+
+    <div id="modalSignature" class="modal-overlay">
+        <div class="modal-content" style="max-width: 450px;">
+            <h3>Opcions de Firma</h3>
+            <div class="sign-option" onclick="processarFirma('Autofirma')">
+                <svg viewBox="0 0 24 24"><path d="M3 21h18M3 10h18M5 10V7a7 7 0 1114 0v3M8 21v-7m4 7v-7m4 7v-7"/></svg>
+                <div><strong>Autofirma (Oficial)</strong><div style="font-size:0.75rem;">Invocació de programa local instal·lat.</div></div>
+            </div>
+            <div class="sign-option" onclick="obrirFirmaInterna()">
+                <svg viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                <div><strong>Firma Interna</strong><div style="font-size:0.75rem;">Ús intern del centre o presencial (PANTALLA).</div></div>
+            </div>
+            <button class="btn-flex btn-secondary" style="margin-top:20px; width:100%; justify-content:center;" onclick="tancarModalsFirma()">Tancar</button>
+        </div>
+    </div>
+
+    <div id="modalInterna" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px; text-align: center;">
+            <h3>Firma Interna</h3>
+            <canvas id="signature-pad" width="400" height="200" style="margin: 20px 0;"></canvas>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-flex btn-primary" style="flex:1; justify-content:center;" onclick="finalitzarFirmaInterna()">Generar PDF</button>
+                <button class="btn-flex btn-secondary" onclick="clearCanvas()">Esborrar</button>
+                <button class="btn-flex btn-secondary" onclick="tancarModalsFirma()">Tancar</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="profile-container">
+            <div class="fam-header">
+                <div>
+                    <span id="fam-id-tag" class="label" style="background:#eff6ff; color:#2563eb; padding:4px 8px; border-radius:4px;">...</span>
+                    <h1 id="fam-title" style="margin: 10px 0 5px 0;">Carregant...</h1>
+                    <p id="fam-desc" style="color:#64748b; margin:0;"></p>
+                    <div id="fam-programes" style="margin-top: 10px;"></div>
+                    <div id="fam-lacaixa-alert" style="display:none;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:8px 14px;border-radius:9px;margin-top:10px;font-size:0.82rem;font-weight:700;align-items:center;gap:7px;">
+                        <svg style="width:15px;height:15px;flex-shrink:0;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        Un o més membres participen al programa La Caixa CPI
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-flex btn-secondary" onclick="generarHistorico()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8m8 4H8m2-8H8"/></svg>
+                        PDF Històric
+                    </button>
+                    <button class="btn-flex btn-primary" onclick="nouInforme()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 4v16m8-8H4"/></svg>
+                        Alta Informe
+                    </button>
+                </div>
+            </div>
+
+            <div class="tab-nav">
+                <div class="tab-link active" onclick="showTab('membres', event)">Membres i Dades</div>
+                <div class="tab-link" onclick="showTab('informes', event)">Seguiments</div>
+                <div class="tab-link" onclick="showTab('psicosocial', event)" id="tab-btn-psy">Psicosocial</div>
+            </div>
+
+            <div id="tab-membres" class="tab-pane active"><div class="member-grid" id="grid-membres"></div></div>
+            <div id="tab-informes" class="tab-pane">
+                <div id="llista-informes-hist"></div>
+            </div>
+            <div id="tab-psicosocial" class="tab-pane">
+                <div id="psy-section-content">Carregant informació psicosocial...</div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { db } from './firebase-config.js';
+        import { doc, getDoc, collection, query, where, getDocs, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        const params = new URLSearchParams(window.location.search);
+        const famId = params.get('id');
+        let familiaActual = null;
+        let informeSeleccionat = null;
+
+        // --- Lógica Firma (Canvas) ---
+        let canvas, ctx, drawing = false;
+        function initCanvas() {
+            canvas = document.getElementById('signature-pad');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+            canvas.addEventListener('mousedown', () => drawing = true);
+            window.addEventListener('mouseup', () => drawing = false);
+            canvas.addEventListener('mousemove', (e) => {
+                if (!drawing) return;
+                const rect = canvas.getBoundingClientRect();
+                ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#000';
+                ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+                ctx.stroke(); ctx.beginPath(); ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+            });
+        }
+
+        window.clearCanvas = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.beginPath(); };
+        function _plainText(value) {
+            if (!value) return '';
+            const tmp = document.createElement('div');
+            tmp.innerHTML = String(value);
+            return (tmp.textContent || tmp.innerText || '').trim();
+        }
+        function buildInformeSignatureText(informe) {
+            const familyLabel = window._familiaActual?.cognoms_referencia || famId || 'Família';
+            return [
+                `Informe familiar: ${informe?.titol || 'Sense títol'}`,
+                `Família: ${familyLabel}`,
+                `Data: ${informe?.data || '—'}`,
+                `Redactor/a: ${informe?.redactor || '—'}`,
+                '',
+                _plainText(informe?.contingut || ''),
+            ].filter(Boolean).join('\n');
+        }
+        window.enviarInformeAFirma = async function() {
+            if (!informeSeleccionat) return;
+            try {
+                const SignatureFlow = (await import('./signature-flow.js')).default;
+                const familyLabel = window._familiaActual?.cognoms_referencia || famId || 'Família';
+                window.closeUserModal();
+                SignatureFlow.openQuickSignFlow({
+                    documentTitle: `${informeSeleccionat.titol} - Família ${familyLabel}`,
+                    documentText: buildInformeSignatureText(informeSeleccionat),
+                    sourceModule: 'familia-perfil',
+                    metadata: {
+                        familiaId: famId,
+                        familiaLabel: familyLabel,
+                        reportId: informeSeleccionat.id || '',
+                        reportTitle: informeSeleccionat.titol || '',
+                        reportDate: informeSeleccionat.data || '',
+                    },
+                });
+            } catch (e) {
+                console.error('[familia-perfil] Error obrint NexeSing', e);
+                alert('No s\'ha pogut obrir la firma unificada.');
+            }
+        };
+        window.obrirModalFirma = () => { window.enviarInformeAFirma(); };
+        window.obrirFirmaInterna = () => { document.getElementById('modalSignature').style.display = 'none'; document.getElementById('modalInterna').style.display = 'flex'; window.clearCanvas(); };
+        window.tancarModalsFirma = () => { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'modalUser') m.style.display = 'none'; }); };
+        window.closeUserModal = () => { document.getElementById('modalUser').style.display = 'none'; };
+
+        window.processarFirma = function(metode) {
+            window.tancarModalsFirma();
+            if (metode === 'Autofirma') {
+                AutoFirmaConnector.signarInforme(informeSeleccionat, famId);
+            } else {
+                generarPDFInforme(metode);
+            }
+        };
+        window.finalitzarFirmaInterna = () => { window.tancarModalsFirma(); generarPDFInforme('Firma Interna'); };
+        function generarPDFInforme(metode) { NexePrinter.generarPDFInforme(informeSeleccionat, famId, metode); window.closeUserModal(); }
+
+        window.generarHistorico = () => { window.open(`familia-historico.html?famId=${famId}`, '_blank'); };
+        window.nouInforme = () => { window.location.href = `informe-nou.html?famId=${famId}`; };
+
+        window.showTab = function(tab, e) {
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            if (tab === 'psicosocial') window.renderPsicosocial && window.renderPsicosocial();
+        };
+
+        async function renderMembers(membres) {
+            const grid = document.getElementById('grid-membres');
+            if (!membres || !membres.length) {
+                grid.innerHTML = '<p style="color:#94a3b8;padding:20px;">Cap membre vinculat.</p>';
+                return;
+            }
+            grid.innerHTML = '<p style="color:#94a3b8;padding:10px;">Carregant membres...</p>';
+            const cards = await Promise.all(membres.map(async membId => {
+                try {
+                    const snap = await getDoc(doc(db, 'expedientes', membId));
+                    if (!snap.exists()) return '';
+                    const p = snap.data();
+                    const nom = p.dades_personals?.nom || '';
+                    const cog = p.dades_personals?.cognoms || '';
+                    const num = p.numero_expediente || snap.id;
+                    return `<div class="member-card" onclick="window.openMemberModal('${snap.id}')">
+                        <div class="member-avatar">${(nom||'?').charAt(0).toUpperCase()}</div>
+                        <div>
+                            <div style="font-weight:700;">${nom} ${cog}</div>
+                            <div style="font-size:0.75rem; color:#64748b;">${num}</div>
+                            <div style="font-size:0.72rem;color:#94a3b8;">${p.programa||''}</div>
+                        </div>
+                    </div>`;
+                } catch(e) { return ''; }
+            }));
+            grid.innerHTML = cards.join('') || '<p style="color:#94a3b8;">No s\'han pogut carregar els membres.</p>';
+        }
+
+        window.openMemberModal = async function(expId) {
+            try {
+                const snap = await getDoc(doc(db, 'expedientes', expId));
+                if (!snap.exists()) return;
+                const p = snap.data();
+                const dp = p.dades_personals || {};
+                document.getElementById('modalUserData').innerHTML = `
+                    <h3>${dp.nom||''} ${dp.cognoms||''}</h3>
+                    <p><strong>Expedient:</strong> ${p.numero_expediente||expId}</p>
+                    <p><strong>DNI:</strong> ${dp.dni||'No disponible'}</p>
+                    <p><strong>Telèfon:</strong> ${dp.telefon||'—'}</p>
+                    <p><strong>Programa:</strong> ${p.programa||'—'}</p>
+                    <p><strong>Estat:</strong> ${p.estado||'—'}</p>
+                    <div style="display:flex;gap:8px;margin-top:15px;">
+                        <a href="expedient-detall.html?id=${expId}" class="btn-flex btn-primary" style="text-decoration:none;">Veure Expedient</a>
+                        <button onclick="window.closeUserModal()" class="btn-flex btn-secondary">Tancar</button>
+                    </div>`;
+                document.getElementById('modalUser').style.display = 'flex';
+            } catch(e) { console.error(e); }
+        };
+
+        function renderInformes() {
+            const container = document.getElementById('llista-informes-hist');
+            const informes = (JSON.parse(localStorage.getItem('nexe_informes')) || []).filter(inf => inf.familiaId === famId);
+            container.innerHTML = informes.length ? informes.map(inf => `
+                <div class="report-item" style="background:white;padding:12px 15px;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+                    <div><strong>${inf.titol}</strong><br><small>${inf.data} - ${inf.redactor}</small></div>
+                    <button class="btn-flex btn-secondary" onclick="window.veureDetallInforme('${inf.id}')" style="font-size:0.75rem;">Veure Detall</button>
+                </div>`).join('') : '<p style="text-align:center;color:#64748b;">No hi ha informes registrats.</p>';
+        }
+
+        window.veureDetallInforme = function(id) {
+            const inf = (JSON.parse(localStorage.getItem('nexe_informes')) || []).find(i => i.id === id);
+            if (!inf) return;
+            informeSeleccionat = inf;
+            document.getElementById('modalUserData').innerHTML = `
+                <h3>${inf.titol}</h3>
+                <p style="font-size:0.8rem;color:#64748b;">${inf.redactor} - ${inf.data}</p>
+                <div style="background:#f8fafc;padding:15px;border-radius:8px;margin:15px 0;max-height:200px;overflow-y:auto;">${inf.contingut}</div>
+                <div style="display:flex;gap:10px;">
+                    <button onclick="window.enviarInformeAFirma()" class="btn-flex btn-primary">Enviar a Firmar</button>
+                    <button onclick="window.closeUserModal()" class="btn-flex btn-secondary">Tancar</button>
+                </div>`;
+            document.getElementById('modalUser').style.display = 'flex';
+        };
+
+        let _unsubFamilia = null;
+
+        function init() {
+            initCanvas();
+            if (!famId) {
+                document.getElementById('fam-title').textContent = 'ID no especificat';
+                return;
+            }
+            _unsubFamilia = onSnapshot(
+                doc(db, 'familias', famId),
+                async (snap) => {
+                    if (!snap.exists()) {
+                        document.getElementById('fam-title').textContent = 'Família no trobada';
+                        return;
+                    }
+                    familiaActual = { id: snap.id, ...snap.data() };
+                    document.getElementById('fam-id-tag').textContent = familiaActual.id.slice(0, 8) + '...';
+                    document.getElementById('fam-title').textContent = 'Família ' + (familiaActual.cognoms_referencia || '');
+                    const dataCreacio = familiaActual.createdAt?.toDate
+                        ? familiaActual.createdAt.toDate().toLocaleDateString('ca-ES')
+                        : '';
+                    document.getElementById('fam-desc').textContent = dataCreacio ? `Expedient obert el ${dataCreacio}` : '';
+
+                    if (familiaActual.programes_actius?.length) {
+                        document.getElementById('fam-programes').innerHTML = familiaActual.programes_actius.map(p =>
+                            `<span class="program-tag">${p.curs} - ${p.nom}</span>`).join('');
+                    }
+
+                    await renderMembers(familiaActual.membres || []);
+                    renderInformes();
+                    window._familiaActual = familiaActual;
+                },
+                (e) => {
+                    console.error(e);
+                    document.getElementById('fam-title').textContent = 'Error carregant dades';
+                }
+            );
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+        window.addEventListener('beforeunload', () => { if (_unsubFamilia) _unsubFamilia(); });
+    </script>
+
+    <!-- La Caixa CPI check via Firestore -->
+    <script type="module">
+        import { db } from './firebase-config.js';
+        import { collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        async function checkLaCaixaFamilia() {
+            const famId = new URLSearchParams(location.search).get('id');
+            if (!famId) return;
+            // Wait for family to be loaded by main module
+            let tries = 0;
+            while (!window._familiaActual && tries++ < 40) {
+                await new Promise(r => setTimeout(r, 150));
+            }
+            const fam = window._familiaActual;
+            if (!fam || !fam.membres?.length) return;
+            const membres = fam.membres.slice(0, 10); // Firestore 'in' limit
+            try {
+                const snap = await getDocs(query(
+                    collection(db, 'beneficiarios_grupos'),
+                    where('beneficiarioId', 'in', membres)
+                ));
+                const isLaCaixa = snap.docs.some(d => {
+                    const dn = (d.data().departamentoNombre || '').toLowerCase();
+                    return dn.includes('la caixa') || dn.includes('cpi');
+                });
+                const el = document.getElementById('fam-lacaixa-alert');
+                if (el && isLaCaixa) el.style.display = 'flex';
+            } catch(e) { console.warn('[La Caixa check]', e); }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkLaCaixaFamilia);
+    </script>
+
+    <!-- Secció Psicosocial amb control d'accés NexePsy -->
+    <script type="module">
+        import { db } from './firebase-config.js';
+        import { collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+        import { ExpedientPsyDB } from './NexePsy/nexepsy-db.js';
+
+        // Comprovem accés NexePsy
+        const perms = JSON.parse(localStorage.getItem('userPermissions') || '{}');
+        const teAccesPsy = perms.psy && perms.psy !== 'none';
+
+        let psyLoaded = false;
+
+        window.renderPsicosocial = async function() {
+            if (psyLoaded) return;
+            psyLoaded = true;
+
+            const famId = new URLSearchParams(location.search).get('id');
+            const container = document.getElementById('psy-section-content');
+            if (!container || !famId) return;
+
+            if (!teAccesPsy) {
+                // Vista restringida: només mostra indicador
+                try {
+                    const resum = await ExpedientPsyDB.resumPublicFamilia(famId);
+                    if (resum.teAtencio) {
+                        container.innerHTML = `
+                            <div style="background:#ede9fe;border:1px solid #c4b5fd;border-radius:14px;padding:22px;display:flex;align-items:flex-start;gap:16px;">
+                                <div style="background:#6366f1;color:white;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🧠</div>
+                                <div>
+                                    <div style="font-weight:800;color:#4f46e5;margin-bottom:4px;">Seguiment Psicosocial Actiu</div>
+                                    <div style="color:#5b21b6;font-size:.85rem;line-height:1.6;">
+                                        Aquesta família té atenció psicosocial individualitzada en curs
+                                        (${resum.totalIntervencions} intervenció${resum.totalIntervencions !== 1 ? 's' : ''} activa${resum.totalIntervencions !== 1 ? 's' : ''}).
+                                        ${resum.membres.map(m => `<br>· <strong>${m.nom}</strong>: ${m.count} intervenció${m.count !== 1 ? 's' : ''}`).join('')}
+                                    </div>
+                                    <div style="margin-top:10px;font-size:.75rem;color:#7c3aed;font-style:italic;">Contingut clínic restringit al personal de NexePsy.</div>
+                                </div>
+                            </div>`;
+                    } else {
+                        container.innerHTML = `<div style="text-align:center;padding:40px;color:#94a3b8;"><div style="font-size:2rem;margin-bottom:10px;">🧠</div><p>Sense atenció psicosocial activa per a aquesta família.</p></div>`;
+                    }
+                } catch(e) {
+                    container.innerHTML = '<p style="color:#64748b;padding:20px;">No disponible.</p>';
+                }
+                return;
+            }
+
+            // Vista completa NexePsy
+            container.innerHTML = '<p style="color:#94a3b8;padding:20px;">Carregant intervencions...</p>';
+            try {
+                const intervencions = await ExpedientPsyDB.obtenerPorFamilia(famId);
+
+                // Agrupem per beneficiari
+                const perPersoa = {};
+                intervencions.forEach(interv => {
+                    const bid = interv.beneficiariId || interv.pacienteId;
+                    if (!perPersoa[bid]) perPersoa[bid] = { nom: interv.pacienteNombre || bid, items: [] };
+                    perPersoa[bid].items.push(interv);
+                });
+
+                if (!Object.keys(perPersoa).length) {
+                    container.innerHTML = `
+                        <div style="text-align:center;padding:40px;color:#94a3b8;">
+                            <div style="font-size:2rem;margin-bottom:10px;">🧠</div>
+                            <p>Sense intervencions psicosocials registrades.</p>
+                            <p style="font-size:.8rem;">Per registrar una intervenció, accedeix a l'expedient individual de cada membre des de NexePsy.</p>
+                        </div>`;
+                    return;
+                }
+
+                container.innerHTML = Object.entries(perPersoa).map(([bid, data]) => {
+                    const actives = data.items.filter(i => i.estado === 'activa').length;
+                    return `
+                    <div style="background:white;border:1px solid #e2e8f0;border-radius:16px;padding:22px;margin-bottom:16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <div style="width:38px;height:38px;background:#ede9fe;color:#6366f1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;">${(data.nom||'?').charAt(0).toUpperCase()}</div>
+                                <div>
+                                    <div style="font-weight:800;color:#1e293b;">${data.nom}</div>
+                                    <div style="font-size:.75rem;color:#94a3b8;">${data.items.length} intervenció${data.items.length !== 1 ? 'ns' : ''} · ${actives} activa${actives !== 1 ? 'es' : ''}</div>
+                                </div>
+                            </div>
+                            <a href="NexePsy/nexepsy-individu.html?id=${bid}&familiaId=${famId}" style="display:inline-flex;align-items:center;gap:6px;background:#6366f1;color:white;padding:8px 16px;border-radius:10px;font-size:.78rem;font-weight:700;text-decoration:none;">
+                                Veure expedient psicosocial →
+                            </a>
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                            ${data.items.slice(0,4).map(i => `
+                                <span style="background:${i.estado==='activa'?'#d1fae5':'#f1f5f9'};color:${i.estado==='activa'?'#065f46':'#475569'};padding:4px 12px;border-radius:999px;font-size:.75rem;font-weight:700;">
+                                    ${i.diagnóstico || i.diagnostic || 'Sense diagnòstic'}
+                                </span>`).join('')}
+                            ${data.items.length > 4 ? `<span style="color:#94a3b8;font-size:.75rem;align-self:center;">+${data.items.length - 4} més</span>` : ''}
+                        </div>
+                    </div>`;
+                }).join('');
+
+            } catch(e) {
+                console.error(e);
+                container.innerHTML = '<p style="color:#ef4444;padding:20px;">Error carregant dades psicosocials.</p>';
+            }
+        };
+    </script>
+</body>
+</html>

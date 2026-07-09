@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documents Centre de Dia - NexeSocial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style-dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        .page-main { padding: 32px 40px; max-width: 1400px; }
+        .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+        .page-header h1 { margin:0; font-size:1.5rem; font-weight:800; color:#1e293b; }
+        .page-header p { margin:4px 0 0; color:#64748b; font-size:0.875rem; }
+
+        /* TYPE PILLS */
+        .type-pills { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+        .type-pill { padding:7px 14px; border-radius:999px; border:1.5px solid #e2e8f0; background:white; cursor:pointer; font-size:0.78rem; font-weight:700; color:#64748b; transition:0.15s; font-family:inherit; }
+        .type-pill:hover { border-color:#2563eb; color:#2563eb; background:#eff6ff; }
+        .type-pill.active { background:#2563eb; color:white; border-color:#2563eb; }
+
+        /* DOC GRID */
+        .doc-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:15px; }
+        .doc-card { background:white; border:1px solid #e2e8f0; border-radius:14px; padding:18px; transition:0.2s; cursor:pointer; }
+        .doc-card:hover { box-shadow:0 8px 25px -5px rgba(0,0,0,0.1); transform:translateY(-2px); }
+        .doc-card-badge { display:inline-flex; align-items:center; gap:5px; font-size:0.68rem; font-weight:800; text-transform:uppercase; padding:3px 9px; border-radius:999px; margin-bottom:10px; letter-spacing:0.3px; }
+        .doc-card-title { font-weight:700; font-size:0.9rem; color:#1e293b; margin-bottom:3px; }
+        .doc-card-meta { font-size:0.78rem; color:#64748b; }
+        .doc-card-actions { display:flex; gap:6px; margin-top:12px; }
+        .doc-card-actions button { flex:1; padding:6px; border:1px solid #e2e8f0; border-radius:7px; background:white; font-size:0.7rem; font-weight:700; cursor:pointer; transition:0.15s; font-family:inherit; color:#64748b; }
+        .doc-card-actions button:hover { background:#2563eb; color:white; border-color:#2563eb; }
+        .doc-card-actions button.xl:hover { background:#059669 !important; border-color:#059669 !important; }
+        .doc-card-actions button.pdf:hover { background:#dc2626 !important; border-color:#dc2626 !important; }
+
+        /* STATS */
+        .stats-bar { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+        .stat-chip { display:flex; align-items:center; gap:8px; padding:7px 14px; background:white; border:1px solid #e2e8f0; border-radius:10px; font-size:0.8rem; font-weight:700; color:#1e293b; }
+        .stat-chip .n { font-size:1rem; font-weight:800; }
+
+        /* MODAL – FULL SCREEN */
+        .cd-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:20000; align-items:center; justify-content:center; padding:20px; }
+        .cd-modal { background:white; border-radius:18px; width:calc(100vw - 40px); max-width:1080px; height:calc(100vh - 40px); max-height:calc(100vh - 40px); display:flex; flex-direction:column; overflow:hidden; box-shadow:0 30px 60px -10px rgba(0,0,0,0.45); }
+        .cd-modal-hdr { padding:18px 28px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; background:#fafbfc; }
+        .cd-modal-hdr h3 { margin:0; font-size:1.05rem; font-weight:800; color:#1e293b; display:flex; align-items:center; gap:8px; }
+        .cd-modal-body { flex:1; overflow-y:auto; padding:26px 32px; }
+        .cd-modal-ftr { padding:14px 28px; border-top:1px solid #e2e8f0; display:flex; gap:9px; justify-content:flex-end; flex-shrink:0; flex-wrap:wrap; background:#fafbfc; }
+
+        /* TYPE SELECTOR */
+        .type-sel-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+        .type-sel-card { border:2px solid #e2e8f0; border-radius:12px; padding:16px 12px; cursor:pointer; text-align:center; transition:0.2s; }
+        .type-sel-card:hover { transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,0.08); }
+        .type-sel-card .ticon { display:flex; align-items:center; justify-content:center; margin-bottom:9px; }
+        .type-sel-card .ticon svg { width:30px; height:30px; }
+        .type-sel-card .name { font-weight:700; font-size:0.8rem; color:#1e293b; margin-bottom:3px; }
+        .type-sel-card .desc { font-size:0.68rem; color:#64748b; }
+
+        /* FORM */
+        .fsect { margin-bottom:18px; }
+        .fsect-title { font-size:0.62rem; font-weight:800; text-transform:uppercase; color:#64748b; letter-spacing:1px; border-bottom:1px solid #e2e8f0; padding-bottom:7px; margin-bottom:13px; }
+        .frow { display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-bottom:11px; }
+        .frow.c1 { grid-template-columns:1fr; }
+        .frow.c3 { grid-template-columns:1fr 1fr 1fr; }
+        .ff { display:flex; flex-direction:column; }
+        .ff label { font-size:0.62rem; font-weight:800; text-transform:uppercase; color:#64748b; margin-bottom:4px; letter-spacing:0.3px; }
+        .ff input, .ff select, .ff textarea { padding:9px 11px; border:1px solid #e2e8f0; border-radius:8px; font-family:inherit; font-size:0.875rem; transition:0.15s; background:white; color:#1e293b; box-sizing:border-box; width:100%; }
+        .ff textarea { resize:vertical; min-height:68px; }
+        .ff input:focus, .ff select:focus, .ff textarea:focus { outline:none; border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,0.1); }
+
+        /* RATING TABLE */
+        .rtable { width:100%; border-collapse:collapse; font-size:0.85rem; margin-bottom:11px; }
+        .rtable th { padding:9px 11px; background:#f8fafc; font-size:0.62rem; font-weight:800; text-transform:uppercase; color:#64748b; border-bottom:1px solid #e2e8f0; text-align:left; }
+        .rtable td { padding:9px 11px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+        .rtable tr:last-child td { border-bottom:none; }
+        .rtable td:first-child { font-weight:600; color:#1e293b; }
+        .rsel { padding:5px 9px; border:1px solid #e2e8f0; border-radius:6px; font-family:inherit; font-size:0.8rem; background:white; cursor:pointer; min-width:155px; }
+        .rnote { width:100%; padding:4px 8px; border:1px solid #e2e8f0; border-radius:6px; font-family:inherit; font-size:0.8rem; }
+
+        /* ACTIVITY ROWS */
+        .act-row { display:grid; grid-template-columns:105px 1fr 1fr 1fr 1fr 30px; gap:8px; align-items:end; padding:8px 0; border-bottom:1px dashed #e2e8f0; }
+        .act-row:last-child { border-bottom:none; }
+        .btn-rm { background:none; border:1px solid #fca5a5; color:#ef4444; border-radius:6px; width:30px; height:30px; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; font-family:inherit; transition:0.15s; flex-shrink:0; }
+        .btn-rm:hover { background:#fef2f2; }
+        .btn-add-act { display:flex; align-items:center; gap:6px; margin-top:8px; padding:8px 14px; border:1.5px dashed #2563eb; border-radius:8px; background:#eff6ff; color:#2563eb; cursor:pointer; font-size:0.78rem; font-weight:700; font-family:inherit; transition:0.15s; }
+        .btn-add-act:hover { background:#dbeafe; }
+
+        /* BUTTONS */
+        .btn { padding:10px 18px; border-radius:9px; font-weight:700; cursor:pointer; font-family:inherit; font-size:0.875rem; border:none; display:inline-flex; align-items:center; gap:7px; transition:0.15s; }
+        .btn-primary { background:#2563eb; color:white; } .btn-primary:hover { background:#1d4ed8; }
+        .btn-success { background:#10b981; color:white; } .btn-success:hover { background:#059669; }
+        .btn-danger { background:#ef4444; color:white; } .btn-danger:hover { background:#dc2626; }
+        .btn-ghost { background:#f1f5f9; color:#1e293b; } .btn-ghost:hover { background:#e2e8f0; }
+        .btn-draft { background:#f8fafc; color:#475569; border:1.5px dashed #94a3b8; padding:9px 17px; border-radius:9px; font-weight:700; cursor:pointer; font-family:inherit; font-size:0.875rem; display:inline-flex; align-items:center; gap:7px; transition:0.15s; }
+        .btn-draft:hover { background:#f1f5f9; border-color:#64748b; color:#1e293b; }
+        .btn:disabled, .btn-draft:disabled { opacity:0.5; cursor:not-allowed; }
+        /* DRAFT BADGE */
+        .draft-tag { display:inline-flex; align-items:center; gap:3px; padding:2px 7px; background:#fffbeb; color:#d97706; border:1px solid #fde68a; border-radius:999px; font-size:0.6rem; font-weight:800; text-transform:uppercase; margin-left:5px; vertical-align:middle; }
+        .doc-card-draft { border-left:3px solid #f59e0b !important; }
+
+        /* EMPTY */
+        .empty-st { text-align:center; padding:60px 20px; color:#64748b; }
+        .empty-st h3 { margin:12px 0 5px; font-size:1rem; color:#1e293b; }
+        .empty-st p { font-size:0.875rem; margin:0; }
+        @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+
+        /* BUILDER MODAL */
+        .bldr-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:21000; align-items:center; justify-content:center; padding:20px; }
+        .bldr-modal { background:white; border-radius:18px; width:calc(100vw - 40px); max-width:820px; height:calc(100vh - 40px); display:flex; flex-direction:column; overflow:hidden; box-shadow:0 30px 60px -10px rgba(0,0,0,0.45); }
+        .bldr-hdr { padding:18px 28px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; background:#fafbfc; }
+        .bldr-hdr h3 { margin:0; font-size:1.05rem; font-weight:800; color:#1e293b; display:flex; align-items:center; gap:8px; }
+        .bldr-body { flex:1; overflow-y:auto; padding:26px 32px; }
+        .bldr-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; transition:0.15s; }
+        .bldr-card:hover { box-shadow:0 4px 12px rgba(0,0,0,0.07); }
+        .bldr-section { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px 18px; margin-bottom:12px; }
+        .bldr-field-row { display:grid; grid-template-columns:110px 1fr 1fr 28px; gap:8px; align-items:end; padding:7px 0; border-bottom:1px dashed #f1f5f9; }
+        .bldr-field-row:last-child { border-bottom:none; }
+    </style>
+</head>
+<body>
+
+<main class="main-wrapper">
+    <div class="page-main">
+        <div class="page-header">
+            <div>
+                <h1><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Documents Centre de Dia</h1>
+                <p>Diaris individuals, observacions, avaluacions, seguiments grupals i planificació</p>
+            </div>
+            <div style="display:flex;gap:9px;align-items:center">
+                <button class="btn btn-ghost" onclick="window.openBuilder()" title="Gestionar formularis personalitzats">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2"/></svg>
+                    Formularis
+                </button>
+                <button class="btn btn-primary" onclick="window.novaDoc()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Nou Document
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-bar" id="cd-stats"></div>
+
+        <div class="type-pills">
+            <button class="type-pill active" data-filter="" onclick="window.cdFilter('')">Tots</button>
+            <button class="type-pill" data-filter="individual" onclick="window.cdFilter('individual')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Individuals</button>
+            <button class="type-pill" data-filter="grupal" onclick="window.cdFilter('grupal')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Grupals</button>
+            <span style="border-left:1px solid #e2e8f0;margin:0 4px;"></span>
+            <button class="type-pill" data-filter="diari_ind" onclick="window.cdFilter('diari_ind')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Diari</button>
+            <button class="type-pill" data-filter="observacio_ind" onclick="window.cdFilter('observacio_ind')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Observació</button>
+            <button class="type-pill" data-filter="avaluacio_ind" onclick="window.cdFilter('avaluacio_ind')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Aval. Individual</button>
+            <button class="type-pill" data-filter="seguiment_grup" onclick="window.cdFilter('seguiment_grup')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Seguiment</button>
+            <button class="type-pill" data-filter="planificacio_act" onclick="window.cdFilter('planificacio_act')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Planificació</button>
+            <button class="type-pill" data-filter="avaluacio_grup" onclick="window.cdFilter('avaluacio_grup')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Aval. Grupal</button>
+        </div>
+
+        <div id="cd-list">
+            <div class="empty-st">
+                <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#cbd5e1;display:block;margin:0 auto"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <h3>Carregant...</h3>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- MODAL -->
+<div id="cd-overlay" class="cd-overlay">
+    <div class="cd-modal">
+        <div class="cd-modal-hdr">
+            <h3 id="cd-modal-title">Nou Document</h3>
+            <button onclick="window.cdTancar()" style="background:none;border:none;cursor:pointer;color:#64748b;padding:4px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="cd-modal-body" id="cd-modal-body"></div>
+        <div class="cd-modal-ftr">
+            <button class="btn btn-ghost" onclick="window.cdTancar()">Cancel·lar</button>
+            <button class="btn btn-success" id="btn-xl" style="display:none" onclick="window.cdExcelCurrent()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Excel
+            </button>
+            <button class="btn btn-danger" id="btn-pdf" style="display:none" onclick="window.cdPDFCurrent()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                PDF
+            </button>
+            <button class="btn-draft" id="btn-draft" style="display:none" onclick="window.cdGuardar('esborrany')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Guardar esborrany
+            </button>
+            <button class="btn btn-primary" id="btn-save" style="display:none" onclick="window.cdGuardar('definitiu')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+                Guardar definitiu
+            </button>
+            <button class="btn btn-primary" id="btn-sign" style="display:none; background:#10b981; border-color:#10b981;" onclick="abrirParaFirmarCentreD()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 11h8M12 15h8M12 19h4"/></svg>
+                Enviar a Firmar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- BUILDER MODAL -->
+<div id="bldr-overlay" class="bldr-overlay">
+    <div class="bldr-modal">
+        <div class="bldr-hdr">
+            <h3>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                Gestionar Formularis
+            </h3>
+            <button onclick="window.closeBuilder()" style="background:none;border:none;cursor:pointer;color:#64748b;padding:4px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="bldr-body" id="bldr-body"></div>
+    </div>
+</div>
+
+<script src="security-check.js"></script>
+<script type="module">
+import { db, auth } from './firebase-config.js';
+import {
+    collection, addDoc, getDocs, updateDoc, doc, deleteDoc,
+    query, orderBy, serverTimestamp, where, onSnapshot
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { waitForCrypto } from './vault-init.js';
+import { decryptField } from './crypto-utils.js';
+
+// ======================================================
+// SVG ICON HELPERS
+// ======================================================
+const SVGICO = {
+    book:      (s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`,
+    eye:       (s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+    barChart:  (s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+    users:     (s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+    calendar:  (s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+    clipboard: (s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>`,
+    folder:    (s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`,
+    user:      (s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+    // Section title icons (small)
+    id:        (s=11)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
+    edit:      (s=11)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+    home:      (s=11)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+    pin:       (s=11)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+    alert:     (s=11)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    chart:     (s=11)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+    check:     (s=11)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>`,
+    target:    (s=11)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+    list:      (s=11)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`,
+    flag:      (s=11)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`,
+};
+
+// ======================================================
+// DOCUMENT TYPE REGISTRY
+// ======================================================
+const TYPES = {
+    diari_ind:      { nom: 'Diari Individual',         iconKey: 'book',      sub: 'individual', color: '#3b82f6', bg: '#eff6ff', desc: 'Registre diari d\'activitats i observacions' },
+    observacio_ind: { nom: 'Observació Individual',    iconKey: 'eye',       sub: 'individual', color: '#8b5cf6', bg: '#f5f3ff', desc: 'Observació detallada per àrees de desenvolupament' },
+    avaluacio_ind:  { nom: 'Avaluació Individual',     iconKey: 'barChart',  sub: 'individual', color: '#10b981', bg: '#ecfdf5', desc: 'Avaluació per competències (1r, 2n i Final)' },
+    avaluacio_general:{ nom: 'Avaluació General',      iconKey: 'clipboard', sub: 'individual', color: '#0ea5e9', bg: '#f0f9ff', desc: 'Avaluació general integral del beneficiari/ària' },
+    seguiment_grup: { nom: 'Seguiment Grupal',         iconKey: 'users',     sub: 'grupal',     color: '#f59e0b', bg: '#fffbeb', desc: 'Registre d\'observació i seguiment de sessions' },
+    planificacio_act:{ nom: 'Planificació Activitats', iconKey: 'calendar',  sub: 'grupal',     color: '#ef4444', bg: '#fef2f2', desc: 'Planificació i avaluació d\'activitats per trimestre' },
+    avaluacio_grup: { nom: 'Avaluació Grupal',         iconKey: 'clipboard', sub: 'grupal',     color: '#06b6d4', bg: '#ecfeff', desc: 'Avaluació grupal i dels participants per període' }
+};
+
+const RATING_LABELS = { '': '—', 'molt_bona': 'Molt bona', 'bona': 'Bona', 'regular': 'Regular', 'malament': 'Malament' };
+const RATING_NUM = { '': '—', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', '10': '10' };
+const CURSUS = ['2023-24', '2024-25', '2025-26', '2026-27'];
+
+// ======================================================
+// STATE
+// ======================================================
+const S = {
+    docs: [], expedients: [], groups: [],
+    cdBeneficiarios: [], // Beneficiarios del Centro de Día
+    filtered: [], filterKey: '',
+    currentTipus: '', currentDocId: null,
+    viewingDoc: null, actRows: [],
+    customForms: {}
+};
+window.BS = { view: 'list', editId: null, meta: {}, sections: [], evidencias: [] };
+
+// ======================================================
+// INIT
+// ======================================================
+window.addEventListener('DOMContentLoaded', async () => {
+    try { await (typeof auth.authStateReady === 'function' ? auth.authStateReady() : Promise.resolve()); } catch (e) {}
+    await waitForCrypto();
+    await Promise.all([loadDocs(), loadExpedients(), loadGroups(), loadCustomForms()]);
+    S.cdBeneficiarios = await loadCentroDiaBeneficiaries();
+    _bldrUpdateTypePills();
+    renderStats();
+    renderList();
+});
+
+let _unsubDocs = null;
+function loadDocs() {
+    if (_unsubDocs) _unsubDocs();
+    const q = query(collection(db, 'docs_centre_dia'), orderBy('createdAt', 'desc'));
+    return new Promise(resolve => {
+        let resolved = false;
+        _unsubDocs = onSnapshot(q, (snap) => {
+            S.docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            S.filtered = [...S.docs];
+            if (!resolved) { resolved = true; resolve(); }
+            else { renderStats(); renderList(); }
+        }, (e) => { console.warn('[loadDocs]', e); S.docs = []; S.filtered = []; if (!resolved) { resolved = true; resolve(); } });
+    });
+}
+
+async function loadExpedients() {
+    try {
+        const snap = await getDocs(collection(db, 'expedientes'));
+        const results = await Promise.all(snap.docs.map(async d => {
+            const v = d.data() || {};
+            let nom = '';
+            let cognoms = '';
+            if (v.dades_personals) {
+                try {
+                    const dec = await decryptField(v.dades_personals);
+                    const parsed = typeof dec === 'string' ? JSON.parse(dec) : dec;
+                    nom = parsed?.nom || '';
+                    cognoms = parsed?.cognoms || '';
+                } catch { /* encrypted field unreadable */ }
+            }
+            const fullNom = `${nom} ${cognoms}`.trim() || d.id;
+            return { id: d.id, nom: fullNom };
+        }));
+        S.expedients = results.filter(e => e.nom).sort((a, b) => a.nom.localeCompare(b.nom));
+    } catch (e) { S.expedients = []; }
+}
+
+async function loadGroups() {
+    try {
+        const snap = await getDocs(collection(db, 'grupos'));
+        S.groups = snap.docs.map(d => ({
+            id: d.id,
+            nom: d.data().nombre || d.data().nom || d.id,
+            membres: d.data().miembros || d.data().membres || [],
+            departamentoId: d.data().departamentoId || d.data().departmentId || '',
+            departamentoNombre: d.data().departamentoNombre || d.data().departmentName || ''
+        })).sort((a, b) => a.nom.localeCompare(b.nom));
+    } catch (e) { S.groups = []; }
+}
+
+async function loadCentroDiaBeneficiaries() {
+    try {
+        const gruposCD = S.groups.filter(g => 
+            (g.departamentoNombre || '').toLowerCase().includes('centre de dia') ||
+            (g.departamentoNombre || '').toLowerCase().includes('centro de día')
+        );
+        
+        if (gruposCD.length === 0) return [];
+        
+        const beneficiarioIds = new Set();
+        const bg = await getDocs(collection(db, 'beneficiarios_grupos'));
+        bg.docs.forEach(d => {
+            const data = d.data();
+            if (gruposCD.some(g => g.id === data.grupoId)) {
+                beneficiarioIds.add(data.beneficiarioId);
+            }
+        });
+
+        // Cargar expedientes correspondientes
+        const beneficiarios = [];
+        for (const bId of beneficiarioIds) {
+            const exp = S.expedients.find(e => e.id === bId);
+            if (exp) beneficiarios.push(exp);
+        }
+        
+        return beneficiarios.sort((a, b) => a.nom.localeCompare(b.nom));
+    } catch (e) { 
+        console.warn('[loadCentroDiaBeneficiaries]', e);
+        return []; 
+    }
+}
+
+// Auto-fill asistencia counts + La Caixa when beneficiary is selected
+const _MONTH_MAP = {'10':'oct','11':'nov','12':'des','01':'gen','02':'feb','03':'mar','04':'abr','05':'mai','06':'jun'};
+
+window.cdCambiarFiltro = function(filtroValue) {
+    const selectExp = document.getElementById('select-expediente');
+    if (!selectExp) return;
+
+    const expedientesAMostrar = filtroValue === 'centro-dia' ? S.cdBeneficiarios : S.expedients;
+    const optionsHtml = '<option value="">— Selecciona —</option>' + 
+        expedientesAMostrar.map(e => `<option value="${e.id}">${esc(e.nom)}</option>`).join('');
+    selectExp.innerHTML = optionsHtml;
+};
+
+window.cdExpedientChanged = async function(expId) {
+    if (!expId || S.currentTipus !== 'diari_ind') return;
+    try {
+        const [asistSnap, bgSnap] = await Promise.all([
+            getDocs(query(collection(db, 'asistencia'), where('beneficiarioId', '==', expId), where('estado', '==', 'P'))),
+            getDocs(query(collection(db, 'beneficiarios_grupos'), where('beneficiarioId', '==', expId)))
+        ]);
+        // Count P records per month
+        const perMonth = {};
+        asistSnap.docs.forEach(d => {
+            const fecha = d.data().fecha || '';
+            const mNum = fecha.split('-')[1];
+            const mKey = _MONTH_MAP[mNum];
+            if (mKey) perMonth[mKey] = (perMonth[mKey] || 0) + 1;
+        });
+        Object.entries(perMonth).forEach(([mKey, count]) => {
+            const racEl = document.querySelector(`[data-f="assist_raco_${mKey}"]`);
+            const ludEl = document.querySelector(`[data-f="assist_ludiques_${mKey}"]`);
+            if (racEl && !racEl.value) racEl.value = count;
+            if (ludEl && !ludEl.value) ludEl.value = count;
+        });
+        // Check La Caixa CPI
+        const isLaCaixa = bgSnap.docs.some(d => {
+            const dn = (d.data().departamentoNombre || '').toLowerCase();
+            return dn.includes('la caixa') || dn.includes('cpi');
+        });
+        const lacaixaEl = document.querySelector('[data-f="la_caixa"]');
+        if (lacaixaEl && isLaCaixa && !lacaixaEl.value) lacaixaEl.value = 'Sí';
+    } catch(e) { console.warn('[cdExpedientChanged]', e); }
+};
+
+// Manejar evidencias en seguimiento grupal
+window.cdAgregarEvidencia = function() {
+    const urlInput = document.getElementById('evidencia-url');
+    const descInput = document.getElementById('evidencia-desc');
+    
+    if (!urlInput || !descInput) return;
+    
+    const url = urlInput.value.trim();
+    const desc = descInput.value.trim();
+    
+    if (!url || !desc) {
+        alert('Por favor completa URL y descripción');
+        return;
+    }
+    
+    window.BS.evidencias.push({ url, desc });
+    window.cdRenderEvidencias();
+    urlInput.value = '';
+    descInput.value = '';
+};
+
+window.cdRenderEvidencias = function() {
+    const container = document.getElementById('evidencias-list');
+    if (!container) return;
+    
+    if (window.BS.evidencias.length === 0) {
+        container.innerHTML = '<div style="color:#94a3b8;font-size:0.8rem;padding:8px;text-align:center">No hay evidencias agregadas</div>';
+        return;
+    }
+    
+    container.innerHTML = window.BS.evidencias.map((e, idx) => `
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:6px;padding:8px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:start;gap:8px">
+            <div style="flex:1;min-width:0">
+                <div style="font-size:0.75rem;font-weight:600;color:#1e293b;word-break:break-word">${esc(e.url)}</div>
+                <div style="font-size:0.75rem;color:#64748b;margin-top:3px">${esc(e.desc)}</div>
+            </div>
+            <button type="button" onclick="window.cdEliminarEvidencia(${idx})" style="padding:3px 8px;background:#fee2e2;color:#dc2626;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem;font-weight:600;white-space:nowrap">Eliminar</button>
+        </div>
+    `).join('');
+};
+
+window.cdEliminarEvidencia = function(idx) {
+    window.BS.evidencias.splice(idx, 1);
+    window.cdRenderEvidencias();
+};
+
+// ======================================================
+// RENDER
+// ======================================================
+function renderStats() {
+    const byType = {};
+    S.docs.forEach(d => { byType[d.tipus] = (byType[d.tipus] || 0) + 1; });
+    let html = `<div class="stat-chip"><span class="n">${S.docs.length}</span> Documents totals</div>`;
+    Object.entries(TYPES).forEach(([k, t]) => {
+        if (byType[k]) html += `<div class="stat-chip" style="border-left:3px solid ${t.color}">${SVGICO[t.iconKey](14)}<span class="n" style="color:${t.color}">${byType[k]}</span><span style="color:#64748b;font-weight:600">${t.nom}</span></div>`;
+    });
+    document.getElementById('cd-stats').innerHTML = html;
+}
+
+function renderList() {
+    const el = document.getElementById('cd-list');
+    if (!S.filtered.length) {
+        el.innerHTML = `<div class="empty-st"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#cbd5e1;display:block;margin:0 auto"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><h3>Cap document trobat</h3><p>Crea el primer document amb el botó "Nou Document"</p></div>`;
+        return;
+    }
+    const cards = S.filtered.map(d => {
+        const t = TYPES[d.tipus] || S.customForms[d.tipus] || { nom: d.tipus, iconKey: 'folder', color: '#64748b', bg: '#f8fafc' };
+        const titol = d.subtipus === 'individual' ? (d.expedienteNom || '\u2014') : (d.grupNom || '\u2014');
+        const isDraft = d.estat === 'esborrany';
+        return `<div class="doc-card${isDraft?' doc-card-draft':''}" onclick="window.cdObrir('${d.id}')">
+            <div class="doc-card-badge" style="background:${t.bg};color:${t.color};display:inline-flex;align-items:center;gap:5px">${SVGICO[t.iconKey](13)} ${t.nom}${isDraft?`<span class="draft-tag">esborrany</span>`:''}</div>
+            <div class="doc-card-title">${esc(titol)}</div>
+            <div class="doc-card-meta" style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">${d.data?`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${esc(d.data)}`:''}${d.educador?` <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${esc(d.educador)}`:''}${d.curs?` · ${esc(d.curs)}`:''}</div>
+            <div class="doc-card-actions" onclick="event.stopPropagation()">
+                <button class="xl" onclick="window.cdExcelById('${d.id}')">↓ Excel</button>
+                <button class="pdf" onclick="window.abrirParaFirmarCentreD('${d.id}')">Signar</button>
+                <button class="pdf" onclick="window.cdPDFById('${d.id}')">↓ PDF</button>
+                <button onclick="window.cdObrir('${d.id}')">✏ Editar</button>
+            </div>
+        </div>`;
+    }).join('');
+    el.innerHTML = `<div class="doc-grid">${cards}</div>`;
+}
+
+// ======================================================
+// FILTER
+// ======================================================
+window.cdFilter = function(key) {
+    S.filterKey = key;
+    document.querySelectorAll('.type-pill').forEach(p => p.classList.toggle('active', p.dataset.filter === key));
+    if (!key) S.filtered = [...S.docs];
+    else if (key === 'individual' || key === 'grupal') S.filtered = S.docs.filter(d => d.subtipus === key);
+    else S.filtered = S.docs.filter(d => d.tipus === key);
+    renderList();
+};
+
+// ======================================================
+// MODAL OPEN
+// ======================================================
+window.novaDoc = function() {
+    S.currentDocId = null; S.viewingDoc = null; S.currentTipus = ''; S.actRows = [];
+    document.getElementById('cd-modal-title').textContent = 'Nou Document';
+    document.getElementById('btn-xl').style.display = 'none';
+    document.getElementById('btn-pdf').style.display = 'none';
+    document.getElementById('btn-draft').style.display = 'none';
+    document.getElementById('btn-save').style.display = 'none';
+    document.getElementById('cd-modal-body').innerHTML = buildTypeSelector();
+    document.getElementById('cd-overlay').style.display = 'flex';
+};
+
+window.cdObrir = function(id) {
+    const d = S.docs.find(x => x.id === id);
+    if (!d) return;
+    S.currentDocId = id; S.viewingDoc = d; S.currentTipus = d.tipus;
+    S.actRows = Array.isArray(d.contingut?.activitats) ? d.contingut.activitats.map(a => ({ ...a })) : [newActRow()];
+    window.BS.evidencias = Array.isArray(d.contingut?.evidencias_list) ? d.contingut.evidencias_list : [];
+    const t = TYPES[d.tipus] || S.customForms[d.tipus] || {};
+    document.getElementById('cd-modal-title').innerHTML = `<span style="color:${t.color};display:inline-flex;align-items:center">${SVGICO[t.iconKey]?.(16)||''}</span>&nbsp;${t.nom || d.tipus}`;
+    document.getElementById('btn-xl').style.display = '';
+    document.getElementById('btn-pdf').style.display = '';
+    document.getElementById('btn-draft').style.display = '';
+    document.getElementById('btn-save').style.display = '';
+    document.getElementById('cd-modal-body').innerHTML = buildForm(d.tipus, d);
+    document.getElementById('cd-overlay').style.display = 'flex';
+    if (d.tipus === 'planificacio_act') renderActRows();
+    if (d.tipus === 'seguiment_grup') setTimeout(() => window.cdRenderEvidencias(), 50);
+    if (d.tipus === 'avaluacio_grup') setTimeout(() => loadPartsEval(d), 50);
+};
+
+window.cdTancar = function() { document.getElementById('cd-overlay').style.display = 'none'; };
+
+// ======================================================
+// TYPE SELECTOR
+// ======================================================
+function buildTypeSelector() {
+    const group = (label, sub) => {
+        const entries = Object.entries(TYPES).filter(([, t]) => t.sub === sub);
+        return `<div style="font-size:0.62rem;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:8px;letter-spacing:0.5px">${label}</div>
+        <div class="type-sel-grid" style="margin-bottom:20px">
+        ${entries.map(([k, t]) => `<div class="type-sel-card" onclick="window.cdSelectTipus('${k}')" style="border-color:${t.color}30">
+            <div class="ticon" style="color:${t.color}">${SVGICO[t.iconKey](30)}</div>
+            <div class="name" style="color:${t.color}">${t.nom}</div>
+            <div class="desc">${t.desc}</div>
+        </div>`).join('')}
+        </div>`;
+    };
+    const customEntries = Object.entries(S.customForms).filter(([, f]) => f.active !== false);
+    const customGroup = customEntries.length ? `
+        <div style="font-size:0.62rem;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:8px;letter-spacing:0.5px">FORMULARIS PERSONALITZATS</div>
+        <div class="type-sel-grid" style="margin-bottom:20px">
+        ${customEntries.map(([k, t]) => `<div class="type-sel-card" onclick="window.cdSelectTipus('${k}')" style="border-color:${t.color}30">
+            <div class="ticon" style="color:${t.color}">${SVGICO[t.iconKey]?.(30) || SVGICO.folder(30)}</div>
+            <div class="name" style="color:${t.color}">${esc(t.nom)}</div>
+            <div class="desc">${esc(t.desc || '')}</div>
+        </div>`).join('')}
+        </div>` : '';
+    return `<div class="fsect-title">Tipus de document</div>
+    ${group('DOCUMENTS INDIVIDUALS (per beneficiari/ària)', 'individual')}
+    ${group('DOCUMENTS GRUPALS (per grup)', 'grupal')}${customGroup}`;
+}
+
+window.cdSelectTipus = function(tipus) {
+    S.currentTipus = tipus;
+    window.BS.evidencias = [];
+    const t = TYPES[tipus] || S.customForms[tipus] || {};
+    document.getElementById('cd-modal-title').innerHTML = `<span style="color:${t.color};display:inline-flex;align-items:center">${SVGICO[t.iconKey]?.(16)||SVGICO.folder(16)}</span>&nbsp;Nou Document &mdash; ${esc(t.nom||tipus)}`;
+    document.getElementById('cd-modal-body').innerHTML = buildForm(tipus, {});
+    document.getElementById('btn-draft').style.display = '';
+    document.getElementById('btn-save').style.display = '';
+    if (tipus === 'planificacio_act') { S.actRows = [newActRow()]; renderActRows(); }
+    if (tipus === 'seguiment_grup') setTimeout(() => window.cdRenderEvidencias(), 50);
+};
+
+// ======================================================
+// FORM BUILDERS
+// ======================================================
+function buildForm(tipus, d) {
+    const c = d.contingut || {};
+    const expOpts = S.expedients.map(e => `<option value="${e.id}" ${d.expedienteId === e.id ? 'selected' : ''}>${esc(e.nom)}</option>`).join('');
+    const grpOpts = S.groups.map(g => `<option value="${g.id}" ${d.grupId === g.id ? 'selected' : ''}>${esc(g.nom)}</option>`).join('');
+    switch (tipus) {
+        case 'diari_ind':       return fmDiari(d, c, expOpts);
+        case 'observacio_ind':  return fmObservacio(d, c, expOpts);
+        case 'avaluacio_ind':   return fmAvaluacioInd(d, c, expOpts);
+        case 'avaluacio_general': return fmAvaluacioGeneral(d, c, expOpts);
+        case 'seguiment_grup':  return fmSeguiment(d, c, grpOpts);
+        case 'planificacio_act':return fmPlanificacio(d, c, grpOpts);
+        case 'avaluacio_grup':  return fmAvaluacioGrup(d, c, grpOpts);
+        default:
+            if (S.customForms[tipus]) return buildCustomForm(tipus, d);
+            return '<p>Tipus desconegut.</p>';
+    }
+}
+
+function hdrInd(d, expOpts) {
+    const cdOpts = S.cdBeneficiarios.map(e => `<option value="${e.id}" ${d.expedienteId === e.id ? 'selected' : ''}>${esc(e.nom)}</option>`).join('');
+    const filterLabel = S.cdBeneficiarios.length > 0 ? 'Filtrar' : '';
+    const filterSelect = S.cdBeneficiarios.length > 0 ? `
+        <div class="ff" style="grid-column: 1"><label>${filterLabel}</label>
+            <select id="filtro-beneficiarios" onchange="window.cdCambiarFiltro(this.value)">
+                <option value="todos" selected>📋 Todos los beneficiarios</option>
+                <option value="centro-dia">🏫 Centro de Día</option>
+            </select>
+        </div>
+    ` : '';
+    return `<div class="frow c3">
+        <div class="ff"><label>Curs</label><select data-f="curs">${CURSUS.map(c => `<option ${(d.curs||'2025-26')===c?'selected':''}>${c}</option>`).join('')}</select></div>
+        <div class="ff"><label>Data *</label><input type="date" data-f="data" value="${d.data||''}"></div>
+        <div class="ff"><label>Educador/a *</label><input type="text" data-f="educador" placeholder="Nom educador/a" value="${esc(d.educador||'')}"></div>
+    </div>
+    ${filterSelect}
+    <div class="frow c1"><div class="ff"><label>Beneficiari/ària *</label>
+        <select id="select-expediente" data-f="expedienteId" onchange="window.cdExpedientChanged(this.value)"><option value="">— Selecciona —</option>${expOpts}</select>
+    </div></div>`;
+}
+
+function hdrGrp(d, grpOpts) {
+    return `<div class="frow c3">
+        <div class="ff"><label>Curs</label><select data-f="curs">${CURSUS.map(c => `<option ${(d.curs||'2025-26')===c?'selected':''}>${c}</option>`).join('')}</select></div>
+        <div class="ff"><label>Data</label><input type="date" data-f="data" value="${d.data||''}"></div>
+        <div class="ff"><label>Educador/a *</label><input type="text" data-f="educador" placeholder="Nom educador/a" value="${esc(d.educador||'')}"></div>
+    </div>
+    <div class="frow c1"><div class="ff"><label>Grup *</label>
+        <select data-f="grupId" onchange="window.cdGrupChanged(this)"><option value="">— Selecciona —</option>${grpOpts}</select>
+    </div></div>`;
+}
+
+function rrow(label, key, val) {
+    const v = (val && typeof val === 'object') ? val : {};
+    const opts = Object.entries(RATING_LABELS).map(([k, l]) => `<option value="${k}" ${(v.valor||'')==k?'selected':''}>${l}</option>`).join('');
+    return `<tr>
+        <td>${esc(label)}</td>
+        <td><select class="rsel" data-r="${key}">${opts}</select></td>
+        <td><input class="rnote" type="text" placeholder="Observació..." data-rn="${key}" value="${esc(v.notes||'')}"></td>
+    </tr>`;
+}
+
+function sel(field, options, current) {
+    return `<select data-f="${field}">${options.map(o => `<option ${current===o?'selected':''}>${o}</option>`).join('')}</select>`;
+}
+
+// DIARI INDIVIDUAL — exact indicators from DIARI 2025-26.xlsx
+function fmDiari(d, c, expOpts) {
+    function mnthRow(label, key) {
+        const MONTHS = ['oct','nov','des','gen','feb','mar','abr','mai','jun'];
+        const cells = MONTHS.map(m => `<td style="padding:2px"><input type="number" min="0" max="31" data-f="${key}_${m}" value="${esc(String(c[key+'_'+m]||''))}" style="width:38px;padding:3px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.75rem;text-align:center;font-family:inherit"></td>`).join('');
+        return `<tr><td style="padding:6px 8px;font-size:0.8rem;font-weight:600;color:#1e293b;white-space:nowrap">${esc(label)}</td>${cells}<td style="padding:6px 8px;font-size:0.8rem;font-weight:700;color:#2563eb;text-align:center">${MONTHS.reduce((s,m)=>s+(+c[key+'_'+m]||0),0)||''}</td></tr>`;
+    }
+    function mnthRowSiNo(label, key) {
+        const MONTHS = ['oct','nov','des','gen','feb','mar','abr','mai','jun'];
+        const cells = MONTHS.map(m => {
+            const val = c[key+'_'+m] || '';
+            return `<td style="padding:2px"><select data-f="${key}_${m}" style="width:62px;padding:3px 4px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.72rem;font-family:inherit"><option value="">—</option><option value="si" ${val==='si'?'selected':''}>Sí</option><option value="no" ${val==='no'?'selected':''}>No</option></select></td>`;
+        }).join('');
+        const total = MONTHS.filter(m => c[key+'_'+m] === 'si').length;
+        return `<tr><td style="padding:6px 8px;font-size:0.8rem;font-weight:600;color:#1e293b;white-space:nowrap">${esc(label)}</td>${cells}<td style="padding:6px 8px;font-size:0.8rem;font-weight:700;color:#2563eb;text-align:center">${total||''}</td></tr>`;
+    }
+    function indRow(label, key) {
+        const MONTHS = ['oct','nov','des','gen','feb','mar','abr','mai','jun'];
+        const opts = Object.entries(RATING_LABELS).map(([v,l])=>`<option value="${v}" ${(c[key]?.find?.(r=>r.mes==='X')||{}).val===v?'selected':''}>${l}</option>`).join('');
+        const cells = MONTHS.map(m => {
+            const saved = Array.isArray(c[key]) ? (c[key].find(r=>r.mes===m)||{}) : {};
+            return `<td style="padding:2px"><select data-f="${key}__${m}" style="width:90px;padding:3px 4px;border:1px solid #e2e8f0;border-radius:4px;font-size:0.68rem;font-family:inherit"><option value="">—</option>${['molt_bona','bona','regular','malament'].map(v=>`<option value="${v}" ${saved.val===v?'selected':''}>${RATING_LABELS[v]}</option>`).join('')}</select></td>`;
+        }).join('');
+        return `<tr><td style="padding:6px 8px;font-size:0.78rem;font-weight:600;color:#1e293b;max-width:200px">${esc(label)}</td>${cells}</tr>`;
+    }
+    const MONTHS = ['oct','nov','des','gen','feb','mar','abr','mai','jun'];
+    const mHdr = MONTHS.map(m=>`<th style="padding:5px 3px;font-size:0.62rem;font-weight:800;text-transform:uppercase;color:#64748b;min-width:42px">${m.toUpperCase()}</th>`).join('');
+    const tStyle = 'width:100%;border-collapse:collapse;font-size:0.8rem;margin-bottom:4px';
+    return `
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.id()} Identificació</div>
+    ${hdrInd(d, expOpts)}</div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.calendar(11)} ACONSEGUIR UNA ASSISTÈNCIA ESTABLE I CONTINUADA</div>
+        <div style="overflow-x:auto"><table style="${tStyle}">
+            <thead><tr><th style="text-align:left;padding:5px 8px;font-size:0.65rem;font-weight:800;color:#64748b;min-width:200px">Indicador</th>${mHdr}<th style="padding:5px;font-size:0.62rem;color:#64748b">TOTAL</th></tr></thead>
+            <tbody>
+                ${mnthRow("Assistència mensual de l'infant (racó)(*)", 'assist_raco')}
+                ${mnthRow("Assistència mensual de l'infant (lúdiques)(*)", 'assist_ludiques')}
+            </tbody>
+        </table></div>
+        <div class="frow c1" style="margin-top:10px"><div class="ff"><label>Observacions</label><textarea data-f="obs_assistencia">${esc(c.obs_assistencia||'')}</textarea></div></div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.edit()} MILLORAR ELS HÀBITS D'ESTUDI</div>
+        <p style="font-size:0.75rem;color:#64748b;margin:0 0 10px">Qualificació per mes: Molt bona / Bona / Regular / Malament</p>
+        <div style="overflow-x:auto"><table style="${tStyle}">
+            <thead><tr><th style="text-align:left;padding:5px 8px;font-size:0.65rem;font-weight:800;color:#64748b;min-width:220px">Indicador (*)</th>${mHdr}</tr></thead>
+            <tbody>
+                ${indRow("S'organitza i planifica les tasques", 'hab_organitza')}
+                ${indRow("Du l'agenda i el material escolar", 'hab_agenda')}
+                ${indRow('Bon seguiment de les tasques escolars', 'hab_seguiment')}
+                ${indRow('És autònom per fer les tasques', 'hab_autonomia')}
+                ${indRow("Adequada implicació de l'infant a l'escola", 'hab_implicacio')}
+            </tbody>
+        </table></div>
+        <div class="frow c1" style="margin-top:10px"><div class="ff"><label>Observacions</label><textarea data-f="obs_habits">${esc(c.obs_habits||'')}</textarea></div></div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.users(11)} MILLORAR LES RELACIONS INTERPERSONALS</div>
+        <div style="overflow-x:auto"><table style="${tStyle}">
+            <thead><tr><th style="text-align:left;padding:5px 8px;font-size:0.65rem;font-weight:800;color:#64748b;min-width:220px">Indicador (*)</th>${mHdr}</tr></thead>
+            <tbody>
+                ${indRow('Participa positivament a les activitats', 'rel_participa')}
+                ${indRow('Es sent bé dintre del grup', 'rel_sentbe')}
+                ${indRow('Relacions i vincles són positius amb adults', 'rel_adults')}
+                ${indRow('Relacions i vincles són positius amb iguals', 'rel_iguals')}
+                ${indRow('Fa una bona gestió dels conflictes', 'rel_conflictes')}
+                ${indRow('Identifica i gestiona les emocions', 'rel_emocions')}
+            </tbody>
+        </table></div>
+        <div class="frow c1" style="margin-top:10px"><div class="ff"><label>Observacions</label><textarea data-f="obs_relacions">${esc(c.obs_relacions||'')}</textarea></div></div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.alert()} DETECTAR SITUACIONS DE RISC</div>
+        <div style="overflow-x:auto"><table style="${tStyle}">
+            <thead><tr><th style="text-align:left;padding:5px 8px;font-size:0.65rem;font-weight:800;color:#64748b;min-width:220px">Indicador (*)</th>${mHdr}</tr></thead>
+            <tbody>
+                ${indRow("L'infant és puntual", 'risc_puntual')}
+                ${indRow("Supervisió i cura de la família és adequada", 'risc_familia')}
+                ${indRow("El context familiar és segur per l'infant", 'risc_context')}
+            </tbody>
+        </table></div>
+        <div class="frow c1" style="margin-top:10px"><div class="ff"><label>Observacions</label><textarea data-f="obs_risc">${esc(c.obs_risc||'')}</textarea></div></div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.check()} MILLORAR ELS HÀBITS DE VIDA SALUDABLE</div>
+        <div style="overflow-x:auto"><table style="${tStyle}">
+            <thead><tr><th style="text-align:left;padding:5px 8px;font-size:0.65rem;font-weight:800;color:#64748b;min-width:220px">Indicador (*)</th>${mHdr}<th style="padding:5px;font-size:0.62rem;color:#64748b">TOTAL SÍ</th></tr></thead>
+            <tbody>
+                ${mnthRowSiNo("Participa d'activitats d'esport i/o moviment", 'salut_esport')}
+                ${mnthRowSiNo("Fa ús dels berenars saludables", 'salut_berenars')}
+            </tbody>
+        </table></div>
+        <div class="frow c1" style="margin-top:10px"><div class="ff"><label>Observacions</label><textarea data-f="obs_salut">${esc(c.obs_salut||'')}</textarea></div></div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.pin()} Informació addicional</div>
+        <div class="frow"><div class="ff"><label>Escola i curs</label><input type="text" data-f="escola" value="${esc(c.escola||'')}"></div>
+        <div class="ff"><label>Grup</label><input type="text" data-f="grup" value="${esc(c.grup||'')}"></div></div>
+        <div class="frow"><div class="ff"><label>Programes</label><input type="text" data-f="programes" value="${esc(c.programes||'')}"></div>
+        <div class="ff"><label>"La Caixa"</label><input type="text" data-f="la_caixa" value="${esc(c.la_caixa||'')}"></div></div>
+        <div class="frow"><div class="ff"><label>Voluntaris/es</label><input type="text" data-f="voluntaris" value="${esc(c.voluntaris||'')}"></div><div class="ff"></div></div>
+    </div>`;
+}
+
+// OBSERVACIÓ INDIVIDUAL — from Diario de observación.xlsx (simple: Fecha + Observaciones)
+function fmObservacio(d, c, expOpts) {
+    return `<div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.id()} Identificació</div>${hdrInd(d, expOpts)}</div>
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.eye(11)} Diari d'observació</div>
+        <div class="frow c1"><div class="ff"><label>Data</label><input type="date" data-f="data_obs" value="${esc(c.data_obs||d.data||'')}"></div></div>
+        <div class="frow c1"><div class="ff"><label>Observacions</label><textarea data-f="observacions" style="min-height:200px" placeholder="Descriure les observacions del dia...">${esc(c.observacions||'')}</textarea></div></div>
+    </div>`;
+}
+
+// AVALUACIÓ INDIVIDUAL (1ª, 2ª i FINAL) — exact items from AVAL templates
+function fmAvaluacioInd(d, c, expOpts) {
+    function arow(label, key) {
+        const opts = Object.entries(RATING_LABELS).map(([v,l])=>`<option value="${v}" ${(c[key]?.val||'')==v?'selected':''}>${l}</option>`).join('');
+        return `<tr>
+            <td style="padding:8px 10px;font-size:0.82rem;font-weight:600;color:#1e293b">${esc(label)}</td>
+            <td style="padding:5px"><select class="rsel" data-r="${key}" style="min-width:130px"><option value="">— Selecciona —</option>${opts}</select></td>
+            <td style="padding:5px"><input class="rnote" type="text" placeholder="Observació..." data-rn="${key}" value="${esc(c[key]?.notes||'')}"></td>
+        </tr>`;
+    }
+    return `<div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.id()} Identificació</div>
+    ${hdrInd(d, expOpts)}
+    <div class="frow c3">
+        <div class="ff"><label>Període *</label>
+            <select data-f="periode">
+                <option value="">— Selecciona —</option>
+                ${['1a Avaluació (Desembre)','2a Avaluació (Març)','Avaluació Final (Juny)'].map(o=>`<option ${(c.periode||'')==o?'selected':''}>${o}</option>`).join('')}
+            </select>
+        </div>
+        <div class="ff"><label>Escola</label><input type="text" data-f="escola" value="${esc(c.escola||'')}"></div>
+        <div class="ff"><label>Grup</label><input type="text" data-f="grup" value="${esc(c.grup||'')}"></div>
+    </div>
+    <div class="frow">
+        <div class="ff"><label>Programes</label><input type="text" data-f="programes" value="${esc(c.programes||'')}"></div>
+        <div class="ff"><label>Voluntaris/es</label><input type="text" data-f="voluntaris" value="${esc(c.voluntaris||'')}"></div>
+    </div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.edit()} REFORÇ EDUCATIU</div>
+        <p style="font-size:0.73rem;color:#64748b;margin:0 0 10px">* Cada ítem s'ha de contestar amb: Molt bona / Bona / Regular / Malament. Afegir SEMPRE una petita observació.</p>
+        <table class="rtable"><thead><tr><th style="width:230px">Ítem</th><th style="width:155px">Qualificació</th><th>Observació</th></tr></thead><tbody>
+            ${arow("Organització / planificació", 'ref_organitzacio')}
+            ${arow("Ús agenda", 'ref_agenda')}
+            ${arow("Socials", 'ref_socials')}
+            ${arow("Matemàtiques", 'ref_matematiques')}
+            ${arow("Lingüístiques", 'ref_linguistiques')}
+            ${arow("Higiene de l'espai/cura del material", 'ref_higiene')}
+            ${arow("Seguiment tasques escolars", 'ref_seguiment')}
+            ${arow("Assistència i implicació a les sessions de reforç", 'ref_assistencia')}
+            ${arow("Autonomia per fer les tasques", 'ref_autonomia')}
+            ${arow("Implicació del menor a l'escola", 'ref_implicacio')}
+        </tbody></table>
+        <div class="frow c1" style="margin-top:10px"><div class="ff"><label>Observacions generals Reforç Educatiu</label><textarea data-f="obs_reforc">${esc(c.obs_reforc||'')}</textarea></div></div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.users(11)} ACTIVITATS LÚDIQUES</div>
+        <table class="rtable"><thead><tr><th style="width:230px">Ítem</th><th style="width:155px">Qualificació</th><th>Observació</th></tr></thead><tbody>
+            ${arow("Participar de les activitats i està integrat en el grup", 'lud_participa')}
+            ${arow("Desenvolupa relacions i vincles positius amb adults", 'lud_vincles_adults')}
+            ${arow("Desenvolupa relacions i vincles positius amb iguals", 'lud_vincles_iguals')}
+        </tbody></table>
+        <div class="frow c1" style="margin-top:10px"><div class="ff"><label>Observacions generals Activitats Lúdiques</label><textarea data-f="obs_ludiques">${esc(c.obs_ludiques||'')}</textarea></div></div>
+    </div>`;
+}
+
+// AVALUACIÓ GENERAL — integral view across key dimensions
+function fmAvaluacioGeneral(d, c, expOpts) {
+    function gRow(label, key) {
+        const opts = Object.entries(RATING_NUM).map(([v,l])=>`<option value="${v}" ${(c[key]?.val||'')==v?'selected':''}>${l}</option>`).join('');
+        return `<tr>
+            <td style="padding:8px 10px;font-size:0.82rem;font-weight:600;color:#1e293b">${esc(label)}</td>
+            <td style="padding:5px"><select class="rsel" data-r="${key}" style="min-width:90px">${opts}</select></td>
+            <td style="padding:5px"><input class="rnote" type="text" placeholder="Observació..." data-rn="${key}" value="${esc(c[key]?.notes||'')}"></td>
+        </tr>`;
+    }
+
+    return `<div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.id()} Identificació</div>
+    ${hdrInd(d, expOpts)}
+    <div class="frow c3">
+        <div class="ff"><label>Període *</label>
+            <select data-f="periode">
+                <option value="">— Selecciona —</option>
+                ${['Inicial','1r Trimestre','2n Trimestre','3r Trimestre','Final de curs'].map(o=>`<option ${(c.periode||'')==o?'selected':''}>${o}</option>`).join('')}
+            </select>
+        </div>
+        <div class="ff"><label>Data d'avaluació</label><input type="date" data-f="data_avaluacio" value="${esc(c.data_avaluacio||d.data||'')}"></div>
+        <div class="ff"><label>Nivell general</label>
+            <select data-f="nivell_general">
+                <option value="">— Selecciona —</option>
+                ${['Molt positiu','Positiu','Adequat','Amb dificultats','Prioritari'].map(o=>`<option ${(c.nivell_general||'')==o?'selected':''}>${o}</option>`).join('')}
+            </select>
+        </div>
+    </div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.chart()} Valoració per dimensions (1-10)</div>
+        <p style="font-size:0.73rem;color:#64748b;margin:0 0 10px">1 = molt baix, 10 = molt alt. Afegir observació breu a cada dimensió.</p>
+        <table class="rtable"><thead><tr><th style="width:260px">Dimensió</th><th style="width:110px">Valoració</th><th>Observació</th></tr></thead><tbody>
+            ${gRow('Autonomia personal', 'gen_autonomia')}
+            ${gRow('Habilitats socials', 'gen_social')}
+            ${gRow('Participació i implicació', 'gen_participacio')}
+            ${gRow('Regulació emocional', 'gen_emocional')}
+            ${gRow('Comunicació i expressió', 'gen_comunicacio')}
+            ${gRow('Rendiment educatiu / escolar', 'gen_escolar')}
+            ${gRow('Relació amb adults de referència', 'gen_rel_adults')}
+            ${gRow('Relació amb iguals', 'gen_rel_iguals')}
+        </tbody></table>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.target()} Síntesi i pla d'acció</div>
+        <div class="frow c1"><div class="ff"><label>Fortaleses principals</label><textarea data-f="fortaleses" style="min-height:70px">${esc(c.fortaleses||'')}</textarea></div></div>
+        <div class="frow c1" style="margin-top:9px"><div class="ff"><label>Necessitats detectades</label><textarea data-f="necessitats" style="min-height:70px">${esc(c.necessitats||'')}</textarea></div></div>
+        <div class="frow c1" style="margin-top:9px"><div class="ff"><label>Objectius prioritaris (proper període)</label><textarea data-f="objectius_prioritaris" style="min-height:70px">${esc(c.objectius_prioritaris||'')}</textarea></div></div>
+        <div class="frow c1" style="margin-top:9px"><div class="ff"><label>Intervencions recomanades</label><textarea data-f="intervencions" style="min-height:70px">${esc(c.intervencions||'')}</textarea></div></div>
+        <div class="frow c1" style="margin-top:9px"><div class="ff"><label>Observacions finals</label><textarea data-f="obs_finals" style="min-height:80px">${esc(c.obs_finals||'')}</textarea></div></div>
+    </div>`;
+}
+
+// SEGUIMENT GRUPAL — exact dimensions from REGISTRE OBSERVACIÓ I SEGUIMENT GRUPAL NUEVO.docx
+function fmSeguiment(d, c, grpOpts) {
+    function dim(label, key, hint) {
+        return `<tr>
+            <td style="padding:8px 10px;font-size:0.82rem;font-weight:600;color:#1e293b;min-width:220px;vertical-align:top">
+                ${esc(label)}<br><span style="font-size:0.7rem;font-weight:400;color:#94a3b8;font-style:italic">${esc(hint)}</span>
+            </td>
+            <td style="padding:5px;vertical-align:top;min-width:80px">
+                <select class="rsel" data-r="${key}" style="min-width:75px">
+                    <option value="">—</option>
+                    ${Object.entries(RATING_NUM).slice(1).map(([v,l])=>`<option value="${v}" ${(c[key]?.val||'')==v?'selected':''}>${l}</option>`).join('')}
+                </select>
+            </td>
+            <td style="padding:5px;vertical-align:top"><textarea class="rnote" data-rn="${key}" placeholder="Descripció / observació qualitativa..." style="min-height:55px;resize:vertical">${esc(c[key]?.notes||'')}</textarea></td>
+        </tr>`;
+    }
+    return `<div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.id()} 1. DADES GENERALS</div>
+    ${hdrGrp(d, grpOpts)}
+    <div class="frow c3">
+        <div class="ff"><label>Trimestre</label>
+            <select data-f="trimestre"><option value="">— Selecciona —</option>
+            ${['1r Trimestre','2n Trimestre','3r Trimestre'].map(o=>`<option ${(c.trimestre||'')==o?'selected':''}>${o}</option>`).join('')}
+            </select>
+        </div>
+        <div class="ff"><label>Nombre de participants</label><input type="number" data-f="num_participants" min="0" value="${esc(String(c.num_participants||''))}"></div>
+        <div class="ff"><label>Rang d'edat del grup</label><input type="text" data-f="rang_edat" placeholder="Ex: 8-12 anys" value="${esc(c.rang_edat||'')}"></div>
+    </div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.chart()} 2. OBSERVACIÓ I VALORACIÓ (1 = molt baix / 10 = molt alt)</div>
+        <div style="overflow-x:auto"><table class="rtable">
+            <thead><tr><th>Dimensió observada</th><th style="min-width:80px">Valoració (1–10)</th><th>Descripció / Observació qualitativa</th></tr></thead>
+            <tbody>
+                ${dim('Compliment de normes grupals', 'dim_normes', 'El grup respecta les normes del centre, accepta límits, necessita recordatoris constants...')}
+                ${dim('Relació entre iguals, respecte i grau d\'acceptació', 'dim_iguals', 'Hi ha respecte, rebuig o burles, aïllament d\'alguns membres, subgrups tancats...')}
+                ${dim('Participació i implicació en les activitats', 'dim_participacio', 'El grup participa, s\'implica, mostra interès, abandona les tasques, participa si s\'insisteix...')}
+                ${dim('Comunicació i escolta en el grup', 'dim_comunicacio', 'El grup respecta torns de paraula, crida, interromp, sap escoltar, utilitza llenguatge agressiu...')}
+                ${dim('Treball en equip i cooperació', 'dim_equip', 'El grup col·labora, comparteix materials, s\'ajuda en tasques grupals, vol fer-ho tot individualment...')}
+                ${dim('Responsabilitat dins del grup', 'dim_responsabilitat', 'El grup cuida el material, compleix encàrrecs, recull l\'espai, assumeix responsabilitats...')}
+                ${dim('Autoestima i seguretat en si mateixos', 'dim_autoestima', 'El grup mostra seguretat, confia en les seves capacitats, mostra inseguretat, busca aprovació...')}
+                ${dim('Autonomia personal', 'dim_autonomia', 'El grup és autònom en les activitats, pren decisions, resol petites dificultats, depèn molt de l\'adult...')}
+                ${dim('Empatia i suport entre iguals', 'dim_empatia', 'Al grup s\'ajuden entre companys/es, es preocupen per l\'altre, es riuen, ignoren o no ajuden...')}
+                ${dim('Sentiment de pertinença al grup', 'dim_pertinenca', 'El grup se sent part del centre, cuida el grup, hi ha sentiment de grup, volen venir...')}
+                ${dim('Regulació emocional i tolerància a la frustració', 'dim_regulacio', 'El grup es frustra fàcilment, hi ha enfados freqüents, saben calmar-se, accepten perdre...')}
+                ${dim('Resolució de conflictes', 'dim_conflictes', 'El grup dialoga, demana ajuda, utilitza l\'agressivitat, evita conflictes, busca solucions...')}
+                ${dim('Relació i vincle amb l\'educador/a', 'dim_vincle_edu', 'El grup confia en l\'educador/a, busca ajuda, rebutja l\'adult, desafia constantment, hi ha vincle positiu...')}
+            </tbody>
+        </table></div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.target()} 3. OBJECTIUS I EVOLUCIÓ TRIMESTRAL</div>
+        <div class="frow c1"><div class="ff"><label>Evolució respecte als objectius plantejats</label><textarea data-f="evolucio_objectius" style="min-height:80px" placeholder="Descriure breument els progressos, dificultats o canvis observats en relació amb els objectius establerts per a aquest trimestre...">${esc(c.evolucio_objectius||'')}</textarea></div></div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.flag()} 4. FORTALESES, ASPECTES A MILLORAR I ESTRATÈGIES</div>
+        <div class="frow c1"><div class="ff"><label>Fortaleses del grup</label><textarea data-f="fortaleses">${esc(c.fortaleses||'')}</textarea></div></div>
+        <div class="frow c1" style="margin-top:9px"><div class="ff"><label>Aspectes a millorar</label><textarea data-f="aspectes_millorar">${esc(c.aspectes_millorar||'')}</textarea></div></div>
+        <div class="frow c1" style="margin-top:9px"><div class="ff"><label>Estratègies, tècniques i recursos utilitzats</label><textarea data-f="estrategies" placeholder="Ex: cohesió grupal, economia de fitxes, dinàmiques d'habilitats socials, mediació, reforç positiu...">${esc(c.estrategies||'')}</textarea></div></div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.edit()} 6. EVIDÈNCIES GRÀFIQUES O DOCUMENTALS</div>
+        <div class="frow c1">
+            <div class="ff">
+                <label>Afegir evidència (foto/descripció)</label>
+                <div style="display:grid;grid-template-columns:1fr 120px;gap:8px;margin-bottom:8px">
+                    <input type="text" id="evidencia-url" placeholder="URL de la imatge (o nom de l'arxiu)" style="padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-family:inherit">
+                    <input type="text" id="evidencia-desc" placeholder="Descripció" style="padding:8px;border:1px solid #e2e8f0;border-radius:6px;font-family:inherit">
+                    <button type="button" onclick="window.cdAgregarEvidencia()" style="grid-column:1/-1;padding:8px;background:#3b82f6;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-family:inherit">+ Afegir evidència</button>
+                </div>
+                <div id="evidencias-list" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px;max-height:200px;overflow-y:auto;margin-bottom:8px"></div>
+                <textarea data-f="evidencies" placeholder="Descripció general d'evidències..." style="min-height:60px">${esc(c.evidencies||'')}</textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.pin()} 7. OBSERVACIONS FINALS I PROJECCIONS PER AL PROPER TRIMESTRE</div>
+        <div class="frow c1"><div class="ff"><label>Observacions finals / projeccions</label><textarea data-f="obs_finals" style="min-height:80px">${esc(c.obs_finals||'')}</textarea></div></div>
+    </div>`;
+}
+
+// PLANIFICACIÓ ACTIVITATS — exact evaluation items from PLANIFICACIÓ I AVALUACIÓ ACTIVITATS 25-26.odt
+function fmPlanificacio(d, c, grpOpts) {
+    return `<div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.id()} Identificació</div>
+    ${hdrGrp(d, grpOpts)}
+    <div class="frow c1"><div class="ff"><label>Mes</label><input type="text" data-f="mes" placeholder="Ex: Octubre 2025" value="${esc(c.mes||'')}"></div></div>
+    <div class="frow c1"><div class="ff"><label>Rutina de la setmana</label><textarea data-f="rutina" placeholder="Descriure la rutina setmanal...">${esc(c.rutina||'')}</textarea></div></div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.calendar(11)} Activitats planificades</div>
+        <div style="overflow-x:auto"><div style="min-width:750px">
+            <div style="display:grid;grid-template-columns:70px 1fr 1fr 1fr 1fr 30px;gap:8px;padding:7px 0;font-size:0.6rem;font-weight:800;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">
+                <span>Setmana</span><span>Nom activitat</span><span>Descripció i desenvolupament</span><span>Objectius</span><span>Material</span><span></span>
+            </div>
+            <div id="act-rows"></div>
+        </div></div>
+        <button class="btn-add-act" onclick="window.cdAddActRow()">+ Afegir activitat</button>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.chart()} Ítems d'avaluació per sessió</div>
+        <p style="font-size:0.75rem;color:#64748b;margin:0 0 10px">Valoració de l'1 al 5 per cada ítem d'avaluació de les sessions realitzades.</p>
+        <table class="rtable"><thead><tr><th>Ítem d'avaluació</th><th style="width:130px">Valoració (1–5)</th><th>Observació</th></tr></thead><tbody>
+            ${_aval5row('Participació activa dels infants', 'aval_participacio', c)}
+            ${_aval5row("Implicació i actitud del voluntariat", 'aval_voluntariat', c)}
+            ${_aval5row("Adequació i comprensibilitat de les dinàmiques proposades", 'aval_adequacio', c)}
+            ${_aval5row("Idoneïtat dels materials disponibles", 'aval_materials', c)}
+            ${_aval5row("Capacitat de reflexió i expressió dels infants", 'aval_reflexio', c)}
+            ${_aval5row("Grau d'assoliment dels objectius de la sessió", 'aval_objectius', c)}
+            ${_aval5row("Motivació i interès del grup durant l'activitat", 'aval_motivacio', c)}
+            ${_aval5row("Cohesió i interacció positiva entre participants", 'aval_cohesio', c)}
+        </tbody></table>
+        <div class="frow c1" style="margin-top:9px"><div class="ff"><label>Incidències</label><textarea data-f="incidencies">${esc(c.incidencies||'')}</textarea></div></div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.check()} Valoració global del mes</div>
+        <div class="frow c1"><div class="ff"><label>Aspectes positius i potencialitats</label><textarea data-f="aspectes_positius">${esc(c.aspectes_positius||'')}</textarea></div></div>
+        <div class="frow c1" style="margin-top:9px"><div class="ff"><label>Propostes de millora</label><textarea data-f="propostes_millora">${esc(c.propostes_millora||'')}</textarea></div></div>
+        <div class="frow c1" style="margin-top:9px"><div class="ff"><label>Observacions generals</label><textarea data-f="observacions_generals">${esc(c.observacions_generals||'')}</textarea></div></div>
+    </div>`;
+}
+function _aval5row(label, key, c) {
+    const opts = ['','1','2','3','4','5'].map(v=>`<option value="${v}" ${(c[key]?.val||'')==v?'selected':''}>${v||'—'}</option>`).join('');
+    return `<tr><td style="padding:8px 10px;font-size:0.82rem;font-weight:600;color:#1e293b">${esc(label)}</td>
+        <td style="padding:5px"><select class="rsel" data-r="${key}">${opts}</select></td>
+        <td style="padding:5px"><input class="rnote" type="text" placeholder="Observació..." data-rn="${key}" value="${esc(c[key]?.notes||'')}"></td>
+    </tr>`;
+}
+
+// AVALUACIÓ GRUPAL — from EVALUACION NIÑOS 2025-2026 CENTRE DE DIA.docx
+function fmAvaluacioGrup(d, c, grpOpts) {
+    return `<div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.id()} Identificació</div>
+    ${hdrGrp(d, grpOpts)}
+    <div class="frow">
+        <div class="ff"><label>Periode *</label>
+            <select data-f="periode"><option value="">— Selecciona —</option>
+            ${['1a Avaluació (Desembre)','2a Avaluació (Març)','Avaluació Final (Juny)'].map(o=>`<option ${(c.periode||'')==o?'selected':''}>${o}</option>`).join('')}
+            </select>
+        </div>
+        <div class="ff"><label>Valoració general del grup</label>
+            <select data-f="valoracio_grup"><option value="">— Selecciona —</option>
+            ${['Molt positiva','Positiva','Acceptable','Millorable','Negativa'].map(o=>`<option ${(c.valoracio_grup||'')==o?'selected':''}>${o}</option>`).join('')}
+            </select>
+        </div>
+    </div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.clipboard(11)} Avaluació individual dels participants</div>
+        <div id="parts-eval"><p style="color:#64748b;font-size:0.85rem">Selecciona el grup per veure els participants...</p></div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.chart()} Resum de l'avaluació del grup</div>
+        <div class="frow c1"><div class="ff"><label>Resum narratiu del grup (característiques, incidències, comportament...)</label><textarea data-f="resum_grup" style="min-height:100px" placeholder="Ex: El grup ha tingut una assistència bona. El grup ha destacat per tenir nens/es amb les següents característiques...">${esc(c.resum_grup||'')}</textarea></div></div>
+        <div class="frow c1" style="margin-top:9px"><div class="ff"><label>Activitats que han funcionat millor</label><textarea data-f="activ_millors">${esc(c.activ_millors||'')}</textarea></div></div>
+        <div class="frow c1" style="margin-top:9px"><div class="ff"><label>Activitats que han funcionat menys</label><textarea data-f="activ_menys">${esc(c.activ_menys||'')}</textarea></div></div>
+        <div class="frow c1" style="margin-top:9px"><div class="ff"><label>Sortides i activitats especials destacades</label><textarea data-f="sortides">${esc(c.sortides||'')}</textarea></div></div>
+        <div class="frow c1" style="margin-top:9px"><div class="ff"><label>Casos a destacar / prioritzar</label><textarea data-f="casos_destacar" placeholder="Nom: situació...">${esc(c.casos_destacar||'')}</textarea></div></div>
+    </div>
+
+    <div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.flag()} Propostes i millores</div>
+        <div class="frow c1"><div class="ff"><label>Suggerències per al proper curs / Activitats que els agradaria fer</label><textarea data-f="suggerencies">${esc(c.suggerencies||'')}</textarea></div></div>
+        <div class="frow c1" style="margin-top:9px"><div class="ff"><label>Queixes o aspectes a millorar sobre el funcionament</label><textarea data-f="queixes">${esc(c.queixes||'')}</textarea></div></div>
+        <div class="frow c1" style="margin-top:9px"><div class="ff"><label>Propostes de millora per a l'organització del centre de dia</label><textarea data-f="propostes_millora">${esc(c.propostes_millora||'')}</textarea></div></div>
+    </div>`;
+}
+
+// ======================================================
+// DYNAMIC HELPERS
+// ======================================================
+window.cdGrupChanged = function(sel) {
+    if (S.currentTipus === 'avaluacio_grup') loadPartsEval({ grupId: sel.value, contingut: {} });
+};
+
+function loadPartsEval(d) {
+    const sel = document.querySelector('[data-f="grupId"]');
+    const grupId = sel ? sel.value : d.grupId;
+    const grup = S.groups.find(g => g.id === grupId);
+    const container = document.getElementById('parts-eval');
+    if (!container) return;
+    const membres = grup?.membres || [];
+    const saved = d.contingut?.parts_eval || {};
+    if (!membres.length) {
+        container.innerHTML = '<p style="color:#64748b;font-size:0.85rem">El grup no té membres registrats.</p>';
+        return;
+    }
+    const COMPS = [['Autonomia','autonomia'],['Social','social'],['Participació','participacio'],['Actitud','actitud']];
+    const rOpts = Object.entries(RATING_LABELS).map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+    const rows = membres.map((m, i) => {
+        const nom = typeof m === 'string' ? m : (m.nombre || m.nom || `Participant ${i + 1}`);
+        const sv = saved[nom] || {};
+        const cells = COMPS.map(([, k]) => `<td style="padding:5px"><select style="width:100%;padding:4px 6px;border:1px solid #e2e8f0;border-radius:5px;font-size:0.75rem;font-family:inherit" data-part="${esc(nom)}" data-comp="${k}">${Object.entries(RATING_LABELS).map(([v, l]) => `<option value="${v}" ${(sv[k]||'')==v?'selected':''}>${l}</option>`).join('')}</select></td>`).join('');
+        return `<tr><td style="padding:5px 9px;font-weight:600;font-size:0.82rem">${esc(nom)}</td>${cells}<td style="padding:5px"><input type="text" style="width:100%;padding:4px 7px;border:1px solid #e2e8f0;border-radius:5px;font-size:0.75rem;font-family:inherit" placeholder="Obs..." data-part="${esc(nom)}" data-comp="notes" value="${esc(sv.notes||'')}"></td></tr>`;
+    }).join('');
+    container.innerHTML = `<p style="font-size:0.75rem;color:#64748b;margin:0 0 8px">1 = Necessita suport &nbsp;|&nbsp; 2 = En procés &nbsp;|&nbsp; 3 = Assolit &nbsp;|&nbsp; 4 = Excel·lent</p>
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.82rem">
+        <thead><tr style="background:#f8fafc">${['Participant',...COMPS.map(([l])=>l),'Observació'].map(h=>`<th style="padding:7px 9px;text-align:left;font-size:0.6rem;font-weight:800;color:#64748b;border-bottom:1px solid #e2e8f0">${h}</th>`).join('')}</tr></thead>
+        <tbody>${rows}</tbody>
+    </table></div>`;
+}
+
+// Activity rows (Planificació)
+function newActRow() { return { data: '', activitat: '', objectiu: '', materials: '', avaluacio: '' }; }
+
+window.cdAddActRow = function() { S.actRows.push(newActRow()); renderActRows(); };
+window.cdRemActRow = function(i) { S.actRows.splice(i, 1); if (!S.actRows.length) S.actRows.push(newActRow()); renderActRows(); };
+
+function renderActRows() {
+    const c = document.getElementById('act-rows');
+    if (!c) return;
+    c.innerHTML = S.actRows.map((r, i) => `<div class="act-row">
+        <div class="ff"><label>Data</label><input type="date" data-ai="${i}" data-af="data" value="${r.data||''}"></div>
+        <div class="ff"><label>Activitat</label><input type="text" data-ai="${i}" data-af="activitat" value="${esc(r.activitat||'')}"></div>
+        <div class="ff"><label>Objectiu</label><input type="text" data-ai="${i}" data-af="objectiu" value="${esc(r.objectiu||'')}"></div>
+        <div class="ff"><label>Materials</label><input type="text" data-ai="${i}" data-af="materials" value="${esc(r.materials||'')}"></div>
+        <div class="ff"><label>Avaluació</label><input type="text" data-ai="${i}" data-af="avaluacio" value="${esc(r.avaluacio||'')}"></div>
+        <button class="btn-rm" onclick="window.cdRemActRow(${i})">×</button>
+    </div>`).join('');
+    c.querySelectorAll('[data-ai]').forEach(el => {
+        el.addEventListener('input', () => { const row = S.actRows[+el.dataset.ai]; if (row) row[el.dataset.af] = el.value; });
+    });
+}
+
+// ======================================================
+// COLLECT FORM DATA
+// ======================================================
+function collectData() {
+    const data = {};
+    document.querySelectorAll('.cd-modal-body [data-f]').forEach(el => {
+        const key = el.dataset.f;
+        if (key.includes('__')) {
+            // Monthly indicator: key format "indicator__month"
+            const [indKey, month] = key.split('__');
+            if (!Array.isArray(data[indKey])) data[indKey] = [];
+            data[indKey].push({ mes: month, val: el.value });
+        } else {
+            data[key] = el.value || '';
+        }
+    });
+    document.querySelectorAll('.cd-modal-body [data-r]').forEach(el => {
+        const k = el.dataset.r;
+        if (!data[k]) data[k] = {};
+        data[k].val = el.value;
+    });
+    document.querySelectorAll('.cd-modal-body [data-rn]').forEach(el => {
+        const k = el.dataset.rn;
+        if (!data[k]) data[k] = {};
+        data[k].notes = el.value;
+    });
+    if (S.currentTipus === 'planificacio_act') data.activitats = S.actRows;
+    if (S.currentTipus === 'seguiment_grup') data.evidencias_list = window.BS.evidencias;
+    if (S.currentTipus === 'avaluacio_grup') {
+        const parts = {};
+        document.querySelectorAll('.cd-modal-body [data-part]').forEach(el => {
+            const n = el.dataset.part; const comp = el.dataset.comp;
+            if (!parts[n]) parts[n] = {};
+            parts[n][comp] = el.value;
+        });
+        data.parts_eval = parts;
+    }
+    return data;
+}
+
+// ======================================================
+// SAVE
+// ======================================================
+window.cdGuardar = async function(estat = 'definitiu') {
+    if (!S.currentTipus) return;
+    const btnId = estat === 'esborrany' ? 'btn-draft' : 'btn-save';
+    const btn = document.getElementById(btnId);
+    const origHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 0.8s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Guardant...`;
+    try {
+        const contingut = collectData();
+        const expedienteId = contingut.expedienteId || '';
+        const grupId = contingut.grupId || '';
+        const exp = S.expedients.find(e => e.id === expedienteId);
+        const grp = S.groups.find(g => g.id === grupId);
+        const t = TYPES[S.currentTipus];
+        const payload = {
+            tipus: S.currentTipus, subtipus: t.sub,
+            curs: contingut.curs || '2025-26',
+            data: contingut.data || '',
+            educador: contingut.educador || '',
+            expedienteId: expedienteId || null,
+            expedienteNom: exp?.nom || '',
+            grupId: grupId || null,
+            grupNom: grp?.nom || '',
+            estat,
+            contingut
+        };
+        if (S.currentDocId) {
+            await updateDoc(doc(db, 'docs_centre_dia', S.currentDocId), { ...payload, updatedAt: serverTimestamp() });
+        } else {
+            await addDoc(collection(db, 'docs_centre_dia'), { ...payload, creatPer: auth.currentUser?.uid || null, createdAt: serverTimestamp() });
+        }
+        if (estat === 'esborrany') {
+            // Don't close modal for drafts — show feedback
+            btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> Esborrany guardat`;
+            btn.style.borderColor = '#22c55e'; btn.style.color = '#15803d';
+            setTimeout(() => { btn.innerHTML = origHTML; btn.disabled = false; btn.style.borderColor = ''; btn.style.color = ''; }, 2000);
+        } else {
+            window.cdTancar();
+        }
+        await loadDocs();
+        renderStats();
+        window.cdFilter(S.filterKey);
+    } catch (err) {
+        console.error('[cdGuardar]', err);
+        alert('Error al guardar. Consulta la consola.');
+        btn.disabled = false; btn.innerHTML = origHTML;
+    } finally {
+        if (estat !== 'esborrany') { btn.disabled = false; btn.innerHTML = origHTML; }
+    }
+};
+
+// ======================================================
+// EXCEL EXPORT
+// ======================================================
+function getEntitatCfg() {
+    try {
+        const raw = JSON.parse(localStorage.getItem('nexe_config_entitat') || '{}');
+        return {
+            nom: raw.nom || 'NexeSocial',
+            cif: raw.cif || '',
+            telefon: raw.telefon || '',
+            email: raw.email || '',
+            adreca: raw.adreca || ''
+        };
+    } catch {
+        return { nom: 'NexeSocial', cif: '', telefon: '', email: '', adreca: '' };
+    }
+}
+
+window.cdExcelCurrent = function() { if (S.viewingDoc) doExcel(S.viewingDoc); };
+window.cdExcelById = function(id) { const d = S.docs.find(x => x.id === id); if (d) doExcel(d); };
+
+function doExcel(d) {
+    const wb = XLSX.utils.book_new();
+    const t = TYPES[d.tipus] || {};
+    const c = d.contingut || {};
+    let rows = [];
+
+    const meta = d.subtipus === 'individual'
+        ? [['Curs', d.curs, 'Data', d.data], ['Beneficiari/ària', d.expedienteNom, 'Educador/a', d.educador]]
+        : [['Curs', d.curs, 'Data', d.data], ['Grup', d.grupNom, 'Educador/a', d.educador]];
+
+    const ent = getEntitatCfg();
+    const entContact = [ent.cif, ent.telefon, ent.email].filter(Boolean).join(' · ');
+    const header = [
+        [ent.nom],
+        [entContact],
+        [ent.adreca],
+        [`${t.nom || d.tipus} — Centre de Dia`],
+        [],
+        ...meta,
+        []
+    ];
+    const RL = RATING_LABELS;
+
+    switch (d.tipus) {
+        case 'diari_ind':
+            rows = [...header,
+                ['ACTIVITATS REALITZADES'], [c.activitats || ''], [],
+                ['Actitud', c.actitud || '', 'Relació grup', c.relacio_grup || ''],
+                ['Notes actitud', c.actitud_notes || ''], [],
+                ['HÀBITS I AUTONOMIA'], [c.habits || ''], [],
+                ['OBSERVACIONS GENERALS'], [c.observacions || ''], [],
+                ['ACCIONS DE SEGUIMENT'], [c.accions || '']
+            ]; break;
+        case 'observacio_ind':
+            rows = [...header, ['Àrea', 'Valoració', 'Observació'],
+                ...['social','emocional','participacio','habits','autonomia'].map((k, i) =>
+                    [['Àrea social','Àrea emocional','Participació','Hàbits','Autonomia'][i], RL[c[k]?.valor||'']||'—', c[k]?.notes||'']),
+                [], ['INCIDENTS', c.incidents || ''], ['MESURES', c.mesures || '']
+            ]; break;
+        case 'avaluacio_ind': {
+            const COMPS = [['Autonomia personal','autonomia'],['Habilitats socials','soc'],['Participació','participacio'],['Actitud i esforç','actitud'],['Hàbits i rutines','habits'],['Relació educadors/es','rel_edu'],['Relació amb iguals','rel_iguals']];
+            rows = [...header, c.periode ? ['Periode', c.periode] : [], [],
+                ['Competència', 'Valoració', 'Observació'],
+                ...COMPS.map(([l, k]) => [l, RL[c[k]?.valor||'']||'—', c[k]?.notes||'']),
+                [], ['PUNTS FORTS', c.punts_forts||''], ['ÀREES DE MILLORA', c.arees_millora||''], ['OBJECTIUS', c.objectius||''], ['COMENTARIS FAMÍLIA', c.comentaris_familia||'']
+            ]; break;
+        }
+        case 'avaluacio_general': {
+            const DIMS = [
+                ['Autonomia personal','gen_autonomia'],
+                ['Habilitats socials','gen_social'],
+                ['Participació i implicació','gen_participacio'],
+                ['Regulació emocional','gen_emocional'],
+                ['Comunicació i expressió','gen_comunicacio'],
+                ['Rendiment educatiu / escolar','gen_escolar'],
+                ['Relació amb adults de referència','gen_rel_adults'],
+                ['Relació amb iguals','gen_rel_iguals']
+            ];
+            rows = [...header,
+                ['Periode', c.periode||'', 'Data avaluació', c.data_avaluacio||''],
+                ['Nivell general', c.nivell_general||''],
+                [],
+                ['Dimensió', 'Valoració (1-10)', 'Observació'],
+                ...DIMS.map(([l, k]) => [l, RL[c[k]?.valor||'']||'—', c[k]?.notes||'']),
+                [],
+                ['FORTALESES', c.fortaleses||''],
+                ['NECESSITATS', c.necessitats||''],
+                ['OBJECTIUS PRIORITARIS', c.objectius_prioritaris||''],
+                ['INTERVENCIONS', c.intervencions||''],
+                ['OBSERVACIONS FINALS', c.obs_finals||'']
+            ]; break;
+        }
+        case 'seguiment_grup':
+            rows = [...header,
+                ['Nº Sessió', c.num_sessio||'', 'Assistents', c.num_assistents||''],
+                ['Dinàmica', c.dinamica||'', 'Valoració', c.valoracio||''], [],
+                ['ACTIVITAT / CONTINGUT'], [c.activitat||''], [],
+                ['OBSERVACIONS GRUPALS'], [c.obs_grupals||''], [],
+                ['OBSERVACIONS INDIVIDUALS'], [c.obs_individuals||''], [],
+                ['INCIDENTS', c.incidents||''], ['PROPERES SESSIONS', c.properes_sessions||'']
+            ]; break;
+        case 'planificacio_act':
+            rows = [...header, c.trimestre ? ['Trimestre', c.trimestre] : [], [],
+                ['Data', 'Activitat', 'Objectiu', 'Materials', 'Avaluació'],
+                ...(c.activitats || []).map(a => [a.data||'', a.activitat||'', a.objectiu||'', a.materials||'', a.avaluacio||'']),
+                [], ['OBSERVACIONS GENERALS', c.observacions_generals||'']
+            ]; break;
+        case 'avaluacio_grup':
+            rows = [...header,
+                ['Periode', c.periode||'', 'Valoració general', c.valoracio_grup||''], [],
+                ['COHESIÓ'], [c.cohesio||''], ['DINÀMICA HABITUAL'], [c.dinamica||''], [],
+                ['Participant', 'Autonomia', 'Social', 'Participació', 'Actitud', 'Observació'],
+                ...Object.entries(c.parts_eval || {}).map(([n, v]) => [n, RL[v.autonomia||'']||'—', RL[v.social||'']||'—', RL[v.participacio||'']||'—', RL[v.actitud||'']||'—', v.notes||'']),
+                [], ['PUNTS FORTS GRUP', c.punts_forts_grup||''], ['ÀREES DE MILLORA', c.arees_millora_grup||''], ['OBJECTIUS', c.objectius_grup||'']
+            ]; break;
+        default: rows = [['Sense format definit']];
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(rows.filter(r => r !== null));
+    XLSX.utils.book_append_sheet(wb, ws, (t.nom || d.tipus).substring(0, 31));
+    const fn = `${t.nom || d.tipus}_${d.expedienteNom || d.grupNom || ''}_${d.data || new Date().toISOString().slice(0,10)}.xlsx`.replace(/[\s/]/g, '_');
+    XLSX.writeFile(wb, fn);
+}
+
+// ======================================================
+// PDF EXPORT
+// ======================================================
+window.cdPDFCurrent = function() {
+    if (!S.viewingDoc && !S.currentTipus) return;
+    // Build a live doc object from current form state so PDF reflects unsaved edits
+    const liveDoc = buildCentreDiaLiveDoc();
+    if (!liveDoc) return;
+    doPDF(liveDoc);
+};
+window.cdPDFById = function(id) { const d = S.docs.find(x => x.id === id); if (d) doPDF(d); };
+
+function buildCentreDiaLiveDoc() {
+    if (!S.viewingDoc && !S.currentTipus) return null;
+    const liveCont = collectData();
+    const base = S.viewingDoc || {};
+    const t = TYPES[S.currentTipus] || {};
+    const expId = liveCont.expedienteId || base.expedienteId || '';
+    const grpId = liveCont.grupId || base.grupId || '';
+    const exp = S.expedients.find(e => e.id === expId);
+    const grp = S.groups.find(g => g.id === grpId);
+    return {
+        ...base,
+        tipus: S.currentTipus,
+        subtipus: t.sub,
+        curs: liveCont.curs || base.curs || '',
+        data: liveCont.data || base.data || '',
+        educador: liveCont.educador || base.educador || '',
+        expedienteId: expId,
+        expedienteNom: exp?.nom || base.expedienteNom || '',
+        grupId: grpId,
+        grupNom: grp?.nom || base.grupNom || '',
+        contingut: liveCont
+    };
+}
+
+function flattenCentreDiaValue(value, label = '') {
+    if (value == null || value === '') return [];
+    if (Array.isArray(value)) {
+        return value.flatMap((entry, index) => {
+            if (typeof entry === 'object' && entry !== null) {
+                return Object.entries(entry).map(([key, nested]) => `${label || 'element'} ${index + 1} · ${key}: ${nested}`);
+            }
+            return `${label || 'element'} ${index + 1}: ${entry}`;
+        });
+    }
+    if (typeof value === 'object') {
+        return Object.entries(value).flatMap(([key, nested]) => flattenCentreDiaValue(nested, key));
+    }
+    return [`${label}: ${value}`];
+}
+
+function buildCentreDiaSignOptions(docData) {
+    const t = TYPES[docData.tipus] || S.customForms[docData.tipus] || { nom: docData.tipus || 'Document' };
+    const subject = docData.subtipus === 'individual'
+        ? (docData.expedienteNom || 'Beneficiari/ària')
+        : (docData.grupNom || 'Grup');
+    const bodyLines = Object.entries(docData.contingut || {}).flatMap(([key, value]) => flattenCentreDiaValue(value, key));
+
+    return {
+        documentTitle: `${t.nom} - ${subject}`,
+        documentText: [
+            `Tipus: ${t.nom}`,
+            `Modalitat: ${docData.subtipus || '—'}`,
+            `Data: ${docData.data || '—'}`,
+            `Curs: ${docData.curs || '—'}`,
+            `Educador/a: ${docData.educador || '—'}`,
+            docData.expedienteNom ? `Beneficiari/ària: ${docData.expedienteNom}` : '',
+            docData.grupNom ? `Grup: ${docData.grupNom}` : '',
+            '',
+            ...bodyLines,
+        ].filter(Boolean).join('\n'),
+        sourceModule: 'centre-dia-docs',
+        metadata: {
+            tipo: docData.tipus || '',
+            subtipus: docData.subtipus || '',
+            centro: 'Centre Dia',
+            expedienteId: docData.expedienteId || '',
+            expedienteNom: docData.expedienteNom || '',
+            grupId: docData.grupId || '',
+            grupNom: docData.grupNom || '',
+            educador: docData.educador || '',
+            data: docData.data || '',
+        },
+    };
+}
+
+function doPDF(d) {
+    const { jsPDF } = window.jspdf;
+    const jd = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    const t = TYPES[d.tipus] || {};
+    const c = d.contingut || {};
+    const W = jd.internal.pageSize.getWidth();
+    const M = 18;
+    const CW = W - M * 2;
+    let y = 0;
+
+    const BLUE = [37, 99, 235], DARK = [15, 23, 42], MUTED = [100, 116, 139], LBG = [248, 250, 252], BDR = [226, 232, 240];
+
+    const ent = getEntitatCfg();
+    const entContact = [ent.cif, ent.telefon, ent.email].filter(Boolean).join(' · ');
+
+    // Header bar
+    jd.setFillColor(...BLUE);
+    jd.rect(0, 0, W, 16, 'F');
+    jd.setFont('helvetica', 'bold'); jd.setFontSize(10); jd.setTextColor(255, 255, 255);
+    jd.text(`${(ent.nom || 'NEXESOCIAL').toUpperCase()} · Centre de Dia`, M, 11);
+    jd.setFont('helvetica', 'normal'); jd.setFontSize(8);
+    jd.text(new Date().toLocaleDateString('ca-ES'), W - M, 11, { align: 'right' });
+    y = 26;
+
+    if (entContact) {
+        jd.setFont('helvetica', 'normal'); jd.setFontSize(7); jd.setTextColor(...MUTED);
+        jd.text(entContact, M, y);
+        y += 5;
+    }
+
+    // Title
+    jd.setFont('helvetica', 'bold'); jd.setFontSize(15); jd.setTextColor(...DARK);
+    jd.text(`${t.nom || d.tipus}`, M, y); y += 8;
+
+    // Info box
+    jd.setFillColor(...LBG); jd.rect(M, y, CW, 20, 'F');
+    jd.setDrawColor(...BDR); jd.rect(M, y, CW, 20);
+    const labels = d.subtipus === 'individual'
+        ? [['CURS', d.curs], ['DATA', d.data], ['BENEFICIARI/ÀRIA', d.expedienteNom], ['EDUCADOR/A', d.educador]]
+        : [['CURS', d.curs], ['DATA', d.data], ['GRUP', d.grupNom], ['EDUCADOR/A', d.educador]];
+    labels.forEach(([lbl, val], i) => {
+        const x = M + i * (CW / 4) + 3;
+        jd.setFont('helvetica', 'bold'); jd.setFontSize(6.5); jd.setTextColor(...MUTED);
+        jd.text(lbl, x, y + 6);
+        jd.setFont('helvetica', 'bold'); jd.setFontSize(8.5); jd.setTextColor(...DARK);
+        jd.text(String(val || '—').substring(0, 24), x, y + 14);
+    });
+    y += 26;
+
+    function secTitle(title) {
+        if (y > 265) { jd.addPage(); y = 20; }
+        jd.setFont('helvetica', 'bold'); jd.setFontSize(8.5); jd.setTextColor(...BLUE);
+        jd.text(title.toUpperCase(), M, y);
+        jd.setDrawColor(...BDR); jd.line(M, y + 2, M + CW, y + 2);
+        y += 9;
+    }
+
+    function txtBlock(label, value) {
+        if (!value || !String(value).trim()) return;
+        if (y > 265) { jd.addPage(); y = 20; }
+        jd.setFont('helvetica', 'bold'); jd.setFontSize(7.5); jd.setTextColor(...MUTED);
+        jd.text(label, M, y); y += 5;
+        jd.setFont('helvetica', 'normal'); jd.setFontSize(9); jd.setTextColor(...DARK);
+        const lines = jd.splitTextToSize(String(value), CW);
+        jd.text(lines, M, y); y += lines.length * 5 + 4;
+    }
+
+    const RL = RATING_LABELS;
+
+    switch (d.tipus) {
+        case 'diari_ind': {
+            const MTHS = ['oct','nov','des','gen','feb','mar','abr','mai','jun'];
+            const MLBL = {oct:'Oct',nov:'Nov',des:'Des',gen:'Gen',feb:'Feb',mar:'Mar',abr:'Abr',mai:'Mai',jun:'Jun'};
+            const QL = {molt_bona:'MB',bona:'B',regular:'R',malament:'M'};
+
+            function mTableNum(rowDefs) {
+                if (y > 250) { jd.addPage(); y = 20; }
+                jd.autoTable({ startY: y,
+                    head: [['Indicador', ...MTHS.map(m=>MLBL[m]), 'TOTAL']],
+                    body: rowDefs.map(([lbl, key]) => {
+                        const vals = MTHS.map(m => c[`${key}_${m}`] || '');
+                        const total = MTHS.reduce((s,m)=>s+(parseInt(c[`${key}_${m}`])||0),0);
+                        return [lbl, ...vals, total||''];
+                    }),
+                    margin:{left:M,right:M}, styles:{fontSize:6.5,cellPadding:2,halign:'center'},
+                    headStyles:{fillColor:BLUE,textColor:[255,255,255],fontStyle:'bold',fontSize:6},
+                    columnStyles:{0:{cellWidth:46,halign:'left'},10:{fontStyle:'bold',cellWidth:13}}
+                });
+                y = jd.lastAutoTable.finalY + 5;
+            }
+            function mTableQual(rowDefs) {
+                if (y > 250) { jd.addPage(); y = 20; }
+                jd.autoTable({ startY: y,
+                    head: [['Indicador', ...MTHS.map(m=>MLBL[m])]],
+                    body: rowDefs.map(([lbl, key]) => {
+                        const arr = Array.isArray(c[key]) ? c[key] : [];
+                        return [lbl, ...MTHS.map(m => { const r = arr.find(x=>x.mes===m); return QL[r?.val||'']||''; })];
+                    }),
+                    margin:{left:M,right:M}, styles:{fontSize:6.5,cellPadding:2,halign:'center'},
+                    headStyles:{fillColor:BLUE,textColor:[255,255,255],fontStyle:'bold',fontSize:6},
+                    columnStyles:{0:{cellWidth:50,halign:'left'}}
+                });
+                y = jd.lastAutoTable.finalY + 5;
+            }
+            function mTableSiNo(rowDefs) {
+                if (y > 250) { jd.addPage(); y = 20; }
+                jd.autoTable({ startY: y,
+                    head: [['Indicador', ...MTHS.map(m=>MLBL[m]), 'Sí']],
+                    body: rowDefs.map(([lbl, key]) => {
+                        const vals = MTHS.map(m => c[`${key}_${m}`]==='si'?'Sí':c[`${key}_${m}`]==='no'?'No':'');
+                        const total = MTHS.filter(m=>c[`${key}_${m}`]==='si').length;
+                        return [lbl, ...vals, total||''];
+                    }),
+                    margin:{left:M,right:M}, styles:{fontSize:6.5,cellPadding:2,halign:'center'},
+                    headStyles:{fillColor:BLUE,textColor:[255,255,255],fontStyle:'bold',fontSize:6},
+                    columnStyles:{0:{cellWidth:50,halign:'left'},10:{fontStyle:'bold',cellWidth:10}}
+                });
+                y = jd.lastAutoTable.finalY + 5;
+            }
+
+            secTitle('Assistència Estable i Continuada');
+            mTableNum([["Assistència mensual de l'infant (racó)",'assist_raco'],["Assistència mensual de l'infant (lúdiques)",'assist_ludiques']]);
+            txtBlock('Observacions assistència', c.obs_assistencia);
+
+            secTitle("Millora dels Hàbits d'Estudi");
+            jd.setFont('helvetica','italic');jd.setFontSize(7);jd.setTextColor(...MUTED);
+            if(y>270){jd.addPage();y=20;} jd.text('MB=Molt bona · B=Bona · R=Regular · M=Malament',M,y);y+=5;
+            mTableQual([["S'organitza i planifica les tasques",'hab_organitza'],["Du l'agenda i el material escolar",'hab_agenda'],['Bon seguiment de les tasques escolars','hab_seguiment'],['És autònom per fer les tasques','hab_autonomia'],["Adequada implicació de l'infant a l'escola",'hab_implicacio']]);
+            txtBlock("Observacions hàbits d'estudi", c.obs_habits);
+
+            secTitle('Millora de les Relacions Interpersonals');
+            mTableQual([['Participa positivament a les activitats','rel_participa'],['Es sent bé dintre del grup','rel_sentbe'],['Relacions positives amb adults','rel_adults'],['Relacions positives amb iguals','rel_iguals'],['Fa una bona gestió dels conflictes','rel_conflictes'],['Identifica i gestiona les emocions','rel_emocions']]);
+            txtBlock('Observacions relacions', c.obs_relacions);
+
+            secTitle('Detecció de Situacions de Risc');
+            mTableQual([["L'infant és puntual",'risc_puntual'],["Supervisió i cura de la família adequada",'risc_familia'],["El context familiar és segur per l'infant",'risc_context']]);
+            txtBlock('Observacions risc', c.obs_risc);
+
+            secTitle('Hàbits de Vida Saludable');
+            mTableSiNo([["Participa d'activitats d'esport i/o moviment",'salut_esport'],["Fa ús dels berenars saludables",'salut_berenars']]);
+            txtBlock('Observacions salut', c.obs_salut);
+
+            if (c.escola||c.grup||c.programes||c.la_caixa||c.voluntaris) {
+                secTitle('Informació Addicional');
+                txtBlock('Escola i curs', c.escola); txtBlock('Grup', c.grup);
+                txtBlock('Programes', c.programes); txtBlock('"La Caixa"', c.la_caixa);
+                txtBlock('Voluntaris/es', c.voluntaris);
+            }
+            break;
+        }
+
+        case 'observacio_ind':
+            secTitle('Observació per àrees');
+            jd.autoTable({ startY: y, head: [['Àrea', 'Valoració', 'Observació']],
+                body: [['Àrea social','social'],['Àrea emocional','emocional'],['Participació','participacio'],['Hàbits','habits'],['Autonomia','autonomia']].map(([l,k]) => [l, RL[c[k]?.valor||'']||'—', c[k]?.notes||'']),
+                margin:{left:M,right:M}, styles:{fontSize:9,cellPadding:3.5},
+                headStyles:{fillColor:BLUE,textColor:[255,255,255],fontStyle:'bold',fontSize:8},
+                columnStyles:{0:{fontStyle:'bold',cellWidth:42},1:{cellWidth:45}}
+            });
+            y = jd.lastAutoTable.finalY + 8;
+            secTitle('Incidents i accions');
+            txtBlock('Incidents', c.incidents); txtBlock('Mesures adoptades', c.mesures);
+            break;
+
+        case 'avaluacio_ind': {
+            if (c.periode) { jd.setFont('helvetica','bold'); jd.setFontSize(9.5); jd.setTextColor(...BLUE); jd.text(`Periode: ${c.periode}`, M, y); y += 9; }
+            secTitle('Avaluació per competències');
+            const COMPS = [['Autonomia personal','autonomia'],['Habilitats socials','soc'],['Participació','participacio'],['Actitud i esforç','actitud'],['Hàbits i rutines','habits'],['Relació educadors/es','rel_edu'],['Relació amb iguals','rel_iguals']];
+            jd.autoTable({ startY: y, head: [['Competència', 'Valoració', 'Observació']],
+                body: COMPS.map(([l,k]) => [l, RL[c[k]?.valor||'']||'—', c[k]?.notes||'']),
+                margin:{left:M,right:M}, styles:{fontSize:9,cellPadding:3.5},
+                headStyles:{fillColor:BLUE,textColor:[255,255,255],fontStyle:'bold',fontSize:8},
+                columnStyles:{0:{fontStyle:'bold',cellWidth:52},1:{cellWidth:45}}
+            });
+            y = jd.lastAutoTable.finalY + 8;
+            secTitle('Conclusions');
+            txtBlock('Punts forts', c.punts_forts); txtBlock('Àrees de millora', c.arees_millora);
+            txtBlock('Objectius per al proper periode', c.objectius); txtBlock('Comentaris família', c.comentaris_familia);
+            break;
+        }
+
+        case 'avaluacio_general': {
+            const cap = [c.periode || '—', c.data_avaluacio || '—', c.nivell_general || '—'];
+            jd.setFont('helvetica','bold'); jd.setFontSize(9.5); jd.setTextColor(...BLUE);
+            jd.text(`Periode: ${cap[0]}  |  Data: ${cap[1]}  |  Nivell general: ${cap[2]}`, M, y);
+            y += 9;
+            secTitle('Valoració per dimensions (1-10)');
+            const DIMS = [
+                ['Autonomia personal','gen_autonomia'],
+                ['Habilitats socials','gen_social'],
+                ['Participació i implicació','gen_participacio'],
+                ['Regulació emocional','gen_emocional'],
+                ['Comunicació i expressió','gen_comunicacio'],
+                ['Rendiment educatiu / escolar','gen_escolar'],
+                ['Relació amb adults de referència','gen_rel_adults'],
+                ['Relació amb iguals','gen_rel_iguals']
+            ];
+            jd.autoTable({ startY: y, head: [['Dimensió', 'Valoració', 'Observació']],
+                body: DIMS.map(([l,k]) => [l, RL[c[k]?.valor||'']||'—', c[k]?.notes||'']),
+                margin:{left:M,right:M}, styles:{fontSize:9,cellPadding:3.5},
+                headStyles:{fillColor:BLUE,textColor:[255,255,255],fontStyle:'bold',fontSize:8},
+                columnStyles:{0:{fontStyle:'bold',cellWidth:62},1:{cellWidth:28}}
+            });
+            y = jd.lastAutoTable.finalY + 8;
+            secTitle('Síntesi i pla d\'acció');
+            txtBlock('Fortaleses principals', c.fortaleses);
+            txtBlock('Necessitats detectades', c.necessitats);
+            txtBlock('Objectius prioritaris', c.objectius_prioritaris);
+            txtBlock('Intervencions recomanades', c.intervencions);
+            txtBlock('Observacions finals', c.obs_finals);
+            break;
+        }
+
+        case 'seguiment_grup':
+            secTitle('Contingut de la sessió');
+            txtBlock('Activitat / contingut treballat', c.activitat);
+            txtBlock('Dinàmica del grup', `${c.dinamica || '—'}  |  Valoració: ${c.valoracio || '—'}  |  Assistents: ${c.num_assistents || '—'}`);
+            secTitle('Observacions');
+            txtBlock('Observacions grupals', c.obs_grupals);
+            txtBlock('Observacions individuals', c.obs_individuals);
+            txtBlock('Incidents', c.incidents);
+            txtBlock('Properes sessions', c.properes_sessions);
+            break;
+
+        case 'planificacio_act':
+            if (c.trimestre) { jd.setFont('helvetica','bold'); jd.setFontSize(9.5); jd.setTextColor(...BLUE); jd.text(`Trimestre: ${c.trimestre}`, M, y); y += 9; }
+            secTitle('Activitats planificades');
+            jd.autoTable({ startY: y, head: [['Data','Activitat','Objectiu','Materials','Avaluació']],
+                body: (c.activitats || []).map(a => [a.data||'—', a.activitat||'', a.objectiu||'', a.materials||'', a.avaluacio||'']),
+                margin:{left:M,right:M}, styles:{fontSize:8,cellPadding:3},
+                headStyles:{fillColor:BLUE,textColor:[255,255,255],fontStyle:'bold',fontSize:7.5},
+                columnStyles:{0:{cellWidth:22}}
+            });
+            y = jd.lastAutoTable.finalY + 8;
+            txtBlock('Observacions generals', c.observacions_generals);
+            break;
+
+        case 'avaluacio_grup':
+            if (c.periode) { jd.setFont('helvetica','bold'); jd.setFontSize(9.5); jd.setTextColor(...BLUE); jd.text(`Periode: ${c.periode}  |  Valoració: ${c.valoracio_grup || '—'}`, M, y); y += 9; }
+            secTitle('Dinàmica del grup');
+            txtBlock('Cohesió', c.cohesio); txtBlock('Dinàmica habitual', c.dinamica);
+            if (c.parts_eval && Object.keys(c.parts_eval).length) {
+                secTitle('Avaluació individual dels participants');
+                jd.autoTable({ startY: y, head: [['Participant','Autonomia','Social','Participació','Actitud','Observació']],
+                    body: Object.entries(c.parts_eval).map(([n,v]) => [n, RL[v.autonomia||'']||'—', RL[v.social||'']||'—', RL[v.participacio||'']||'—', RL[v.actitud||'']||'—', v.notes||'']),
+                    margin:{left:M,right:M}, styles:{fontSize:8,cellPadding:3},
+                    headStyles:{fillColor:BLUE,textColor:[255,255,255],fontStyle:'bold',fontSize:7.5},
+                    columnStyles:{0:{fontStyle:'bold',cellWidth:38}}
+                });
+                y = jd.lastAutoTable.finalY + 8;
+            }
+            secTitle('Conclusions del grup');
+            txtBlock('Punts forts', c.punts_forts_grup); txtBlock('Àrees de millora', c.arees_millora_grup); txtBlock('Objectius', c.objectius_grup);
+            break;
+    }
+
+    // Footer on all pages
+    const pages = jd.internal.getNumberOfPages();
+    for (let i = 1; i <= pages; i++) {
+        jd.setPage(i);
+        jd.setFont('helvetica', 'normal'); jd.setFontSize(7); jd.setTextColor(...MUTED);
+        jd.text(`${t.nom} · ${d.expedienteNom || d.grupNom || ''} · ${d.data || ''}`, M, 290);
+        jd.text(`Pàgina ${i} de ${pages}`, W - M, 290, { align: 'right' });
+    }
+
+    const fn = `${t.nom || d.tipus}_${d.expedienteNom || d.grupNom || ''}_${d.data || new Date().toISOString().slice(0,10)}.pdf`.replace(/[\s/]/g, '_');
+    jd.save(fn);
+}
+
+// ======================================================
+// CUSTOM FORMS
+// ======================================================
+async function loadCustomForms() {
+    try {
+        const snap = await getDocs(collection(db, 'cd_form_definitions'));
+        S.customForms = {};
+        snap.docs.forEach(d => { S.customForms[d.id] = { id: d.id, ...d.data() }; });
+    } catch (e) { S.customForms = {}; }
+}
+
+function buildCustomForm(tipus, d) {
+    const def = S.customForms[tipus];
+    if (!def) return '<p style="color:#64748b;padding:20px">Formulari no trobat.</p>';
+    const c = d.contingut || {};
+    const expOpts = S.expedients.map(e => `<option value="${e.id}" ${d.expedienteId === e.id ? 'selected' : ''}>${esc(e.nom)}</option>`).join('');
+    const grpOpts = S.groups.map(g => `<option value="${g.id}" ${d.grupId === g.id ? 'selected' : ''}>${esc(g.nom)}</option>`).join('');
+    let html = `<div class="fsect"><div class="fsect-title" style="display:flex;align-items:center;gap:5px">${SVGICO.id()} Identificació</div>`;
+    html += def.sub === 'individual' ? hdrInd(d, expOpts) : hdrGrp(d, grpOpts);
+    html += '</div>';
+    (def.sections || []).forEach(sect => {
+        html += `<div class="fsect"><div class="fsect-title">${esc(sect.title)}</div>`;
+        (sect.fields || []).forEach(f => { html += _buildCustomField(f, c); });
+        html += '</div>';
+    });
+    return html;
+}
+
+function _buildCustomField(f, c) {
+    const val = c[f.key] !== undefined ? String(c[f.key]) : '';
+    const lbl = `<label>${esc(f.label)}</label>`;
+    switch (f.type) {
+        case 'textarea': return `<div class="frow c1"><div class="ff">${lbl}<textarea data-f="${f.key}">${esc(val)}</textarea></div></div>`;
+        case 'date':     return `<div class="frow c1"><div class="ff">${lbl}<input type="date" data-f="${f.key}" value="${esc(val)}"></div></div>`;
+        case 'number':   return `<div class="frow c1"><div class="ff">${lbl}<input type="number" data-f="${f.key}" value="${esc(val)}"></div></div>`;
+        case 'select': {
+            const opts = (f.options || []).map(o => `<option ${val === o ? 'selected' : ''}>${esc(o)}</option>`).join('');
+            return `<div class="frow c1"><div class="ff">${lbl}<select data-f="${f.key}"><option value="">— Selecciona —</option>${opts}</select></div></div>`;
+        }
+        default: return `<div class="frow c1"><div class="ff">${lbl}<input type="text" data-f="${f.key}" value="${esc(val)}"></div></div>`;
+    }
+}
+
+// ======================================================
+// FORM BUILDER
+// ======================================================
+const BLDR_COLS = ['#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444','#06b6d4','#64748b','#ec4899'];
+const BLDR_BG  = {'#3b82f6':'#eff6ff','#8b5cf6':'#f5f3ff','#10b981':'#ecfdf5','#f59e0b':'#fffbeb','#ef4444':'#fef2f2','#06b6d4':'#ecfeff','#64748b':'#f8fafc','#ec4899':'#fdf2f8'};
+
+window.openBuilder = function() {
+    window.BS.view = 'list'; window.BS.editId = null;
+    _bldrRender();
+    document.getElementById('bldr-overlay').style.display = 'flex';
+};
+window.closeBuilder = function() { document.getElementById('bldr-overlay').style.display = 'none'; };
+
+function _bldrRender() {
+    const body = document.getElementById('bldr-body');
+    if (!body) return;
+    window.BS.view === 'list' ? _bldrRenderList(body) : _bldrRenderEditor(body);
+}
+
+function _bldrRenderList(body) {
+    const customs = Object.values(S.customForms);
+    const pills = Object.entries(TYPES).map(([,t]) => `<span style="padding:4px 10px;background:${t.bg};color:${t.color};border-radius:999px;font-size:0.72rem;font-weight:700">${t.nom}</span>`).join('');
+    const cards = customs.map(f => `
+        <div class="bldr-card">
+            <div style="display:flex;align-items:center;gap:12px">
+                <div style="width:38px;height:38px;border-radius:9px;background:${f.bg||'#f8fafc'};color:${f.color||'#64748b'};display:flex;align-items:center;justify-content:center;flex-shrink:0">${SVGICO[f.iconKey]?.(20)||SVGICO.folder(20)}</div>
+                <div>
+                    <div style="font-weight:700;font-size:0.9rem;color:#1e293b">${esc(f.nom)}</div>
+                    <div style="font-size:0.75rem;color:#64748b">${f.sub==='individual'?'Individual':'Grupal'} · ${(f.sections||[]).length} seccions · ${(f.sections||[]).reduce((a,s)=>a+(s.fields||[]).length,0)} camps</div>
+                </div>
+            </div>
+            <div style="display:flex;gap:7px;flex-shrink:0">
+                <button class="btn btn-ghost" style="padding:7px 12px;font-size:0.78rem" onclick="window.builderEdit('${f.id}')">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Editar
+                </button>
+                <button class="btn btn-danger" style="padding:7px 12px;font-size:0.78rem" onclick="window.builderDelete('${f.id}')">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                </button>
+            </div>
+        </div>`).join('');
+    body.innerHTML = `
+        <div style="margin-bottom:20px">
+            <button class="btn btn-primary" onclick="window.builderNew()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Nou Formulari
+            </button>
+        </div>
+        <div style="margin-bottom:10px;font-size:0.72rem;font-weight:800;text-transform:uppercase;color:#64748b;letter-spacing:0.5px">Formularis personalitzats (${customs.length})</div>
+        ${customs.length ? cards : `<div style="text-align:center;padding:40px 20px;color:#94a3b8;font-size:0.875rem;border:2px dashed #e2e8f0;border-radius:10px;margin-bottom:16px">No hi ha formularis personalitzats.<br>Crea el primer amb el botó de sobre.</div>`}
+        <div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0">
+            <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;color:#94a3b8;margin-bottom:8px">Formularis integrats (no modificables aquí)</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">${pills}</div>
+        </div>`;
+}
+
+function _bldrRenderEditor(body) {
+    const colBtns = BLDR_COLS.map(col => {
+        const active = window.BS.meta.color === col;
+        return `<button type="button" onclick="window.builderPickColor('${col}')" style="width:28px;height:28px;border-radius:50%;background:${col};border:3px solid ${active?'#1e293b':'transparent'};cursor:pointer;transition:0.15s" data-col="${col}"></button>`;
+    }).join('');
+    body.innerHTML = `
+        <div style="margin-bottom:20px;display:flex;align-items:center;gap:12px">
+            <button class="btn btn-ghost" onclick="window.builderBack()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5m0 0l7 7m-7-7l7-7"/></svg>
+                Tornar
+            </button>
+            <span style="font-size:1rem;font-weight:800;color:#1e293b">${window.BS.editId ? 'Editar Formulari' : 'Nou Formulari'}</span>
+        </div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px">
+            <div class="fsect-title" style="display:flex;align-items:center;gap:5px;margin-bottom:14px">${SVGICO.id()} Informació bàsica</div>
+            <div class="frow">
+                <div class="ff"><label>Nom *</label><input type="text" id="bldr-nom" placeholder="Ex: Informe de derivació" value="${esc(window.BS.meta.nom||'')}"></div>
+                <div class="ff"><label>Descripció</label><input type="text" id="bldr-desc" placeholder="Breu descripció" value="${esc(window.BS.meta.desc||'')}"></div>
+            </div>
+            <div class="frow">
+                <div class="ff"><label>Tipus</label>
+                    <select id="bldr-sub">
+                        <option value="individual" ${window.BS.meta.sub==='individual'?'selected':''}>Individual (per beneficiari/ària)</option>
+                        <option value="grupal" ${window.BS.meta.sub==='grupal'?'selected':''}>Grupal (per grup)</option>
+                    </select>
+                </div>
+                <div class="ff"><label>Icona</label>
+                    <select id="bldr-icon">
+                        ${['book','eye','barChart','users','calendar','clipboard','folder','user','alert','chart','flag','list','target','pin','home'].map(k=>`<option value="${k}" ${window.BS.meta.iconKey===k?'selected':''}>${k}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
+            <div class="ff" style="margin-top:11px"><label>Color</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:6px" id="bldr-col-btns">${colBtns}</div>
+            </div>
+        </div>
+        <div style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
+            <div class="fsect-title" style="display:flex;align-items:center;gap:5px;margin-bottom:0">${SVGICO.list()} Seccions i camps</div>
+            <button class="btn btn-ghost" style="font-size:0.78rem;padding:7px 12px" onclick="window.builderAddSection()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Afegir secció
+            </button>
+        </div>
+        <div id="bldr-sections"></div>
+        <div style="margin-top:20px;display:flex;gap:9px;justify-content:flex-end;padding-bottom:10px">
+            <button class="btn btn-ghost" onclick="window.builderBack()">Cancel·lar</button>
+            <button id="bldr-save-btn" class="btn btn-primary" onclick="window.builderSave()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+                Guardar formulari
+            </button>
+        </div>`;
+    _bldrRenderSections();
+}
+
+function _bldrRenderSections() {
+    const c = document.getElementById('bldr-sections');
+    if (!c) return;
+    if (!window.BS.sections.length) {
+        c.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;font-size:0.875rem;border:2px dashed #e2e8f0;border-radius:10px">Afegeix una secció per definir els camps del formulari.</div>`;
+        return;
+    }
+    c.innerHTML = window.BS.sections.map((sect, si) => `
+        <div class="bldr-section">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                <input type="text" placeholder="Títol de la secció" value="${esc(sect.title)}"
+                    style="flex:1;padding:7px 10px;border:1px solid #e2e8f0;border-radius:7px;font-size:0.85rem;font-family:inherit;font-weight:600;background:white"
+                    oninput="window.builderUpdateSection(${si},this.value)">
+                <button class="btn-rm" onclick="window.builderRemSection(${si})">×</button>
+            </div>
+            <div id="bldr-fields-${si}"></div>
+            <button class="btn-add-act" style="margin-top:8px" onclick="window.builderAddField(${si})">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Afegir camp
+            </button>
+        </div>`).join('');
+    window.BS.sections.forEach((_, si) => _bldrRenderFields(si));
+}
+
+function _bldrRenderFields(si) {
+    const c = document.getElementById(`bldr-fields-${si}`);
+    if (!c) return;
+    const fields = window.BS.sections[si]?.fields || [];
+    if (!fields.length) { c.innerHTML = ''; return; }
+    const ffStyle = 'padding:5px 7px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.78rem;font-family:inherit;background:white;width:100%';
+    c.innerHTML = fields.map((f, fi) => `
+        <div class="bldr-field-row">
+            <div class="ff"><label style="font-size:0.58rem">Tipus</label>
+                <select style="${ffStyle}" onchange="window.builderUpdateField(${si},${fi},'type',this.value)">
+                    ${['text','textarea','date','number','select'].map(t=>`<option value="${t}" ${f.type===t?'selected':''}>${t}</option>`).join('')}
+                </select>
+            </div>
+            <div class="ff"><label style="font-size:0.58rem">Etiqueta</label>
+                <input type="text" value="${esc(f.label)}" placeholder="Nom del camp"
+                    style="${ffStyle}" oninput="window.builderUpdateField(${si},${fi},'label',this.value)">
+            </div>
+            <div class="ff"><label style="font-size:0.58rem">${f.type==='select'?'Opcions (separades per ;)':'Clau (auto si buit)'}</label>
+                ${f.type==='select'
+                    ? `<input type="text" value="${esc((f.options||[]).join(';'))}" placeholder="Op1;Op2;..."
+                        style="${ffStyle}" oninput="window.builderUpdateOptions(${si},${fi},this.value)">`
+                    : `<input type="text" value="${esc(f.key)}" placeholder="auto"
+                        style="${ffStyle};color:#94a3b8" oninput="window.builderUpdateField(${si},${fi},'key',this.value)">`}
+            </div>
+            <button class="btn-rm" style="margin-bottom:0;align-self:flex-end" onclick="window.builderRemField(${si},${fi})">×</button>
+        </div>`).join('');
+}
+
+// --- Builder Actions ---
+window.builderNew = function() {
+    window.BS.view = 'editor'; window.BS.editId = null;
+    window.BS.meta = { nom:'', desc:'', iconKey:'folder', color:'#3b82f6', bg:'#eff6ff', sub:'individual' };
+    window.BS.sections = [];
+    _bldrRender();
+};
+
+window.builderEdit = function(id) {
+    const f = S.customForms[id]; if (!f) return;
+    window.BS.view = 'editor'; window.BS.editId = id;
+    window.BS.meta = { nom:f.nom||'', desc:f.desc||'', iconKey:f.iconKey||'folder', color:f.color||'#3b82f6', bg:f.bg||'#eff6ff', sub:f.sub||'individual' };
+    window.BS.sections = JSON.parse(JSON.stringify(f.sections||[]));
+    _bldrRender();
+};
+
+window.builderBack = function() { window.BS.view = 'list'; _bldrRender(); };
+
+window.builderDelete = async function(id) {
+    if (!confirm('Eliminar aquest formulari? Els documents existents no s\'eliminaran.')) return;
+    try {
+        await deleteDoc(doc(db, 'cd_form_definitions', id));
+        delete S.customForms[id];
+        _bldrUpdateTypePills();
+        _bldrRender();
+    } catch(e) { alert('Error al eliminar: ' + e.message); }
+};
+
+window.builderPickColor = function(col) {
+    window.BS.meta.color = col;
+    window.BS.meta.bg = BLDR_BG[col] || '#f8fafc';
+    document.querySelectorAll('#bldr-col-btns button').forEach(b => {
+        b.style.border = `3px solid ${b.dataset.col === col ? '#1e293b' : 'transparent'}`;
+    });
+};
+
+window.builderAddSection = function() {
+    window.BS.sections.push({ title: '', fields: [] });
+    _bldrRenderSections();
+};
+window.builderRemSection = function(si) {
+    window.BS.sections.splice(si, 1);
+    _bldrRenderSections();
+};
+window.builderAddField = function(si) {
+    if (!window.BS.sections[si]) return;
+    window.BS.sections[si].fields.push({ type: 'text', label: '', key: '', options: [] });
+    _bldrRenderFields(si);
+};
+window.builderRemField = function(si, fi) {
+    if (!window.BS.sections[si]) return;
+    window.BS.sections[si].fields.splice(fi, 1);
+    _bldrRenderFields(si);
+};
+window.builderUpdateSection = function(si, val) {
+    if (window.BS.sections[si]) window.BS.sections[si].title = val;
+};
+window.builderUpdateField = function(si, fi, prop, val) {
+    if (window.BS.sections[si]?.fields[fi]) {
+        window.BS.sections[si].fields[fi][prop] = val;
+        if (prop === 'type') _bldrRenderFields(si);
+    }
+};
+window.builderUpdateOptions = function(si, fi, val) {
+    if (window.BS.sections[si]?.fields[fi]) {
+        window.BS.sections[si].fields[fi].options = val.split(';').map(s => s.trim()).filter(Boolean);
+    }
+};
+
+window.builderSave = async function() {
+    const nom = document.getElementById('bldr-nom')?.value?.trim();
+    if (!nom) { alert('El nom del formulari és obligatori.'); return; }
+    const sub     = document.getElementById('bldr-sub')?.value || 'individual';
+    const iconKey = document.getElementById('bldr-icon')?.value || 'folder';
+    const desc    = document.getElementById('bldr-desc')?.value?.trim() || '';
+    // Auto-generate keys for fields without one
+    window.BS.sections.forEach(sect => {
+        sect.fields.forEach(f => {
+            if (!f.key && f.label) {
+                f.key = f.label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+                    .replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'').substring(0, 30);
+            }
+        });
+    });
+    const payload = {
+        nom, desc, iconKey,
+        color: window.BS.meta.color || '#3b82f6',
+        bg: window.BS.meta.bg || '#eff6ff',
+        sub, active: true,
+        sections: window.BS.sections,
+        updatedAt: serverTimestamp()
+    };
+    const btn = document.getElementById('bldr-save-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Guardant...'; }
+    try {
+        if (window.BS.editId) {
+            await updateDoc(doc(db, 'cd_form_definitions', window.BS.editId), payload);
+            S.customForms[window.BS.editId] = { id: window.BS.editId, ...payload };
+        } else {
+            const ref = await addDoc(collection(db, 'cd_form_definitions'), { ...payload, createdAt: serverTimestamp() });
+            S.customForms[ref.id] = { id: ref.id, ...payload };
+        }
+        _bldrUpdateTypePills();
+        window.BS.view = 'list';
+        _bldrRender();
+    } catch(e) {
+        console.error('[builderSave]', e);
+        alert('Error al guardar: ' + e.message);
+        if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar formulari'; }
+    }
+};
+
+function _bldrUpdateTypePills() {
+    const pills = document.querySelector('.type-pills');
+    if (!pills) return;
+    pills.querySelectorAll('[data-custom]').forEach(p => p.remove());
+    Object.entries(S.customForms).filter(([, f]) => f.active !== false).forEach(([k, f]) => {
+        const pill = document.createElement('button');
+        pill.className = 'type-pill';
+        pill.dataset.filter = k;
+        pill.dataset.custom = '1';
+        pill.innerHTML = `${SVGICO[f.iconKey]?.(12)||''} ${esc(f.nom)}`;
+        pill.onclick = () => window.cdFilter(k);
+        pills.appendChild(pill);
+    });
+}
+
+// ======================================================
+// UTILS
+// ======================================================
+function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+window.addEventListener('beforeunload', () => { if (_unsubDocs) _unsubDocs(); });
+
+// Función para abrir el flujo de firma desde centre-dia-docs
+window.abrirParaFirmarCentreD = async function(id) {
+    try {
+        const SignatureFlow = (await import('./signature-flow.js')).default;
+        const docData = id ? S.docs.find(x => x.id === id) : buildCentreDiaLiveDoc();
+        if (!docData) {
+            alert('No hi ha cap document disponible per enviar a firma.');
+            return;
+        }
+
+        SignatureFlow.openQuickSignFlow(buildCentreDiaSignOptions(docData));
+    } catch(e) {
+        console.error('Error obrint firma:', e);
+        alert('Error al obrir el flux de firma');
+    }
+};
+</script>
+<script type="module" src="sidebar.js"></script>
+</body>
+</html>

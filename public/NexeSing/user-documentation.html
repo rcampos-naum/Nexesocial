@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexeSing - Documentacio d'Usuari</title>
+    <link rel="stylesheet" href="../style-dashboard.css">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #f8fafc; padding: 20px; }
+        .doc-container { max-width: 1200px; margin: 0 auto; }
+        .doc-header { background: linear-gradient(135deg, #2563eb, #1d4ed8); padding: 40px; border-radius: 12px; color: white; margin-bottom: 30px; }
+        .doc-header h1 { margin: 0; font-size: 2.2rem; font-weight: 800; }
+        .doc-header p { margin: 8px 0 0; font-size: 1.1rem; opacity: 0.9; }
+        .doc-nav { background: white; padding: 20px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+        .doc-nav-btn { padding: 12px 16px; border: 1px solid #e2e8f0; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; color: #475569; transition: all 0.2s; }
+        .doc-nav-btn:hover { background: #f8fafc; border-color: #2563eb; }
+        .doc-nav-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
+        .doc-content { background: white; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .doc-section { margin-bottom: 40px; }
+        .doc-section:last-child { margin-bottom: 0; }
+        h2 { color: #0f172a; font-size: 1.8rem; margin: 0 0 20px 0; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0; }
+        h3 { color: #1e293b; font-size: 1.3rem; margin: 24px 0 12px 0; }
+        p, li { color: #475569; line-height: 1.6; font-size: 0.95rem; }
+        ul, ol { margin: 16px 0; padding-left: 24px; }
+        li { margin-bottom: 10px; }
+        .highlight { background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 8px; margin: 16px 0; }
+        .highlight strong { color: #92400e; }
+        .success-box { background: #dcfce7; padding: 16px; border-left: 4px solid #10b981; border-radius: 8px; margin: 16px 0; }
+        .error-box { background: #fee2e2; padding: 16px; border-left: 4px solid #ef4444; border-radius: 8px; margin: 16px 0; }
+        .code-block { background: #0f172a; color: #10b981; padding: 16px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85rem; overflow-x: auto; margin: 16px 0; }
+        .step-card { background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #2563eb; }
+        .step-number { display: inline-block; background: #2563eb; color: white; width: 32px; height: 32px; border-radius: 50%; text-align: center; line-height: 32px; font-weight: 800; margin-right: 12px; }
+        .module-docs { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        .module-doc-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; }
+        .module-doc-card h4 { margin: 0 0 12px 0; color: #1e293b; }
+        .module-doc-card p { margin: 8px 0; color: #64748b; }
+        .faq-item { margin-bottom: 20px; }
+        .faq-question { background: #f8fafc; padding: 16px; border-radius: 8px; cursor: pointer; font-weight: 600; color: #1e293b; user-select: none; }
+        .faq-question:hover { background: #eef2ff; }
+        .faq-answer { background: white; padding: 16px; border-radius: 8px; margin-top: 8px; display: none; color: #475569; line-height: 1.6; }
+        .faq-answer.active { display: block; }
+        .button-demo { display: flex; gap: 10px; margin: 16px 0; flex-wrap: wrap; }
+        .btn-demo { background: #2563eb; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; }
+        .btn-demo.secondary { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .toc { background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        .toc h3 { margin-top: 0; }
+        .toc ul { margin: 10px 0; }
+        .toc a { color: #2563eb; text-decoration: none; font-weight: 500; }
+        .toc a:hover { text-decoration: underline; }
+        .video-embed { width: 100%; height: 400px; border-radius: 8px; margin: 16px 0; }
+    </style>
+</head>
+<body>
+    <div class="doc-container">
+        <!-- Capcalera -->
+        <div class="doc-header">
+            <h1>📚 Guia d'Usuari NexeSing</h1>
+            <p>Documentacio completa del sistema unificat de firmes</p>
+        </div>
+
+        <!-- Navegacio -->
+        <div class="doc-nav">
+            <button class="doc-nav-btn active" onclick="switchSection('intro', this)">Introduccio</button>
+            <button class="doc-nav-btn" onclick="switchSection('getting-started', this)">Comencar</button>
+            <button class="doc-nav-btn" onclick="switchSection('modules', this)">Guia de Moduls</button>
+            <button class="doc-nav-btn" onclick="switchSection('signing-methods', this)">Metodes de Firma</button>
+            <button class="doc-nav-btn" onclick="switchSection('troubleshooting', this)">Resolucio de Problemes</button>
+            <button class="doc-nav-btn" onclick="switchSection('faq', this)">FAQ</button>
+        </div>
+
+        <!-- Contingut -->
+        <div class="doc-content">
+
+            <!-- INTRODUCCIO -->
+            <div id="section-intro" class="doc-section">
+                <h2>👋 Benvingut a NexeSing</h2>
+                <p>NexeSing es un sistema unificat i segur de firmes que agilita els fluxos d'aprovacio de documents a tots els moduls de NexeSocial. Tant si firmes informes psicosocials, documents de supervisio clinica o convenis administratius, NexeSing ofereix una experiencia simple i consistent.</p>
+
+                <div class="toc">
+                    <h3>Accessos Rapids</h3>
+                    <ul>
+                        <li><a href="#" onclick="switchSection('getting-started')">Comenca en 2 minuts</a></li>
+                        <li><a href="#" onclick="switchSection('modules')">Troba el teu modul</a></li>
+                        <li><a href="#" onclick="switchSection('signing-methods')">Tria el teu metode de firma</a></li>
+                        <li><a href="#" onclick="switchSection('faq')">Consulta dubtes frequents</a></li>
+                    </ul>
+                </div>
+
+                <h3>Caracteristiques Clau</h3>
+                <ul>
+                    <li><strong>Firma multimode:</strong> En pantalla, QR mobil o AutoFirma local</li>
+                    <li><strong>Segur i auditat:</strong> Firestore amb registre complet d'auditoria</li>
+                    <li><strong>Cadena de firmes:</strong> Suport per a multiples firmants en sequencia o en paral-lel</li>
+                    <li><strong>Preparat per mobil:</strong> Sessions QR de 15 minuts per firmar des del mobil</li>
+                    <li><strong>Integrat:</strong> Funciona de forma unificada als 10 moduls de la plataforma</li>
+                </ul>
+            </div>
+
+            <!-- COMENCAR -->
+            <div id="section-getting-started" class="doc-section" style="display: none;">
+                <h2>🚀 Comencar</h2>
+
+                <h3>Pas 1: Accedeix a NexeSing</h3>
+                <div class="step-card">
+                    <span class="step-number">1</span>
+                    <div>Des de qualsevol modul (Informe, Convenis, Centre de Dia, etc.), cerca el boto verd <strong>"Enviar a firmar"</strong>. Fes-hi clic per obrir NexeSing.</div>
+                </div>
+
+                <h3>Pas 2: Crea o selecciona una sollicitud</h3>
+                <div class="step-card">
+                    <span class="step-number">2</span>
+                    <div>Si es la primera vegada, crea una nova sollicitud de firma. El sistema omplira automaticament el titol i el contingut des del modul actual.</div>
+                </div>
+
+                <h3>Pas 3: Selecciona els firmants</h3>
+                <div class="step-card">
+                    <span class="step-number">3</span>
+                    <div>Tria un o mes empleats de la base de dades. Pots seleccionar Director, companys o qualsevol persona autoritzada a firmar.</div>
+                </div>
+
+                <h3>Pas 4: Tria el metode de firma</h3>
+                <div class="step-card">
+                    <span class="step-number">4</span>
+                    <div>Selecciona com vols firmar: en pantalla amb rato/tactil, amb QR mobil o amb certificat digital via AutoFirma.</div>
+                </div>
+
+                <h3>Pas 5: Firma i completa</h3>
+                <div class="step-card">
+                    <span class="step-number">5</span>
+                    <div>Completa la firma. El document queda firmat i desat de manera segura amb registre d'auditoria complet.</div>
+                </div>
+
+                <div class="success-box">
+                    <strong>✓ Consell:</strong> Pots tornar en qualsevol moment per revisar l'estat de firmes pendents o consultar documents firmats.
+                </div>
+            </div>
+
+            <!-- GUIA DE MODULS -->
+            <div id="section-modules" class="doc-section" style="display: none;">
+                <h2>📦 Guia per Moduls</h2>
+
+                <h3>Fase 1: Documents Critics</h3>
+                <div class="module-docs">
+                    <div class="module-doc-card">
+                        <h4>📋 Informe Psicosocial</h4>
+                        <p>Els informes psicosocials necessiten firma abans de la finalitzacio.</p>
+                        <p><strong>Qui pot firmar:</strong> Tecnic responsable, Director</p>
+                        <p><strong>Ubicacio:</strong> Editor d'informe, boto verd a la barra d'accions</p>
+                        <p><strong>Flux tipic:</strong> Crear informe → Enviar a Direccio → Direccio firma → Informe complet</p>
+                    </div>
+
+                    <div class="module-doc-card">
+                        <h4>🏥 NexePsy - Informe Seguiment</h4>
+                        <p>Els informes de supervisio clinica necessiten firma del psicoleg.</p>
+                        <p><strong>Qui pot firmar:</strong> Psicoleg supervisor, Director clinic</p>
+                        <p><strong>Ubicacio:</strong> Formulari de supervisio, boto verd a la barra d'accions</p>
+                        <p><strong>Flux tipic:</strong> Completar supervisio → Enviar a psicoleg → Revisio i firma</p>
+                    </div>
+
+                    <div class="module-doc-card">
+                        <h4>📜 Convenis</h4>
+                        <p>Els convenis legals requereixen firmes organitzatives.</p>
+                        <p><strong>Qui pot firmar:</strong> Director, Responsable legal</p>
+                        <p><strong>Ubicacio:</strong> Editor de conveni, peu del modal</p>
+                        <p><strong>Flux tipic:</strong> Esborrany de conveni → Demanar firmes → Ambdues parts firmen → Conveni actiu</p>
+                    </div>
+                </div>
+
+                <h3>Fase 2: Documentacio Important</h3>
+                <div class="module-docs">
+                    <div class="module-doc-card">
+                        <h4>🏢 Documents Centre de Dia</h4>
+                        <p>Els informes d'activitat i seguiment poden requerir firma.</p>
+                        <p><strong>Qui pot firmar:</strong> Coordinador d'activitat, Director del centre</p>
+                        <p><strong>Ubicacio:</strong> Peu de la llista de documents</p>
+                    </div>
+
+                    <div class="module-doc-card">
+                        <h4>📊 Programes Gestió</h4>
+                        <p>Les activitats i actualitzacions del programa requereixen aprovacio de coordinacio.</p>
+                        <p><strong>Qui pot firmar:</strong> Coordinador de programa, Manager</p>
+                        <p><strong>Ubicacio:</strong> Modal d'activitat, barra d'accions</p>
+                    </div>
+                </div>
+
+                <h3>Fase 3: Documents Complementaris</h3>
+                <div class="module-docs">
+                    <div class="module-doc-card">
+                        <h4>📝 Passar Llista</h4>
+                        <p>Els registres d'assistencia diaria requereixen firma diaria.</p>
+                        <p><strong>Qui pot firmar:</strong> Educador de grup, Director del centre</p>
+                        <p><strong>Requisit:</strong> Una firma per dia d'assistencia</p>
+                    </div>
+
+                    <div class="module-doc-card">
+                        <h4>🔐 Documents Administratius</h4>
+                        <p>Documents administratius (contractes, politiques, etc.).</p>
+                        <p><strong>Qui pot firmar:</strong> Admin, Director, Legal</p>
+                    </div>
+
+                    <div class="module-doc-card">
+                        <h4>🔍 Informes d'Auditoria</h4>
+                        <p>Els informes de compliance i auditoria necessiten aprovacio.</p>
+                        <p><strong>Qui pot firmar:</strong> Responsable de Qualitat, Director</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- METODES DE FIRMA -->
+            <div id="section-signing-methods" class="doc-section" style="display: none;">
+                <h2>✍️ Metodes de Firma</h2>
+
+                <h3>Metode 1: Firma en Pantalla</h3>
+                <p><strong>Millor per a:</strong> Aprovacions rapides, entorn d'oficina</p>
+                <p><strong>Com funciona:</strong> Dibuixa la teva firma en pantalla amb rato, trackpad o pantalla tactil.</p>
+                <div class="highlight">
+                    <strong>⚠️ Nota:</strong> Les firmes en pantalla s'accepten per a la majoria de documents interns, pero poden no tenir validesa legal per a contractes oficials. Revisa la politica de l'organitzacio.
+                </div>
+                <ul>
+                    <li>Fes clic al boto "Firmar en pantalla"</li>
+                    <li>Dibuixa la firma al canvas</li>
+                    <li>Si cal, esborra amb el boto "Netejar"</li>
+                    <li>Fes clic a "Guardar" per completar</li>
+                </ul>
+
+                <h3>Metode 2: Codi QR Mobil</h3>
+                <p><strong>Millor per a:</strong> Aprovacio remota, fluxos mobils</p>
+                <p><strong>Com funciona:</strong> Escaneja un codi QR amb el teu telefon per firmar des de qualsevol lloc.</p>
+                <div class="highlight">
+                    <strong>⏱️ Limit de temps:</strong> Les sessions QR caduquen al cap de 15 minuts. Genera'n una de nova si cal.
+                </div>
+                <ul>
+                    <li>Fes clic al boto "Firmar amb QR"</li>
+                    <li>Escaneja el codi QR amb la camera del telefon</li>
+                    <li>Seras redirigit a la pagina de firma mobil</li>
+                    <li>Dibuixa la teva firma des del telefon</li>
+                    <li>La sessio es completa automaticament</li>
+                </ul>
+
+                <h3>Metode 3: AutoFirma (amb Certificat)</h3>
+                <p><strong>Millor per a:</strong> Documents legals, firmes oficials</p>
+                <p><strong>Com funciona:</strong> Utilitza el certificat digital instal-lat al teu ordinador.</p>
+                <div class="error-box">
+                    <strong>⚙️ Requisits previs:</strong> Has de tenir AutoFirma instal-lat i un certificat digital valid.
+                </div>
+                <ul>
+                    <li>Fes clic al boto "Firmar amb AutoFirma"</li>
+                    <li>L'aplicacio AutoFirma s'obrira automaticament</li>
+                    <li>Selecciona el certificat</li>
+                    <li>Introdueix la contrasenya del certificat</li>
+                    <li>La firma es completa amb validesa legal</li>
+                </ul>
+
+                <h3>Exemple de Cadena de Firmes</h3>
+                <p>Quan es requereixen multiples firmes:</p>
+                <div class="code-block">
+Firmant 1 (Tecnic): Firma ✓
+Firmant 2 (Coordinador): Firma ✓
+Firmant 3 (Director): Firma ✓
+Estat del document: FIRMAT COMPLETAMENT ✓
+                </div>
+            </div>
+
+            <!-- RESOLUCIO DE PROBLEMES -->
+            <div id="section-troubleshooting" class="doc-section" style="display: none;">
+                <h2>🔧 Resolucio de Problemes</h2>
+
+                <h3>Problema: "El boto no funciona"</h3>
+                <p><strong>Causa:</strong> El modul pot no estar ben integrat o JavaScript pot estar desactivat.</p>
+                <ul>
+                    <li>Comprova que JavaScript estigui activat al navegador</li>
+                    <li>Prova de recarregar la pagina</li>
+                    <li>Neteja la caché del navegador (Ctrl+Shift+Delete)</li>
+                    <li>Prova un altre navegador (Chrome, Firefox, Safari)</li>
+                </ul>
+
+                <h3>Problema: "No puc seleccionar firmants"</h3>
+                <p><strong>Causa:</strong> La base de dades d'empleats pot no carregar correctament.</p>
+                <ul>
+                    <li>Comprova la connexio a internet</li>
+                    <li>Verifica que tens permisos per accedir a la llista d'empleats</li>
+                    <li>Contacta amb l'administrador si la llista surt buida</li>
+                </ul>
+
+                <h3>Problema: "El codi QR caduca massa aviat"</h3>
+                <p><strong>Causa:</strong> El timeout de sessio esta configurat a 15 minuts.</p>
+                <ul>
+                    <li>Genera un nou codi QR si la sessio ha caducat</li>
+                    <li>Contacta amb admin per augmentar el timeout a configuracio</li>
+                    <li>Prova la firma en pantalla o AutoFirma com alternativa</li>
+                </ul>
+
+                <h3>Problema: "AutoFirma no s'obre"</h3>
+                <p><strong>Causa:</strong> AutoFirma no esta instal-lat o no esta configurat.</p>
+                <ul>
+                    <li>Descarrega i instal-la AutoFirma des del web oficial</li>
+                    <li>Assegura't que el certificat digital estigui ben instal-lat</li>
+                    <li>Reinicia el navegador despres d'instal-lar AutoFirma</li>
+                    <li>Fes servir firma en pantalla o QR com alternativa</li>
+                </ul>
+
+                <h3>Problema: "La firma no s'ha desat"</h3>
+                <p><strong>Causa:</strong> Error de connexio o incidencia del servidor.</p>
+                <ul>
+                    <li>Comprova la connexio a internet</li>
+                    <li>Torna a provar de firmar</li>
+                    <li>Revisa el dashboard d'auditoria per confirmar si s'ha desat</li>
+                    <li>Contacta amb suport si el problema persisteix</li>
+                </ul>
+            </div>
+
+            <!-- PREGUNTES FREQÜENTS -->
+            <div id="section-faq" class="doc-section" style="display: none;">
+                <h2>❓ Preguntes Frequents</h2>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        Puc firmar en nom d'una altra persona?
+                    </div>
+                    <div class="faq-answer">
+                        No. Per seguretat i compliment normatiu, cada persona ha de firmar amb les seves propies credencials. Tot i aixi, es pot delegar autoritat de firma mitjancant la configuracio de control d'acces.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        Puc revocar o modificar una firma una vegada completada?
+                    </div>
+                    <div class="faq-answer">
+                        No. Les firmes son immutables una vegada completades. Aixo garanteix la integritat del registre d'auditoria. Si calen canvis, pots demanar una nova firma o crear una nova versio del document.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        On es guarden els meus documents firmats?
+                    </div>
+                    <div class="faq-answer">
+                        Tots els documents firmats es guarden de manera segura a Firestore amb copies de seguretat xifrades. Hi pots accedir des del dashboard de NexeSing o des dels informes d'auditoria. Contacta amb l'administrador per la politica de retencio.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        Que passa si no surt a la llista d'empleats?
+                    </div>
+                    <div class="faq-answer">
+                        Contacta amb RRHH o amb l'administrador del sistema. Et podran donar d'alta a la col-leccio usuarios de Firestore amb el teu correu, nom i rol.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        La meva firma te validesa legal?
+                    </div>
+                    <div class="faq-answer">
+                        Les firmes amb AutoFirma (certificat digital) tenen validesa legal a la majoria de jurisdiccions. Les firmes en pantalla i per QR s'accepten per processos interns, pero poden no tenir validesa per contractes oficials. Consulta l'equip legal.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        Puc firmar diversos documents alhora?
+                    </div>
+                    <div class="faq-answer">
+                        Actualment, es firma un document per sollicitud. Tot i aixi, pots crear multiples sollicituds rapidament i firmar-les una darrere l'altra.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        Com puc seguir les firmes pendents?
+                    </div>
+                    <div class="faq-answer">
+                        Ves al dashboard de NexeSing o al dashboard d'auditoria per veure totes les firmes pendents i completades. Pots filtrar per modul, data o estat.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        Que passa si rebutj un document?
+                    </div>
+                    <div class="faq-answer">
+                        Si rebutges un document, torna al sollicitant amb el teu comentari. Rebra una notificacio i podra fer correccions abans de reenviar-lo a firma.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function switchSection(sectionName, buttonEl = null) {
+            // Amaga totes les seccions
+            document.querySelectorAll('.doc-section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.doc-nav-btn').forEach(b => b.classList.remove('active'));
+            
+            // Mostra la seccio seleccionada
+            document.getElementById(`section-${sectionName}`).style.display = 'block';
+
+            if (buttonEl) {
+                buttonEl.classList.add('active');
+            }
+            
+            // Fes scroll cap a dalt del contingut
+            document.querySelector('.doc-content').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function toggleFAQ(element) {
+            const answer = element.nextElementSibling;
+            answer.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

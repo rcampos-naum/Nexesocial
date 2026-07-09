@@ -1,0 +1,210 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" type="image/svg+xml" href="../img/NexePsy-icon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; background-color: #f8fafc; color: #1e293b;
+            font-family: 'Inter', sans-serif; display: flex; min-height: 100vh;
+        }
+        .main-content {
+            flex-grow: 1; margin-left: 280px; padding: 40px 60px;
+            transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        body.collapsed .main-content { margin-left: 85px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .btn-psy-primary {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: #6366f1; color: white; padding: 14px 24px;
+            border-radius: 15px; font-weight: 700; text-decoration: none;
+            transition: 0.2s; box-shadow: 0 4px 12px rgba(99,102,241,.2);
+        }
+        .btn-psy-primary:hover { transform: translateY(-2px); opacity: 0.9; }
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px; margin-bottom: 32px;
+        }
+        .stat-card { background: white; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0; }
+        .stat-card h4 { margin: 0; color: #64748b; font-size: .82rem; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-card .value { font-size: 2.2rem; font-weight: 800; color: #0f172a; margin: 10px 0 2px; min-height: 2.6rem; }
+        .stat-card .trend { font-size: .78rem; color: #94a3b8; }
+        .stat-pulse { display: inline-block; width: 60px; height: 2.2rem; background: linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%); background-size: 200% 100%; border-radius: 8px; animation: shimmer 1.4s infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+        .chart-card { background: white; border-radius: 22px; border: 1px solid #e2e8f0; padding: 28px 32px; }
+        .chart-card h3 { margin: 0 0 20px; font-size: .9rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .5px; }
+        .chart-wrap { position: relative; width: 100%; }
+        .chart-wrap-doughnut { max-width: 260px; margin: 0 auto; }
+        .chart-error { color: #ef4444; font-size: .85rem; text-align: center; padding: 30px 0; }
+        @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .main-content { margin-left: 0 !important; padding: 20px; } }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar-container"></div>
+
+    <main class="main-content">
+        <header class="page-header">
+            <div>
+                <span style="color:#6366f1;font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:1px;">AnÃ lisi de Dades</span>
+                <h1 style="font-size:2.8rem;font-weight:800;margin:8px 0 0;letter-spacing:-.05em;color:#0f172a;">EstadÃ­stiques</h1>
+            </div>
+            <a href="nexepsy-estadisticas-informe.html" class="btn-psy-primary">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Generar Informe Anual
+            </a>
+        </header>
+
+        <section class="stats-grid">
+            <div class="stat-card">
+                <h4>Total Expedients</h4>
+                <div class="value" id="kpi-total"><span class="stat-pulse"></span></div>
+            </div>
+            <div class="stat-card">
+                <h4>Intervencions Actives</h4>
+                <div class="value" id="kpi-actives"><span class="stat-pulse"></span></div>
+            </div>
+            <div class="stat-card">
+                <h4>En Llista d'Espera</h4>
+                <div class="value" id="kpi-espera"><span class="stat-pulse"></span></div>
+            </div>
+            <div class="stat-card">
+                <h4>Informes Generats</h4>
+                <div class="value" id="kpi-informes"><span class="stat-pulse"></span></div>
+            </div>
+        </section>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Intervencions per mes (any en curs)</h3>
+                <div class="chart-wrap" style="height:280px;">
+                    <canvas id="chart-monthly"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>Estat de les intervencions</h3>
+                <div class="chart-wrap chart-wrap-doughnut" style="height:260px;">
+                    <canvas id="chart-status"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Tipus d'atenciÃ³</h3>
+                <div class="chart-wrap" style="height:260px;">
+                    <canvas id="chart-tipus"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>Derivacions per estat</h3>
+                <div class="chart-wrap chart-wrap-doughnut" style="height:260px;">
+                    <canvas id="chart-derivacions"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../security-check.js"></script>
+    <script src="sidebar-nexepsy.js"></script>
+    <script type="module">
+        import '../auth-manager.js';
+        if (!await window.checkModuleAccess('NexePsy')) throw new Error('access denied');
+        import { db } from '../firebase-config.js';
+        import { collection, getDocs, query, where, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        const MESOS_CA = ['Gen','Feb','Mar','Abr','Mai','Jun','Jul','Ago','Set','Oct','Nov','Des'];
+        const CHART_COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899'];
+
+        function renderBar(canvasId, labels, data, label, color = '#6366f1') {
+            const ctx = document.getElementById(canvasId)?.getContext('2d');
+            if (!ctx) return;
+            new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets: [{ label, data, backgroundColor: color + 'cc', borderColor: color, borderWidth: 2, borderRadius: 8, borderSkipped: false }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Inter', size: 11 } }, grid: { color: '#f1f5f9' } }, x: { ticks: { font: { family: 'Inter', size: 11 } }, grid: { display: false } } } }
+            });
+        }
+
+        function renderDoughnut(canvasId, labels, data, colors) {
+            const ctx = document.getElementById(canvasId)?.getContext('2d');
+            if (!ctx) return;
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 11 }, padding: 14, boxWidth: 12, boxHeight: 12 } } } }
+            });
+        }
+
+        async function loadStats() {
+            try {
+                const [intervSnap, reportesSnap, derivSnap] = await Promise.all([
+                    getDocs(collection(db, 'nexepsy/intervenciones/intervenciones')),
+                    getDocs(collection(db, 'nexepsy/reportes/reportes')),
+                    getDocs(collection(db, 'nexepsy/derivacions/solicituds'))
+                ]);
+
+                const intervs = intervSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                const derivs  = derivSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                const year    = new Date().getFullYear();
+
+                // â”€â”€ KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                const totalExp  = intervs.length;
+                const actives   = intervs.filter(d => d.estado === 'activa').length;
+                const espera    = derivs.filter(d => d.estat === 'acceptada').length;
+                const informes  = reportesSnap.size;
+
+                document.getElementById('kpi-total').textContent   = totalExp;
+                document.getElementById('kpi-actives').textContent = actives;
+                document.getElementById('kpi-espera').textContent  = espera;
+                document.getElementById('kpi-informes').textContent = informes;
+
+                // â”€â”€ Intervencions per mes (any en curs) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                const perMes = Array(12).fill(0);
+                intervs.forEach(d => {
+                    const ts = d.fechaCreacion;
+                    if (!ts) return;
+                    const date = ts.toDate ? ts.toDate() : new Date(ts);
+                    if (date.getFullYear() === year) perMes[date.getMonth()]++;
+                });
+                renderBar('chart-monthly', MESOS_CA, perMes, 'Intervencions', '#6366f1');
+
+                // â”€â”€ Estat de les intervencions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                const estatMap = {};
+                intervs.forEach(d => { const k = d.estado || 'desconegut'; estatMap[k] = (estatMap[k] || 0) + 1; });
+                const estatLabels = { activa: 'Activa', finalitzada: 'Finalitzada', completada: 'Completada', suspesa: 'Suspesa', desconegut: 'Sense estat' };
+                const stKeys   = Object.keys(estatMap);
+                const stLabels = stKeys.map(k => estatLabels[k] || k);
+                renderDoughnut('chart-status', stLabels, stKeys.map(k => estatMap[k]), CHART_COLORS);
+
+                // â”€â”€ Tipus d'atenciÃ³ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                const tipusMap = {};
+                intervs.forEach(d => { const k = d.tipusAtencio || 'individual'; tipusMap[k] = (tipusMap[k] || 0) + 1; });
+                const tLabels = { individual: 'Individual', familiar: 'Familiar', grupal: 'Grupal' };
+                const tKeys   = Object.keys(tipusMap);
+                renderBar('chart-tipus', tKeys.map(k => tLabels[k] || k), tKeys.map(k => tipusMap[k]), 'Casos', '#8b5cf6');
+
+                // â”€â”€ Derivacions per estat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                const derivMap = {};
+                derivs.forEach(d => { const k = d.estat || 'pendent'; derivMap[k] = (derivMap[k] || 0) + 1; });
+                const derivLabels = { pendent: 'Pendent', acceptada: 'En espera', rebutjada: 'Rebutjada', iniciada: 'Iniciada' };
+                const dKeys   = Object.keys(derivMap);
+                const dColors = dKeys.map(k => ({ pendent: '#f59e0b', acceptada: '#6366f1', rebutjada: '#ef4444', iniciada: '#10b981' }[k] || '#94a3b8'));
+                renderDoughnut('chart-derivacions', dKeys.map(k => derivLabels[k] || k), dKeys.map(k => derivMap[k]), dColors);
+
+            } catch(e) {
+                console.error('Error carregant estadÃ­stiques:', e);
+            }
+        }
+
+        loadStats();
+    </script>
+</body>
+</html>

@@ -1,0 +1,446 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" type="image/svg+xml" href="../img/nexeauditsuit-icon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        :root {
+            --audit-primary: #1e293b;
+            --audit-accent: #2563eb;
+            --audit-bg: #f1f5f9;
+            --success: #10b981;
+            --danger: #ef4444;
+            --danger-pastel: #ffe6e6;
+            --sidebar-width: 280px;
+            --sidebar-collapsed: 80px;
+        }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--audit-bg); font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+        /* --- SIDEBAR --- */
+        #sidebar-container { display: flex; height: 100vh; }
+        .sidebar-audit { 
+            width: var(--sidebar-width); 
+            background: var(--audit-primary); 
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 25px; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            flex-shrink: 0; 
+        }
+
+        body.collapsed .sidebar-audit { width: var(--sidebar-collapsed); padding: 25px 15px; }
+        body.collapsed .link-text, body.collapsed .nav-label, body.collapsed .logo-text, body.collapsed #add-program { display: none !important; }
+        body.collapsed .nav-link { justify-content: center; padding: 12px 0; }
+
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 12px; color: #cbd5e1; text-decoration: none; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: 0.2s; }
+        .nav-link:hover { background: rgba(255,255,255,0.05); }
+        .nav-link.active { background: var(--audit-accent); color: white; font-weight: 600; }
+        .nav-label { font-size: 0.65rem; text-transform: uppercase; color: #94a3b8; margin: 25px 0 10px 0; font-weight: 700; display: block; }
+
+        /* --- WORKSPACE & DASHBOARD --- */
+        .workspace { flex-grow: 1; overflow-y: auto; padding: 40px; }
+        .dashboard-header { max-width: 1100px; margin: 0 auto 30px auto; display: flex; justify-content: space-between; align-items: center; }
+        .form-container { background: white; max-width: 1100px; margin: 0 auto; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding: 40px; border: 1px solid #e2e8f0; }
+
+        .audit-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .audit-table th { text-align: left; font-size: 0.7rem; color: #94a3b8; padding: 15px; border-bottom: 2px solid #f1f5f9; text-transform: uppercase; letter-spacing: 0.5px; }
+        .audit-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; color: var(--audit-primary); }
+        .dept-badge { background: #eff6ff; color: var(--audit-accent); padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+
+        /* --- MODAL FORMULARIO --- */
+        #form-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--audit-bg); z-index: 1000; overflow-y: auto; padding: 40px 20px; }
+        .modal-form-content { background: white; max-width: 900px; margin: 0 auto; padding: 50px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .pdf-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 30px; }
+        .logo-bar-separator { font-size: 28px; color: #cbd5e1; margin: 0 15px; font-weight: 300; }
+
+        .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+        .field { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; }
+        input, select, textarea { border: 1.5px solid #e2e8f0; padding: 10px; border-radius: 8px; font-family: inherit; font-size: 0.9rem; width: 100%; }
+
+        .btn { padding: 12px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; font-size: 0.85rem; }
+        .btn-save { background: var(--success); color: white; }
+        .btn-print { background: var(--audit-primary); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-add { width: 100%; padding: 12px; border: 2px dashed #e2e8f0; background: #f8fafc; color: var(--audit-accent); border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 15px; }
+        .btn-remove { color: var(--danger); background: none; border: none; padding: 5px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+
+        .nc-description { margin-top: 10px; border-left: 3px solid var(--danger); padding-left: 10px; display: none; }
+        .row-item.has-nc { background-color: var(--danger-pastel); }
+        .row-item.has-nc .nc-description { display: block; }
+
+        #custom-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-small { background: white; padding: 30px; border-radius: 16px; width: 400px; }
+        #entity-modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72); z-index: 10001; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 20px; }
+        .entity-modal-card { background: white; width: 100%; max-width: 760px; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.18); padding: 28px; }
+        .entity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .entity-grid .full { grid-column: 1 / -1; }
+        .toast-audit { display:none; position: fixed; right: 20px; bottom: 20px; z-index: 12000; background: #0f172a; color: white; padding: 12px 16px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        #executive-preview-modal { display:none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72); z-index: 10002; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 20px; }
+        .executive-preview-card { background: white; width: 100%; max-width: 980px; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.18); overflow: hidden; }
+        .executive-preview-toolbar { display:flex; justify-content: space-between; align-items:center; padding: 18px 22px; border-bottom: 1px solid #e2e8f0; }
+        .executive-preview-body { max-height: 70vh; overflow: auto; background: #e5e7eb; padding: 24px; }
+        .executive-report-sheet { background: white; max-width: 760px; margin: 0 auto; padding: 32px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); border-radius: 10px; }
+        .executive-report-sheet h2, .executive-report-sheet h3 { color: #0f172a; margin-top: 0; }
+        .executive-meta { display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0 18px; }
+        .executive-meta div { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; }
+        .executive-meta strong { display:block; color:#64748b; font-size:0.72rem; text-transform:uppercase; margin-bottom:4px; }
+        .executive-table { width:100%; border-collapse: collapse; margin-top: 12px; }
+        .executive-table th, .executive-table td { border:1px solid #e2e8f0; padding: 8px 10px; font-size: 0.85rem; text-align:left; }
+        .executive-table th { background:#f8fafc; }
+
+        .summary-grid { max-width: 1100px; margin: 0 auto 24px auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .summary-card { background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+        .summary-card .label { font-size: 0.72rem; text-transform: uppercase; color: #64748b; font-weight: 800; }
+        .summary-card .value { font-size: 1.8rem; font-weight: 800; color: var(--audit-primary); margin-top: 8px; }
+        .summary-card .meta { margin-top: 6px; font-size: 0.8rem; color: #64748b; }
+
+        .grid-2 { max-width: 1100px; margin: 0 auto 24px auto; display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
+        .info-card { background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+        .info-card h3 { margin: 0 0 14px 0; color: var(--audit-primary); }
+        .muted { color: #64748b; font-size: 0.92rem; }
+        .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .tag { background: #eff6ff; color: #1d4ed8; border-radius: 999px; padding: 6px 10px; font-size: 0.75rem; font-weight: 700; }
+        .tag.ok { background: #ecfdf5; color: #047857; }
+        .tag.warn { background: #fff7ed; color: #c2410c; }
+        .tag.danger { background: #fef2f2; color: #b91c1c; }
+
+        .section-title { max-width: 1100px; margin: 0 auto 12px auto; color: var(--audit-primary); font-size: 1.1rem; font-weight: 800; }
+        .roadmap { max-width: 1100px; margin: 0 auto 24px auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .phase-card { background: white; border: 1px solid #e2e8f0; border-left: 4px solid var(--audit-accent); border-radius: 12px; padding: 18px; }
+        .phase-card h4 { margin: 0 0 8px 0; color: var(--audit-primary); }
+        .phase-card p { margin: 0; color: #64748b; font-size: 0.9rem; line-height: 1.5; }
+
+        @media (max-width: 900px) {
+            .summary-grid, .grid-2, .roadmap, .field-grid { grid-template-columns: 1fr; }
+            .workspace { padding: 20px; }
+            .dashboard-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+        }
+
+        /* Mobile sidebar backdrop */
+        .audit-mobile-backdrop {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.55); z-index: 999;
+        }
+        .audit-mobile-backdrop.visible { display: block; }
+
+        /* Mobile hamburger button */
+        .audit-mobile-btn {
+            display: none; position: fixed; top: 14px; left: 14px; z-index: 1001;
+            width: 44px; height: 44px; border-radius: 12px;
+            background: #1e293b; color: white; border: none; cursor: pointer;
+            align-items: center; justify-content: center;
+        }
+        @media (max-width: 768px) {
+            .audit-mobile-btn { display: flex; }
+            #sidebar-container { position: relative; }
+            .sidebar-audit {
+                position: fixed; top: 0; left: 0; height: 100vh; z-index: 1000;
+                transform: translateX(-100%);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .sidebar-audit.mobile-open { transform: translateX(0); }
+            body.collapsed .sidebar-audit { transform: translateX(-100%); width: var(--sidebar-width) !important; }
+            body.collapsed .sidebar-audit.mobile-open { transform: translateX(0); }
+            .workspace { padding: 70px 14px 20px !important; }
+            .dashboard-header { flex-direction: column; gap: 10px; }
+            .dashboard-header > div:last-child { flex-wrap: wrap; }
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+            .grid-2, .roadmap, .field-grid, .entity-grid { grid-template-columns: 1fr !important; }
+            .executive-meta { grid-template-columns: 1fr !important; }
+            .form-container { padding: 20px !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar-container"></div>
+
+    <main class="workspace">
+        <div class="dashboard-header" id="section-dashboard">
+            <div>
+                <h1 style="color: var(--audit-primary); margin: 0;">Sistema d'Auditoria ISO 9001</h1>
+                <p style="color: #64748b; margin: 5px 0 0 0;">Fase 0 definida, roadmap funcional i seguiment digital de la qualitat</p>
+                <div id="current-filter-label" class="tag-list" style="margin-top:10px;"><span class="tag">Vista global</span></div>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn" style="background:#e2e8f0; color: var(--audit-primary);" onclick="seedDemoData()">Carregar exemple</button>
+                <button class="btn" style="background:#dbeafe; color:#1d4ed8;" onclick="createDepartment()">+ Departament</button>
+                <button class="btn" style="background:#fee2e2; color:#b91c1c;" onclick="openFindingModal()">+ No conformitat</button>
+                <button class="btn" style="background:#ecfdf5; color:#047857;" onclick="openActionModal()">+ AcciÃ³ correctiva</button>
+                <button class="btn" style="background:#0f172a; color:white;" onclick="openExecutivePreviewModal()">Informe executiu</button>
+                <button class="btn" style="background:#f8fafc; color: var(--audit-primary); border:1px solid #cbd5e1;" onclick="exportBackup()">Backup</button>
+                <button class="btn" style="background:#f8fafc; color: var(--audit-primary); border:1px solid #cbd5e1;" onclick="document.getElementById('backupImport').click()">Importar</button>
+                <input type="file" id="backupImport" accept="application/json" style="display:none" onchange="importBackup(event)">
+                <button class="btn" style="background: var(--audit-accent); color: white; padding: 15px 25px;" onclick="openNewAuditModal()">+ Nou Informe</button>
+            </div>
+        </div>
+
+        <section class="summary-grid">
+            <div class="summary-card"><div class="label">Compliment global</div><div class="value" id="kpi-compliance">0%</div><div class="meta">ISO 9001:2015</div></div>
+            <div class="summary-card"><div class="label">Auditories planificades</div><div class="value" id="kpi-audits">0</div><div class="meta">Pla anual</div></div>
+            <div class="summary-card"><div class="label">No conformitats obertes</div><div class="value" id="kpi-nc">0</div><div class="meta">Menor, major, crÃ­tica</div></div>
+            <div class="summary-card"><div class="label">Accions correctives</div><div class="value" id="kpi-actions">0</div><div class="meta">Seguiment actiu</div></div>
+        </section>
+
+        <section class="grid-2">
+            <div class="info-card">
+                <h3>ðŸŽ¯ Fase 0 Â· DefiniciÃ³ del sistema</h3>
+                <p class="muted">Objectiu: definir quÃ¨ s'audita, com s'organitza i amb quins indicadors es mesura.</p>
+                <div class="tag-list">
+                    <span class="tag">Mapa de processos</span>
+                    <span class="tag">Departaments</span>
+                    <span class="tag">Abast del sistema</span>
+                    <span class="tag">Requisits ISO 9001:2015</span>
+                    <span class="tag">KPI</span>
+                </div>
+                <div style="margin-top:16px;">
+                    <strong style="color:var(--audit-primary);">Processos clau</strong>
+                    <div class="tag-list">
+                        <span class="tag ok">DirecciÃ³</span>
+                        <span class="tag ok">AdministraciÃ³</span>
+                        <span class="tag ok">RRHH</span>
+                        <span class="tag ok">IntervenciÃ³ Social</span>
+                        <span class="tag ok">Qualitat</span>
+                        <span class="tag ok">Millora contÃ­nua</span>
+                    </div>
+                </div>
+            </div>
+            <div class="info-card">
+                <h3>ðŸ” Decisions clau</h3>
+                <div class="tag-list">
+                    <span class="tag">Internes i externes</span>
+                    <span class="tag warn">FreqÃ¼Ã¨ncia trimestral</span>
+                    <span class="tag ok">DigitalitzaciÃ³ 100%</span>
+                    <span class="tag">TraÃ§abilitat completa</span>
+                </div>
+                <ul class="muted" style="margin-top:16px; line-height:1.7; padding-left:18px;">
+                    <li>Control d'accessos per rol</li>
+                    <li>Historial de canvis i evidÃ¨ncies</li>
+                    <li>ExportaciÃ³ PDF per certificadora</li>
+                    <li>Seguiment de riscos per departament</li>
+                </ul>
+            </div>
+        </section>
+
+        <div class="section-title">ðŸ“‹ Pla anual d'auditories</div>
+        <div class="form-container" id="section-plan" style="margin-bottom:24px;">
+            <table class="audit-table">
+                <thead>
+                    <tr>
+                        <th>ID Informe</th>
+                        <th>Programa</th>
+                        <th>Data</th>
+                        <th>Auditor</th>
+                        <th style="text-align: right;">Accions</th>
+                    </tr>
+                </thead>
+                <tbody id="audit-list-body"></tbody>
+            </table>
+        </div>
+
+        <section class="grid-2" id="section-findings">
+            <div class="info-card">
+                <h3>ðŸš¨ No conformitats obertes</h3>
+                <table class="audit-table">
+                    <thead>
+                        <tr><th>Departament</th><th>ClÃ usula</th><th>Nivell</th><th>Estat</th></tr>
+                    </thead>
+                    <tbody id="findings-body"></tbody>
+                </table>
+            </div>
+            <div class="info-card">
+                <h3>ðŸ“Š Requisits ISO aplicables</h3>
+                <div class="tag-list">
+                    <span class="tag">4. Context</span>
+                    <span class="tag">5. Lideratge</span>
+                    <span class="tag">6. PlanificaciÃ³</span>
+                    <span class="tag">7. Suport</span>
+                    <span class="tag">8. OperaciÃ³</span>
+                    <span class="tag">9. AvaluaciÃ³</span>
+                    <span class="tag">10. Millora</span>
+                </div>
+                <p class="muted" style="margin-top:16px;">Cada auditoria avalua compliment, compliment parcial o no compliment i calcula el risc automÃ ticament.</p>
+            </div>
+        </section>
+
+        <section class="grid-2" id="section-management">
+            <div class="info-card">
+                <h3>ðŸ¢ Departaments i responsables</h3>
+                <table class="audit-table">
+                    <thead>
+                        <tr><th>Departament</th><th>Responsable</th><th>FreqÃ¼Ã¨ncia</th><th>Estat</th><th>GestiÃ³</th></tr>
+                    </thead>
+                    <tbody id="departments-body"></tbody>
+                </table>
+            </div>
+            <div class="info-card">
+                <h3>âœ… Accions correctives</h3>
+                <table class="audit-table">
+                    <thead>
+                        <tr><th>ID</th><th>AcciÃ³</th><th>Dept.</th><th>Venciment</th><th>GestiÃ³</th></tr>
+                    </thead>
+                    <tbody id="actions-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <div class="section-title">ðŸ—ï¸ Roadmap del sistema</div>
+        <section class="roadmap" id="section-roadmap">
+            <div class="phase-card"><h4>Fase 1 Â· Disseny funcional</h4><p>Usuaris, departaments, pla anual, checklist ISO, incidÃ¨ncies, accions correctives i informes automÃ tics.</p></div>
+            <div class="phase-card"><h4>Fase 2 Â· Arquitectura tÃ¨cnica</h4><p>Web app segura, base de dades traÃ§able, autenticaciÃ³ robusta i emmagatzematge d'evidÃ¨ncies.</p></div>
+            <div class="phase-card"><h4>Fase 3 Â· Motor d'auditoria</h4><p>Plantilles reutilitzables, sistema de puntuaciÃ³ i cÃ lcul de risc per departament.</p></div>
+            <div class="phase-card"><h4>Fase 4 Â· Informes</h4><p>Resums per Ã rea, direcciÃ³ i perÃ­ode, amb exportaciÃ³ PDF i format corporatiu.</p></div>
+            <div class="phase-card"><h4>Fase 5 Â· Seguretat</h4><p>Control d'accÃ©s, audit trail, RGPD, cÃ²pies de seguretat i signatura digital opcional.</p></div>
+            <div class="phase-card"><h4>Fase 6-7 Â· Desplegament i millora contÃ­nua</h4><p>Entorns separats, formaciÃ³, feedback d'auditors, alertes i analÃ­tica avanÃ§ada.</p></div>
+        </section>
+    </main>
+
+    <div id="form-modal">
+        <div class="modal-form-content">
+            <header class="pdf-header">
+                <div style="display: flex; align-items: center;">
+                    <img id="pdf-logo-nexe" src="../img/NexeSocial-logo.png" height="45" alt="Nexe Social">
+                    <span class="logo-bar-separator">/</span>
+                    <img id="pdf-logo-suite" src="../img/nexeauditsuit.svg" height="45" alt="Audit Suite">
+                </div>
+                <div style="text-align: right;">
+                    <div id="modal-report-id" style="font-weight: 800; color: var(--audit-accent); font-size: 1.2rem;">ID: ---</div>
+                    <div id="modal-dept-badge" class="dept-badge" style="margin-top: 5px;">PROGRAMA</div>
+                </div>
+            </header>
+
+            <div class="field-grid">
+                <div class="field">
+                    <label>Auditor Responsable</label>
+                    <input type="text" id="edit_auditor" placeholder="Nom de l'auditor">
+                </div>
+                <div class="field">
+                    <label>Data de l'Audit</label>
+                    <input type="date" id="edit_date">
+                </div>
+            </div>
+
+            <table class="audit-table">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">Codi Requisit</th>
+                        <th style="width: 70%;">EvidÃ¨ncies i Troballes Objectives</th>
+                        <th style="width: 15%;">Estat</th>
+                    </tr>
+                </thead>
+                <tbody id="modal-rows-body"></tbody>
+            </table>
+            <button class="btn-add" onclick="addRowToModal()">+ Afegir Punt de Control (ISO)</button>
+
+            <div class="field" style="margin-top: 30px;">
+                <label>Conclusions, No Conformitats i Millores</label>
+                <textarea id="edit_conclusions" rows="4" placeholder="Resum executiu per a conformitat ISO 9001..."></textarea>
+            </div>
+
+            <div class="action-bar" style="margin-top: 40px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn" onclick="closeFormModal()" style="background:#f1f5f9; color: #64748b;">Tancar</button>
+                <button class="btn btn-save" onclick="abrirParaFirmarAudit()" style="background:#10b981;">Enviar a Firmar</button>
+                <button class="btn btn-save" onclick="saveAuditData()">Guardar Canvis</button>
+                <button class="btn btn-print" onclick="generateISO9001PDF()">Generar Informe ISO PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="custom-modal">
+        <div class="modal-small">
+            <h3 id="modal-title" style="margin:0 0 20px 0;">TÃ­tol</h3>
+            <div id="modal-input-group">
+                <div class="field">
+                    <label id="modal-label">Etiqueta:</label>
+                    <input type="text" id="modal-input" placeholder="...">
+                </div>
+            </div>
+            <p id="modal-message" style="display:none; color: #475569; font-size: 0.9rem; line-height: 1.5;"></p>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:25px;">
+                <button class="btn" id="modal-cancel-btn" onclick="closeModal()" style="background:#f1f5f9; color: #64748b;">CancelÂ·lar</button>
+                <button class="btn btn-print" id="modal-confirm-btn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="entity-modal">
+        <div class="entity-modal-card">
+            <div class="pdf-header" style="margin-bottom:18px;">
+                <div>
+                    <h3 id="entity-modal-title" style="margin:0; color:var(--audit-primary);">GestiÃ³</h3>
+                    <p id="entity-modal-subtitle" style="margin:6px 0 0 0; color:#64748b;">Completa les dades</p>
+                </div>
+                <button class="btn" onclick="closeEntityModal()" style="background:#f1f5f9; color:#475569;">Tancar</button>
+            </div>
+            <div id="entity-modal-body" class="entity-grid"></div>
+            <div class="action-bar" style="margin-top:22px; display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn" onclick="closeEntityModal()" style="background:#f8fafc; color:#64748b;">CancelÂ·lar</button>
+                <button class="btn btn-save" id="entity-save-btn">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="executive-preview-modal">
+        <div class="executive-preview-card">
+            <div class="executive-preview-toolbar">
+                <div>
+                    <h3 style="margin:0; color:#0f172a;">Vista prÃ¨via Â· Informe executiu</h3>
+                    <p style="margin:4px 0 0 0; color:#64748b;">Revisa el resum abans d'imprimir o descarregar-lo en PDF</p>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="btn" onclick="printExecutivePreview()" style="background:#eff6ff; color:#1d4ed8;">Imprimir</button>
+                    <button class="btn btn-print" onclick="generateExecutiveDashboardPDF()">Descarregar PDF</button>
+                    <button class="btn" onclick="closeExecutivePreviewModal()" style="background:#f8fafc; color:#64748b;">Tancar</button>
+                </div>
+            </div>
+            <div class="executive-preview-body">
+                <div id="executive-preview-content" class="executive-report-sheet"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="audit-toast" class="toast-audit"></div>
+
+    <script src="../security-check.js"></script>
+    <script src="nexeauditsuite-sidebar.js"></script>
+    <script src="nexeadutisuite-page.js?v=20260414-3"></script>
+    
+    <script>
+        // Función para abrir el flujo de firma desde nexeaudit
+        window.abrirParaFirmarAudit = async function() {
+            try {
+                import('../signature-flow.js').then(mod => {
+                    const SignatureFlow = mod.default;
+                    const auditTitle = document.getElementById('edit_title')?.value || 'Informe Audit';
+                    const auditDept = document.getElementById('edit_department')?.value || 'Departament';
+                    
+                    SignatureFlow.openQuickSignFlow({
+                        documentTitle: `Audit - ${auditTitle}`,
+                        documentText: `Informe d'auditoria: ${auditTitle} - ${auditDept}`,
+                        sourceModule: 'nexeaudit',
+                        metadata: {
+                            tipo: 'informe-auditoria',
+                            titulo: auditTitle,
+                            departamento: auditDept,
+                        },
+                    });
+                });
+            } catch(e) {
+                console.error('Error obrint firma:', e);
+                alert('Error al obrir el flux de firma');
+            }
+        };
+    </script>
+</body>
+</html>
