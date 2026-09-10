@@ -1,0 +1,373 @@
+{
+  "scope": "Static source inspection only; no browser or production data access",
+  "publicFiles": 130,
+  "htmlPages": 73,
+  "externalScripts": 39,
+  "inlineScripts": 104,
+  "syntaxFailures": [
+    {
+      "file": "public/genograma_editor.html",
+      "line": 451,
+      "diagnostic": "[stdin]:6\r\n        if (!famId) return; // mode lliure, res a fer\r\n                    ^^^^^^\r\n\r\nSyntaxError: Illegal return statement\r\n    at checkSyntax (node:internal/main/check_syntax:72:5)\r\n    at node:internal/main/check_syntax:45:5\r"
+    },
+    {
+      "file": "public/informe-psicosocial.html",
+      "line": 636,
+      "diagnostic": "[stdin]:7\r\n    if (!famId) return; // informe lliure, window.onload ja ha fet el que cal\r\n                ^^^^^^\r\n\r\nSyntaxError: Illegal return statement\r\n    at checkSyntax (node:internal/main/check_syntax:72:5)\r\n    at node:internal/main/check_syntax:45:5\r"
+    },
+    {
+      "file": "public/NexeAdmin/admin-donacions.html",
+      "line": 557,
+      "diagnostic": "[stdin]:537\r\n        document.getElementById('cp-sign-lloc').textContent = `Barcelona, ${today.getDate()} de ${['gener','febrer','març','abril','maig','juny','juliol','agost','setembre','octubre','novembre','desembre')[today.getMonth()]} de ${today.getFullYear()}`;\r\n                                                                                                                                                                                                            ^\r\n\r\nSyntaxError: Unexpected token ')'\r\n    at checkSyntax (node:internal/main/check_syntax:72:5)\r\n    at node:internal/main/check_syntax:45:5\r"
+    },
+    {
+      "file": "public/NexeAudit/audit-logic.js",
+      "line": 1,
+      "diagnostic": "[stdin]:325\r\n    async crear AcciónCorrectiva(hallazgoId, data) {\r\n                ^^^^^^^^^^^^^^^^\r\n\r\nSyntaxError: Unexpected identifier 'AcciónCorrectiva'\r\n    at checkSyntax (node:internal/main/check_syntax:72:5)\r\n    at node:internal/main/check_syntax:45:5\r"
+    },
+    {
+      "file": "public/NexePsy/logos_financiadors.html",
+      "line": 129,
+      "diagnostic": "[stdin]:59\r\n            const vÃ lids = files.filter(f => allowed.includes(f.type));\r\n                  ^^\r\n\r\nSyntaxError: Missing initializer in const declaration\r\n    at wrapSafe (node:internal/modules/cjs/loader:1743:18)\r\n    at checkSyntax (node:internal/main/check_syntax:76:3)\r"
+    },
+    {
+      "file": "public/NexePsy/nexepsy-espera.html",
+      "line": 238,
+      "diagnostic": "[stdin]:313\r\n                    diagnÃ³stico: diagnostic,\r\n                          \r\n\r\nSyntaxError: Invalid or unexpected token\r\n    at checkSyntax (node:internal/main/check_syntax:72:5)\r\n    at node:internal/main/check_syntax:45:5\r"
+    },
+    {
+      "file": "public/NexePsy/nexepsy-individu.html",
+      "line": 225,
+      "diagnostic": "[stdin]:125\r\n                            <p class=\"interv-diag\">${esc(interv.diagnÃ³stico || interv.diagnostic || 'â€”')}</p>\r\n                                                                ^^^^^^\r\n\r\nSyntaxError: missing ) after argument list\r\n    at checkSyntax (node:internal/main/check_syntax:72:5)\r\n    at node:internal/main/check_syntax:45:5\r"
+    },
+    {
+      "file": "public/NexePsy/nexepsy-logic.js",
+      "line": 1,
+      "diagnostic": "[stdin]:172\r\n    async actualizar Sesión(intervenciónId, sesiónId, data) {\r\n                     ^^^^^^\r\n\r\nSyntaxError: Unexpected identifier 'Sesión'\r\n    at checkSyntax (node:internal/main/check_syntax:72:5)\r\n    at node:internal/main/check_syntax:45:5\r"
+    },
+    {
+      "file": "public/NexePsy/nexepsy.html",
+      "line": 232,
+      "diagnostic": "[stdin]:31\r\n                                dec(data.direcciÃ³n || data.direccion || ''),\r\n                                         ^^^^^^^^\r\n\r\nSyntaxError: missing ) after argument list\r\n    at checkSyntax (node:internal/main/check_syntax:72:5)\r\n    at node:internal/main/check_syntax:45:5\r"
+    }
+  ],
+  "missingReferences": [
+    {
+      "file": "public/caixaproinfancia.html",
+      "line": 155,
+      "reference": "./sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/centre-dia-docs.html",
+      "line": 2034,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/cites.html",
+      "line": 187,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/configuracio.html",
+      "line": 244,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/convenios.html",
+      "line": 501,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/crear-grup.html",
+      "line": 354,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/dades-totals.html",
+      "line": 98,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/departament.html",
+      "line": 182,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/expedient-detall.html",
+      "line": 51,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/familia-perfil.html",
+      "line": 46,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/families-llistat.html",
+      "line": 34,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/genograma-editor-backend.js",
+      "line": 6,
+      "reference": "../firebase-config.js",
+      "resolved": "firebase-config.js"
+    },
+    {
+      "file": "public/gestio-avisos.html",
+      "line": 75,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/gestio-beneficiaris.html",
+      "line": 288,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/gestio-detall.html",
+      "line": 35,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/gestio-entitats-xarxa.html",
+      "line": 205,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/gestio-usuaris.html",
+      "line": 35,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/grups.html",
+      "line": 203,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/home.html",
+      "line": 144,
+      "reference": "./sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/importador-datos.html",
+      "line": 102,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/informe-nou.html",
+      "line": 37,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/js/components/sidebar.js",
+      "line": 14,
+      "reference": "dashboard.html",
+      "resolved": "public/js/components/dashboard.html"
+    },
+    {
+      "file": "public/js/components/sidebar.js",
+      "line": 19,
+      "reference": "socios.html",
+      "resolved": "public/js/components/socios.html"
+    },
+    {
+      "file": "public/js/components/sidebar.js",
+      "line": 24,
+      "reference": "projectes.html",
+      "resolved": "public/js/components/projectes.html"
+    },
+    {
+      "file": "public/manage-tipos-actividad.html",
+      "line": 649,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/manteniment.html",
+      "line": 110,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/NexeAdmin/admin-logic.js",
+      "line": 25,
+      "reference": "index.html",
+      "resolved": "public/NexeAdmin/index.html"
+    },
+    {
+      "file": "public/NexePsy/nexepsy-individu.html",
+      "line": 104,
+      "reference": "../sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/passar-llista.html",
+      "line": 501,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/perfil-usuari.html",
+      "line": 132,
+      "reference": "./sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/perfil.html",
+      "line": 80,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/programes-gestio.html",
+      "line": 149,
+      "reference": "sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/reportar-incidencia.html",
+      "line": 59,
+      "reference": "./sidebar.js",
+      "resolved": "public/sidebar.js"
+    },
+    {
+      "file": "public/security-check.js",
+      "line": 107,
+      "reference": "../home.html",
+      "resolved": "home.html"
+    },
+    {
+      "file": "public/security-check.js",
+      "line": 144,
+      "reference": "../home.html",
+      "resolved": "home.html"
+    },
+    {
+      "file": "public/sidebar-nexepsy.js",
+      "line": 102,
+      "reference": "../informe-psicosocial.html",
+      "resolved": "informe-psicosocial.html"
+    },
+    {
+      "file": "public/sidebar-nexepsy.js",
+      "line": 132,
+      "reference": "../home.html",
+      "resolved": "home.html"
+    },
+    {
+      "file": "public/sidebar-nexepsy.js",
+      "line": 141,
+      "reference": "../img/NexePsy.svg",
+      "resolved": "img/NexePsy.svg"
+    },
+    {
+      "file": "public/sidebar-nexepsy.js",
+      "line": 147,
+      "reference": "nexepsy.html",
+      "resolved": "public/nexepsy.html"
+    },
+    {
+      "file": "public/sidebar-nexepsy.js",
+      "line": 152,
+      "reference": "nexepsy-espera.html",
+      "resolved": "public/nexepsy-espera.html"
+    },
+    {
+      "file": "public/sidebar-nexepsy.js",
+      "line": 162,
+      "reference": "../genograma_editor.html",
+      "resolved": "genograma_editor.html"
+    },
+    {
+      "file": "public/sidebar-nexepsy.js",
+      "line": 166,
+      "reference": "nexepsy-estadistiques.html",
+      "resolved": "public/nexepsy-estadistiques.html"
+    },
+    {
+      "file": "public/sidebar-nexepsy.js",
+      "line": 172,
+      "reference": "logos_financiadors.html",
+      "resolved": "public/logos_financiadors.html"
+    }
+  ],
+  "largestFiles": [
+    {
+      "file": "public/centre-dia-docs.html",
+      "lines": 2037
+    },
+    {
+      "file": "public/perfil-usuari.html",
+      "lines": 2031
+    },
+    {
+      "file": "public/caixaproinfancia.html",
+      "lines": 1568
+    },
+    {
+      "file": "public/cites.html",
+      "lines": 1540
+    },
+    {
+      "file": "public/manteniment.html",
+      "lines": 1428
+    },
+    {
+      "file": "public/departament-page.js",
+      "lines": 1363
+    },
+    {
+      "file": "public/NexeAdmin/admin-proveidors.html",
+      "lines": 1285
+    },
+    {
+      "file": "public/NexeAdmin/admin-donacions.html",
+      "lines": 1149
+    },
+    {
+      "file": "public/NexeAdmin/admin-plantilles.html",
+      "lines": 1124
+    },
+    {
+      "file": "public/programes-gestio-page.js",
+      "lines": 1095
+    },
+    {
+      "file": "public/NexeAdmin/admin-recepcio.html",
+      "lines": 1045
+    },
+    {
+      "file": "public/auth-manager.js",
+      "lines": 976
+    }
+  ],
+  "metrics": {
+    "filesUsingLocalStorage": 48,
+    "filesUsingInnerHTML": 73,
+    "filesUsingFirestore": 63
+  },
+  "firebaseSDKVersions": [
+    "10.12.0",
+    "10.12.2"
+  ]
+}

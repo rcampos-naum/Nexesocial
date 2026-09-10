@@ -1,0 +1,54 @@
+{
+  "environment": "loopback emulator, synthetic data",
+  "results": [
+    {
+      "id": "R01",
+      "description": "Viewer reads an unassigned-area personal record",
+      "allowed": true,
+      "secureExpectation": "deny",
+      "meetsSecureExpectation": false
+    },
+    {
+      "id": "R02",
+      "description": "Monitor modifies an unassigned-area personal record",
+      "allowed": true,
+      "secureExpectation": "deny",
+      "meetsSecureExpectation": false
+    },
+    {
+      "id": "R03",
+      "description": "Monitor reads a clinical record outside assigned area",
+      "allowed": true,
+      "secureExpectation": "deny",
+      "meetsSecureExpectation": false
+    },
+    {
+      "id": "R04",
+      "description": "Viewer reads the organization encryption secret",
+      "allowed": true,
+      "secureExpectation": "deny",
+      "meetsSecureExpectation": false
+    },
+    {
+      "id": "R05",
+      "description": "Admin overwrites an allegedly immutable audit entry",
+      "allowed": true,
+      "secureExpectation": "deny",
+      "meetsSecureExpectation": false
+    },
+    {
+      "id": "R06",
+      "description": "Signature participant attributes a decision to another participant",
+      "allowed": true,
+      "secureExpectation": "deny",
+      "meetsSecureExpectation": false
+    },
+    {
+      "id": "R07",
+      "description": "Anonymous reads a personal record (negative control)",
+      "allowed": false,
+      "secureExpectation": "deny",
+      "meetsSecureExpectation": true
+    }
+  ]
+}

@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "description": "Firestore security rules tests for NexeSocial",
   "scripts": {
+    "audit:static": "node scripts/audit-static.mjs --check",
+    "audit:rules": "node scripts/audit-rules.cjs --check",
     "test:structure": "node --test scripts/program-structure.test.mjs",
     "test:rules": "firebase emulators:exec --only firestore \"node scripts/test-firestore-rules.js\"",
     "ops:readiness": "powershell -ExecutionPolicy Bypass -File .\\ops-readiness.ps1",
