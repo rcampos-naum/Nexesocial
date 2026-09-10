@@ -1,10 +1,14 @@
-﻿import { db } from './firebase-config.js';
+import { db } from './firebase-config.js';
 import {
     collection, getDocs, getDoc, doc, setDoc, updateDoc, addDoc,
     query, where, serverTimestamp, deleteDoc, onSnapshot, orderBy, limit, arrayUnion
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { GruposLogic } from './grupos-logic.js';
 import { BeneficiariosGruposDB } from './grupos-db.js';
+import { fillStructureSelect, loadStructure } from './program-structure-store.js';
+import { structurePath } from './program-structure.mjs';
+let departmentStructure = [];
+loadStructure().then(data => { departmentStructure = data.nodes; renderActivities(); }).catch(() => {});
 
 // ── Slug → dept matching ─────────────────────────────────────────────────────
 const SLUG_ALIASES = {
@@ -111,7 +115,7 @@ async function loadActivities(deptId){
     try{
         const q=query(collection(db,'actividades'),where('departamentoId','==',deptId));
         const s=await getDocs(q);
-        const res=s.docs.map(d=>{const dd=d.data()||{};return{id:d.id,departmentId:dd.departamentoId||dd.departmentId||deptId,name:dd.nombre||dd.name||d.id,code:dd.codigo||dd.code||norm(dd.nombre||d.id).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10),ageMin:Number(dd.edadMinima??dd.ageMin??0),ageMax:Number(dd.edadMaxima??dd.ageMax??99),startDate:dd.fechaInicio||dd.startDate||'',endDate:dd.fechaFin||dd.endDate||'',temporalization:dd.temporalizacion||dd.temporalization||'Trimestral',theme:dd.eixTematic||dd.theme||'',logistics:dd.necessitatsLogistiques||dd.logistics||'',coorganization:dd.coorganitzacioActiva||dd.coorganization||'',notes:dd.descripcion||dd.notes||'',status:dd.estado||dd.status||'Activa',periodId:dd.periodId||dd.periodoId||'',periodLabel:dd.periodLabel||dd.periodoLabel||'',periodType:dd.periodType||''}});
+        const res=s.docs.map(d=>{const dd=d.data()||{};return{id:d.id,structureNodeId:dd.structureNodeId||'',departmentId:dd.departamentoId||dd.departmentId||deptId,name:dd.nombre||dd.name||d.id,code:dd.codigo||dd.code||norm(dd.nombre||d.id).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10),ageMin:Number(dd.edadMinima??dd.ageMin??0),ageMax:Number(dd.edadMaxima??dd.ageMax??99),startDate:dd.fechaInicio||dd.startDate||'',endDate:dd.fechaFin||dd.endDate||'',temporalization:dd.temporalizacion||dd.temporalization||'Trimestral',theme:dd.eixTematic||dd.theme||'',logistics:dd.necessitatsLogistiques||dd.logistics||'',coorganization:dd.coorganitzacioActiva||dd.coorganization||'',notes:dd.descripcion||dd.notes||'',status:dd.estado||dd.status||'Activa',periodId:dd.periodId||dd.periodoId||'',periodLabel:dd.periodLabel||dd.periodoLabel||'',periodType:dd.periodType||''}});
         return res.filter(a=>a.status!=='Inactiva').filter(isForViewedPeriod);
     }catch{return[];}
 }
@@ -659,6 +663,7 @@ function renderActivities(){
                         <span class="act-title">${esc(a.name)}</span>
                     </div>
                     <div class="act-badge-row">
+                        <span class="act-badge badge-green">${esc(structurePath(departmentStructure, a.structureNodeId).map(n => n.name).join(' › ') || 'Sense classificar')}</span>
                         <span class="act-badge badge-blue">${esc(String(a.ageMin))}-${esc(String(a.ageMax))} anys</span>
                         <span class="act-badge badge-green">${esc(a.temporalization)}</span>
                         ${a.theme?`<span class="act-badge" style="background:#ede9fe;color:#6d28d9;">${esc(a.theme)}</span>`:''}
@@ -700,6 +705,7 @@ function openActModal(actId=null){
     const a=actId?S.activities.find(x=>x.id===actId):null;
     text('act-modal-title',a?'Editar activitat':'Nova activitat');
     $('act-id').value=a?.id||'';$('act-name').value=a?.name||'';
+    fillStructureSelect($('act-structure'), a?.structureNodeId || '');
     const codeField=$('act-code');
     const codeHint=$('act-code-hint');
     const nameField=$('act-name');
@@ -742,6 +748,7 @@ async function saveActivity(){
     const resps=getCheckedResp('act-resp-list');
     const activity={id,departmentId:S.dept.id,name,code,ageMin:Number($('act-age-min').value)||0,ageMax:Number($('act-age-max').value)||99,startDate:$('act-start').value,endDate:$('act-end').value,temporalization:$('act-temp').value,theme:$('act-theme').value.trim(),logistics:$('act-logistics').value.trim(),coorganization:$('act-coorg').value.trim(),notes:$('act-notes').value.trim(),responsablesIds:resps.map(r=>r.id),responsablesNoms:resps.map(r=>r.name),status:'Activa',...currentPeriodMeta()};
     try{
+        activity.structureNodeId = $('act-structure').value;
         await setDoc(doc(db,'actividades',id),{...activity,codigo:activity.code,nombre:activity.name,departamentoId:S.dept.id,edadMinima:activity.ageMin,edadMaxima:activity.ageMax,fechaInicio:activity.startDate,fechaFin:activity.endDate,temporalizacion:activity.temporalization,eixTematic:activity.theme,necessitatsLogistiques:activity.logistics,coorganitzacioActiva:activity.coorganization,descripcion:activity.notes,responsablesIds:activity.responsablesIds,responsablesNoms:activity.responsablesNoms,estado:'Activa',fechaModificacion:serverTimestamp(),periodoId:activity.periodId,periodoLabel:activity.periodLabel},{merge:true});
         const idx=S.activities.findIndex(x=>x.id===id);
         if(idx>=0)S.activities[idx]=activity;else S.activities.push(activity);

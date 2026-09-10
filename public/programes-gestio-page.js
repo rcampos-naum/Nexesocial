@@ -1,4 +1,7 @@
-﻿import { db } from './firebase-config.js';
+import { auth, db } from './firebase-config.js';
+import { matchesStructure, structurePath } from './program-structure.mjs';
+import { fillStructureSelect } from './program-structure-store.js';
+import { mountStructurePanel } from './program-structure-panel.js';
 import {
     collection,
     getDocs,
@@ -7,10 +10,14 @@ import {
     setDoc,
     addDoc,
     updateDoc,
+    arrayUnion,
     serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const _rtUnsub = [];
+let structureNodes = [];
+let structureFilter = '';
+let structurePanel = null;
 
 const STORAGE_KEYS = {
     departments: 'nexesocial_departments',
@@ -307,7 +314,7 @@ async function hydrateActivitiesFromFirestore() {
             const data = item.data() || {};
             if (state.activities.some((activity) => activity.id === item.id)) return;
             state.activities.push({
-                id: data.id || item.id,
+                id: data.id || item.id, firestoreId: item.id, structureNodeId: data.structureNodeId || '',
                 departmentId: data.departamentoId || data.departamentoID || data.departamento || data.departmentId || '',
                 name: data.nombre || data.name || item.id,
                 code: data.codigo || data.code || normalizeText(data.nombre || item.id).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10),
@@ -329,11 +336,12 @@ async function hydrateActivitiesFromFirestore() {
 
 async function syncActivityToFirestore(activity) {
     try {
-        await setDoc(doc(db, 'actividades', activity.id), {
+        await setDoc(doc(db, 'actividades', activity.firestoreId || activity.id), {
             id: activity.id,
             codigo: activity.code,
             nombre: activity.name,
             departamentoId: activity.departmentId,
+            structureNodeId: activity.structureNodeId || '',
             edadMinima: Number(activity.ageMin),
             edadMaxima: Number(activity.ageMax),
             fechaInicio: activity.startDate,
@@ -347,6 +355,7 @@ async function syncActivityToFirestore(activity) {
         }, { merge: true });
     } catch (error) {
         console.warn('No s’ha pogut sincronitzar l’activitat a Firestore:', error);
+        throw error;
     }
 }
 
@@ -473,6 +482,7 @@ function renderGroupLinks(activity) {
 }
 
 function renderBoard() {
+    structurePanel?.refresh();
     const board = document.getElementById('tauler-programes');
     if (!board) return;
 
@@ -481,15 +491,15 @@ function renderBoard() {
         return;
     }
 
-    const visibleDepartments = state.departments.filter((department) => department.status !== 'Inactiu' && canSeeDepartment(department));
+    const visibleDepartments = state.departments.filter((department) => department.status !== 'Inactiu' && canSeeDepartment(department) && (!structureFilter || state.activities.some(activity => activity.departmentId === department.id && activity.status !== 'Inactiva' && matchesStructure(structureNodes, activity, structureFilter))));
 
     if (!visibleDepartments.length) {
-        board.innerHTML = '<div class="main-program-card"><div class="subprograms-container"><div class="empty-inline">No hi ha programes visibles per al perfil actual.</div></div></div>';
+        board.innerHTML = '<div class="main-program-card"><div class="subprograms-container"><div class="empty-inline">No hi ha activitats per a aquesta selecció o no hi ha departaments visibles. Canvia el filtre o crea una activitat si tens permisos.</div></div></div>';
         return;
     }
 
     board.innerHTML = visibleDepartments.map((department) => {
-        const departmentActivities = state.activities.filter((activity) => activity.departmentId === department.id && activity.status !== 'Inactiva');
+        const departmentActivities = state.activities.filter((activity) => activity.departmentId === department.id && activity.status !== 'Inactiva' && matchesStructure(structureNodes, activity, structureFilter));
         const departmentGroups = state.groups.filter((group) => matchesGroupDepartment(group, department.id) && canSeeGroup(group));
 
         return `
@@ -506,7 +516,7 @@ function renderBoard() {
                 </div>
                 <div class="department-stats">
                     <span>${departmentActivities.length} activitats</span>
-                    <span>${departmentGroups.length} grups visibles</span>
+                    <span>${departmentGroups.length} grups del departament</span>
                     <span>Revisió ${escapeHtml(department.frequency || 'Trimestral')}</span>
                 </div>
                 <div class="subprograms-container">
@@ -516,6 +526,7 @@ function renderBoard() {
                                 <div>
                                     <span class="id-pill">${escapeHtml(activity.code || activity.id)}</span>
                                     <h3>${escapeHtml(activity.name)}</h3>
+                                    <div class="structure-path">${escapeHtml(structurePath(structureNodes, activity.structureNodeId).map(n => n.name).join(' › ') || 'Sense classificar')}</div>
                                 </div>
                                 <span class="age-badge">${escapeHtml(String(activity.ageMin))}-${escapeHtml(String(activity.ageMax))} anys</span>
                             </div>
@@ -636,11 +647,17 @@ async function saveActivity(event) {
     }
 
     const current = getActivityById(id);
+    if (endDate < startDate) {
+        showToast('La data de fi ha de ser igual o posterior a la data d’inici', 'warning');
+        return;
+    }
     const payload = {
         id,
+        firestoreId: current?.firestoreId || id,
         departmentId,
+        structureNodeId: document.getElementById('activityStructure').value,
         name,
-        code: buildActivityCode(departmentId, name),
+        code: current?.code || buildActivityCode(departmentId, name),
         ageMin,
         ageMax,
         startDate,
@@ -649,19 +666,23 @@ async function saveActivity(event) {
         notes,
         linkedGroupIds,
         participantIds: current?.participantIds || [],
-        status: 'Activa'
+        status: current?.status || 'Activa'
     };
 
-    if (current) {
-        Object.assign(current, payload);
-    } else {
-        state.activities.push(payload);
-    }
-
-    await syncActivityToFirestore(payload);
-    closeModalById('activityModal');
-    renderBoard();
-    showToast('Activitat guardada correctament', 'success');
+    const submit = event.target.querySelector('[type="submit"]');
+    if (submit.disabled) return;
+    submit.disabled = true;
+    try {
+        await syncActivityToFirestore(payload);
+        const saved = getActivityById(id);
+        if (saved) Object.assign(saved, payload);
+        else state.activities.push(payload);
+        closeModalById('activityModal');
+        renderBoard();
+        showToast('Activitat guardada correctament', 'success');
+    } catch {
+        showToast('No s’ha guardat l’activitat. Revisa la connexió i els permisos i torna-ho a provar.', 'warning');
+    } finally { submit.disabled = false; }
 }
 
 function openActivityModal(departmentId = '', activityId = '') {
@@ -678,6 +699,7 @@ function openActivityModal(departmentId = '', activityId = '') {
 
     document.getElementById('activityModalTitle').textContent = current ? 'Editar activitat' : 'Nova activitat';
     document.getElementById('activityId').value = current?.id || '';
+    fillStructureSelect(document.getElementById('activityStructure'), current ? current.structureNodeId || '' : (structureFilter === '__unassigned' ? '' : structureFilter));
     document.getElementById('activityDepartment').innerHTML = state.departments.filter((item) => item.status !== 'Inactiu' && canSeeDepartment(item)).map((item) => `<option value="${escapeHtml(item.id)}" ${item.id === targetDepartmentId ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('');
     document.getElementById('activityName').value = current?.name || '';
     document.getElementById('activityAgeMin').value = current?.ageMin ?? 12;
@@ -743,7 +765,7 @@ async function openEnrollmentModal(activityId) {
     openModalById('enrollmentModal');
 }
 
-function enrollParticipant(activityId, participantId) {
+async function enrollParticipant(activityId, participantId) {
     if (!canEditPrograms()) {
         showToast('Aquest perfil és només de lectura', 'warning');
         return;
@@ -751,12 +773,14 @@ function enrollParticipant(activityId, participantId) {
 
     const activity = getActivityById(activityId);
     if (!activity) return;
-    if (!Array.isArray(activity.participantIds)) activity.participantIds = [];
-    if (!activity.participantIds.includes(participantId)) activity.participantIds.push(participantId);
-    syncActivityToFirestore(activity);
-    openEnrollmentModal(activityId);
-    renderBoard();
-    showToast("Participant inscrit a l'activitat", 'success');
+    try {
+        await updateDoc(doc(db, 'actividades', activity.firestoreId || activityId), { participantIds: arrayUnion(participantId) });
+        if (!Array.isArray(activity.participantIds)) activity.participantIds = [];
+        if (!activity.participantIds.includes(participantId)) activity.participantIds.push(participantId);
+        await openEnrollmentModal(activityId);
+        renderBoard();
+        showToast("Participant inscrit a l'activitat", 'success');
+    } catch { showToast('No s’ha guardat la inscripció. Torna-ho a provar.', 'warning'); }
 }
 
 function requestDirectionApproval(activityId, participantId) {
@@ -946,7 +970,7 @@ function loadActivitiesRT() {
         const unsub = onSnapshot(collection(db, 'actividades'), (snap) => {
             state.activities = snap.docs.map(item => {
                 const data = item.data() || {};
-                return { id: data.id || item.id, departmentId: data.departamentoId || data.departmentId || '', name: data.nombre || data.name || item.id, code: data.codigo || data.code || normalizeText(data.nombre || item.id).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10), ageMin: Number(data.edadMinima || data.ageMin || 0), ageMax: Number(data.edadMaxima || data.ageMax || 99), startDate: data.fechaInicio || data.startDate || '', endDate: data.fechaFin || data.endDate || '', temporalization: data.temporalizacion || data.temporalization || 'Trimestral', notes: data.descripcion || data.notes || '', linkedGroupIds: Array.isArray(data.linkedGroupIds) ? data.linkedGroupIds : [], participantIds: Array.isArray(data.participantIds) ? data.participantIds : [], status: data.estado || data.status || 'Activa' };
+                return { id: data.id || item.id, firestoreId: item.id, structureNodeId: data.structureNodeId || '', departmentId: data.departamentoId || data.departmentId || '', name: data.nombre || data.name || item.id, code: data.codigo || data.code || normalizeText(data.nombre || item.id).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10), ageMin: Number(data.edadMinima || data.ageMin || 0), ageMax: Number(data.edadMaxima || data.ageMax || 99), startDate: data.fechaInicio || data.startDate || '', endDate: data.fechaFin || data.endDate || '', temporalization: data.temporalizacion || data.temporalization || 'Trimestral', notes: data.descripcion || data.notes || '', linkedGroupIds: Array.isArray(data.linkedGroupIds) ? data.linkedGroupIds : [], participantIds: Array.isArray(data.participantIds) ? data.participantIds : [], status: data.estado || data.status || 'Activa' };
             });
             if (!resolved) { resolved = true; resolve(); }
             else { renderBoard(); }
@@ -1008,6 +1032,9 @@ function startDeferredListeners() {
 }
 
 async function initialize() {
+    await auth.authStateReady();
+    if (!auth.currentUser) return;
+    if (window.Auth?.initialize) await window.Auth.initialize();
     state.currentUser = resolveCurrentUser();
     state.access = resolveAccessProfile();
 
@@ -1018,6 +1045,11 @@ async function initialize() {
     renderRequestsPanel();
     renderBoard();
     startDeferredListeners();
+    if (canReadPrograms()) structurePanel = await mountStructurePanel(document.getElementById('naum-structure'), {
+        getActivities: () => state.activities.filter(a => a.status !== 'Inactiva' && state.departments.some(d => d.id === a.departmentId && d.status !== 'Inactiu' && canSeeDepartment(d))),
+        getGroups: () => state.groups.filter(canSeeGroup),
+        onChange: (nodes, selectedId) => { structureNodes = nodes; structureFilter = selectedId; renderBoard(); }
+    });
 
     const btnGlobal = document.getElementById('btnOpenActivityGlobal');
     if (btnGlobal) btnGlobal.style.display = canEditPrograms() ? 'inline-flex' : 'none';

@@ -2,8 +2,10 @@
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>NexeSocial - Gestió de Programes</title>
     <link rel="stylesheet" href="style-dashboard.css">
+    <link rel="stylesheet" href="program-structure.css">
     <style>
         /* ESTRUCTURA PRINCIPAL */
         .main-program-card {
@@ -125,7 +127,7 @@
         .mini-pill.warn { background: #fef3c7; color: #92400e; }
         .reports-preview { display: grid; gap: 6px; }
         .program-toast {
-            display: none; position: fixed; right: 20px; bottom: 20px; z-index: 5000; background: #0f172a; color: white;
+            display: none; position: fixed; right: 20px; bottom: 20px; z-index: 50000; background: #0f172a; color: white;
             padding: 12px 16px; border-radius: 12px; box-shadow: 0 12px 28px rgba(0,0,0,0.2);
         }
         .program-toast.show { display: block; }
@@ -165,6 +167,7 @@
         </div>
 
         <div id="visibility-note" class="info-banner"></div>
+        <section id="naum-structure" class="structure-panel" aria-label="Estructura de Naum"></section>
 
         <div id="direction-approvals" class="main-program-card" style="display:none;">
             <div class="main-program-header area-pink">
@@ -204,6 +207,11 @@
                     <div>
                         <label>Nom de l'activitat</label>
                         <input type="text" id="activityName" placeholder="Ex: Taller d'habilitats socials" required>
+                    </div>
+                    <div class="full">
+                        <label for="activityStructure">Àrea, programa o subprograma</label>
+                        <select id="activityStructure"><option value="">Sense classificar</option></select>
+                        <p class="activity-meta">La classificació organitza l’activitat. El departament conserva els grups i professionals vinculats.</p>
                     </div>
                     <div>
                         <label>Edat mínima</label>
@@ -313,7 +321,7 @@
         </div>
     </div>
 
-    <div id="program-toast" class="program-toast"></div>
+    <div id="program-toast" class="program-toast" role="status" aria-live="polite"></div>
 
     <script>
         // Función para abrir el flujo de firma desde programes-gestio
