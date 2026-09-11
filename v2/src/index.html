@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="NexeSocial 2.0 · gestió de programes de la Fundació Naum">
+  <title>NexeSocial 2.0 · Naum</title>
+  <link rel="stylesheet" href="./app.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Anar al contingut</a>
+  <div id="app"><main id="main" class="boot"><h1>NexeSocial 2.0</h1><p>Preparant l’espai de treball…</p></main></div>
+  <div id="announcement" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="activity-dialog" aria-labelledby="activity-title">
+    <form id="activity-form">
+      <div class="dialog-heading"><h2 id="activity-title">Nova activitat</h2><button type="button" id="close-dialog" aria-label="Tancar">×</button></div>
+      <input type="hidden" name="id">
+      <label for="activity-name">Nom de l’activitat</label><input id="activity-name" name="name" required minlength="2" maxlength="120" autocomplete="off">
+      <label for="activity-area">Àrea</label><select id="activity-area" name="areaId" required></select>
+      <label for="activity-program">Programa <span class="muted">· opcional</span></label><select id="activity-program" name="programId"></select>
+      <label for="activity-status">Estat</label><select id="activity-status" name="status"><option value="active">Activa</option><option value="paused">En pausa</option></select>
+      <p id="form-error" class="error" role="alert"></p>
+      <div class="dialog-actions"><button type="button" id="cancel-dialog" class="secondary">Cancel·lar</button><button type="submit" class="primary">Guardar activitat</button></div>
+    </form>
+  </dialog>
+  <noscript>Cal activar JavaScript per utilitzar NexeSocial.</noscript>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

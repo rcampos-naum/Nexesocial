@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function membershipPath() { return /databases/$(database)/documents/memberships/$(request.auth.uid); }
+    function active() {
+      return signedIn() && exists(membershipPath())
+        && get(membershipPath()).data.active == true
+        && get(membershipPath()).data.role in ['admin', 'coordinator', 'educator', 'volunteer']
+        && get(membershipPath()).data.validUntil > request.time;
+    }
+    function admin() { return active() && get(membershipPath()).data.role == 'admin'; }
+    function inArea(areaId) {
+      return active() && (admin() || areaId in get(membershipPath()).data.areaIds);
+    }
+    function canManage(areaId) {
+      return inArea(areaId) && get(membershipPath()).data.role in ['admin', 'coordinator'];
+    }
+    function validActivity(data) {
+      return data.keys().hasAll(['name', 'areaId', 'programId', 'status', 'createdBy', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['name', 'areaId', 'programId', 'status', 'createdBy', 'createdAt', 'updatedAt'])
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 120
+        && data.areaId is string && exists(/databases/$(database)/documents/areas/$(data.areaId))
+        && data.programId is string
+        && (data.programId == '' || (exists(/databases/$(database)/documents/programs/$(data.programId))
+          && get(/databases/$(database)/documents/programs/$(data.programId)).data.areaId == data.areaId))
+        && data.status in ['active', 'paused']
+        && data.createdBy is string && data.createdAt is timestamp
+        && data.updatedAt == request.time;
+    }
+    match /memberships/{uid} {
+      // A revoked user can still read their own status, but cannot access data.
+      allow read: if signedIn() && (request.auth.uid == uid || admin());
+      allow write: if false;
+    }
+    match /areas/{areaId} {
+      allow read: if inArea(areaId);
+      allow write: if false;
+    }
+    match /programs/{programId} {
+      allow read: if inArea(resource.data.areaId);
+      allow write: if false;
+    }
+    match /activities/{activityId} {
+      allow read: if inArea(resource.data.areaId);
+      allow create: if canManage(request.resource.data.areaId)
+        && validActivity(request.resource.data)
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+      allow update: if canManage(resource.data.areaId)
+        && validActivity(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'programId', 'status', 'updatedAt']);
+      allow delete: if false;
+    }
+    // No general administrative write override. Unimplemented domains stay closed.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

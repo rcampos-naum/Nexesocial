@@ -4,6 +4,11 @@
   "version": "1.0.0",
   "description": "Firestore security rules tests for NexeSocial",
   "scripts": {
+    "v2:build": "node v2/scripts/build.mjs",
+    "v2:check": "node --test v2/tests/base.test.mjs",
+    "v2:dev": "firebase --config v2/firebase.json --project demo-nexesocial-v2 emulators:start --only auth,firestore,hosting",
+    "v2:seed": "node v2/scripts/seed.mjs",
+    "v2:test": "firebase --config v2/firebase.json --project demo-nexesocial-v2 emulators:exec --only firestore \"node v2/tests/permissions.cjs\"",
     "audit:static": "node scripts/audit-static.mjs --check",
     "audit:rules": "node scripts/audit-rules.cjs --check",
     "test:structure": "node --test scripts/program-structure.test.mjs",
@@ -20,6 +25,8 @@
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^3.0.3",
-    "firebase": "^10.14.1"
+    "esbuild": "0.28.2",
+    "firebase": "^10.14.1",
+    "firebase-tools": "15.30.0"
   }
 }
