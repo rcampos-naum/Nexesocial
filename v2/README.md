@@ -8,7 +8,7 @@ sus reglas ni repara retrospectivamente todos los hallazgos de su auditoría.
 ## Incluido
 
 - Interfaz compartida: inicio, áreas/programas y actividades, adaptable a móvil.
-- Seis áreas y ocho programas de Naum como catálogo de prueba; cuatro actividades
+- Seis áreas y ocho programas de la entidad como catálogo de prueba; cuatro actividades
   claramente ficticias. No se crea información de personas atendidas.
 - Cuatro cuentas reales del emulador Auth: administración, coordinación, equipo
   educativo y voluntariado. No es un selector que solo cambia botones.
@@ -105,7 +105,7 @@ completa de navegador.
 ## Siguiente bloque
 
 Personas y familias con un identificador único, seguido de inscripciones, grupos,
-sesiones y asistencia. Antes de conectar datos reales: entorno de pruebas de Naum,
+sesiones y asistencia. Antes de conectar datos reales: entorno de pruebas de la entidad,
 servicio administrativo de asignaciones, registro de operaciones, restauración
 ensayada y validación de permisos con responsables. El catálogo es de solo lectura
 en esta entrega; editar áreas y subprogramas corresponde a ese servicio posterior.

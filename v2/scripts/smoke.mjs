@@ -10,7 +10,7 @@ for (const role of ['admin', 'coordinator', 'educator', 'volunteer']) {
         connectAuthEmulator(auth, 'http://127.0.0.1:9092', { disableWarnings: true });
         const db = getFirestore(app);
         connectFirestoreEmulator(db, '127.0.0.1', 8182);
-        const { user } = await signInWithEmailAndPassword(auth, `${role}@demo.naum.test`, 'NexeDemo-2026!');
+        const { user } = await signInWithEmailAndPassword(auth, `${role}@demo.nexesocial.test`, 'NexeDemo-2026!');
         const membership = (await getDoc(doc(db, 'memberships', user.uid))).data();
         assert.equal(membership.role, role);
         const areas = await getDocs(role === 'admin' ? collection(db, 'areas') : query(collection(db, 'areas'), where(documentId(), 'in', membership.areaIds)));

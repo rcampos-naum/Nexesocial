@@ -16,7 +16,7 @@ try {
     ];
     const memberships = [];
     for (const profile of profiles) {
-        const credentials = { email: `${profile.role}@demo.naum.test`, password: 'NexeDemo-2026!', returnSecureToken: true };
+        const credentials = { email: `${profile.role}@demo.nexesocial.test`, password: 'NexeDemo-2026!', returnSecureToken: true };
         async function request(method) {
             const response = await fetch(`http://127.0.0.1:9092/identitytoolkit.googleapis.com/v1/accounts:${method}?key=demo-only`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(credentials) });
             return response.json();

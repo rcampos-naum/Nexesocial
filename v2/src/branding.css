@@ -1,0 +1,12 @@
+/* Official repository assets are displayed whole, without filters or cropping. */
+.brand { position: relative; align-items: flex-start; }
+.official-logo { display: block; width: 100%; height: auto; object-fit: contain; border-radius: 8px; }
+.sidebar .brand { max-width: 180px; margin: 0 auto; }
+.login-brand .brand { width: min(300px, 100%); }
+.brand small { position: absolute; right: 7px; top: 7px; background: #fff; color: #126681; border-color: #b7d9df; }
+.suite-branding { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; gap: 16px; padding: 20px 0; margin: 8px 0 16px; border-block: 1px solid var(--line); }
+.suite-branding img { display: block; width: 100%; max-width: 160px; height: 48px; object-fit: contain; }
+@media (max-width: 720px) {
+  .sidebar .brand { width: 130px; margin: 0; }
+  .login-brand .brand { width: 175px; }
+}
