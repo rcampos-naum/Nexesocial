@@ -1,0 +1,21 @@
+[Unit]
+Description=NexeSocial para el centro de dia
+After=network.target
+
+[Service]
+Type=simple
+User=nexesocial
+Group=nexesocial
+WorkingDirectory=/opt/nexesocial
+EnvironmentFile=/etc/nexesocial.env
+ExecStart=/usr/bin/node /opt/nexesocial/selfhost/server.mjs
+Restart=on-failure
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/nexesocial
+
+[Install]
+WantedBy=multi-user.target

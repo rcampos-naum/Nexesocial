@@ -1,0 +1,30 @@
+services:
+  nexesocial:
+    build:
+      context: ..
+      dockerfile: selfhost/Dockerfile
+    restart: unless-stopped
+    init: true
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 512m
+    environment:
+      SITE_ORIGIN: ${SITE_ORIGIN:?Define SITE_ORIGIN con el dominio HTTPS de pruebas}
+      COOKIE_SECURE: "1"
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    ports:
+      - "127.0.0.1:4080:4080"
+    volumes:
+      - nexesocial-data:/app/selfhost/data
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:4080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+volumes:
+  nexesocial-data:

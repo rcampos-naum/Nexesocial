@@ -1,0 +1,12 @@
+**
+!selfhost/
+!selfhost/**
+!public/
+!public/import-persones-core.mjs
+selfhost/data/
+selfhost/backups/
+selfhost/.env
+**/*.sqlite
+**/*.sqlite-wal
+**/*.sqlite-shm
+**/*.log

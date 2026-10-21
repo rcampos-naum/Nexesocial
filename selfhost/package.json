@@ -1,0 +1,6 @@
+{
+  "name": "nexesocial-selfhost",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24 <25" }
+}

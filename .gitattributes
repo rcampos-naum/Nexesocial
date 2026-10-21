@@ -1,0 +1,3 @@
+selfhost/*.sh text eol=lf
+selfhost/Dockerfile text eol=lf
+selfhost/*.yaml text eol=lf

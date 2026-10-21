@@ -42,3 +42,8 @@ build/
 # Temporales del proyecto
 temp_*.js
 temp_*.html
+selfhost/data/
+selfhost/backups/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

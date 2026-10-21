@@ -1,0 +1,154 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { Readable } from 'node:stream';
+import { DatabaseSync, backup } from 'node:sqlite';
+import { createApplication } from '../server.mjs';
+
+test('complete local workflow, permissions, idempotency and durable data', async t => {
+  const directory = mkdtempSync(join(tmpdir(), 'nexe-selfhost-'));
+  const origin = 'http://127.0.0.1:4080';
+  const app = createApplication({ dataDir: directory, origin, adminEmail: 'admin@example.test', adminPassword: 'Local-test-only-12345' });
+  // Exercise the actual request handler in process: no socket or external service.
+  let active = app; let cookie; let closed = false;
+  function dispatch(path, { method = 'GET', headers = {}, body } = {}) {
+    return new Promise(resolve => {
+      const request = Readable.from(body === undefined ? [] : [Buffer.from(body)]);
+      request.url = path; request.method = method; request.headers = Object.fromEntries(Object.entries(headers).map(([key, value]) => [key.toLowerCase(), value]));
+      request.socket = { remoteAddress: '127.0.0.1' };
+      const responseHeaders = new Map();
+      const response = { headersSent: false, status: 200,
+        setHeader(key, value) { responseHeaders.set(key.toLowerCase(), value); },
+        writeHead(status, headers) { this.status = status; this.headersSent = true; for (const [key, value] of Object.entries(headers || {})) this.setHeader(key, value); },
+        end(value) { const text = String(value ?? ''); resolve({ status: this.status, headers: { get: key => responseHeaders.get(key.toLowerCase()) }, json: async () => JSON.parse(text), text: async () => text }); },
+      };
+      active.server.emit('request', request, response);
+    });
+  }
+  async function request(path, body, session = cookie, originHeader = origin) {
+    const response = await dispatch(`/api/${path}`, { method: body === undefined ? 'GET' : 'POST', headers: { ...(session ? { Cookie: session } : {}), ...(body === undefined ? {} : { 'Content-Type': 'application/json', 'X-Nexe-Request': '1', Origin: originHeader }) }, body: body === undefined ? undefined : JSON.stringify(body) });
+    return { status: response.status, body: await response.json(), cookie: response.headers.get('set-cookie')?.split(';')[0] };
+  }
+  try {
+    await t.test('requires authenticated session; rejects cross-origin writes', async () => {
+      assert.equal((await request('data')).status, 401);
+      assert.equal((await request('login', { email: 'admin@example.test', password: 'Local-test-only-12345' }, null, 'https://other.test')).status, 403);
+      assert.equal((await request('login', { email: 'admin@example.test', password: 'incorrect' })).status, 401);
+    });
+    await t.test('login returns a safe user and an HttpOnly session', async () => {
+      const result = await request('login', { email: 'admin@example.test', password: 'Local-test-only-12345' });
+      assert.equal(result.status, 200); cookie = result.cookie; assert.ok(cookie); assert.ok(!('password' in result.body));
+      assert.equal((await request('me')).body.role, 'admin');
+      const response = await dispatch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin, 'X-Nexe-Request': '1' }, body: JSON.stringify({ email: 'admin@example.test', password: 'Local-test-only-12345' }) });
+      assert.match(response.headers.get('set-cookie'), /HttpOnly; SameSite=Strict/);
+    });
+    let family, person, program, group, caseId, report;
+    const nora = { nom: 'Nora', cognoms: 'Exemple', dni: 'TEST001', data_naixement: '2014-06-03', telefon: '', email: '', poblacio: '' };
+    await t.test('creates family and person, detects existing identity and supports minors', async () => {
+      const f = await request('families', { name: 'Familia de prueba', contact: '', notes: '' }); assert.equal(f.status, 201); family = f.body.id;
+      const p = await request('people', { ...nora, family_id: family }); assert.equal(p.status, 201); person = p.body.id;
+      assert.equal((await request('people', nora)).status, 409);
+      assert.equal((await request('people', { ...nora, dni: '', nom: 'Otra', data_naixement: '2015-01-01' })).status, 201);
+      assert.equal((await request('people', { ...nora, nom: 'Nombre', dni: '', data_naixement: '' })).status, 400);
+    });
+    await t.test('creates program, group, enrollment and a case with followup', async () => {
+      program = (await request('programs', { name: 'Centro de día', description: 'Prueba local' })).body.id;
+      group = (await request('groups', { name: 'Grupo de prueba', program_id: program, course: '2026-27' })).body.id;
+      assert.equal((await request('enrollments', { person_id: person, group_id: group })).status, 200);
+      const result = await request('cases', { person_id: person, program_id: program, opened_at: '2026-10-21', notes: 'Objetivos de prueba' }); assert.equal(result.status, 201); caseId = result.body.id;
+      assert.equal((await request('followups', { case_id: caseId, body: 'Seguimiento de prueba' })).status, 201);
+      assert.equal((await request('cases/status', { id: caseId, status: 'closed' })).status, 200);
+      assert.equal((await request('cases', { person_id: person, family_id: family, program_id: program, opened_at: '2026-10-21' })).status, 400);
+    });
+    await t.test('person and family edits reject stale versions and preserve identity uniqueness', async () => {
+      const payload = { ...nora, id: person, version: 1, family_id: family, telefon: '600000000' };
+      assert.equal((await request('people/update', payload)).status, 200);
+      assert.equal((await request('people/update', payload)).status, 409);
+      assert.equal((await request('families/update', { id: family, version: 1, name: 'Familia actualizada', contact: 'Contacto', notes: '' })).status, 200);
+      assert.equal((await request('families/update', { id: family, version: 1, name: 'Sobrescritura', contact: '', notes: '' })).status, 409);
+    });
+    await t.test('records attendance and rejects stale or unregistered updates atomically', async () => {
+      const payload = { group_id: group, day: '2026-10-21', slot: 'general', rows: [{ person_id: person, status: 'P', version: 0 }] };
+      assert.equal((await request('attendance', payload)).status, 200);
+      assert.equal((await request('attendance', payload)).status, 409);
+      const attendance = await request(`attendance?group=${group}&day=2026-10-21`); assert.equal(attendance.body[0].version, 1);
+      assert.equal((await request('attendance', { ...payload, rows: [{ person_id: 'unknown', status: 'P' }] })).status, 400);
+      const summary = await request('attendance/summary?start=2026-10-01&end=2026-10-31'); assert.equal(summary.body[0].total, 1);
+    });
+    await t.test('report drafts have version checks; final reports cannot be overwritten', async () => {
+      const payload = { type: 'observation', person_id: person, day: '2026-10-21', course: '2026-27', title: 'Observación', state: 'draft', fields: { observacio: 'Prueba de observación' } };
+      const result = await request('reports', payload); assert.equal(result.status, 200); report = result.body.id;
+      assert.equal((await request('reports', { ...payload, id: report, version: 0 })).status, 409);
+      assert.equal((await request('reports', { ...payload, id: report, version: 1, state: 'final' })).status, 200);
+      assert.equal((await request('reports', { ...payload, id: report, version: 2 })).status, 409);
+      const saved = await request(`reports?id=${report}`); assert.equal(saved.body.version, 2); assert.equal(saved.body.state, 'final');
+      assert.equal(app.db.prepare('SELECT count(*) total FROM report_versions').get().total, 2);
+      assert.equal((await request('reports', { ...payload, fields: { unknown: 'extra' } })).status, 400);
+    });
+    await t.test('Excel review is read-only; imports are transactional and repeatable', async () => {
+      const imported = { ...nora, nom: 'Persona', cognoms: 'Importada', dni: 'TEST002', data_naixement: '2015-02-01' };
+      const count = app.db.prepare('SELECT count(*) total FROM people').get().total;
+      const review = await request('import/review', { people: [nora, imported] }); assert.equal(review.body[0].status, 'duplicate'); assert.equal(review.body[1].status, 'new');
+      assert.equal(app.db.prepare('SELECT count(*) total FROM people').get().total, count);
+      assert.equal((await request('import', { people: [imported, { ...imported, nom: '' }] })).status, 400);
+      assert.equal(app.db.prepare('SELECT count(*) total FROM people').get().total, count);
+      const result = await request('import', { people: [nora, imported, imported] }); assert.deepEqual(result.body.map(row => row.status), ['duplicate', 'created', 'duplicate']);
+      const retry = await request('import', { people: [imported] }); assert.equal(retry.body[0].status, 'duplicate');
+      assert.equal(app.db.prepare('SELECT count(*) total FROM people').get().total, count + 1);
+    });
+    await t.test('a mid-import database failure rolls back people, counters and audit together', async () => {
+      const count = app.db.prepare('SELECT count(*) total FROM people').get().total;
+      const auditCount = app.db.prepare('SELECT count(*) total FROM audit').get().total;
+      const counter = app.db.prepare("SELECT value FROM counters WHERE name='people'").get().value;
+      app.db.exec("CREATE TRIGGER test_import_failure BEFORE INSERT ON people WHEN NEW.nom='Fallara' BEGIN SELECT RAISE(ABORT,'synthetic failure'); END");
+      const result = await request('import', { people: [{ ...nora, nom: 'Primera', dni: 'TEST101' }, { ...nora, nom: 'Fallara', dni: 'TEST102' }] });
+      assert.equal(result.status, 500);
+      assert.equal(app.db.prepare('SELECT count(*) total FROM people').get().total, count);
+      assert.equal(app.db.prepare('SELECT count(*) total FROM audit').get().total, auditCount);
+      assert.equal(app.db.prepare("SELECT value FROM counters WHERE name='people'").get().value, counter);
+      app.db.exec('DROP TRIGGER test_import_failure');
+    });
+    let viewerCookie, viewerId;
+    await t.test('viewers can read but cannot import, write reports or administer accounts', async () => {
+      const account = await request('users', { name: 'Consulta', email: 'viewer@example.test', password: 'Viewer-test-only-12345', role: 'viewer' }); viewerId = account.body.id;
+      viewerCookie = (await request('login', { email: 'viewer@example.test', password: 'Viewer-test-only-12345' })).cookie;
+      assert.equal((await request('data', undefined, viewerCookie)).status, 200);
+      for (const [path, body] of [['people', nora], ['import', { people: [nora] }], ['reports', {}], ['users', {}], ['programs', {}]]) assert.equal((await request(path, body, viewerCookie)).status, 403);
+      assert.equal((await request('audit', undefined, viewerCookie)).status, 403);
+    });
+    await t.test('revocation takes effect immediately and last admin is protected', async () => {
+      assert.equal((await request('users/update', { id: viewerId, role: 'viewer', active: false })).status, 200);
+      assert.equal((await request('data', undefined, viewerCookie)).status, 401);
+      const me = (await request('me')).body;
+      assert.equal((await request('users/update', { id: me.id, role: 'viewer', active: false })).status, 400);
+    });
+    await t.test('static app contains no Firebase, remote scripts or public data paths', async () => {
+      const response = await dispatch('/'); const html = await response.text(); assert.equal(response.status, 200);
+      assert.ok(!html.includes('firebase')); assert.ok(!html.includes('https://')); assert.match(response.headers.get('content-security-policy'), /connect-src 'self'/);
+      assert.equal((await dispatch('/nexesocial.sqlite')).status, 404);
+      assert.equal((await dispatch('/../server.mjs')).status, 404);
+      assert.ok(!JSON.stringify((await request('data')).body).includes('Local-test-only'));
+    });
+    await t.test('consistent SQLite backup includes reports and passes integrity check', async () => {
+      const path = join(directory, 'backup-test.sqlite'); await backup(app.db, path);
+      const copy = new DatabaseSync(path, { readOnly: true });
+      try {
+        assert.equal(copy.prepare('PRAGMA integrity_check').get().integrity_check, 'ok');
+        assert.ok(copy.prepare('SELECT id FROM reports WHERE id=?').get(report));
+        assert.equal(copy.prepare('SELECT count(*) total FROM people').get().total, app.db.prepare('SELECT count(*) total FROM people').get().total);
+      } finally { copy.close(); }
+    });
+    await t.test('data persists after server shutdown and restart', async () => {
+      app.db.close(); closed = true;
+      const restored = createApplication({ dataDir: directory, origin });
+      active = restored;
+      try { const result = await request('data'); assert.equal(result.status, 200); assert.ok(result.body.people.some(p => p.id === person)); assert.ok(result.body.reports.some(r => r.id === report)); }
+      finally { restored.db.close(); }
+    });
+  } finally {
+    if (!closed) app.db.close();
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
