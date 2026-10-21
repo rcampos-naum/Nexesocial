@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual, createHash } from 'node:crypto';
 import { validateRows, classifyRows, identityKeys } from '../public/import-persones-core.mjs';
 import { templates } from './web/templates.mjs';
+import { templates as legacyTemplates } from './legacy-templates-v1.mjs';
 
 const root = dirname(fileURLToPath(import.meta.url));
 const hash = value => createHash('sha256').update(value).digest('hex');
@@ -35,6 +36,8 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
     CREATE TABLE IF NOT EXISTS programs(id TEXT PRIMARY KEY,name TEXT NOT NULL,description TEXT NOT NULL DEFAULT '',active INTEGER NOT NULL DEFAULT 1);
     CREATE TABLE IF NOT EXISTS groups_cd(id TEXT PRIMARY KEY,name TEXT NOT NULL,program_id TEXT NOT NULL REFERENCES programs(id),course TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS enrollments(person_id TEXT NOT NULL REFERENCES people(id),group_id TEXT NOT NULL REFERENCES groups_cd(id),active INTEGER NOT NULL DEFAULT 1,PRIMARY KEY(person_id,group_id));
+    CREATE TABLE IF NOT EXISTS program_memberships(person_id TEXT NOT NULL REFERENCES people(id),program_id TEXT NOT NULL REFERENCES programs(id),started_at TEXT NOT NULL,ended_at TEXT,active INTEGER NOT NULL DEFAULT 1,PRIMARY KEY(person_id,program_id));
+    CREATE TABLE IF NOT EXISTS membership_events(id TEXT PRIMARY KEY,person_id TEXT NOT NULL REFERENCES people(id),program_id TEXT NOT NULL REFERENCES programs(id),action TEXT NOT NULL,effective_at TEXT NOT NULL,actor TEXT,created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS cases_cd(id TEXT PRIMARY KEY,person_id TEXT REFERENCES people(id),family_id TEXT REFERENCES families(id),program_id TEXT NOT NULL REFERENCES programs(id),owner_id TEXT NOT NULL REFERENCES users(id),status TEXT NOT NULL,opened_at TEXT NOT NULL,notes TEXT NOT NULL DEFAULT '');
     CREATE TABLE IF NOT EXISTS followups(id TEXT PRIMARY KEY,case_id TEXT NOT NULL REFERENCES cases_cd(id),body TEXT NOT NULL,created_by TEXT NOT NULL REFERENCES users(id),created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS attendance(person_id TEXT NOT NULL REFERENCES people(id),group_id TEXT NOT NULL REFERENCES groups_cd(id),day TEXT NOT NULL,slot TEXT NOT NULL,status TEXT NOT NULL,notes TEXT NOT NULL DEFAULT '',updated_by TEXT NOT NULL REFERENCES users(id),version INTEGER NOT NULL DEFAULT 1,PRIMARY KEY(person_id,group_id,day,slot));
@@ -46,6 +49,31 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
   const all = (sql, ...args) => db.prepare(sql).all(...args);
   const run = (sql, ...args) => db.prepare(sql).run(...args);
   const atomic = callback => { db.exec('BEGIN IMMEDIATE'); try { const result = callback(); db.exec('COMMIT'); return result; } catch (e) { db.exec('ROLLBACK'); throw e; } };
+  // Additive upgrade from the first local test package; keep all existing data.
+  atomic(() => {
+    for (const [table, name, definition] of [
+      ['programs', 'kind', "TEXT NOT NULL DEFAULT 'general'"],
+      ['programs', 'version', 'INTEGER NOT NULL DEFAULT 1'],
+      ['groups_cd', 'active', 'INTEGER NOT NULL DEFAULT 1'],
+      ['groups_cd', 'version', 'INTEGER NOT NULL DEFAULT 1'],
+      ['reports', 'schema_json', "TEXT NOT NULL DEFAULT ''"],
+    ]) {
+      if (!all(`PRAGMA table_info(${table})`).some(column => column.name === name)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${name} ${definition}`);
+    }
+    // A pre-existing group enrollment implies participation in its program.
+    run(`INSERT INTO program_memberships(person_id,program_id,started_at,active)
+      SELECT e.person_id,g.program_id,?,MAX(e.active) FROM enrollments e JOIN groups_cd g ON g.id=e.group_id
+      GROUP BY e.person_id,g.program_id ON CONFLICT(person_id,program_id) DO NOTHING`, now().slice(0, 10));
+    for (const report of all("SELECT id,type FROM reports WHERE schema_json=''")) {
+      requireValue(legacyTemplates[report.type], 'Tipo de informe antiguo no reconocido');
+      run('UPDATE reports SET schema_json=? WHERE id=?', JSON.stringify(legacyTemplates[report.type]), report.id);
+    }
+    for (const membership of all('SELECT * FROM program_memberships m WHERE NOT EXISTS(SELECT 1 FROM membership_events e WHERE e.person_id=m.person_id AND e.program_id=m.program_id)')) {
+      run('INSERT INTO membership_events VALUES(?,?,?,?,?,?,?)', randomUUID(), membership.person_id, membership.program_id, 'start', membership.started_at, null, now());
+      if (membership.ended_at) run('INSERT INTO membership_events VALUES(?,?,?,?,?,?,?)', randomUUID(), membership.person_id, membership.program_id, 'end', membership.ended_at, null, now());
+    }
+    db.exec('PRAGMA user_version=3');
+  });
   const audit = (user, action, id) => run('INSERT INTO audit(actor,action,entity_id,at) VALUES(?,?,?,?)', user.id, action, id, now());
   if (!get('SELECT id FROM users LIMIT 1')) {
     requireValue(typeof adminPassword === 'string' && adminPassword.length >= 12 && adminEmail, 'Primera instalación: define ADMIN_EMAIL y ADMIN_PASSWORD de al menos 12 caracteres');
@@ -57,6 +85,21 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
   const admin = user => requireValue(user.role === 'admin', 'Solo administración', 403);
   const foreign = (table, id) => { requireValue(typeof id === 'string' && !!get(`SELECT id FROM ${table} WHERE id=?`, id), 'Referencia no encontrada'); return id; };
   const nullable = (table, id) => id ? foreign(table, id) : null;
+  const activeProgram = id => { foreign('programs', id); requireValue(get('SELECT active FROM programs WHERE id=?', id).active, 'El programa está inactivo'); return id; };
+  const dayCentreGroup = id => {
+    foreign('groups_cd', id);
+    requireValue(get("SELECT g.id FROM groups_cd g JOIN programs p ON p.id=g.program_id WHERE g.id=? AND p.kind='dayCentre'", id), 'El grupo no pertenece a Centro de Día');
+    return id;
+  };
+  const isDayCentrePerson = id => !!get(`SELECT m.person_id FROM program_memberships m JOIN programs p ON p.id=m.program_id WHERE m.person_id=? AND p.kind='dayCentre'`, id);
+  function enrollProgram(person, program, started, user) {
+    const previous = get('SELECT * FROM program_memberships WHERE person_id=? AND program_id=?', person, program);
+    if (previous?.active) return;
+    requireValue(!previous?.ended_at || started >= previous.ended_at, 'El nuevo ingreso debe ser posterior o igual a la última baja');
+    run('INSERT INTO program_memberships VALUES(?,?,?,NULL,1) ON CONFLICT(person_id,program_id) DO UPDATE SET started_at=excluded.started_at,active=1,ended_at=NULL', person, program, started);
+    run('INSERT INTO membership_events VALUES(?,?,?,?,?,?,?)', randomUUID(), person, program, 'start', started, user.id, now());
+    audit(user, 'program.enroll', person);
+  }
   function readPerson(input) {
     const mapping = Object.fromEntries(['nom', 'cognoms', 'dni', 'data_naixement', 'telefon', 'email', 'poblacio'].map((key, i) => [key, i]));
     const [row] = validateRows([{ rowNumber: 1, cells: Object.keys(mapping).map(key => input[key] ?? '') }], mapping);
@@ -123,7 +166,7 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
       if (route === '/api/me' && method === 'GET') return send(200, exposedUser(user));
       if (route === '/api/data' && method === 'GET') return send(200, {
         people: all('SELECT * FROM people ORDER BY cognoms,nom'), families: all('SELECT * FROM families ORDER BY name'), programs: all('SELECT * FROM programs ORDER BY name'), groups: all('SELECT * FROM groups_cd ORDER BY name'),
-        enrollments: all('SELECT * FROM enrollments'), cases: all('SELECT * FROM cases_cd ORDER BY opened_at DESC'), followups: all('SELECT * FROM followups ORDER BY created_at'),
+        enrollments: all('SELECT * FROM enrollments'), memberships: all('SELECT * FROM program_memberships'), membershipEvents: all('SELECT * FROM membership_events ORDER BY effective_at,created_at'), cases: all('SELECT * FROM cases_cd ORDER BY opened_at DESC'), followups: all('SELECT * FROM followups ORDER BY created_at'),
         reports: all('SELECT id,type,person_id,group_id,day,course,title,state,version,created_by,created_at,updated_at FROM reports ORDER BY day DESC'), team: all('SELECT id,name FROM users WHERE active=1'),
       });
       if (route === '/api/users' && method === 'GET') { admin(user); return send(200, all('SELECT id,name,email,role,active FROM users ORDER BY name')); }
@@ -159,9 +202,43 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
         }); return send(200, { ok: true });
       }
       if (route === '/api/people/family' && method === 'POST') { write(user); const person = foreign('people', body.person_id); const family = nullable('families', body.family_id); atomic(() => { requireValue(get('SELECT version FROM people WHERE id=?', person).version === body.version, 'La ficha cambió. Recarga antes de guardar', 409); run('UPDATE people SET family_id=?,version=version+1 WHERE id=?', family, person); audit(user, 'person.family', person); }); return send(200, { ok: true }); }
-      if (route === '/api/programs' && method === 'POST') { manage(user); const id = randomUUID(); atomic(() => { run('INSERT INTO programs(id,name,description) VALUES(?,?,?)', id, string(body.name, 120, true), string(body.description, 5000)); audit(user, 'program.create', id); }); return send(201, { id }); }
-      if (route === '/api/groups' && method === 'POST') { manage(user); const id = randomUUID(); atomic(() => { run('INSERT INTO groups_cd VALUES(?,?,?,?)', id, string(body.name, 120, true), foreign('programs', body.program_id), string(body.course, 20, true)); audit(user, 'group.create', id); }); return send(201, { id }); }
-      if (route === '/api/enrollments' && method === 'POST') { write(user); const person = foreign('people', body.person_id); const group = foreign('groups_cd', body.group_id); atomic(() => { run('INSERT INTO enrollments VALUES(?,?,1) ON CONFLICT(person_id,group_id) DO UPDATE SET active=1', person, group); audit(user, 'enrollment.save', person); }); return send(200, { ok: true }); }
+      if (route === '/api/programs' && method === 'POST') { manage(user); const kind = body.kind || 'general'; requireValue(['general', 'dayCentre'].includes(kind), 'Tipo de programa no válido'); const id = randomUUID(); atomic(() => { run('INSERT INTO programs(id,name,description,kind) VALUES(?,?,?,?)', id, string(body.name, 120, true), string(body.description, 5000), kind); audit(user, 'program.create', id); }); return send(201, { id }); }
+      if (route === '/api/programs/update' && method === 'POST') {
+        manage(user); const id = foreign('programs', body.id); requireValue(['general', 'dayCentre'].includes(body.kind) && typeof body.active === 'boolean', 'Estado o tipo no válido');
+        atomic(() => {
+          const previous = get('SELECT * FROM programs WHERE id=?', id); requireValue(previous.version === body.version, 'El programa cambió. Recarga antes de guardar', 409);
+          if (previous.kind === 'dayCentre' && body.kind !== 'dayCentre') requireValue(!get('SELECT id FROM groups_cd WHERE program_id=? LIMIT 1', id) && !get('SELECT person_id FROM program_memberships WHERE program_id=? LIMIT 1', id), 'Conserva el tipo Centro de Día para no ocultar su histórico');
+          run('UPDATE programs SET name=?,description=?,kind=?,active=?,version=version+1 WHERE id=?', string(body.name, 120, true), string(body.description, 5000), body.kind, Number(body.active), id); audit(user, 'program.update', id);
+        }); return send(200, { ok: true });
+      }
+      if (route === '/api/groups' && method === 'POST') { manage(user); const id = randomUUID(); atomic(() => { run('INSERT INTO groups_cd(id,name,program_id,course) VALUES(?,?,?,?)', id, string(body.name, 120, true), activeProgram(body.program_id), string(body.course, 20, true)); audit(user, 'group.create', id); }); return send(201, { id }); }
+      if (route === '/api/groups/update' && method === 'POST') {
+        manage(user); const id = foreign('groups_cd', body.id); requireValue(typeof body.active === 'boolean', 'Estado no válido');
+        atomic(() => { const previous = get('SELECT version FROM groups_cd WHERE id=?', id); requireValue(previous.version === body.version, 'El grupo cambió. Recarga antes de guardar', 409); run('UPDATE groups_cd SET name=?,course=?,active=?,version=version+1 WHERE id=?', string(body.name, 120, true), string(body.course, 20, true), Number(body.active), id); audit(user, 'group.update', id); }); return send(200, { ok: true });
+      }
+      if (route === '/api/memberships' && method === 'POST') {
+        write(user); const person = foreign('people', body.person_id); const program = activeProgram(body.program_id); const started = date(body.started_at);
+        requireValue(started <= now().slice(0, 10), 'El alta futura todavía no está disponible');
+        atomic(() => enrollProgram(person, program, started, user)); return send(200, { ok: true });
+      }
+      if (route === '/api/memberships/end' && method === 'POST') {
+        write(user); const person = foreign('people', body.person_id); const program = foreign('programs', body.program_id); const ended = date(body.ended_at);
+        atomic(() => {
+          const membership = get('SELECT * FROM program_memberships WHERE person_id=? AND program_id=?', person, program); requireValue(membership && ended >= membership.started_at && ended <= now().slice(0, 10), 'La baja debe ser posterior o igual al alta y no puede ser futura');
+          if (!membership.active) { requireValue(membership.ended_at === ended, 'La participación ya está de baja'); return; }
+          run('UPDATE program_memberships SET active=0,ended_at=? WHERE person_id=? AND program_id=?', ended, person, program);
+          run('INSERT INTO membership_events VALUES(?,?,?,?,?,?,?)', randomUUID(), person, program, 'end', ended, user.id, now());
+          run('UPDATE enrollments SET active=0 WHERE person_id=? AND group_id IN(SELECT id FROM groups_cd WHERE program_id=?)', person, program); audit(user, 'program.end', person);
+        }); return send(200, { ok: true });
+      }
+      if (route === '/api/enrollments' && method === 'POST') {
+        write(user); const person = foreign('people', body.person_id); const group = foreign('groups_cd', body.group_id); const groupData = get('SELECT * FROM groups_cd WHERE id=?', group);
+        activeProgram(groupData.program_id); requireValue(groupData.active, 'El grupo está inactivo');
+        atomic(() => {
+          run('INSERT INTO enrollments VALUES(?,?,1) ON CONFLICT(person_id,group_id) DO UPDATE SET active=1', person, group);
+          enrollProgram(person, groupData.program_id, now().slice(0, 10), user); audit(user, 'enrollment.save', person);
+        }); return send(200, { ok: true });
+      }
       if (route === '/api/enrollments/end' && method === 'POST') { write(user); const person = foreign('people', body.person_id); const group = foreign('groups_cd', body.group_id); atomic(() => { run('UPDATE enrollments SET active=0 WHERE person_id=? AND group_id=?', person, group); audit(user, 'enrollment.end', person); }); return send(200, { ok: true }); }
       if (route === '/api/cases' && method === 'POST') {
         write(user); const person = nullable('people', body.person_id); const family = nullable('families', body.family_id); requireValue(!!person !== !!family, 'Elige una persona o una familia');
@@ -170,9 +247,9 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
       }
       if (route === '/api/cases/status' && method === 'POST') { write(user); const id = foreign('cases_cd', body.id); requireValue(['open', 'closed'].includes(body.status), 'Estado no válido'); atomic(() => { run('UPDATE cases_cd SET status=? WHERE id=?', body.status, id); audit(user, 'case.status', id); }); return send(200, { ok: true }); }
       if (route === '/api/followups' && method === 'POST') { write(user); const id = randomUUID(); atomic(() => { run('INSERT INTO followups VALUES(?,?,?,?,?)', id, foreign('cases_cd', body.case_id), string(body.body, 20000, true), user.id, now()); audit(user, 'followup.create', id); }); return send(201, { id }); }
-      if (route === '/api/attendance' && method === 'GET') { const group = foreign('groups_cd', url.searchParams.get('group')); const day = date(url.searchParams.get('day')); return send(200, all('SELECT * FROM attendance WHERE group_id=? AND day=?', group, day)); }
+      if (route === '/api/attendance' && method === 'GET') { const group = dayCentreGroup(url.searchParams.get('group')); const day = date(url.searchParams.get('day')); return send(200, all('SELECT * FROM attendance WHERE group_id=? AND day=?', group, day)); }
       if (route === '/api/attendance' && method === 'POST') {
-        write(user); const group = foreign('groups_cd', body.group_id); const day = date(body.day); requireValue(['general', 'refuerzo', 'ludicas', 'tribu'].includes(body.slot), 'Sesión no válida');
+        write(user); const group = dayCentreGroup(body.group_id); const day = date(body.day); requireValue(['general', 'refuerzo', 'ludicas', 'tribu'].includes(body.slot), 'Sesión no válida');
         requireValue(Array.isArray(body.rows) && body.rows.length > 0 && body.rows.length <= 500, 'Lista no válida');
         requireValue(new Set(body.rows.map(row => row.person_id)).size === body.rows.length, 'Persona repetida');
         atomic(() => {
@@ -188,7 +265,7 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
       }
       if (route === '/api/attendance/summary' && method === 'GET') {
         const start = date(url.searchParams.get('start')); const end = date(url.searchParams.get('end')); requireValue(start <= end, 'Periodo no válido');
-        return send(200, all('SELECT person_id,group_id,slot,status,count(*) total FROM attendance WHERE day BETWEEN ? AND ? GROUP BY person_id,group_id,slot,status', start, end));
+        return send(200, all("SELECT a.person_id,a.group_id,a.slot,a.status,count(*) total FROM attendance a JOIN groups_cd g ON g.id=a.group_id JOIN programs p ON p.id=g.program_id WHERE a.day BETWEEN ? AND ? AND p.kind='dayCentre' GROUP BY a.person_id,a.group_id,a.slot,a.status", start, end));
       }
       if (route === '/api/reports' && method === 'GET') { const id = foreign('reports', url.searchParams.get('id')); return send(200, get('SELECT * FROM reports WHERE id=?', id)); }
       if (route === '/api/reports' && method === 'POST') {
@@ -196,24 +273,27 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
         requireValue([...individual, ...groupTypes].includes(body.type), 'Tipo de informe no válido');
         const person = nullable('people', body.person_id); const group = nullable('groups_cd', body.group_id);
         requireValue(individual.includes(body.type) ? person && !group : group && !person, 'Vincula el informe a su persona o grupo');
+        if (!body.id) { if (person) requireValue(isDayCentrePerson(person), 'La persona no está vinculada a un programa de Centro de Día'); else dayCentreGroup(group); }
         requireValue(body.fields && typeof body.fields === 'object' && !Array.isArray(body.fields) && JSON.stringify(body.fields).length <= 100000, 'Contenido no válido');
-        const definition = templates[body.type];
+        const id = body.id ? foreign('reports', body.id) : randomUUID(); const previous = body.id ? get('SELECT * FROM reports WHERE id=?', id) : null;
+        const definition = previous?.schema_json ? JSON.parse(previous.schema_json) : templates[body.type];
         requireValue(Object.keys(body.fields).every(key => definition.fields.some(field => field.key === key)), 'El informe contiene campos desconocidos');
         for (const field of definition.fields) {
           const value = body.fields[field.key] ?? '';
           requireValue(typeof value === 'string' && value.length <= 20000, 'Campo de informe no válido');
           if (value && field.type === 'select') requireValue(field.options.includes(value), 'Valor de evaluación no válido');
           if (value && field.type === 'number') requireValue(/^\d+$/.test(value), 'Indica un número entero positivo');
+          if (value && field.type === 'month') requireValue(/^\d{4}-(0[1-9]|1[0-2])$/.test(value), 'Mes no válido');
+          if (body.state === 'final' && field.requiredOnFinal) requireValue(value.trim(), `Completa ${field.label} antes de cerrar el informe`);
         }
         requireValue(['draft', 'final'].includes(body.state), 'Estado no válido');
         if (body.state === 'final') requireValue(Object.values(body.fields).some(value => value.trim()), 'Completa el contenido antes de cerrar el informe');
-        const id = body.id ? foreign('reports', body.id) : randomUUID(); const previous = body.id ? get('SELECT * FROM reports WHERE id=?', id) : null;
         requireValue(!previous || previous.version === body.version, 'El informe cambió. Recarga antes de guardar', 409);
         requireValue(!previous || previous.state !== 'final', 'El informe está cerrado. Crea otro para conservar el histórico', 409);
         requireValue(!previous || (previous.type === body.type && previous.person_id === person && previous.group_id === group), 'No se puede cambiar la vinculación de un informe existente');
         const version = (previous?.version || 0) + 1; const content = JSON.stringify(body.fields); const created = previous?.created_at || now();
         atomic(() => {
-          run('INSERT INTO reports VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET day=excluded.day,course=excluded.course,title=excluded.title,body=excluded.body,state=excluded.state,version=excluded.version,updated_at=excluded.updated_at', id, body.type, person, group, date(body.day), string(body.course, 20, true), string(body.title, 200, true), content, body.state, version, previous?.created_by || user.id, created, now());
+          run('INSERT INTO reports(id,type,person_id,group_id,day,course,title,body,state,version,created_by,created_at,updated_at,schema_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET day=excluded.day,course=excluded.course,title=excluded.title,body=excluded.body,state=excluded.state,version=excluded.version,updated_at=excluded.updated_at', id, body.type, person, group, date(body.day), string(body.course, 20, true), string(body.title, 200, true), content, body.state, version, previous?.created_by || user.id, created, now(), previous?.schema_json || JSON.stringify(definition));
           run('INSERT INTO report_versions VALUES(?,?,?,?,?)', id, version, content, user.id, now()); audit(user, 'report.save', id);
         }); return send(200, { id, version });
       }

@@ -2,15 +2,18 @@
 
 Entrega inicial para pruebas de aceptación. Aplicación web y base de datos SQLite en Linux, sin Firebase ni servicios externos de datos. Todo el contenido de fichas e informes se guarda en el volumen local. El frontend de esta entrega tampoco carga bibliotecas o fuentes desde terceros.
 
+El alcance y los criterios de puesta en marcha en el plazo máximo solicitado de 15 días están en [ALCANCE-15-DIAS.md](ALCANCE-15-DIAS.md). La versión actual sigue pendiente de aceptación de navegador, plantillas y servidor.
+
 ## Qué permite probar
 
 - Cuentas del equipo: administración, coordinación, educación y consulta. Alta, cambio de perfil, contraseña y desactivación. Las personas atendidas no son cuentas de acceso.
 - Personas: alta y edición, identificador automático, contacto y vinculación a una familia. Control de coincidencias por documento o nombre y nacimiento; coincidencias ambiguas bloqueadas para revisión.
 - Familias: alta, edición y consulta de integrantes.
-- Programas, grupos por curso e inscripción o baja de personas en grupos. La inscripción en un programa se representa mediante su grupo.
+- Programas generales y de Centro de Día: alta, edición, desactivación, participantes y fechas de alta/baja. Inscripción directa en programa o mediante un grupo, con histórico de movimientos. Grupos por curso, edición y baja conservando sus registros.
+- Módulo Centro de Día con sus participantes, grupos, expedientes e informes. Sus pantallas de asistencia e informes filtran los programas de ese tipo; no sustituyen un futuro control de autorización por profesional o departamento.
 - Expedientes individuales o familiares por programa, profesional responsable, apertura/cierre y seguimientos con autoría.
 - Asistencia por fecha, grupo y sesión: general, refuerzo, lúdicas o Tribu; presente, ausente, justificada y retraso. Control de ediciones concurrentes y resumen imprimible por periodo.
-- Informes: diario individual, observación, primera/segunda/final evaluación, evaluación general, seguimiento grupal, planificación de actividades, Tribu y evaluación grupal. Borradores versionados y cierre definitivo; impresión del contenido y guardado como PDF mediante el navegador.
+- Informes: diario individual, observación, primera/segunda/final evaluación, encuesta del niño/a, seguimiento grupal, planificación de actividades, Tribu y resumen de evaluación grupal. Borradores versionados y cierre definitivo; impresión del contenido y guardado como PDF mediante el navegador. Cada informe conserva su definición de campos al actualizar la aplicación.
 - Importación **.xlsx** local: selección de hoja/cabeceras, asignación de columnas, validación, previsualización y confirmación. Los `.xls` antiguos requieren guardar primero como `.xlsx` en Excel/LibreOffice. No se evalúan fórmulas ni macros. Máximo 10 MB y 1.000 personas por lote. La asignación familiar e inscripciones se hacen después; no se deducen del apellido.
 - Bitácora de operaciones de solo consulta para administración; no duplica texto de informes en el log.
 
@@ -75,7 +78,7 @@ Desde la raíz:
 node --test scripts/test-import-persones.mjs selfhost/test/server.test.mjs
 ```
 
-28 pruebas pasan: validación y fechas, duplicados, atomicidad e idempotencia, acceso, altas y edición con conflictos, relaciones, seguimientos, asistencia, informes definitivos, importación con rollback, revocación, copia consistente y persistencia tras reabrir la base. Las pruebas de servidor invocan el manejador HTTP real **dentro del proceso, sin sockets**. No demuestran conectividad del proxy, cookies en navegador ni funcionamiento de Docker.
+33 pruebas pasan: validación y fechas, duplicados, atomicidad e idempotencia, acceso, altas y edición con conflictos, relaciones, programas, bajas con histórico, coherencia del módulo Centro de Día, seguimientos, asistencia, informes definitivos, importación con rollback, revocación, copia consistente, actualización desde el primer paquete y persistencia tras reabrir la base. Las pruebas de servidor invocan el manejador HTTP real **dentro del proceso, sin sockets**. No demuestran conectividad del proxy, cookies en navegador ni funcionamiento de Docker.
 
 Se comprobó además el lector XLSX con libros sintéticos en memoria: ZIP almacenado/comprimido, cadenas compartidas, texto enriquecido, fechas, identificadores con ceros, fórmulas, hojas ocultas y rechazo de relaciones externas/DTD. Esa comprobación usa un adaptador XML local y tampoco sustituye la prueba de navegador.
 
@@ -83,13 +86,17 @@ La comprobación con conexiones locales quedó bloqueada por el entorno; la soli
 
 ## Límites de esta entrega
 
-- Formularios adaptados del código existente en `public/centre-dia-docs.html`: no se ha demostrado equivalencia de todos los campos ni maquetación idéntica con los nueve originales de `Plantillas CD/`. La planificación Tribu reutiliza por ahora el formulario de actividades; la evaluación general/grupal es una adaptación resumida. Deben validarse antes de uso real.
+- Formularios contrastados con el texto de ocho originales de `Plantillas CD/`: no se ha demostrado equivalencia de todos los campos ni maquetación idéntica. La planificación Tribu reutiliza por ahora el formulario de actividades y su `.doc` antiguo sigue pendiente de revisión. La encuesta del niño/a y el resumen grupal ya se distinguen; sus escalas y presentación deben validarse. El diario funciona por registro mensual, no como la matriz anual del Excel.
 - No incluye exportación con el diseño original Excel/Word, firma, adjuntos, genogramas, clínica, captación, subvenciones, correo ni integración SinergiaCRM.
 - El importador crea personas y su número de ficha, no expedientes por programa, familias ni inscripciones automáticamente. Estas relaciones se completan desde la herramienta; necesitamos las columnas reales para definir una importación relacional segura.
 - No hay importación del histórico de asistencias ni de los documentos antiguos. Mantener originales en su repositorio actual hasta definir su migración.
 - Sin autosalvado del borrador local. Guardar los informes con frecuencia; los informes cerrados no se reabren ni borran desde la aplicación.
 - No hay MFA, restablecimiento de contraseña por correo, paginación de servidor ni auditoría externa inmutable. Administración puede restablecer contraseñas manualmente.
 
-## Aceptación en las dos semanas
+## Aceptación en un máximo de 15 días
 
-Días 1–3: confirmar Excel, modelo de personas/familias y prioridades de las nueve plantillas. Días 4–7: completar equivalencia de formularios y relaciones necesarias de importación. Días 8–10: instalación de pruebas Linux, permisos del equipo y ensayo completo con casos ficticios. Días 11–14: corregir incidencias, probar copias/restauración, formar al equipo y acordar un corte limitado. La fecha depende de acceso al servidor y validación de responsables; este paquete no es una instalación productiva terminada.
+Seguir el alcance y los hitos de `ALCANCE-15-DIAS.md`: núcleo general, módulo Centro de Día, instalación de pruebas, aceptación del equipo y puesta en marcha controlada. La fecha depende de acceso al servidor, Excel representativo y validación de responsables; este paquete no es una instalación productiva terminada.
+
+## Actualizar desde el primer paquete de pruebas
+
+Hacer una copia consistente antes de actualizar. Mantener el mismo directorio de datos o volumen. La aplicación añade columnas y tablas para programas, participación y definiciones de informes sin borrar registros. Los programas existentes quedan de tipo General; administración o coordinación deben marcar el programa correspondiente como Centro de Día para que aparezca en su módulo. No se adivina el tipo a partir del nombre.

@@ -54,7 +54,7 @@ test('complete local workflow, permissions, idempotency and durable data', async
       assert.equal((await request('people', { ...nora, nom: 'Nombre', dni: '', data_naixement: '' })).status, 400);
     });
     await t.test('creates program, group, enrollment and a case with followup', async () => {
-      program = (await request('programs', { name: 'Centro de día', description: 'Prueba local' })).body.id;
+      program = (await request('programs', { name: 'Centro de día', description: 'Prueba local', kind: 'dayCentre' })).body.id;
       group = (await request('groups', { name: 'Grupo de prueba', program_id: program, course: '2026-27' })).body.id;
       assert.equal((await request('enrollments', { person_id: person, group_id: group })).status, 200);
       const result = await request('cases', { person_id: person, program_id: program, opened_at: '2026-10-21', notes: 'Objetivos de prueba' }); assert.equal(result.status, 201); caseId = result.body.id;
@@ -97,6 +97,47 @@ test('complete local workflow, permissions, idempotency and durable data', async
       const result = await request('import', { people: [nora, imported, imported] }); assert.deepEqual(result.body.map(row => row.status), ['duplicate', 'created', 'duplicate']);
       const retry = await request('import', { people: [imported] }); assert.equal(retry.body[0].status, 'duplicate');
       assert.equal(app.db.prepare('SELECT count(*) total FROM people').get().total, count + 1);
+    });
+    await t.test('day-centre operations exclude groups and people from unrelated programs', async () => {
+      const other = (await request('programs', { name: 'Otro programa', kind: 'general' })).body.id;
+      const otherGroup = (await request('groups', { name: 'Grupo general', program_id: other, course: '2026-27' })).body.id;
+      const outsider = (await request('data')).body.people.find(p => p.nom === 'Otra').id;
+      assert.equal((await request('memberships', { person_id: outsider, program_id: other, started_at: '2026-10-01' })).status, 200);
+      assert.equal((await request(`attendance?group=${otherGroup}&day=2026-10-21`)).status, 400);
+      assert.equal((await request('reports', { type: 'generalEvaluation', person_id: outsider, day: '2026-10-21', course: '2026-27', title: 'Encuesta', state: 'draft', fields: { enquesta_0: 'Positiva' } })).status, 400);
+      const member = (await request('data')).body.memberships.find(m => m.person_id === person && m.program_id === program);
+      assert.equal(member.active, 1);
+    });
+    await t.test('program and group edits reject stale versions and inactive enrollment', async () => {
+      const payload = { id: program, version: 1, name: 'Centro de Día', description: 'Programa', kind: 'dayCentre', active: false };
+      assert.equal((await request('programs/update', payload)).status, 200);
+      assert.equal((await request('programs/update', payload)).status, 409);
+      assert.equal((await request('enrollments', { person_id: person, group_id: group })).status, 400);
+      assert.equal((await request('programs/update', { ...payload, version: 2, active: true })).status, 200);
+      assert.equal((await request('programs/update', { ...payload, version: 3, kind: 'general', active: true })).status, 400);
+      const groupPayload = { id: group, version: 1, name: 'Grupo de prueba', course: '2026-27', active: false };
+      assert.equal((await request('groups/update', groupPayload)).status, 200);
+      assert.equal((await request('enrollments', { person_id: person, group_id: group })).status, 400);
+      assert.equal((await request('groups/update', groupPayload)).status, 409);
+      assert.equal((await request('groups/update', { ...groupPayload, version: 2, active: true })).status, 200);
+    });
+    await t.test('program withdrawal ends group enrollment without deleting attendance', async () => {
+      const member = (await request('data')).body.memberships.find(m => m.person_id === person && m.program_id === program);
+      assert.equal((await request('memberships/end', { person_id: person, program_id: program, ended_at: '1900-01-01' })).status, 400);
+      assert.equal((await request('memberships/end', { person_id: person, program_id: program, ended_at: member.started_at })).status, 200);
+      const updated = (await request('data')).body;
+      assert.equal(updated.enrollments.find(e => e.person_id === person && e.group_id === group).active, 0);
+      assert.equal((await request(`attendance?group=${group}&day=2026-10-21`)).body.length, 1);
+      assert.equal((await request('enrollments', { person_id: person, group_id: group })).status, 200);
+      const events = (await request('data')).body.membershipEvents.filter(e => e.person_id === person && e.program_id === program);
+      assert.deepEqual(events.map(e => e.action), ['start', 'end', 'start']);
+    });
+    await t.test('evaluation drafts can be incomplete; closing requires every rated item and observation', async () => {
+      const payload = { type: 'evaluation1', person_id: person, day: '2026-10-21', course: '2026-27', title: 'Primera evaluación', state: 'draft', fields: { competencia_0: 'Bona' } };
+      const draft = await request('reports', payload); assert.equal(draft.status, 200);
+      assert.equal((await request('reports', { ...payload, id: draft.body.id, version: 1, state: 'final' })).status, 400);
+      const saved = (await request(`reports?id=${draft.body.id}`)).body;
+      assert.equal(saved.state, 'draft'); assert.ok(JSON.parse(saved.schema_json).fields.some(f => f.requiredOnFinal));
     });
     await t.test('a mid-import database failure rolls back people, counters and audit together', async () => {
       const count = app.db.prepare('SELECT count(*) total FROM people').get().total;
@@ -151,4 +192,30 @@ test('complete local workflow, permissions, idempotency and durable data', async
     if (!closed) app.db.close();
     rmSync(directory, { recursive: true, force: true });
   }
+});
+
+test('upgrades first test package without losing people, participation or original report definitions', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'nexe-upgrade-'));
+  const original = createApplication({ dataDir: directory, adminEmail: 'test@example.test', adminPassword: 'Local-test-only-12345' });
+  let closed = false;
+  try {
+    const actor = original.db.prepare('SELECT id FROM users LIMIT 1').get().id;
+    original.db.prepare('INSERT INTO people(id,number,nom,cognoms,created_at) VALUES(?,?,?,?,?)').run('person1', 'UA2026-0001', 'Prueba', 'Migración', '2026-10-21');
+    original.db.prepare('INSERT INTO programs(id,name) VALUES(?,?)').run('program1', 'Programa anterior');
+    original.db.prepare('INSERT INTO groups_cd(id,name,program_id,course) VALUES(?,?,?,?)').run('group1', 'Grupo anterior', 'program1', '2026-27');
+    original.db.prepare('INSERT INTO enrollments VALUES(?,?,1)').run('person1', 'group1');
+    original.db.prepare('INSERT INTO reports(id,type,person_id,day,course,title,body,state,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)').run('report1', 'generalEvaluation', 'person1', '2026-10-21', '2026-27', 'Informe anterior', JSON.stringify({ personal: 'Contenido anterior conservado' }), 'draft', actor, '2026-10-21', '2026-10-21');
+    original.db.exec('DROP TABLE program_memberships; ALTER TABLE programs DROP COLUMN kind; ALTER TABLE programs DROP COLUMN version; ALTER TABLE groups_cd DROP COLUMN active; ALTER TABLE groups_cd DROP COLUMN version; ALTER TABLE reports DROP COLUMN schema_json; PRAGMA user_version=0');
+    original.db.close(); closed = true;
+    const updated = createApplication({ dataDir: directory });
+    try {
+      assert.equal(updated.db.prepare('SELECT nom FROM people WHERE id=?').get('person1').nom, 'Prueba');
+      assert.equal(updated.db.prepare('SELECT kind FROM programs WHERE id=?').get('program1').kind, 'general');
+      assert.equal(updated.db.prepare('SELECT active FROM program_memberships WHERE person_id=?').get('person1').active, 1);
+      const report = updated.db.prepare('SELECT * FROM reports WHERE id=?').get('report1');
+      assert.equal(JSON.parse(report.body).personal, 'Contenido anterior conservado');
+      assert.ok(JSON.parse(report.schema_json).fields.some(field => field.key === 'personal'));
+      assert.equal(updated.db.prepare('PRAGMA user_version').get().user_version, 3);
+    } finally { updated.db.close(); }
+  } finally { if (!closed) original.db.close(); rmSync(directory, { recursive: true, force: true }); }
 });
