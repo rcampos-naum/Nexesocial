@@ -1,0 +1,25 @@
+
+        .family-card {
+            background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; transition: all 0.2s; cursor: pointer;
+        }
+        .family-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: #2563eb; }
+        .family-info { display: flex; align-items: center; gap: 20px; }
+        .family-icon {
+            width: 50px; height: 50px; background: #eff6ff; color: #2563eb;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+        }
+        .family-icon svg { width: 26px; height: 26px; stroke-width: 2; }
+        .badge-members { background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+        
+        /* Estil botó i cercador */
+        .btn-action { background: #2563eb !important; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-action:hover { background: #1d4ed8 !important; }
+        .search-container { margin-bottom: 25px; position: relative; }
+        .search-input { 
+            width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid #e2e8f0; 
+            font-family: inherit; font-size: 0.95rem; box-sizing: border-box; outline: none; transition: 0.2s;
+        }
+        .search-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+    

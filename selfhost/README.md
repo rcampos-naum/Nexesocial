@@ -138,3 +138,9 @@ Verificación: 37 pruebas automáticas y revisión en navegador con datos fictic
 - Iconos SVG distintos por sección, nombre accesible y ayuda al pasar el ratón con menú reducido.
 - Migración aditiva a esquema 4. El instalador hace una copia SQLite coherente en `/data/backups` del volumen del piloto antes de aplicar una actualización. Una copia en el mismo volumen protege esta actualización, pero no sustituye las copias externas de la entidad.
 - 44 pruebas automáticas, más prueba de navegador con personas ficticias: filtros, menú reducido, edición y consulta persistente de la ficha. La importación Excel actual carga los campos básicos y asigna el número automáticamente; no migra números ni datos ampliados del Firebase anterior.
+
+## Auditoría de la estética aprobada
+
+Se ha contrastado la adaptación con la web publicada https://nexesocial-bc6c4.web.app, incluida una revisión autenticada de solo lectura. Véase `AUDITORIA-ESTETICA.md` para el inventario, las correcciones y las limitaciones. Se reutilizan 15 extracciones originales de CSS/SVG; las fuentes y Chart.js se sirven localmente. La ficha y el perfil familiar vuelven a ser páginas con pestañas; Programas vuelve a tarjetas y Totales recupera indicadores y gráficos circulares.
+
+La ficha publicada tiene una incidencia previa de estilos dañados, confirmada al navegar sin guardar registros. Esa pantalla no puede certificarse como réplica exacta de una versión anterior íntegra. Las funciones no implementadas se mantienen fuera de los controles operativos del piloto. Se han verificado 46 pruebas automáticas y recorridos en navegador con datos ficticios, incluidos guardado de ficha desde otra pestaña y creación de un documento CD.

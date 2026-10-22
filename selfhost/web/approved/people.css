@@ -1,0 +1,40 @@
+
+        .header-actions { 
+            display: flex; justify-content: space-between; align-items: flex-start; 
+            margin-bottom: 25px; flex-wrap: wrap; gap: 15px;
+        }
+        .title-section h1 { margin: 0; font-size: 1.8rem; color: #1e293b; }
+        .title-section p { margin: 5px 0 0 0; color: #64748b; font-size: 1rem; }
+
+        .btn-nou { 
+            background: #10b981; color: white; border: none; padding: 12px 24px; 
+            border-radius: 10px; cursor: pointer; font-weight: 700; 
+            display: flex; align-items: center; gap: 8px; transition: 0.3s;
+        }
+        .btn-nou:hover { background: #059669; transform: translateY(-2px); }
+
+        .search-container {
+            background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;
+            margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 15px;
+        }
+        .search-bar { 
+            padding: 12px 15px; border-radius: 8px; border: 1px solid #e2e8f0; 
+            width: 100%; max-width: 400px; font-size: 0.95rem; outline-color: #2563eb;
+        }
+
+        .table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; min-width: 950px; }
+        th { 
+            text-align: left; padding: 15px; background: #f8fafc; color: #64748b; 
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; 
+        }
+        td { padding: 15px; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-size: 0.95rem; }
+        
+        tbody tr { cursor: pointer; transition: 0.2s; }
+        tbody tr:hover { background-color: #f8faff; }
+
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
+        .badge-adult { background: #e0f2fe; color: #075985; }
+        .exp-num { font-family: monospace; font-weight: 800; color: #2563eb; }
+    

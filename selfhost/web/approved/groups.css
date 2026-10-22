@@ -1,0 +1,69 @@
+
+        :root {
+            --primary: #0f172a; --accent: #3b82f6; --success: #10b981;
+            --warning: #f59e0b; --danger: #ef4444; --border: #e2e8f0;
+        }
+
+        body { margin: 0; background: #f8fafc; display: flex; flex-direction: column; height: 100vh; font-family: 'Inter', sans-serif; }
+        .content-wrapper { margin-left: 280px; margin-top: 60px; padding: 25px; transition: 0.3s; overflow-y: auto; flex-grow: 1; }
+        body.collapsed .content-wrapper { margin-left: 70px; }
+
+        /* Header */
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .page-header h1 { margin: 0; color: var(--primary); font-size: 1.8rem; }
+
+        .summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .summary-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .summary-label { color: #64748b; font-size: 0.78rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; }
+        .summary-value { color: var(--primary); font-size: 1.7rem; font-weight: 800; margin-top: 8px; }
+
+        .filters-bar { display: grid; grid-template-columns: 1fr 1fr auto; gap: 14px; align-items: end; }
+        .filter-group label { display: block; margin-bottom: 6px; color: var(--primary); font-size: 0.85rem; font-weight: 600; }
+        .filter-group select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: white; font-family: inherit; }
+
+        /* Cards y Tablas */
+        .nexe-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .nexe-table { width: 100%; border-collapse: collapse; }
+        .nexe-table th { background: #f1f5f9; padding: 12px; text-align: left; font-size: 0.75rem; color: #64748b; border-bottom: 2px solid var(--border); font-weight: 600; }
+        .nexe-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+        .nexe-table tr:hover { background: #f8fafc; }
+
+        /* Botones */
+        .btn { padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 0.8rem; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #1e293b; }
+        .btn-outline { background: white; border: 1px solid var(--border); color: var(--primary); }
+        .btn-outline:hover { background: #f1f5f9; }
+
+        .btn-accion { padding: 6px 12px; font-size: 0.75rem; margin-right: 5px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; }
+        .btn-beneficiarios { color: #2563eb; border-color: #2563eb; }
+        .btn-asistencia { color: #16a34a; border-color: #16a34a; }
+        .btn-editar { color: #7c3aed; border-color: #7c3aed; }
+        .btn-eliminar { color: #ef4444; border-color: #ef4444; }
+
+        .btn-accion:hover { background: #f1f5f9; }
+
+        /* Badges */
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-warning { background: #fef3c7; color: #b45309; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+
+        /* Estados */
+        .estado { display: flex; align-items: center; gap: 8px; }
+        .estado-punto { width: 8px; height: 8px; border-radius: 50%; }
+        .estado-activo { background: #10b981; }
+        .estado-inactivo { background: #94a3b8; }
+
+        /* Empty State */
+        .empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 15px; }
+
+        /* Tabla responsiva */
+        @media (max-width: 1024px) {
+            .content-wrapper { margin-left: 70px; padding: 15px; }
+            .nexe-table { font-size: 0.75rem; }
+            .btn-accion { padding: 4px 8px; font-size: 0.7rem; margin-right: 3px; }
+            .summary-grid, .filters-bar { grid-template-columns: 1fr; }
+        }
+    

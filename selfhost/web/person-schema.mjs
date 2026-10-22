@@ -5,7 +5,7 @@ export const personSections = [
     [
       {
         "key": "tipus_document",
-        "label": "Tipo de documento",
+        "label": "Tipus de document",
         "type": "select",
         "options": [
           "DNI",
@@ -15,7 +15,7 @@ export const personSections = [
       },
       {
         "key": "genere",
-        "label": "Género",
+        "label": "Gènere",
         "type": "select",
         "options": [
           "HOME",
@@ -25,12 +25,12 @@ export const personSections = [
       },
       {
         "key": "adreca",
-        "label": "Dirección",
+        "label": "Adreça",
         "type": "text"
       },
       {
         "key": "barri_residencia",
-        "label": "Barrio",
+        "label": "Barri de residència",
         "type": "select",
         "options": [
           "Centre",
@@ -43,12 +43,12 @@ export const personSections = [
       },
       {
         "key": "nacionalitat",
-        "label": "Nacionalidad",
+        "label": "Nacionalitat",
         "type": "text"
       },
       {
         "key": "distribucio_origen",
-        "label": "Región de origen",
+        "label": "Distribució d’origen",
         "type": "select",
         "options": [
           "Espanya",
@@ -62,7 +62,7 @@ export const personSections = [
       },
       {
         "key": "minoria_etnica",
-        "label": "Minoría étnica",
+        "label": "Minoria ètnica",
         "type": "select",
         "options": [
           "Sí",
@@ -71,7 +71,7 @@ export const personSections = [
       },
       {
         "key": "situacio_admin",
-        "label": "Situación administrativa",
+        "label": "Situació administrativa",
         "type": "select",
         "options": [
           "NACIONALITAT ESPANYOLA",
@@ -88,7 +88,7 @@ export const personSections = [
     [
       {
         "key": "derivat_per",
-        "label": "Derivado por",
+        "label": "Derivat per",
         "type": "multi",
         "options": [
           "CENTRE SALUT",
@@ -106,12 +106,12 @@ export const personSections = [
       },
       {
         "key": "derivat_per_altres",
-        "label": "Otro servicio de derivación",
+        "label": "Nom del servei",
         "type": "text"
       },
       {
         "key": "expedient_obert_a",
-        "label": "Expediente abierto en",
+        "label": "Expedient obert a",
         "type": "multi",
         "options": [
           "SS SS",
@@ -123,7 +123,7 @@ export const personSections = [
       },
       {
         "key": "protocols_educacio",
-        "label": "Protocolos educativos",
+        "label": "Protocols d’educació",
         "type": "multi",
         "options": [
           "RUMI",
@@ -136,7 +136,7 @@ export const personSections = [
       },
       {
         "key": "professional_xarxa",
-        "label": "Profesional de la red",
+        "label": "Professional de la xarxa",
         "type": "select",
         "options": [
           "Sí",
@@ -150,7 +150,7 @@ export const personSections = [
     [
       {
         "key": "situacio_domicili",
-        "label": "Situación de vivienda",
+        "label": "Situació del domicili",
         "type": "select",
         "options": [
           "Lloguer",
@@ -166,7 +166,7 @@ export const personSections = [
       },
       {
         "key": "membres_unitat_familiar",
-        "label": "Miembros de la unidad familiar",
+        "label": "Membres de la unitat familiar",
         "type": "select",
         "options": [
           "1",
@@ -179,7 +179,7 @@ export const personSections = [
       },
       {
         "key": "context_familiar",
-        "label": "Contexto familiar",
+        "label": "Context familiar",
         "type": "select",
         "options": [
           "FAM NOMBROSA",
@@ -191,7 +191,7 @@ export const personSections = [
       },
       {
         "key": "nombre_fills",
-        "label": "Número de hijos",
+        "label": "Nombre de fills",
         "type": "select",
         "options": [
           "1",
@@ -204,7 +204,7 @@ export const personSections = [
       },
       {
         "key": "vulnerabilitat_greu",
-        "label": "Vulnerabilidad grave",
+        "label": "Vulnerabilitat greu",
         "type": "multi",
         "options": [
           "Violència de Gènere",
@@ -218,7 +218,7 @@ export const personSections = [
       },
       {
         "key": "bretxa_digital",
-        "label": "Brecha digital",
+        "label": "Bretxa digital",
         "type": "select",
         "options": [
           "Si",
@@ -227,7 +227,7 @@ export const personSections = [
       },
       {
         "key": "participa_comunitaries",
-        "label": "Participa en actividades comunitarias",
+        "label": "Participa en activitats comunitàries",
         "type": "select",
         "options": [
           "Sí",
@@ -236,7 +236,7 @@ export const personSections = [
       },
       {
         "key": "indicadors_risc",
-        "label": "Indicadores de riesgo",
+        "label": "Indicadors de risc",
         "type": "multi",
         "options": [
           "CONDUCTUALS",
@@ -256,7 +256,7 @@ export const personSections = [
       },
       {
         "key": "ingressos",
-        "label": "Ingresos",
+        "label": "Ingressos",
         "type": "select",
         "options": [
           "Sense Ingressos",
@@ -273,7 +273,7 @@ export const personSections = [
     [
       {
         "key": "nivell_educatiu",
-        "label": "Nivel educativo",
+        "label": "Nivell educatiu",
         "type": "select",
         "options": [
           "INFANTIL",
@@ -288,12 +288,12 @@ export const personSections = [
       },
       {
         "key": "centre_educatiu",
-        "label": "Centro educativo",
+        "label": "Centre educatiu",
         "type": "text"
       },
       {
         "key": "situacio_escolar",
-        "label": "Situación escolar",
+        "label": "Situació escolar",
         "type": "select",
         "options": [
           "Escolaritzat",
@@ -305,7 +305,7 @@ export const personSections = [
       },
       {
         "key": "situacio_laboral",
-        "label": "Situación laboral",
+        "label": "Situació laboral",
         "type": "select",
         "options": [
           "Treball indefinit",
@@ -317,7 +317,7 @@ export const personSections = [
       },
       {
         "key": "situacio_laboral_detall",
-        "label": "Detalle laboral",
+        "label": "Detall de la situació laboral",
         "type": "text"
       }
     ]
@@ -327,7 +327,7 @@ export const personSections = [
     [
       {
         "key": "discapacitat",
-        "label": "Discapacidad",
+        "label": "Discapacitat",
         "type": "select",
         "options": [
           "SI",
@@ -336,7 +336,7 @@ export const personSections = [
       },
       {
         "key": "dependencia",
-        "label": "Dependencia",
+        "label": "Dependència",
         "type": "select",
         "options": [
           "SI",
@@ -345,7 +345,7 @@ export const personSections = [
       },
       {
         "key": "malaltia_tipus",
-        "label": "Tipo de enfermedad",
+        "label": "Tipus de malaltia",
         "type": "select",
         "options": [
           "-SALUT FÍSICA",
@@ -354,12 +354,12 @@ export const personSections = [
       },
       {
         "key": "malaltia_nom",
-        "label": "Enfermedad",
+        "label": "Nom de la malaltia",
         "type": "text"
       },
       {
         "key": "adiccio",
-        "label": "Adicción",
+        "label": "Addicció",
         "type": "select",
         "options": [
           "No",
@@ -368,12 +368,12 @@ export const personSections = [
       },
       {
         "key": "adiccio_a_que",
-        "label": "Detalle de adicción",
+        "label": "Addicció a què",
         "type": "text"
       },
       {
         "key": "te_alergies",
-        "label": "Alergias",
+        "label": "Al·lèrgies",
         "type": "select",
         "options": [
           "No",
@@ -382,17 +382,17 @@ export const personSections = [
       },
       {
         "key": "alergies_ambientals",
-        "label": "Alergias ambientales",
+        "label": "Al·lèrgies ambientals",
         "type": "long"
       },
       {
         "key": "alergies_medicaments",
-        "label": "Alergias a medicamentos",
+        "label": "Al·lèrgies a medicaments",
         "type": "long"
       },
       {
         "key": "alergies_aliments",
-        "label": "Alergias alimentarias",
+        "label": "Al·lèrgies alimentàries",
         "type": "long"
       },
       {
@@ -415,7 +415,7 @@ export const personSections = [
       },
       {
         "key": "dependencia_medica",
-        "label": "Dependencia médica",
+        "label": "Dependència mèdica",
         "type": "select",
         "options": [
           "No",
@@ -424,7 +424,7 @@ export const personSections = [
       },
       {
         "key": "grau",
-        "label": "Grado de dependencia",
+        "label": "Grau",
         "type": "select",
         "options": [
           "Grado I",
@@ -434,7 +434,7 @@ export const personSections = [
       },
       {
         "key": "observacions",
-        "label": "Observaciones médicas",
+        "label": "Observacions mèdiques",
         "type": "long"
       }
     ]

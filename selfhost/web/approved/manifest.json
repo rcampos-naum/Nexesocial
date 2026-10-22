@@ -1,0 +1,156 @@
+{
+  "reference": "https://nexesocial-bc6c4.web.app",
+  "captured": "2026-10-22",
+  "files": [
+    {
+      "file": "style-dashboard.css",
+      "sha256": "65475791305ab0a497f0f7d75d6c1fe1115b9de1aed82d49fd96935326cb8c39",
+      "source": "style-dashboard.css",
+      "sourceSha256": "65475791305ab0a497f0f7d75d6c1fe1115b9de1aed82d49fd96935326cb8c39",
+      "method": "verbatim"
+    },
+    {
+      "file": "shell.css",
+      "sha256": "90b6f87da8a17de989593151e5c7c7745a06442990016768c012515df91eef8c",
+      "source": "sidebar.js",
+      "sourceSha256": "53d85ee42dd20ed23654b591d09b9b05d7a727e42f8c04efd75a3e0b675b4dc3",
+      "method": "verbatim CSS template only; no Firebase/auth script"
+    },
+    {
+      "file": "icons.mjs",
+      "sha256": "a6047f7ff04f548208d1251a9a99bd911ff5d13a12d037e7abdf196203388baf",
+      "source": "sidebar.js",
+      "sourceSha256": "53d85ee42dd20ed23654b591d09b9b05d7a727e42f8c04efd75a3e0b675b4dc3",
+      "method": "verbatim static SVG strings"
+    },
+    {
+      "file": "login.css",
+      "sha256": "5441d696801691f6f1115b6eaf00057e8ca1e3ee7dc67d766fdecbc561a484e0",
+      "source": "index.html",
+      "sourceSha256": "f2243017c9e2e6da407d048644e366492ea804e9782a556527633598e30c667b",
+      "method": "CSS extracted verbatim; background URL points to the same local image"
+    },
+    {
+      "file": "home.css",
+      "sha256": "fcc535edbb571c03b841da55ab070f112c3b42a22d0c01aae483d8a44dcc7883",
+      "source": "home.html",
+      "sourceSha256": "3b11f65baa05b854b0c654fb77b75bcdae21e4ae4cec00c23ae5aa5b4c9bfae0",
+      "method": "verbatim CSS blocks"
+    },
+    {
+      "file": "people.css",
+      "sha256": "fe0ed7c9c6fa33d77a913c188f7af199f2fdae55afd292a96112feb632aed5c2",
+      "source": "expedient-detall.html",
+      "sourceSha256": "5d7aabcfd884f2d7063f9d91de1233993ab9df6782e44fcdf0558bcd80cf06d8",
+      "method": "verbatim CSS blocks"
+    },
+    {
+      "file": "families.css",
+      "sha256": "7d39ceb05cb40dc69d050361239c391825aac9ac2c87fc69e689c6cbf04e8405",
+      "source": "families-llistat.html",
+      "sourceSha256": "e4d7633169f55bcd09569ad5827cb94fa03bd27f221ed23c1f7b12008068ab5a",
+      "method": "verbatim CSS blocks"
+    },
+    {
+      "file": "family.css",
+      "sha256": "7f65461bf34c42015fc78453bae4061c89ef869bbd2411f4c307d5996dbdc038",
+      "source": "familia-perfil.html",
+      "sourceSha256": "af1a5cc26d6c23f3f31ae13c7aaae7e393abdc6c2e000b2041dc02b5f0a1a1f3",
+      "method": "verbatim CSS blocks"
+    },
+    {
+      "file": "programs.css",
+      "sha256": "8fb6526bfa810ada405332c1a513ce61601096a736fdec3083e10a83fc95a029",
+      "source": "programes-gestio.html",
+      "sourceSha256": "2a3413facc05c121bbcce9a8eb3ebaa0cba62c82f883f6175e73bd4a8eee8ece",
+      "method": "verbatim CSS blocks"
+    },
+    {
+      "file": "totals.css",
+      "sha256": "578015f875ed371c3a66f443b1c48e81b7fc08ec5ced1749e019bab098ad61ef",
+      "source": "dades-totals.html",
+      "sourceSha256": "5cc6888bab7f27f18e801e50770e4539413810f6cbdf53f5296a06eefe9d8b2a",
+      "method": "verbatim CSS blocks"
+    },
+    {
+      "file": "import.css",
+      "sha256": "50584db471cc8d61b266594dcf0f2277e1190a38c9754b27d81b51bc007dd3a7",
+      "source": "importador-datos.html",
+      "sourceSha256": "7797b0969837f84e00d00f968e3b4f731325abe7c59537c004829e46bab27bd3",
+      "method": "verbatim CSS blocks"
+    },
+    {
+      "file": "reports.css",
+      "sha256": "0cf0202fd21bf7c6c82da1ef98ff151b31c731ca8299dfd78caffb6cf916c95e",
+      "source": "centre-dia-docs.html",
+      "sourceSha256": "89866519b4e82858a2d0239d267960a13436f7f285dfbe4f925617bae7ca1c15",
+      "method": "verbatim CSS blocks"
+    },
+    {
+      "file": "attendance.css",
+      "sha256": "e485b3fedcf4cccae8f87d4536a758beef4ead2c5beb6ae476af2ddc61d9d71b",
+      "source": "passar-llista.html",
+      "sourceSha256": "1a8ecca02d8676f4696da2f5aca6ead939dd7e7739e3c868801ccaefe44f0759",
+      "method": "verbatim CSS blocks"
+    },
+    {
+      "file": "groups.css",
+      "sha256": "893ec0ce10103a5d62938b0e92ffdb6dfd2ab34dae79983b16ed688d45e9df14",
+      "source": "grups.html",
+      "sourceSha256": "8e0b65bd6086d9467bb89f0022b44c85fc1a5a0bc2f8ff9ccd5fdf561db6fcc4",
+      "method": "verbatim CSS blocks"
+    },
+    {
+      "file": "users.css",
+      "sha256": "4c61f94a8ebf18a86d29a7cc0a2a72a77f16982ff66dbc0b1201a73508b15ab8",
+      "source": "gestio-usuaris.html",
+      "sourceSha256": "9f0c1e5a1870dfa1da3c4db2142252f69ae9b953836679f42906dc4bb38ead0e",
+      "method": "verbatim CSS blocks"
+    }
+  ],
+  "limitations": [
+    "perfil-usuari.html has no opening style tag and contains JS fragments in the head. Its missing CSS cannot be certified from that file. Use the available original tab/header markup and familia-perfil.css patterns; the malformed live form was confirmed in an authenticated read-only review on 2026-10-22. Its former approved CSS is not available in this reference."
+  ],
+  "assets": [
+    {
+      "file": "fonts.css",
+      "sha256": "88260762fca17f1e69c98e5a99b0d26c2aea3cd7bb126fb82cf229eceb27645d",
+      "source": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    },
+    {
+      "file": "Inter-400.ttf",
+      "sha256": "1b08e7fc267a5c7e1d614100f604b83e7e8a0be241f0f288faa2b3ac93a683ba",
+      "source": "https://fonts.google.com/specimen/Inter"
+    },
+    {
+      "file": "Inter-500.ttf",
+      "sha256": "8c883f63b2c4157d997319f2c8bc6995ed4357ef371940d31ca159004a4aae63",
+      "source": "https://fonts.google.com/specimen/Inter"
+    },
+    {
+      "file": "Inter-600.ttf",
+      "sha256": "e7a1aaf7eda9f2fad4131725fa556265ec75ca7b2d756260173a040363e8d4f7",
+      "source": "https://fonts.google.com/specimen/Inter"
+    },
+    {
+      "file": "Inter-700.ttf",
+      "sha256": "b37284b5701b6b168dfc770aa1a4ac492106422fd3ba76bc7641e37434e8019c",
+      "source": "https://fonts.google.com/specimen/Inter"
+    },
+    {
+      "file": "Inter-LICENSE.txt",
+      "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a",
+      "source": "https://fonts.google.com/specimen/Inter"
+    },
+    {
+      "file": "chart.js",
+      "sha256": "48444a82d4edcb5bec0f1965faacdde18d9c17db3063d042abada2f705c9f54a",
+      "source": "https://cdn.jsdelivr.net/npm/chart.js@4.5.1/"
+    },
+    {
+      "file": "Chart-LICENSE.md",
+      "sha256": "41a84aa2caba645f966a18d9c2056b73e6d3a81d80bc0046bc0011a2634d4cce",
+      "source": "https://cdn.jsdelivr.net/npm/chart.js@4.5.1/"
+    }
+  ]
+}

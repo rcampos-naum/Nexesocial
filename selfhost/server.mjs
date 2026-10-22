@@ -151,6 +151,9 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
       if (route === '/health' && method === 'GET') return send(200, { ok: true });
       if (!route.startsWith('/api/')) {
         requireValue(method === 'GET', 'Método no permitido', 405);
+        const approved = { 'style-dashboard.css':'text/css', 'shell.css':'text/css', 'login.css':'text/css', 'home.css':'text/css', 'people.css':'text/css', 'families.css':'text/css', 'family.css':'text/css', 'programs.css':'text/css', 'totals.css':'text/css', 'import.css':'text/css', 'reports.css':'text/css', 'attendance.css':'text/css', 'groups.css':'text/css', 'users.css':'text/css', 'fonts.css':'text/css', 'Inter-400.ttf':'font/ttf', 'Inter-500.ttf':'font/ttf', 'Inter-600.ttf':'font/ttf', 'Inter-700.ttf':'font/ttf', 'chart.js':'text/javascript', 'icons.mjs':'text/javascript' };
+        const approvedName = route.startsWith('/approved/') ? route.slice('/approved/'.length) : '';
+        if (approved[approvedName]) { res.writeHead(200, { 'Content-Type': approved[approvedName] }); return res.end(readFileSync(resolve(root,'web/approved',approvedName))); }
         const assets = { '/assets/logo.png': 'NexeSocial-logo.png', '/assets/login-background.png': 'fondo-login.png' };
         if (['/person-schema.mjs', '/totals.mjs'].includes(route)) { res.writeHead(200, { 'Content-Type': 'text/javascript' }); return res.end(readFileSync(resolve(root, 'web', route.slice(1)))); }
         if (assets[route]) { res.writeHead(200, { 'Content-Type': 'image/png' }); return res.end(readFileSync(resolve(root, '../public/img', assets[route]))); }
