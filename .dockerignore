@@ -3,6 +3,9 @@
 !selfhost/**
 !public/
 !public/import-persones-core.mjs
+!public/img/
+!public/img/NexeSocial-logo.png
+!public/img/fondo-login.png
 selfhost/data/
 selfhost/backups/
 selfhost/.env

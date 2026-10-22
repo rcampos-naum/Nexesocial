@@ -122,3 +122,9 @@ Seguir el alcance y los hitos de `ALCANCE-15-DIAS.md`: núcleo general, módulo 
 ## Actualizar desde el primer paquete de pruebas
 
 Hacer una copia consistente antes de actualizar. Mantener el mismo directorio de datos o volumen. La aplicación añade columnas y tablas para programas, participación y definiciones de informes sin borrar registros. Los programas existentes quedan de tipo General; administración o coordinación deben marcar el programa correspondiente como Centro de Día para que aparezca en su módulo. No se adivina el tipo a partir del nombre.
+
+### Apariencia original recuperada
+
+La entrega Linux reutiliza el logotipo y el fondo originales de `public/img`, con la navegación blanca y azul de la primera aplicación. Se adaptaron el acceso, el panel de inicio, los listados y los formularios; Familias recupera las tarjetas con integrantes y buscador. La interfaz sigue conectada al servidor local, sin Firebase.
+
+Verificación: 37 pruebas automáticas y revisión en navegador con datos ficticios del acceso, inicio y creación de familia. Esta adaptación visual no equivale a haber migrado todos los módulos de la aplicación original.

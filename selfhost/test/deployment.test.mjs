@@ -9,7 +9,7 @@ import { probePilotDatabase } from '../probe-data.mjs';
 test('Docker assigns all copied code to its runtime user for private-mode source files', () => {
   const dockerfile = readFileSync(new URL('../Dockerfile', import.meta.url), 'utf8');
   const copies = dockerfile.split(/\r?\n/).filter(line => line.startsWith('COPY '));
-  assert.equal(copies.length, 2);
+  assert.equal(copies.length, 4);
   assert.ok(copies.every(line => line.startsWith('COPY --chown=node:node ')));
   assert.match(dockerfile, /^USER node$/m);
 });

@@ -170,6 +170,10 @@ test('complete local workflow, permissions, idempotency and durable data', async
       assert.ok(!html.includes('firebase')); assert.ok(!html.includes('https://')); assert.match(response.headers.get('content-security-policy'), /connect-src 'self'/);
       assert.equal((await dispatch('/nexesocial.sqlite')).status, 404);
       assert.equal((await dispatch('/../server.mjs')).status, 404);
+      for (const path of ['/assets/logo.png', '/assets/login-background.png']) {
+        const asset = await dispatch(path); assert.equal(asset.status, 200); assert.equal(asset.headers.get('content-type'), 'image/png');
+      }
+      assert.equal((await dispatch('/assets/server.mjs')).status, 404);
       assert.ok(!JSON.stringify((await request('data')).body).includes('Local-test-only'));
     });
     await t.test('consistent SQLite backup includes reports and passes integrity check', async () => {
