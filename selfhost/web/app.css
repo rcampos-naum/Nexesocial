@@ -206,3 +206,36 @@ body[data-page=attendance] #attendanceStats .stat-label { color:inherit; }
 .stat-chip.report-color-groupEval .n,.type-sel-card.report-color-groupEval .name,.type-sel-card.report-color-groupEval .ticon { color:#06b6d4; }
 .type-sel-card.report-color-groupEval { border-color:#06b6d430; }
 .doc-card-badge.report-color-groupEval { color:#06b6d4; background:#ecfeff; }
+/* Document interiors follow centre-dia-docs.html: fixed header/footer, original field grids and rating tables. */
+dialog.cd-modal .dialog-head h2 { margin:0; font-size:1.05rem; font-weight:800; color:#1e293b; display:flex; align-items:center; gap:8px; }
+dialog.cd-modal .ff label { margin:0 0 4px; }
+dialog.cd-modal .ff input,dialog.cd-modal .ff select,dialog.cd-modal .ff textarea { margin-top:0; font-weight:400; text-transform:none; letter-spacing:normal; }
+dialog.cd-modal .fsect-title { display:flex; align-items:center; gap:5px; }
+dialog.cd-modal .fsect-title svg { width:11px; height:11px; flex-shrink:0; }
+dialog.cd-modal #submitEditor { margin:0; }
+dialog.cd-modal #editorFooter { flex-shrink:0; }
+dialog.cd-modal #formError:empty { display:none; }
+dialog.cd-modal #formError:not(:empty) { margin:0; padding:10px 28px; flex-shrink:0; }
+.report-rating-scroll { overflow-x:auto; }
+dialog.cd-modal .rtable { min-width:600px; }
+dialog.cd-modal .rtable td:first-child { width:42%; }
+dialog.cd-modal .rtable td:nth-child(2) { width:170px; }
+dialog.cd-modal .rsel { width:100%; margin:0; padding:5px 9px; font-size:.8rem; border-radius:6px; }
+dialog.cd-modal .rnote { min-height:36px; padding:4px 8px; margin:0; font-size:.8rem; border-radius:6px; }
+dialog.cd-modal .ff textarea.observation-text { min-height:200px; }
+.report-title-icon { display:inline-flex; }
+.report-title-icon svg { width:18px; height:18px; }
+.report-title-icon.report-color-diary { color:#3b82f6; }
+.report-title-icon.report-color-observation { color:#8b5cf6; }
+.report-title-icon.report-color-evaluation { color:#10b981; }
+.report-title-icon.report-color-survey { color:#0ea5e9; }
+.report-title-icon.report-color-followup { color:#f59e0b; }
+.report-title-icon.report-color-plan { color:#ef4444; }
+.report-title-icon.report-color-groupEval { color:#06b6d4; }
+dialog.cd-modal :disabled { opacity:1; color:#334155; -webkit-text-fill-color:#334155; }
+@media(max-width:768px) { dialog.cd-modal .frow,dialog.cd-modal .frow.c3 { grid-template-columns:1fr; } dialog.cd-modal .cd-modal-body { padding:20px; } }
+dialog.cd-modal #closeDialog { background:none; border:0; padding:4px; font-size:24px; font-weight:400; line-height:1; color:#64748b; }
+dialog.cd-modal #closeDialog:hover { background:#f1f5f9; }
+dialog.cd-modal #editorFooter { align-items:center; }
+dialog.cd-modal .rtable td { font-size:.85rem; }
+dialog.cd-modal #submitEditor.btn-draft { background:#f8fafc; color:#475569; border:1.5px dashed #94a3b8; padding:9px 17px; }

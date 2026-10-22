@@ -33,7 +33,7 @@ const reportPresentation = type => reportGroups.find(g=>g.types.includes(type));
 import { approvedIcons } from './approved/icons.mjs';
 import { personSections, personFields as profileFields } from './person-schema.mjs';
 import { ageOn, selectedPeople, totalsFor, dimensionLabel, summaryCsv } from './totals.mjs';
-import { templates } from './templates.mjs';
+import { templates, reportSections } from './templates.mjs';
 import { readWorkbook } from './xlsx.js';
 import { FIELDS, suggestedMapping, validateRows, classifyRows } from './import-persones-core.mjs';
 
@@ -75,14 +75,14 @@ const programOptions = (activeOnly = false) => data.programs.filter(p => !active
 const groupOptions = (cdOnly = false, activeOnly = false) => data.groups.filter(g => (!cdOnly || cdProgramIds().has(g.program_id)) && (!activeOnly || (g.active && data.programs.find(p => p.id === g.program_id)?.active))).map(g => [g.id, `${g.name} · ${g.course}`]);
 function table(headers, rows) { return `<div class="table-wrap"><table class="${['attendance','dayCentre','users'].includes(section)?'nexe-table':''}"><thead><tr>${headers.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${headers.length}">Todavía no hay registros.</td></tr>`}</tbody></table></div>`; }
 function modal(title, fields, save, submit = 'Desar') {
-  $('dialog').classList.toggle('cd-modal',section==='reports'); $('fields').classList.toggle('cd-modal-body',section==='reports'); document.querySelector('.dialog-head').classList.toggle('cd-modal-hdr',section==='reports'); $('dialogTitle').textContent = title; $('fields').innerHTML = fields; $('formError').textContent = ''; $('submitEditor').textContent = submit; $('submitEditor').hidden = !save;
-  if(section==='reports') { for(const label of $('fields').querySelectorAll('label'))label.classList.add('ff'); for(const grid of $('fields').querySelectorAll('.grid'))grid.classList.add('frow'); } editorSave = save; $('dialog').showModal();
+  for(const item of $('editorFooter').querySelectorAll('[data-report-extra]'))item.remove(); $('submitEditor').textContent='Desar'; $('submitEditor').removeAttribute('data-report-state'); $('closeDialog').textContent=section==='reports'?'×':'Tancar'; $('editorFooter').classList.toggle('cd-modal-ftr',section==='reports'); $('submitEditor').classList.remove('btn-draft'); $('submitEditor').classList.toggle('btn',section==='reports'); $('submitEditor').classList.toggle('btn-primary',section==='reports'); $('dialog').classList.toggle('cd-modal',section==='reports'); $('fields').classList.toggle('cd-modal-body',section==='reports'); document.querySelector('.dialog-head').classList.toggle('cd-modal-hdr',section==='reports'); $('dialogTitle').textContent = title; $('fields').innerHTML = fields; $('formError').textContent = ''; $('submitEditor').textContent = submit; $('submitEditor').hidden = !save;
+  if(section==='reports') { for(const label of [...$('fields').querySelectorAll('label')]) { if(label.parentElement.classList.contains('ff'))continue; const controls=[...label.children]; if(!controls.length)continue; const box=document.createElement('div');box.className='ff';label.replaceWith(box);box.append(label);for(const control of controls){if(!control.id)control.id='report_'+control.name;label.htmlFor=control.id;box.append(control);} } for(const grid of $('fields').querySelectorAll('.grid'))grid.classList.add('frow'); } editorSave = save; $('dialog').showModal();
 }
 $('closeDialog').addEventListener('click', () => { if (!saving) $('dialog').close(); });
 $('dialog').addEventListener('cancel', event => { if (saving) event.preventDefault(); });
 $('editor').addEventListener('submit', async event => {
   event.preventDefault(); if (!editorSave || saving) return; saving = true; $('submitEditor').disabled = true; $('closeDialog').disabled = true;
-  try { const result = await editorSave(Object.fromEntries(new FormData($('editor')))); $('dialog').close(); await refresh(); notice('Canvis desats.'); if (result?.next) result.next(); }
+  try { const formValues=Object.fromEntries(new FormData($('editor'))); if(event.submitter?.dataset.reportState)formValues.state=event.submitter.dataset.reportState; const result = await editorSave(formValues); $('dialog').close(); await refresh(); notice('Canvis desats.'); if (result?.next) result.next(); }
   catch (e) { $('formError').textContent = e.message; }
   finally { saving = false; $('submitEditor').disabled = false; $('closeDialog').disabled = false; }
 });
@@ -249,7 +249,7 @@ async function action(action, id) {
   if (action === 'reportEdit') return editReport(await api(`reports?id=${encodeURIComponent(id)}`));
   if (action === 'reportView') { const report = await api(`reports?id=${encodeURIComponent(id)}`); const schema = report.schema_json ? JSON.parse(report.schema_json) : templates[report.type]; const fields = JSON.parse(report.body);
     const body = `<p>${esc(schema.label)} · ${esc(report.day)} · ${esc(report.course)}</p><p>${esc(report.person_id ? personName(report.person_id) : groupName(report.group_id))} · ${esc(teamName(report.created_by))} · v${report.version} · ${report.state === 'final' ? 'Definitivo' : 'Borrador'}</p>${schema.fields.map(f => `<div class="print-field"><strong>${esc(f.label)}</strong>${esc(fields[f.key] || '—')}</div>`).join('')}`;
-    printDocument(report.title, body); return modal(report.title, button('Imprimir / guardar como PDF', 'print', '', true) + body, null);
+    printDocument(report.title, body); return editReport(report,true);
   }
   if (action === 'print') return window.print();
   if (action === 'userNew') return modal('Nueva cuenta del equipo', input('name', 'Nombre') + input('email', 'Correo', 'email') + input('password', 'Contraseña (mínimo 12 caracteres)', 'password') + select('role', 'Perfil', Object.entries(roleLabel)), values => api('users', values));
@@ -260,13 +260,35 @@ async function action(action, id) {
 }
 function followupHtml(id) { return data.followups.filter(f => f.case_id === id).map(f => `<div class="followup"><strong>${esc(f.created_at.slice(0, 10))} · ${esc(teamName(f.created_by))}</strong><br>${esc(f.body)}</div>`).join('') || '<p>Sin seguimientos.</p>'; }
 function printDocument(title, body) { $('printArea').innerHTML = `<h1>${esc(title)}</h1>${body}`; }
-function editReport(report) {
+function editReport(report, readOnly=false) {
   const template = report.schema_json ? JSON.parse(report.schema_json) : templates[report.type]; const values = report.body ? JSON.parse(report.body) : {};
-  const fields = template.fields.map(f => f.type === 'textarea' ? textarea(`field_${f.key}`, f.label, values[f.key]) : f.type === 'select' ? select(`field_${f.key}`, f.label, f.options.map(o => [o, o]), false, values[f.key]) : input(`field_${f.key}`, f.label, f.type, values[f.key] || '', false)).join('');
-  modal(template.label, `${input('title', 'Títol', 'text', report.title || template.label)}<div class="grid">${input('day', 'Data', 'date', report.day || today())}${input('course', 'Curso', 'text', report.course || course())}</div>${template.scope === 'person' ? select('person_id', 'Participant del Centre de Dia', peopleOptions(true), true, report.person_id) : select('group_id', 'Grup del Centre de Dia', groupOptions(true), true, report.group_id)}${select('state', 'Estat', [['draft', 'Esborrany editable'], ['final', 'Definitiu: tanca l’edició']], true, 'draft')}<hr>${fields}`, form => {
+  const control = f => {
+    const name='field_'+f.key, value=values[f.key]??'';
+    if(f.type==='select')return `<select name="${name}" class="rsel" aria-label="${esc(f.label)}"><option value="">— Selecciona —</option>${f.options.map(o=>`<option value="${esc(o)}" ${o===value?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
+    if(f.type==='textarea')return `<textarea name="${name}" class="rnote" aria-label="${esc(f.label)}" maxlength="20000">${esc(value)}</textarea>`;
+    return `<input name="${name}" type="${esc(f.type)}" value="${esc(value)}" aria-label="${esc(f.label)}" maxlength="250">`;
+  };
+  const cell=f=>`<div class="ff"><label for="report_${f.key}">${esc(f.label)}</label>${control(f).replace('name="','id="report_'+f.key+'" name="')}</div>`;
+  const blocks=reportSections(report.type,template.fields).map(block=>{
+    const used=new Set(), rows=[]; const paired=block.fields.filter(f=>f.type==='select'&&block.fields.some(n=>n.key===f.key+'_notes'));
+    for(const f of paired) {const note=block.fields.find(n=>n.key===f.key+'_notes'); used.add(f.key);used.add(note.key);rows.push(`<tr><td>${esc(f.label)}</td><td>${control(f)}</td><td>${control(note)}</td></tr>`);}
+    const survey=block.fields.filter(f=>f.key.startsWith('enquesta_'));
+    for(const f of survey){used.add(f.key);rows.push(`<tr><td>${esc(f.label)}</td><td>${control(f)}</td></tr>`);}
+    const fields=block.fields.filter(f=>!used.has(f.key)); let rest='';
+    for(let i=0;i<fields.length;) {if(fields[i].type==='textarea'){rest+=`<div class="frow c1">${cell(fields[i++])}</div>`;}else{const row=[fields[i++]];if(i<fields.length&&fields[i].type!=='textarea')row.push(fields[i++]);rest+=`<div class="frow ${row.length===1?'c1':''}">${row.map(cell).join('')}</div>`;}}
+    return `<section class="fsect"><div class="fsect-title">${centreIcons[block.icon]||centreIcons.folder}${esc(block.title)}</div>${rows.length?`<div class="report-rating-scroll"><table class="rtable"><thead><tr><th>${survey.length?'Activitat / experiència':'Indicador'}</th><th>Valoració</th>${paired.length?'<th>Observacions</th>':''}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`:''}${rest}</section>`;
+  }).join('');
+  const identity=`<section class="fsect"><div class="fsect-title">${centreIcons.id}Identificació</div><div class="frow c3">${input('course','Curs','text',report.course||course())+input('day','Data','date',report.day||today())}<label>Educador/a<input value="${esc(report.created_by?teamName(report.created_by):user.name)}" readonly></label></div><div class="frow c1">${template.scope==='person'?select('person_id','Beneficiari/ària',peopleOptions(true),true,report.person_id):select('group_id','Grup',groupOptions(true),true,report.group_id)}</div><div class="frow c1">${input('title','Títol','text',report.title||template.label)}</div></section>`;
+  modal(template.label, identity+blocks+`<section class="fsect report-save-state"><div class="frow">${select('state','Estat del document',[['draft','Esborrany editable'],['final','Definitiu: tanca l’edició']],true,'draft')}</div></section>`, form => {
     const fields = Object.fromEntries(template.fields.map(f => [f.key, form[`field_${f.key}`] || '']));
     return api('reports', { id: report.id, version: report.version, type: report.type, title: form.title, day: form.day, course: form.course, person_id: form.person_id || null, group_id: form.group_id || null, state: form.state, fields });
   });
+  const cancel=document.createElement('button'); cancel.type='button';cancel.className='btn btn-ghost';cancel.dataset.reportExtra='';cancel.textContent='Cancel·lar';cancel.addEventListener('click',()=>{if(!saving)$('dialog').close();});$('editorFooter').prepend(cancel);
+  $('fields').querySelector('.report-save-state').hidden=true;
+  if(!readOnly) { $('submitEditor').textContent='Guardar esborrany';$('submitEditor').dataset.reportState='draft';$('submitEditor').classList.remove('btn-primary');$('submitEditor').classList.add('btn-draft'); const final=document.createElement('button'); final.type='submit';final.className='btn btn-primary';final.dataset.reportState='final';final.dataset.reportExtra='';final.textContent='Guardar definitiu';$('editorFooter').append(final); }
+  const presentation=reportPresentation(report.type); $('dialogTitle').innerHTML=`<span class="report-title-icon report-color-${presentation?.key||'diary'}">${centreIcons[presentation?.icon||'folder']}</span>${esc(template.label)}`;
+  if(report.type==='observation')$('fields').querySelector('[name=field_observacio]').classList.add('observation-text');
+  if(readOnly) { editorSave=null; $('submitEditor').hidden=true; for(const el of $('fields').querySelectorAll('input,select,textarea'))el.disabled=true; $('fields').querySelector('.report-save-state').hidden=true; const print=document.createElement('button'); print.type='button';print.className='btn btn-ghost';print.dataset.action='print';print.textContent='Imprimir / guardar com a PDF';print.dataset.reportExtra='';$('editorFooter').append(print); }
 }
 function attendanceContext() { const value = name => $('content').querySelector(`[name=${name}]`).value; return { group_id: value('attendanceGroup'), day: value('attendanceDay'), slot: value('attendanceSlot') }; }
 async function loadAttendance() {

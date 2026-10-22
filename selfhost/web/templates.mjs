@@ -24,3 +24,46 @@ export const templates = {
   tribuPlan: { label: 'Planificació i avaluació Tribu', scope: 'group', source: 'PLANIFICACIÓ I AVALUACIÓ TRIBU PLANTILLA.doc', fields: plan },
   groupEvaluation: { label: 'Resumen de la evaluación del grupo', scope: 'group', source: 'EVALUACION NIÑOS 2025-2026 CENTRE DE DIA.docx', fields: [field('enquestes', 'Número de encuestas recogidas', 'number'), field('resultats', 'Resultados por actividad: positivas, neutras, negativas y no participantes', 'textarea'), field('assistencia', 'Asistencia y evolución del grupo', 'textarea'), field('caracteristiques', 'Características y necesidades del grupo', 'textarea'), field('casos_prioritaris', 'Casos que requieren seguimiento prioritario', 'textarea'), field('comportament', 'Convivencia y comportamiento', 'textarea'), field('funcionen', 'Actividades que mejor y peor han funcionado y por qué', 'textarea'), field('sortides', 'Valoración de las salidas', 'textarea'), field('organitzacio', 'Organización, materiales e instalaciones', 'textarea'), field('propostes', 'Propuestas de mejora y coordinación', 'textarea'), notes] },
 };
+
+// Presentation groups only: field keys, values and validation stay unchanged.
+export function reportSections(type, fields) {
+  const remaining = new Set(fields.map(f => f.key)), sections = [];
+  const take = (title, icon, match) => { const chosen=fields.filter(f=>remaining.has(f.key)&&match(f.key)); if(chosen.length) { sections.push({title,icon,fields:chosen}); chosen.forEach(f=>remaining.delete(f.key)); } };
+  const keys = (...names) => key => names.includes(key);
+  if(type==='diary') {
+    take('Període de seguiment','calendar',keys('mes'));
+    take('ACONSEGUIR UNA ASSISTÈNCIA ESTABLE I CONTINUADA','calendar',key=>key.startsWith('assist_'));
+    take('MILLORAR ELS HÀBITS D’ESTUDI','edit',key=>/^indicador_[0-4](_notes)?$/.test(key));
+    take('MILLORAR LES RELACIONS INTERPERSONALS','users',key=>/^indicador_([5-9]|10)(_notes)?$/.test(key));
+    take('DETECTAR SITUACIONS DE RISC','alert',key=>/^indicador_(11|12|13)(_notes)?$/.test(key));
+    take('MILLORAR ELS HÀBITS DE VIDA SALUDABLE','check',keys('esport','berenar'));
+    take('Informació addicional','pin',keys('escola','programes','la_caixa','voluntaris','grup','observacions'));
+  } else if(type.startsWith('evaluation')) {
+    take('Informació del beneficiari/ària','id',keys('escola','programes','la_caixa','voluntaris','grup'));
+    take('REFORÇ EDUCATIU','edit',key=>/^competencia_([0-9]|10)(_notes)?$/.test(key));
+    take('ACTIVITATS LÚDIQUES','users',key=>/^competencia_(11|12)(_notes)?$/.test(key));
+    take('Evolució i observacions','pin',keys('evolucio','observacions'));
+  } else if(type==='groupFollowup') {
+    take('1. DADES GENERALS','id',keys('trimestre','participants','edat'));
+    take('2. OBSERVACIÓ I VALORACIÓ (1 = molt baix / 10 = molt alt)','chart',key=>key.startsWith('dim_'));
+    take('3. OBJECTIUS I EVOLUCIÓ TRIMESTRAL','target',key=>key.startsWith('objectiu_')||key==='evolucio');
+    take('4. FORTALESES, ASPECTES A MILLORAR I ESTRATÈGIES','flag',keys('fortaleses','millores','estrategies'));
+    take('6. EVIDÈNCIES GRÀFIQUES O DOCUMENTALS','edit',keys('evidencies'));
+    take('7. OBSERVACIONS FINALS I PROJECCIONS PER AL PROPER TRIMESTRE','pin',keys('projeccions','observacions'));
+  } else if(type==='activityPlan'||type==='tribuPlan') {
+    take('Període i rutina setmanal','calendar',keys('mes','rutina'));
+    take('Activitats planificades','calendar',keys('activitats'));
+    take('Ítems d’avaluació per sessió','chart',key=>key.startsWith('aval_'));
+    take('Valoració global del mes','check',keys('incidencies','positius','millora','observacions'));
+  } else if(type==='observation') take('Diari d’observació','eye',()=>true);
+  else if(type==='generalEvaluation') {
+    take('Dades del grup','id',keys('grup'));
+    take('Valoració de les activitats i experiències','clipboard',key=>key.startsWith('enquesta_'));
+    take('Observacions i propostes','pin',()=>true);
+  } else if(type==='groupEvaluation') {
+    take('Resum de l’avaluació del grup','chart',key=>key!=='propostes'&&key!=='observacions');
+    take('Propostes i millores','flag',()=>true);
+  }
+  take('Informació addicional','pin',()=>true);
+  return sections;
+}
