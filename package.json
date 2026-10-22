@@ -6,7 +6,7 @@
   "scripts": {
     "test:import": "node --test scripts/test-import-persones.mjs",
     "selfhost:start": "node selfhost/server.mjs",
-    "selfhost:test": "node --test scripts/test-import-persones.mjs selfhost/test/server.test.mjs",
+    "selfhost:test": "node --test scripts/test-import-persones.mjs selfhost/test/*.test.mjs",
     "test:rules": "firebase emulators:exec --only firestore \"node scripts/test-firestore-rules.js\"",
     "ops:readiness": "powershell -ExecutionPolicy Bypass -File .\\ops-readiness.ps1",
     "ops:routes": "powershell -ExecutionPolicy Bypass -File .\\demo-routes-check.ps1",

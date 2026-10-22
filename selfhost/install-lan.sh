@@ -43,7 +43,26 @@ tar -xzf "$archive" --strip-components=1 -C "$release"
 export NEXE_BIND_IP="$bind_ip"
 export ADMIN_EMAIL=''
 export ADMIN_PASSWORD=''
-if ! "${docker_cmd[@]}" volume inspect "${project}_pilot-data" >/dev/null 2>&1; then
+initialized=false
+if "${docker_cmd[@]}" volume inspect "${project}_pilot-data" >/dev/null 2>&1; then
+    # The previous container may have created the volume without ever starting.
+    probe_code="$(cat "$release/selfhost/probe-data.mjs")"
+    probe_code+=$'\nprocess.exit(probePilotDatabase("/data/nexesocial.sqlite"));'
+    if "${docker_cmd[@]}" run --rm --read-only --network none --cap-drop ALL \
+        --security-opt no-new-privileges:true --user node \
+        --mount "type=volume,src=${project}_pilot-data,dst=/data,readonly" \
+        node:24-bookworm-slim node --input-type=module -e "$probe_code"; then
+        initialized=true
+    else
+        probe_status=$?
+        if [[ "$probe_status" != 3 ]]; then
+            echo 'No se puede verificar la base existente. Se conserva intacta; no se recrearán las cuentas.' >&2
+            exit 1
+        fi
+        echo 'El volumen existe, pero la primera cuenta todavía no se creó. Se completará ahora.'
+    fi
+fi
+if [[ "$initialized" != true ]]; then
     read -r -p 'Correo de la cuenta administradora de pruebas: ' ADMIN_EMAIL
     [[ "$ADMIN_EMAIL" == *@*.* ]] || { echo 'Correo no válido.' >&2; exit 1; }
     read -r -s -p 'Contraseña NUEVA para las pruebas (mínimo 12 caracteres): ' ADMIN_PASSWORD; printf '\n'
@@ -67,7 +86,7 @@ for attempt in $(seq 1 30); do
     status="$("${docker_cmd[@]}" inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container")"
     if [[ "$status" == healthy ]]; then
         echo "PRUEBA PREPARADA: abre http://$bind_ip:4080 desde este ordenador o la misma red."
-        echo 'Accede con la cuenta de pruebas que acabas de definir.'
+        echo 'Accede con tu cuenta de pruebas; si ya existía, se conserva la anterior.'
         echo 'No se ha modificado ningún servicio de producción ni se ha configurado HTTPS todavía.'
         exit 0
     fi

@@ -89,7 +89,7 @@ Restaurar primero en una instalación de pruebas: detener la aplicación, conser
 Desde la raíz:
 
 ```sh
-node --test scripts/test-import-persones.mjs selfhost/test/server.test.mjs
+node --test scripts/test-import-persones.mjs selfhost/test/*.test.mjs
 ```
 
 33 pruebas pasan: validación y fechas, duplicados, atomicidad e idempotencia, acceso, altas y edición con conflictos, relaciones, programas, bajas con histórico, coherencia del módulo Centro de Día, seguimientos, asistencia, informes definitivos, importación con rollback, revocación, copia consistente, actualización desde el primer paquete y persistencia tras reabrir la base. Las pruebas de servidor invocan el manejador HTTP real **dentro del proceso, sin sockets**. No demuestran conectividad del proxy, cookies en navegador ni funcionamiento de Docker.
@@ -99,6 +99,14 @@ Se comprobó además el lector XLSX con libros sintéticos en memoria: ZIP almac
 La comprobación con conexiones locales quedó bloqueada por el entorno; la solicitud de ejecución fuera del límite fue rechazada automáticamente. Tampoco se completó una revisión visual de navegador. Pendiente: probar lector XLSX en navegadores del equipo con un Excel representativo, ejecutar la instalación Linux, verificar impresión/PDF, carga concurrente, copia/restauración y validación funcional con responsables.
 
 ## Límites de esta entrega
+
+### Recuperar el primer arranque con error de permisos
+
+El primer intento en `srv-naum` construyó la imagen pero falló con `EACCES` al abrir `/app/selfhost/server.mjs`. La extracción con permisos privados dejaba el código propiedad de root dentro de la imagen. El Dockerfile corregido usa `COPY --chown=node:node` en las dos copias de código y conserva `USER node` y el sistema de archivos de solo lectura.
+
+Repetir el instalador de la versión corregida conserva el volumen `nexesocial-pruebas_pilot-data`. Una comprobación de solo lectura diferencia entre base inicializada, volumen vacío y base ilegible. Si todavía no hay cuentas, vuelve a pedir las credenciales iniciales; si hay cuentas, las conserva; si no puede comprobar la base, se detiene sin modificarla. No borrar el volumen ni ejecutar el servicio como root.
+
+Pasan cuatro pruebas adicionales sobre estos permisos y estados de recuperación: **37 pruebas en total**. El reintento de Docker en Linux y su comprobación desde navegador siguen pendientes de la salida real del servidor.
 
 - Formularios contrastados con el texto de ocho originales de `Plantillas CD/`: no se ha demostrado equivalencia de todos los campos ni maquetación idéntica. La planificación Tribu reutiliza por ahora el formulario de actividades y su `.doc` antiguo sigue pendiente de revisión. La encuesta del niño/a y el resumen grupal ya se distinguen; sus escalas y presentación deben validarse. El diario funciona por registro mensual, no como la matriz anual del Excel.
 - No incluye exportación con el diseño original Excel/Word, firma, adjuntos, genogramas, clínica, captación, subvenciones, correo ni integración SinergiaCRM.
