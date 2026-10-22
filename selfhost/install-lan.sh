@@ -72,6 +72,18 @@ if [[ "$initialized" != true ]]; then
     unset repeated
 else
     echo 'Se conserva la base del piloto y sus cuentas existentes.'
+    echo 'Creando una copia coherente antes de actualizar…'
+    backup_code='import { DatabaseSync, backup } from "node:sqlite";
+import { mkdirSync, chmodSync } from "node:fs";
+const dir = "/data/backups";
+mkdirSync(dir, { recursive: true, mode: 0o700 });
+const path = `${dir}/antes-actualizar-${new Date().toISOString().replace(/[:.]/g,"-")}.sqlite`;
+const db = new DatabaseSync("/data/nexesocial.sqlite", { readOnly: true });
+try { await backup(db, path); chmodSync(path, 0o600); console.log("Copia guardada en el volumen del piloto:", path); } finally { db.close(); }'
+    "${docker_cmd[@]}" run --rm --read-only --network none --cap-drop ALL \
+        --security-opt no-new-privileges:true --user node \
+        --mount "type=volume,src=${project}_pilot-data,dst=/data" \
+        node:24-bookworm-slim node --input-type=module -e "$backup_code"
 fi
 compose=("${docker_cmd[@]}" compose --project-name "$project" --file "$release/selfhost/compose.pruebas.yaml")
 # -q comprueba el modelo sin imprimir el entorno ni la contraseña.

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -39,4 +39,20 @@ test('corrupt or unrecognized databases fail closed without overwriting data', (
     const other = join(directory, 'other.sqlite'); const db = new DatabaseSync(other); db.exec('CREATE TABLE unexpected(id TEXT)'); db.close();
     assert.equal(probePilotDatabase(other), 4);
   } finally { rmSync(directory, { recursive: true, force: true }); }
+});
+
+test('installer backup includes committed WAL data before upgrading an existing pilot', async () => {
+  const directory = mkdtempSync(join(tmpdir(), 'nexe-before-upgrade-'));
+  const db = new DatabaseSync(join(directory,'nexesocial.sqlite'));
+  try {
+    db.exec("PRAGMA journal_mode=WAL; CREATE TABLE saved(value TEXT); INSERT INTO saved VALUES('contenido anterior')");
+    const installer = readFileSync(new URL('../install-lan.sh',import.meta.url),'utf8');
+    const code = /backup_code='([\s\S]*?)'\r?\n/.exec(installer)?.[1]; assert.ok(code);
+    assert.ok(installer.indexOf('backup_code=') < installer.indexOf('up --detach --build'));
+    const localCode = code.replaceAll('/data',directory.replaceAll('\\','/'));
+    await import('data:text/javascript;base64,' + Buffer.from(localCode).toString('base64'));
+    const backups = readdirSync(join(directory,'backups')); assert.equal(backups.length,1);
+    const copy = new DatabaseSync(join(directory,'backups',backups[0]),{readOnly:true});
+    try { assert.equal(copy.prepare('SELECT value FROM saved').get().value,'contenido anterior'); assert.equal(copy.prepare('PRAGMA integrity_check').get().integrity_check,'ok'); } finally { copy.close(); }
+  } finally { db.close(); rmSync(directory,{recursive:true,force:true}); }
 });

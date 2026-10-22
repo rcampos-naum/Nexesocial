@@ -169,3 +169,18 @@ dialog::backdrop { background: rgb(15 23 42 / 58%); backdrop-filter: blur(8px); 
   h1 { font-size: 22px; } table { font-size: 10px; } th, td { padding: 5px; }
 }
 @media(prefers-reduced-motion:reduce) { *, *::before, *::after { transition: none !important; } }
+.profile-section { border:1px solid #e2e8f0; border-radius:12px; margin:16px 0; padding:16px; }
+.profile-section summary { color:#1d4ed8; font-weight:700; cursor:pointer; }
+.profile-multi { min-width:0; border:1px solid #e2e8f0; border-radius:8px; margin:14px 0; padding:12px; }
+.profile-multi legend { font-weight:700; font-size:.86rem; }
+.profile-multi label { display:flex; align-items:flex-start; font-size:.78rem; font-weight:400; }
+.profile-multi input { flex-shrink:0; margin-top:4px; }
+.profile-values { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; }
+.profile-values dt { font-size:.78rem; color:#64748b; }
+.profile-values dd { margin:5px 0; white-space:pre-wrap; overflow-wrap:anywhere; }
+.permanent-number { background:#eff6ff; color:#1d4ed8; padding:12px; border-radius:8px; }
+.totals-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr)); gap:20px; }
+.totals-grid > .card { margin:0; min-width:0; }
+.total-bar { width:100px; height:12px; fill:#2563eb; }
+@media print { #printArea .card { break-inside:avoid; } #printArea .totals-grid { display:block; } }
+.totals-filters { grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); }

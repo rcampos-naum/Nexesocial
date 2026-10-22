@@ -25,7 +25,7 @@ La herramienta no se considera entregada solo por tener pantallas o superar prue
 - Corregida la distinción entre la encuesta de los niños y el resumen grupal: no son valoraciones clínicas. Las etiquetas de respuesta de la encuesta son una adaptación textual y deben validarse con el equipo.
 - Añadidos campos de identificación en evaluaciones y diario, asistencia mensual en el diario y objetivos, evolución, fortalezas, mejoras, estrategias y descripción de evidencias en seguimiento grupal. La matriz anual y la planificación por cada semana/sesión todavía requieren completar su equivalencia y presentación.
 - Los informes guardan su definición de formulario para conservar la interpretación del contenido al actualizar plantillas. Una actualización desde el primer paquete mantiene las fichas, vinculaciones y formularios anteriores.
-- 33 pruebas automáticas pasan. Son validaciones de lógica y del manejador de solicitudes sin red. Sigue pendiente la aceptación de navegador y del servidor Linux, con los límites de prueba ya descritos en la guía.
+- 44 pruebas automáticas pasan. Se revisaron localmente el acceso, las familias, la ficha ampliada, los totales y el menú reducido en navegador con datos ficticios. Sigue pendiente la aceptación en el servidor Linux.
 
 ## Orden de ejecución y comprobación
 
@@ -45,3 +45,7 @@ Confirmar las columnas del Excel; si contiene varias personas por familia y cód
 ## Fuera de esta primera entrega
 
 SinergiaCRM, captación, contabilidad, gestión de otros departamentos especializados, clínica, firma avanzada, genogramas y rediseño general del resto del repositorio. Los adjuntos y exportaciones con maquetación idéntica a Excel/Word deben decidirse según lo imprescindible para la operativa del centro; por ahora se conservan los originales y se ofrece impresión del informe adaptado.
+
+## Añadido al alcance el 22 de octubre
+
+Incluidos los campos de la ficha original, la pantalla Totales, iconos diferenciados para el menú reducido y numeración de expediente única y permanente por persona. La numeración existente se conserva al actualizar. Archivo/reactivación sustituye a la eliminación de personas. Los totales se basan en perfiles actuales y personas únicas, con filtros por programa/curso/grupo y resumen CSV. Se han completado 44 pruebas automáticas y una revisión local en navegador con datos ficticios; sigue pendiente la actualización y aceptación en Linux.

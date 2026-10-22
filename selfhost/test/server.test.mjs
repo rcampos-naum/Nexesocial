@@ -69,6 +69,41 @@ test('complete local workflow, permissions, idempotency and durable data', async
       assert.equal((await request('families/update', { id: family, version: 1, name: 'Familia actualizada', contact: 'Contacto', notes: '' })).status, 200);
       assert.equal((await request('families/update', { id: family, version: 1, name: 'Sobrescritura', contact: '', notes: '' })).status, 409);
     });
+    await t.test('expanded profile validates categories and preserves omitted fields across edits', async () => {
+      const current = () => app.db.prepare('SELECT * FROM people WHERE id=?').get(person);
+      const update = extra => request('people/update', { ...nora, id: person, version: current().version, family_id: family, ...extra });
+      const profile = { genere:'DONA', situacio_domicili:'Lloguer', derivat_per:['CMSS','CENTRE EDUCATIU'], alergies_aliments:'Prueba ficticia', observacions:'Observación de prueba' };
+      assert.equal((await update({ profile })).status,200);
+      assert.deepEqual(JSON.parse(current().profile_json),profile);
+      assert.equal((await update({ telefon:'600123456' })).status,200);
+      assert.deepEqual(JSON.parse(current().profile_json),profile);
+      const before = current();
+      assert.equal((await update({ profile:{genere:'inventado'} })).status,400);
+      assert.equal((await update({ profile:{derivat_per:'CMSS'} })).status,400);
+      assert.equal((await update({ profile:{unknown:'dato'} })).status,400);
+      assert.deepEqual(current(),before);
+      assert.equal((await update({ profile:{derivat_per:[],observacions:''} })).status,200);
+      assert.equal(JSON.parse(current().profile_json).genere,'DONA');
+      assert.deepEqual(JSON.parse(current().profile_json).derivat_per,[]);
+    });
+    await t.test('person number is permanent through archival, return, family changes and database writes', async () => {
+      const current = () => app.db.prepare('SELECT * FROM people WHERE id=?').get(person);
+      const number = current().number;
+      for (const status of ['archived','active']) {
+        assert.equal((await request('people/update',{...nora,id:person,version:current().version,status})).status,200);
+        assert.equal(current().number,number);
+      }
+      assert.equal((await request('people/family',{person_id:person,family_id:family,version:current().version})).status,200);
+      assert.equal(current().number,number);
+      assert.equal((await request('people/update',{...nora,id:person,version:current().version,number:'UA2099-9999'})).status,400);
+      assert.equal((await request('people',{...nora,number:'UA2099-9999'})).status,400);
+      assert.throws(() => app.db.prepare('UPDATE people SET number=? WHERE id=?').run('changed',person),/permanente/);
+      assert.throws(() => app.db.prepare('DELETE FROM people WHERE id=?').run(person),/archivan/);
+      assert.equal(current().number,number);
+      const other = await request('people',{...nora,nom:'Otra persona',dni:'NEW-UNIQUE'});
+      assert.equal(other.status,201); assert.notEqual(other.body.number,number);
+      assert.equal((await request('people',nora)).status,409);
+    });
     await t.test('records attendance and rejects stale or unregistered updates atomically', async () => {
       const payload = { group_id: group, day: '2026-10-21', slot: 'general', rows: [{ person_id: person, status: 'P', version: 0 }] };
       assert.equal((await request('attendance', payload)).status, 200);
@@ -174,6 +209,7 @@ test('complete local workflow, permissions, idempotency and durable data', async
         const asset = await dispatch(path); assert.equal(asset.status, 200); assert.equal(asset.headers.get('content-type'), 'image/png');
       }
       assert.equal((await dispatch('/assets/server.mjs')).status, 404);
+      for (const path of ['/person-schema.mjs','/totals.mjs']) assert.equal((await dispatch(path)).status,200);
       assert.ok(!JSON.stringify((await request('data')).body).includes('Local-test-only'));
     });
     await t.test('consistent SQLite backup includes reports and passes integrity check', async () => {
@@ -209,17 +245,20 @@ test('upgrades first test package without losing people, participation or origin
     original.db.prepare('INSERT INTO groups_cd(id,name,program_id,course) VALUES(?,?,?,?)').run('group1', 'Grupo anterior', 'program1', '2026-27');
     original.db.prepare('INSERT INTO enrollments VALUES(?,?,1)').run('person1', 'group1');
     original.db.prepare('INSERT INTO reports(id,type,person_id,day,course,title,body,state,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)').run('report1', 'generalEvaluation', 'person1', '2026-10-21', '2026-27', 'Informe anterior', JSON.stringify({ personal: 'Contenido anterior conservado' }), 'draft', actor, '2026-10-21', '2026-10-21');
-    original.db.exec('DROP TABLE program_memberships; ALTER TABLE programs DROP COLUMN kind; ALTER TABLE programs DROP COLUMN version; ALTER TABLE groups_cd DROP COLUMN active; ALTER TABLE groups_cd DROP COLUMN version; ALTER TABLE reports DROP COLUMN schema_json; PRAGMA user_version=0');
+    original.db.exec('DROP TABLE program_memberships; ALTER TABLE programs DROP COLUMN kind; ALTER TABLE programs DROP COLUMN version; ALTER TABLE groups_cd DROP COLUMN active; ALTER TABLE groups_cd DROP COLUMN version; ALTER TABLE reports DROP COLUMN schema_json; ALTER TABLE people DROP COLUMN profile_json; ALTER TABLE people DROP COLUMN status; PRAGMA user_version=0');
     original.db.close(); closed = true;
     const updated = createApplication({ dataDir: directory });
     try {
       assert.equal(updated.db.prepare('SELECT nom FROM people WHERE id=?').get('person1').nom, 'Prueba');
+      assert.equal(updated.db.prepare('SELECT number,profile_json,status FROM people WHERE id=?').get('person1').number, 'UA2026-0001');
+      assert.equal(updated.db.prepare('SELECT profile_json FROM people WHERE id=?').get('person1').profile_json, '{}');
+      assert.equal(updated.db.prepare("SELECT value FROM counters WHERE name='people'").get().value, 1);
       assert.equal(updated.db.prepare('SELECT kind FROM programs WHERE id=?').get('program1').kind, 'general');
       assert.equal(updated.db.prepare('SELECT active FROM program_memberships WHERE person_id=?').get('person1').active, 1);
       const report = updated.db.prepare('SELECT * FROM reports WHERE id=?').get('report1');
       assert.equal(JSON.parse(report.body).personal, 'Contenido anterior conservado');
       assert.ok(JSON.parse(report.schema_json).fields.some(field => field.key === 'personal'));
-      assert.equal(updated.db.prepare('PRAGMA user_version').get().user_version, 3);
+      assert.equal(updated.db.prepare('PRAGMA user_version').get().user_version, 4);
     } finally { updated.db.close(); }
   } finally { if (!closed) original.db.close(); rmSync(directory, { recursive: true, force: true }); }
 });

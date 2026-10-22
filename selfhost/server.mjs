@@ -7,6 +7,7 @@ import { randomBytes, randomUUID, scryptSync, timingSafeEqual, createHash } from
 import { validateRows, classifyRows, identityKeys } from '../public/import-persones-core.mjs';
 import { templates } from './web/templates.mjs';
 import { templates as legacyTemplates } from './legacy-templates-v1.mjs';
+import { personFields } from './web/person-schema.mjs';
 
 const root = dirname(fileURLToPath(import.meta.url));
 const hash = value => createHash('sha256').update(value).digest('hex');
@@ -57,6 +58,8 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
       ['groups_cd', 'active', 'INTEGER NOT NULL DEFAULT 1'],
       ['groups_cd', 'version', 'INTEGER NOT NULL DEFAULT 1'],
       ['reports', 'schema_json', "TEXT NOT NULL DEFAULT ''"],
+      ['people', 'profile_json', "TEXT NOT NULL DEFAULT '{}'"],
+      ['people', 'status', "TEXT NOT NULL DEFAULT 'active'"],
     ]) {
       if (!all(`PRAGMA table_info(${table})`).some(column => column.name === name)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${name} ${definition}`);
     }
@@ -72,7 +75,11 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
       run('INSERT INTO membership_events VALUES(?,?,?,?,?,?,?)', randomUUID(), membership.person_id, membership.program_id, 'start', membership.started_at, null, now());
       if (membership.ended_at) run('INSERT INTO membership_events VALUES(?,?,?,?,?,?,?)', randomUUID(), membership.person_id, membership.program_id, 'end', membership.ended_at, null, now());
     }
-    db.exec('PRAGMA user_version=3');
+    const issued = all('SELECT number FROM people').reduce((max,p) => Math.max(max, Number(/^UA\d{4}-(\d+)$/.exec(p.number)?.[1] || 0)), 0);
+    run("INSERT INTO counters(name,value) VALUES('people',?) ON CONFLICT(name) DO UPDATE SET value=MAX(value,excluded.value)", issued);
+    db.exec(`CREATE TRIGGER IF NOT EXISTS people_number_permanent BEFORE UPDATE OF number ON people WHEN NEW.number IS NOT OLD.number BEGIN SELECT RAISE(ABORT,'El número de expediente es permanente'); END;
+      CREATE TRIGGER IF NOT EXISTS people_no_delete BEFORE DELETE ON people BEGIN SELECT RAISE(ABORT,'Las personas se archivan; su expediente no se elimina'); END;
+      PRAGMA user_version=4`);
   });
   const audit = (user, action, id) => run('INSERT INTO audit(actor,action,entity_id,at) VALUES(?,?,?,?)', user.id, action, id, now());
   if (!get('SELECT id FROM users LIMIT 1')) {
@@ -101,9 +108,20 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
     audit(user, 'program.enroll', person);
   }
   function readPerson(input) {
+    requireValue(!Object.hasOwn(input, 'number') && !Object.hasOwn(input, 'numero_expediente'), 'El número de expediente se asigna automáticamente y no se puede cambiar');
     const mapping = Object.fromEntries(['nom', 'cognoms', 'dni', 'data_naixement', 'telefon', 'email', 'poblacio'].map((key, i) => [key, i]));
     const [row] = validateRows([{ rowNumber: 1, cells: Object.keys(mapping).map(key => input[key] ?? '') }], mapping);
     requireValue(row && row.status === 'new', row?.messages.join('. ') || 'Ficha vacía'); return row.person;
+  }
+  function readProfile(value) {
+    requireValue(value && typeof value === 'object' && !Array.isArray(value), 'Ficha ampliada no válida');
+    requireValue(Object.keys(value).every(key => personFields.some(field => field.key === key)), 'Campo de ficha no reconocido');
+    return Object.fromEntries(personFields.filter(field => Object.hasOwn(value, field.key)).map(field => {
+      const raw = value[field.key];
+      if (field.type === 'multi') { requireValue(Array.isArray(raw) && raw.length <= field.options.length && raw.every(v => field.options.includes(v)), `Selección no válida: ${field.label}`); return [field.key, [...new Set(raw)]]; }
+      const text = string(raw, field.type === 'long' ? 10000 : 250);
+      requireValue(!text || !field.options || field.options.includes(text), `Selección no válida: ${field.label}`); return [field.key, text];
+    }));
   }
   function insertPerson(person, user, familyId = null) {
     const duplicate = classifyRows([{ person, status: 'new', messages: [] }], all('SELECT * FROM people'))[0];
@@ -134,6 +152,7 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
       if (!route.startsWith('/api/')) {
         requireValue(method === 'GET', 'Método no permitido', 405);
         const assets = { '/assets/logo.png': 'NexeSocial-logo.png', '/assets/login-background.png': 'fondo-login.png' };
+        if (['/person-schema.mjs', '/totals.mjs'].includes(route)) { res.writeHead(200, { 'Content-Type': 'text/javascript' }); return res.end(readFileSync(resolve(root, 'web', route.slice(1)))); }
         if (assets[route]) { res.writeHead(200, { 'Content-Type': 'image/png' }); return res.end(readFileSync(resolve(root, '../public/img', assets[route]))); }
         const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/app.css': ['app.css', 'text/css'], '/xlsx.js': ['xlsx.js', 'text/javascript'], '/templates.mjs': ['templates.mjs', 'text/javascript'] };
         if (route === '/import-persones-core.mjs') { res.writeHead(200, { 'Content-Type': 'text/javascript' }); return res.end(readFileSync(resolve(root, '../public/import-persones-core.mjs'))); }
@@ -192,7 +211,7 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
         write(user); const id = foreign('families', body.id);
         atomic(() => { requireValue(get('SELECT version FROM families WHERE id=?', id).version === body.version, 'La familia cambió. Recarga antes de guardar', 409); run('UPDATE families SET name=?,contact=?,notes=?,version=version+1 WHERE id=?', string(body.name, 120, true), string(body.contact), string(body.notes, 10000), id); audit(user, 'family.update', id); }); return send(200, { ok: true });
       }
-      if (route === '/api/people' && method === 'POST') { write(user); const person = readPerson(body); const family = nullable('families', body.family_id); return send(201, atomic(() => insertPerson(person, user, family))); }
+      if (route === '/api/people' && method === 'POST') { write(user); const person = readPerson(body); const family = nullable('families', body.family_id); const profile = readProfile(body.profile || {}); return send(201, atomic(() => { const result = insertPerson(person, user, family); run('UPDATE people SET profile_json=? WHERE id=?', JSON.stringify(profile), result.id); return result; })); }
       if (route === '/api/people/update' && method === 'POST') {
         write(user); const id = foreign('people', body.id); const person = readPerson(body); const family = nullable('families', body.family_id);
         atomic(() => {
@@ -200,6 +219,8 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
           const classified = classifyRows([{ person, status: 'new', messages: [] }], all('SELECT * FROM people WHERE id<>?', id))[0];
           requireValue(classified.status === 'new', 'Hay una coincidencia con otra ficha; revisa antes de guardar', 409);
           run('UPDATE people SET nom=?,cognoms=?,dni=?,data_naixement=?,telefon=?,email=?,poblacio=?,family_id=?,version=version+1 WHERE id=?', person.nom, person.cognoms, person.dni, person.data_naixement, person.telefon, person.email, person.poblacio, family, id);
+          if (Object.hasOwn(body, 'profile')) { const previous = JSON.parse(get('SELECT profile_json FROM people WHERE id=?', id).profile_json); run('UPDATE people SET profile_json=? WHERE id=?', JSON.stringify({ ...previous, ...readProfile(body.profile) }), id); }
+          if (Object.hasOwn(body, 'status')) { requireValue(['active','archived'].includes(body.status), 'Estado no válido'); run('UPDATE people SET status=? WHERE id=?', body.status, id); }
           run('DELETE FROM identities WHERE person_id=?', id); for (const key of identityKeys(person)) run('INSERT INTO identities VALUES(?,?)', hash(key), id); audit(user, 'person.update', id);
         }); return send(200, { ok: true });
       }
