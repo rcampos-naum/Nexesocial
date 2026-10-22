@@ -158,3 +158,51 @@ dialog.cd-modal label.ff { font-size:.62rem; font-weight:800; text-transform:upp
 .person-search-controls { display:flex; gap:10px; flex-grow:1; }
 #personType { max-width:150px; }
 @media(max-width:768px) { .person-search-controls { flex-wrap:wrap; } }
+/* Centre de Dia adapters use the original groups, attendance and document components. */
+.centre-list-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:12px; }
+.centre-list-heading h3 { margin:0; }
+body[data-page=dayCentre] .filter-group label { margin-top:0; }
+body[data-page=dayCentre] .nexe-card .table-wrap { border:0; border-radius:0; }
+body[data-page=dayCentre] .nexe-table th { text-transform:none; letter-spacing:normal; }
+body[data-page=dayCentre] .btn-accion { color:inherit; padding:6px 12px; }
+body[data-page=dayCentre] .btn-beneficiarios { color:#2563eb; }
+body[data-page=dayCentre] .btn-asistencia { color:#16a34a; }
+body[data-page=dayCentre] .btn-editar { color:#7c3aed; }
+.type-pill svg,.stat-chip svg,.doc-card-badge svg { width:14px; height:14px; vertical-align:middle; flex-shrink:0; }
+.report-pill-divider { border-left:1px solid #e2e8f0; margin:0 4px; }
+.type-sel-card .name,.type-sel-card .desc { display:block; }
+.type-sel-grid { margin-bottom:20px; }
+.stat-box.justificadas { background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%); }
+body[data-page=attendance] #attendanceStats { margin-top:20px; }
+body[data-page=attendance] #attendanceStats .stat-label { color:inherit; }
+@media(max-width:768px) { body[data-page=reports] .type-sel-grid { grid-template-columns:1fr; } .centre-list-heading { flex-wrap:wrap; } }
+
+/* Colours from the approved document types, expressed as classes for the local security policy. */
+.stat-chip.report-color-diary { border-left:3px solid #3b82f6; }
+.stat-chip.report-color-diary .n,.type-sel-card.report-color-diary .name,.type-sel-card.report-color-diary .ticon { color:#3b82f6; }
+.type-sel-card.report-color-diary { border-color:#3b82f630; }
+.doc-card-badge.report-color-diary { color:#3b82f6; background:#eff6ff; }
+.stat-chip.report-color-observation { border-left:3px solid #8b5cf6; }
+.stat-chip.report-color-observation .n,.type-sel-card.report-color-observation .name,.type-sel-card.report-color-observation .ticon { color:#8b5cf6; }
+.type-sel-card.report-color-observation { border-color:#8b5cf630; }
+.doc-card-badge.report-color-observation { color:#8b5cf6; background:#f5f3ff; }
+.stat-chip.report-color-evaluation { border-left:3px solid #10b981; }
+.stat-chip.report-color-evaluation .n,.type-sel-card.report-color-evaluation .name,.type-sel-card.report-color-evaluation .ticon { color:#10b981; }
+.type-sel-card.report-color-evaluation { border-color:#10b98130; }
+.doc-card-badge.report-color-evaluation { color:#10b981; background:#ecfdf5; }
+.stat-chip.report-color-survey { border-left:3px solid #0ea5e9; }
+.stat-chip.report-color-survey .n,.type-sel-card.report-color-survey .name,.type-sel-card.report-color-survey .ticon { color:#0ea5e9; }
+.type-sel-card.report-color-survey { border-color:#0ea5e930; }
+.doc-card-badge.report-color-survey { color:#0ea5e9; background:#f0f9ff; }
+.stat-chip.report-color-followup { border-left:3px solid #f59e0b; }
+.stat-chip.report-color-followup .n,.type-sel-card.report-color-followup .name,.type-sel-card.report-color-followup .ticon { color:#f59e0b; }
+.type-sel-card.report-color-followup { border-color:#f59e0b30; }
+.doc-card-badge.report-color-followup { color:#f59e0b; background:#fffbeb; }
+.stat-chip.report-color-plan { border-left:3px solid #ef4444; }
+.stat-chip.report-color-plan .n,.type-sel-card.report-color-plan .name,.type-sel-card.report-color-plan .ticon { color:#ef4444; }
+.type-sel-card.report-color-plan { border-color:#ef444430; }
+.doc-card-badge.report-color-plan { color:#ef4444; background:#fef2f2; }
+.stat-chip.report-color-groupEval { border-left:3px solid #06b6d4; }
+.stat-chip.report-color-groupEval .n,.type-sel-card.report-color-groupEval .name,.type-sel-card.report-color-groupEval .ticon { color:#06b6d4; }
+.type-sel-card.report-color-groupEval { border-color:#06b6d430; }
+.doc-card-badge.report-color-groupEval { color:#06b6d4; background:#ecfeff; }
