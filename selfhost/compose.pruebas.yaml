@@ -1,0 +1,31 @@
+# Solo pruebas con datos ficticios en la red local. Para datos reales, usar HTTPS.
+services:
+  nexesocial:
+    build:
+      context: ..
+      dockerfile: selfhost/Dockerfile
+    restart: unless-stopped
+    init: true
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 512m
+    environment:
+      SITE_ORIGIN: http://${NEXE_BIND_IP:?Indica la IP LAN del servidor}:4080
+      COOKIE_SECURE: "0"
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    ports:
+      - "${NEXE_BIND_IP}:4080:4080"
+    volumes:
+      - pilot-data:/app/selfhost/data
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:4080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+volumes:
+  pilot-data:

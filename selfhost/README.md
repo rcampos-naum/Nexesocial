@@ -48,6 +48,20 @@ Abrir `http://127.0.0.1:4080`. La contraseña debe tener al menos 12 caracteres.
 
 No se ha ejecutado esta instalación en vuestro servidor. El ejemplo no modifica producción.
 
+### Piloto previo en la red local
+
+Para `srv-naum` se ha confirmado Ubuntu 26.04.1, Docker 29.1.3 y Compose 2.40.3; Node no está instalado en el host y no hace falta para la variante Docker. `install-lan.sh` prepara un piloto con el archivo `compose.pruebas.yaml`, proyecto `nexesocial-pruebas`, volumen `pilot-data` y directorio `~/nexesocial-pruebas`, separados de otras aplicaciones. Requiere un SHA completo de la versión revisada y comprueba que la IP indicada pertenece al servidor. No instala paquetes, cambia el firewall ni modifica nginx.
+
+Ejecutar el instalador desde un archivo descargado y verificado, indicando el SHA publicado:
+
+```sh
+bash install-lan.sh SHA_COMPLETO_PUBLICADO 10.0.0.85
+```
+
+Si Docker necesita `sudo`, la contraseña se introduce exclusivamente en la terminal. En la primera instalación pide correo y contraseña de una cuenta de pruebas; no los imprime ni los escribe en archivos del repositorio. Conserva los datos en el volumen al repetir el instalador. La cuenta inicial permanece en la configuración interna del contenedor durante esta fase; antes de uso real se debe retirar esa contraseña del entorno y recrear el servicio con la configuración HTTPS.
+
+La dirección inicial es `http://10.0.0.85:4080`, solo para datos ficticios. El instalador no abre el firewall: si el contenedor está saludable pero otro ordenador no conecta, diagnosticar la red antes de cambiar reglas. La instalación no se da por completada hasta recibir la salida del instalador y comprobar el acceso desde navegador. Para el uso real seguir después la configuración HTTPS de este documento; no mezclar el volumen de pruebas con datos reales sin acordar su transición.
+
 1. Copiar el repositorio o el paquete de entrega conservando `selfhost/` y `public/import-persones-core.mjs`.
 2. Crear un subdominio dedicado y su certificado HTTPS; no sustituir ninguna web existente.
 3. Copiar `selfhost/.env.example` a `selfhost/.env`; ajustar el dominio exacto en `SITE_ORIGIN` (sin barra final), correo y contraseña inicial. Restringir el archivo: `chmod 600 selfhost/.env`.

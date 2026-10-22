@@ -6,6 +6,7 @@
 selfhost/data/
 selfhost/backups/
 selfhost/.env
+selfhost/.env.*
 **/*.sqlite
 **/*.sqlite-wal
 **/*.sqlite-shm
