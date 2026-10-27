@@ -258,3 +258,6 @@ body[data-page=reports] dialog.cd-modal .firebase-original .act-row .ff input { 
 .type-sel-card.report-color-general { border-color:#0ea5e930; }
 .doc-card-badge.report-color-general { color:#0ea5e9; background:#f0f9ff; }
 .fb-print-value { white-space:pre-wrap; font-size:.8rem; }
+/* Native monthly controls in Firebase have no top margin or forced block layout. */
+body[data-page=reports] dialog.cd-modal .firebase-original td > input[data-f],
+body[data-page=reports] dialog.cd-modal .firebase-original td > select[data-f] { margin:0; display:inline-block; }
