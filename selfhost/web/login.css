@@ -1,0 +1,78 @@
+/* Access-page refresh explicitly requested on 27/10/2026. Approved module styles stay frozen. */
+body.login-body {
+  height:auto; min-height:100vh; min-height:100dvh; overflow:auto;
+  display:flex; flex-direction:column; align-items:stretch; justify-content:flex-start;
+  background:#f1f5f9; font-family:Inter,sans-serif;
+}
+.login-body .login-stage {
+  flex:1; display:flex; align-items:center; justify-content:center;
+  padding:40px 24px; background:radial-gradient(ellipse at 12% 15%,#e1f3f1,transparent 55%),radial-gradient(ellipse at 90% 90%,#e2eafa,transparent 55%);
+}
+.login-body .login-layout {
+  width:100%; max-width:1040px; display:grid; grid-template-columns:1fr 1fr;
+  background:white; border:1px solid #e2e8f0; border-radius:24px; overflow:hidden;
+  box-shadow:0 24px 80px -32px rgb(15 23 42 / 25%);
+}
+.login-body .login-story {
+  position:relative; isolation:isolate; display:flex; flex-direction:column; justify-content:space-between;
+  padding:42px; min-height:560px; color:white;
+  background:linear-gradient(145deg,rgb(15 41 74 / 96%),rgb(9 85 112 / 91%) 65%,rgb(18 125 131 / 88%)),url('/assets/login-background.png') center / cover;
+}
+.login-body .login-brand { display:flex; align-items:center; gap:14px; }
+.login-body .login-brand img { width:100px; height:auto; display:block; border-radius:10px; }
+.login-body .login-brand span { font-size:.72rem; letter-spacing:.08em; line-height:1.6; text-transform:uppercase; color:#b6d9e2; max-width:130px; }
+.login-body .login-story h1 { margin:36px 0 18px; font-size:2.6rem; font-weight:600; letter-spacing:-.045em; line-height:1.13; color:white; }
+.login-body .login-story p { margin:0; max-width:330px; color:#c5dfe9; font-size:.94rem; line-height:1.7; }
+.login-body .login-features { list-style:none; padding:0; margin:32px 0 0; display:flex; flex-direction:column; gap:14px; }
+.login-body .login-features li { display:flex; align-items:center; gap:12px; color:#e0eef3; font-size:.85rem; }
+.login-body .login-features svg { width:19px; height:19px; stroke:#73d5d1; fill:none; stroke-width:1.7; flex-shrink:0; }
+.login-body .login-card {
+  box-sizing:border-box; width:100%; max-width:none; padding:48px 44px; margin:0;
+  border:0; border-radius:0; box-shadow:none; background:white; backdrop-filter:none;
+  transform:none; text-align:left; z-index:auto; display:flex; flex-direction:column; justify-content:center;
+}
+.login-body .login-eyebrow { margin:0 0 12px; font-size:.68rem; font-weight:700; color:#0f766e; text-transform:uppercase; letter-spacing:.12em; }
+.login-body .login-card h2 { margin:0; font-size:1.85rem; font-weight:650; letter-spacing:-.035em; line-height:1.2; color:#172b45; }
+.login-body .login-subtitle { margin:12px 0 30px; color:#64748b; font-size:.88rem; line-height:1.65; }
+.login-body .input-group { margin-bottom:20px; }
+.login-body .input-group label { margin:0 0 8px; font-size:.8rem; color:#334155; font-weight:600; }
+.login-body .input-group input { margin:0; padding:13px 14px; height:48px; border:1px solid #cbd5e1; border-radius:9px; background:#fff; color:#172b45; font-family:inherit; font-size:.94rem; }
+.login-body .input-group input::placeholder { color:#94a3b8; }
+.login-body .input-group input:focus { outline:3px solid #dbeafe; outline-offset:1px; border-color:#2563eb; }
+.login-body .password-field { position:relative; }
+.login-body .password-field input { padding-right:50px; }
+.login-body .password-toggle { position:absolute; right:4px; top:4px; width:40px; height:40px; padding:10px; background:transparent; border:0; border-radius:6px; color:#64748b; display:grid; place-items:center; }
+.login-body .password-toggle:hover { background:#f1f5f9; color:#2563eb; }
+.login-body .password-toggle svg { width:20px; height:20px; }
+.login-body .btn-login { display:flex; align-items:center; justify-content:center; gap:12px; margin:6px 0 0; min-height:48px; padding:13px 16px; border-radius:9px; background:#2563eb; color:white; font:600 .9rem Inter,sans-serif; }
+.login-body .btn-login svg { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2; }
+.login-body .btn-login:hover { background:#1d4ed8; }
+.login-body .btn-login:disabled { background:#94a3b8; }
+.login-body .login-note { margin:26px 0 0; padding:18px 0 0; display:flex; align-items:center; justify-content:center; gap:7px; border-top:1px solid #edf2f7; color:#64748b; }
+.login-body .login-note svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.7; flex-shrink:0; }
+.login-body .login-note p { margin:0; font-size:.7rem; line-height:1.5; color:#64748b; }
+body.login-body .main-footer {
+  position:static; inset:auto; left:auto; right:auto; bottom:auto; width:100%; height:auto;
+  min-height:56px; flex-shrink:0; margin:0; padding:16px 28px; background:#fff;
+  border-top:1px solid #e2e8f0; backdrop-filter:none; z-index:auto; transition:none;
+}
+.login-body .login-footer-content { width:100%; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 24px; font-size:.72rem; color:#64748b; line-height:1.5; }
+@media(max-width:760px) {
+  .login-body .login-stage { padding:24px 16px; }
+  .login-body .login-layout { grid-template-columns:1fr; max-width:460px; border-radius:20px; }
+  .login-body .login-story { min-height:0; padding:24px 28px; gap:0; }
+  .login-body .login-brand img { width:76px; }
+  .login-body .login-brand span { max-width:none; font-size:.65rem; }
+  .login-body .login-story h1 { margin:22px 0 0; font-size:1.9rem; }
+  .login-body .login-story p,.login-body .login-features { display:none; }
+  .login-body .login-card { padding:30px 28px; max-width:none; }
+  .login-body .login-card h2 { font-size:1.65rem; }
+  .login-body .input-group input { font-size:1rem; }
+  body.login-body .main-footer { padding:16px 20px; }
+  .login-body .login-footer-content { justify-content:center; text-align:center; }
+}
+@media(max-height:660px) and (min-width:761px) {
+  .login-body .login-stage { padding:24px; }
+  .login-body .login-story { min-height:480px; padding:32px; }
+  .login-body .login-card { padding:32px; }
+}

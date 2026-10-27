@@ -209,7 +209,7 @@ test('complete local workflow, permissions, idempotency and durable data', async
         const asset = await dispatch(path); assert.equal(asset.status, 200); assert.equal(asset.headers.get('content-type'), 'image/png');
       }
       assert.equal((await dispatch('/assets/server.mjs')).status, 404);
-      for (const path of ['/person-schema.mjs','/totals.mjs']) assert.equal((await dispatch(path)).status,200);
+      for (const path of ['/person-schema.mjs','/totals.mjs','/login.css']) assert.equal((await dispatch(path)).status,200);
       for (const path of ['/approved/shell.css','/approved/login.css','/approved/reports.css','/approved/attendance.css','/approved/groups.css','/approved/users.css','/approved/fonts.css','/approved/icons.mjs','/approved/chart.js','/approved/Inter-400.ttf']) assert.equal((await dispatch(path)).status,200,path);
       assert.equal((await dispatch('/approved/../server.mjs')).status,404);
       assert.ok(!JSON.stringify((await request('data')).body).includes('Local-test-only'));

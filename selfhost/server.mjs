@@ -157,7 +157,7 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
         const assets = { '/assets/logo.png': 'NexeSocial-logo.png', '/assets/login-background.png': 'fondo-login.png' };
         if (['/person-schema.mjs', '/totals.mjs'].includes(route)) { res.writeHead(200, { 'Content-Type': 'text/javascript' }); return res.end(readFileSync(resolve(root, 'web', route.slice(1)))); }
         if (assets[route]) { res.writeHead(200, { 'Content-Type': 'image/png' }); return res.end(readFileSync(resolve(root, '../public/img', assets[route]))); }
-        const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/app.css': ['app.css', 'text/css'], '/xlsx.js': ['xlsx.js', 'text/javascript'], '/templates.mjs': ['templates.mjs', 'text/javascript'] };
+        const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/app.css': ['app.css', 'text/css'], '/login.css': ['login.css', 'text/css'], '/xlsx.js': ['xlsx.js', 'text/javascript'], '/templates.mjs': ['templates.mjs', 'text/javascript'] };
         if (route === '/import-persones-core.mjs') { res.writeHead(200, { 'Content-Type': 'text/javascript' }); return res.end(readFileSync(resolve(root, '../public/import-persones-core.mjs'))); }
         requireValue(files[route], 'No encontrado', 404); const [file, type] = files[route];
         res.writeHead(200, { 'Content-Type': `${type}; charset=utf-8` }); return res.end(readFileSync(resolve(root, 'web', file)));
