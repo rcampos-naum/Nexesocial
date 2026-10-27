@@ -239,3 +239,22 @@ dialog.cd-modal #closeDialog:hover { background:#f1f5f9; }
 dialog.cd-modal #editorFooter { align-items:center; }
 dialog.cd-modal .rtable td { font-size:.85rem; }
 dialog.cd-modal #submitEditor.btn-draft { background:#f8fafc; color:#475569; border:1.5px dashed #94a3b8; padding:9px 17px; }
+/* Original CD controls override only the earlier generic form adapter. */
+body[data-page=reports] dialog.cd-modal .firebase-original .rtable { min-width:0; }
+body[data-page=reports] dialog.cd-modal .firebase-original .rtable td:first-child,
+body[data-page=reports] dialog.cd-modal .firebase-original .rtable td:nth-child(2) { width:auto; }
+body[data-page=reports] dialog.cd-modal .firebase-original input.rnote { min-height:0; height:auto; }
+body[data-page=reports] dialog.cd-modal .firebase-original .ff label { margin-bottom:4px; }
+.fb-evidence-row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px; border-bottom:1px solid #e2e8f0; font-size:.78rem; }
+.fb-participant-help { font-size:.75rem; color:#64748b; margin:0 0 8px; }
+body[data-page=reports] dialog.cd-modal .firebase-original .fb-participant-table { font-size:.82rem; }
+body[data-page=reports] dialog.cd-modal .firebase-original .fb-participant-table td { padding:5px; }
+body[data-page=reports] dialog.cd-modal .firebase-original .fb-participant-table select,
+body[data-page=reports] dialog.cd-modal .firebase-original .fb-participant-table input { width:100%; padding:4px 6px; margin:0; border:1px solid #e2e8f0; border-radius:5px; font-size:.75rem; font-family:inherit; }
+body[data-page=reports] dialog.cd-modal .firebase-original .act-row .ff input { padding:9px 11px; }
+.report-title-icon.report-color-general { color:#0ea5e9; }
+.stat-chip.report-color-general { border-left:3px solid #0ea5e9; }
+.stat-chip.report-color-general .n,.type-sel-card.report-color-general .name,.type-sel-card.report-color-general .ticon { color:#0ea5e9; }
+.type-sel-card.report-color-general { border-color:#0ea5e930; }
+.doc-card-badge.report-color-general { color:#0ea5e9; background:#f0f9ff; }
+.fb-print-value { white-space:pre-wrap; font-size:.8rem; }

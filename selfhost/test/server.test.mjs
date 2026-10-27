@@ -122,6 +122,37 @@ test('complete local workflow, permissions, idempotency and durable data', async
       assert.equal(app.db.prepare('SELECT count(*) total FROM report_versions').get().total, 2);
       assert.equal((await request('reports', { ...payload, fields: { unknown: 'extra' } })).status, 400);
     });
+    await t.test('original Firebase forms persist monthly grids, activities, evidence and identified participants with validation',async()=>{
+      const base={day:'2026-10-27',course:'2026-27',state:'draft',title:'Prueba original'};
+      const annual=await request('reports',{...base,type:'firebaseDiary',person_id:person,fields:{educador:'Educador fictici',assist_raco_oct:'0',hab_organitza__oct:'bona',obs_habits:'Conservar observacion'}});assert.equal(annual.status,200);
+      const saved=(await request('reports?id='+annual.body.id)).body;assert.equal(JSON.parse(saved.body).assist_raco_oct,'0');
+      assert.equal((await request('reports',{...base,type:'firebaseDiary',person_id:person,fields:{assist_raco_oct:'32'}})).status,400);
+      const rows=[{data:'2026-10-27',activitat:'Activitat ficticia',objectiu:'Objectiu',materials:'Paper',avaluacio:'Observacio'}];
+      const plan=await request('reports',{...base,type:'firebaseActivityPlan',group_id:group,fields:{activitats:JSON.stringify(rows),aval_participacio__val:'4'}});assert.equal(plan.status,200);assert.deepEqual(JSON.parse(JSON.parse((await request('reports?id='+plan.body.id)).body.body).activitats),rows);
+      assert.equal((await request('reports',{...base,type:'firebaseActivityPlan',group_id:group,fields:{activitats:'{"not":"an array"}'}})).status,400);
+      const evidence=[{file:'nom-arxiu.jpg',description:'Descripcio ficticia'}];
+      assert.equal((await request('reports',{...base,type:'firebaseGroupFollowup',group_id:group,fields:{evidencias_list:JSON.stringify(evidence)}})).status,200);
+      const participants=[{person_id:person,name:'Nom snapshot',autonomia:'bona',social:'regular',participacio:'molt_bona',actitud:'bona',notes:'Nota individual'}];
+      const evaluation=await request('reports',{...base,type:'firebaseGroupEvaluation',group_id:group,fields:{parts_eval:JSON.stringify(participants)}});assert.equal(evaluation.status,200);
+      assert.equal((await request('reports',{...base,type:'firebaseGroupEvaluation',group_id:group,fields:{parts_eval:JSON.stringify([...participants,...participants])}})).status,400);
+      assert.equal((await request('reports',{...base,type:'firebaseGroupEvaluation',group_id:group,fields:{parts_eval:JSON.stringify([{...participants[0],person_id:'not-registered'}])}})).status,400);
+      assert.equal((await request('reports',{...base,type:'firebaseGeneralEvaluation',person_id:person,fields:{gen_autonomia__val:'11'}})).status,400);
+      assert.equal((await request('reports',{...base,type:'firebaseObservation',person_id:person,state:'final',fields:{observacions:'Texto'}})).status,400);
+    });
+    await t.test('legacy drafts upgrade atomically on save and preserve source values, versions and immutable final reports',async()=>{
+      const payload={type:'observation',person_id:person,day:'2026-10-27',course:'2026-27',title:'Documento antiguo',state:'draft',fields:{observacio:'Contenido original conservado'}};
+      const created=await request('reports',payload);assert.equal(created.status,200);
+      const before=(await request('reports?id='+created.body.id)).body;assert.equal(before.type,'observation');
+      const upgrade={id:created.body.id,version:1,type:'firebaseObservation',day:payload.day,course:payload.course,state:'draft',title:payload.title,fields:{educador:'Equipo ficticio',observacions:'Contenido actualizado',legacy__observacio:'Intento de sobrescribir original'}};
+      assert.equal((await request('reports/upgrade',{...upgrade,fields:{educador:'Equipo',invalid:'Campo desconocido'}})).status,400);
+      assert.equal((await request('reports?id='+created.body.id)).body.type,'observation');
+      assert.equal((await request('reports/upgrade',upgrade)).status,200);
+      const saved=(await request('reports?id='+created.body.id)).body;assert.equal(saved.type,'firebaseObservation');assert.equal(saved.version,2);
+      assert.equal(JSON.parse(saved.body).legacy__observacio,'Contenido original conservado');assert.equal(JSON.parse(saved.body).observacions,'Contenido actualizado');
+      assert.equal(app.db.prepare('SELECT count(*) n FROM report_versions WHERE report_id=?').get(created.body.id).n,2);
+      assert.equal((await request('reports/upgrade',upgrade)).status,409);
+      assert.equal((await request('reports/upgrade',{...upgrade,id:report,version:2})).status,409);
+    });
     await t.test('Excel review is read-only; imports are transactional and repeatable', async () => {
       const imported = { ...nora, nom: 'Persona', cognoms: 'Importada', dni: 'TEST002', data_naixement: '2015-02-01' };
       const count = app.db.prepare('SELECT count(*) total FROM people').get().total;
@@ -191,7 +222,7 @@ test('complete local workflow, permissions, idempotency and durable data', async
       const account = await request('users', { name: 'Consulta', email: 'viewer@example.test', password: 'Viewer-test-only-12345', role: 'viewer' }); viewerId = account.body.id;
       viewerCookie = (await request('login', { email: 'viewer@example.test', password: 'Viewer-test-only-12345' })).cookie;
       assert.equal((await request('data', undefined, viewerCookie)).status, 200);
-      for (const [path, body] of [['people', nora], ['import', { people: [nora] }], ['reports', {}], ['users', {}], ['programs', {}]]) assert.equal((await request(path, body, viewerCookie)).status, 403);
+      for (const [path, body] of [['people', nora], ['import', { people: [nora] }], ['reports', {}], ['users', {}], ['programs', {}], ['reports/upgrade', {}]]) assert.equal((await request(path, body, viewerCookie)).status, 403);
       assert.equal((await request('audit', undefined, viewerCookie)).status, 403);
     });
     await t.test('revocation takes effect immediately and last admin is protected', async () => {
@@ -209,7 +240,7 @@ test('complete local workflow, permissions, idempotency and durable data', async
         const asset = await dispatch(path); assert.equal(asset.status, 200); assert.equal(asset.headers.get('content-type'), 'image/png');
       }
       assert.equal((await dispatch('/assets/server.mjs')).status, 404);
-      for (const path of ['/person-schema.mjs','/totals.mjs','/login.css']) assert.equal((await dispatch(path)).status,200);
+      for (const path of ['/person-schema.mjs','/totals.mjs','/login.css','/firebase-original.mjs','/firebase-adapter.mjs','/firebase-dom.mjs','/firebase-legacy.mjs','/reference-forms.css']) assert.equal((await dispatch(path)).status,200);
       for (const path of ['/approved/shell.css','/approved/login.css','/approved/reports.css','/approved/attendance.css','/approved/groups.css','/approved/users.css','/approved/fonts.css','/approved/icons.mjs','/approved/chart.js','/approved/Inter-400.ttf']) assert.equal((await dispatch(path)).status,200,path);
       assert.equal((await dispatch('/approved/../server.mjs')).status,404);
       assert.ok(!JSON.stringify((await request('data')).body).includes('Local-test-only'));

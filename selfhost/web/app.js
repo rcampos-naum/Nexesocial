@@ -1,3 +1,7 @@
+import { adaptLegacyReport,legacyReferenceTypes } from './firebase-legacy.mjs';
+import { firebaseTypes } from './firebase-original.mjs';
+import { firebaseTemplates, firebaseForm } from './firebase-adapter.mjs';
+import { bindFirebaseForm } from './firebase-dom.mjs';
 // SVG paths copied as static strings from the approved centre-dia-docs.html; no source scripts executed.
 const centreIcons = {
   "book": "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"/><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\"/></svg>",
@@ -20,13 +24,14 @@ const centreIcons = {
   "flag": "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z\"/><line x1=\"4\" y1=\"22\" x2=\"4\" y2=\"15\"/></svg>"
 };
 const reportGroups = [
- {key:'diary',label:'Diari',types:['diary'],icon:'book',color:'#3b82f6',bg:'#eff6ff',description:'Registre diari d’activitats i observacions'},
- {key:'observation',label:'Observació',types:['observation'],icon:'eye',color:'#8b5cf6',bg:'#f5f3ff',description:'Observació individual'},
- {key:'evaluation',label:'Aval. Individual',types:['evaluation1','evaluation2','evaluationFinal'],icon:'barChart',color:'#10b981',bg:'#ecfdf5',description:'Avaluació per competències (1r, 2n i Final)'},
+ {key:'diary',label:'Diari',types:['diary','firebaseDiary'],icon:'book',color:'#3b82f6',bg:'#eff6ff',description:'Registre diari d’activitats i observacions'},
+ {key:'observation',label:'Observació',types:['observation','firebaseObservation'],icon:'eye',color:'#8b5cf6',bg:'#f5f3ff',description:'Observació individual'},
+ {key:'evaluation',label:'Aval. Individual',types:['evaluation1','evaluation2','evaluationFinal','firebaseEvaluation'],icon:'barChart',color:'#10b981',bg:'#ecfdf5',description:'Avaluació per competències (1r, 2n i Final)'},
+ {key:'general',label:'Aval. General',types:['firebaseGeneralEvaluation'],icon:'clipboard',color:'#0ea5e9',bg:'#f0f9ff',description:'Avaluació general integral del beneficiari/ària'},
  {key:'survey',label:'Enquesta infants',types:['generalEvaluation'],icon:'clipboard',color:'#0ea5e9',bg:'#f0f9ff',description:'Valoració de les activitats pels infants'},
- {key:'followup',label:'Seguiment',types:['groupFollowup'],icon:'users',color:'#f59e0b',bg:'#fffbeb',description:'Registre d’observació i seguiment de sessions'},
- {key:'plan',label:'Planificació',types:['activityPlan','tribuPlan'],icon:'calendar',color:'#ef4444',bg:'#fef2f2',description:'Planificació i avaluació d’activitats'},
- {key:'groupEval',label:'Aval. Grupal',types:['groupEvaluation'],icon:'clipboard',color:'#06b6d4',bg:'#ecfeff',description:'Avaluació grupal i dels participants per període'},
+ {key:'followup',label:'Seguiment',types:['groupFollowup','firebaseGroupFollowup'],icon:'users',color:'#f59e0b',bg:'#fffbeb',description:'Registre d’observació i seguiment de sessions'},
+ {key:'plan',label:'Planificació',types:['activityPlan','tribuPlan','firebaseActivityPlan'],icon:'calendar',color:'#ef4444',bg:'#fef2f2',description:'Planificació i avaluació d’activitats'},
+ {key:'groupEval',label:'Aval. Grupal',types:['groupEvaluation','firebaseGroupEvaluation'],icon:'clipboard',color:'#06b6d4',bg:'#ecfeff',description:'Avaluació grupal i dels participants per període'},
 ];
 const reportPresentation = type => reportGroups.find(g=>g.types.includes(type));
 
@@ -245,7 +250,7 @@ async function action(action, id) {
     const content = table(['Persona', 'Grupo', 'Sesión', 'Estado', 'Total'], records.map(row => [esc(personName(row.person_id)), esc(groupName(row.group_id)), esc(row.slot), esc(row.status), String(row.total)]));
     printDocument(`Asistencias · ${values.start} / ${values.end}`, content); window.print();
   }, 'Preparar impresión');
-  if(action==='reportNew')return modal('Nou Document',`<div class="fsect-title">Tipus de document</div>${[['person','DOCUMENTS INDIVIDUALS (per beneficiari/ària)'],['group','DOCUMENTS GRUPALS (per grup)']].map(([scope,label])=>`<div class="fsect-title">${label}</div><div class="type-sel-grid">${Object.entries(templates).filter(([,t])=>t.scope===scope).map(([key,t])=>{const g=reportPresentation(key);return `<button type="button" class="type-sel-card report-color-${g.key}" data-action="reportChoose" data-id="${key}"><span class="ticon">${centreIcons[g.icon]}</span><span class="name">${esc(t.label)}</span><span class="desc">${g.description}</span></button>`;}).join('')}</div>`).join('')}`,null);
+  if(action==='reportNew')return modal('Nou Document',`<div class="fsect-title">Tipus de document</div>${[['person','DOCUMENTS INDIVIDUALS (per beneficiari/ària)'],['group','DOCUMENTS GRUPALS (per grup)']].map(([scope,label])=>`<div class="fsect-title">${label}</div><div class="type-sel-grid">${Object.entries(templates).filter(([key,t])=>t.scope===scope&&(firebaseTemplates[key]||key==='generalEvaluation')).map(([key,t])=>{const g=reportPresentation(key);return `<button type="button" class="type-sel-card report-color-${g.key}" data-action="reportChoose" data-id="${key}"><span class="ticon">${centreIcons[g.icon]}</span><span class="name">${esc(t.label)}</span><span class="desc">${esc(firebaseTypes.find(t=>t.key===key)?.description||g.description)}</span></button>`;}).join('')}</div>`).join('')}`,null);
 
   if(action==='reportChoose'&&templates[id]){ $('dialog').close(); return editReport({type:id}); }
   if (action === 'reportEdit') return editReport(await api(`reports?id=${encodeURIComponent(id)}`));
@@ -262,7 +267,33 @@ async function action(action, id) {
 }
 function followupHtml(id) { return data.followups.filter(f => f.case_id === id).map(f => `<div class="followup"><strong>${esc(f.created_at.slice(0, 10))} · ${esc(teamName(f.created_by))}</strong><br>${esc(f.body)}</div>`).join('') || '<p>Sin seguimientos.</p>'; }
 function printDocument(title, body) { $('printArea').innerHTML = `<h1>${esc(title)}</h1>${body}`; }
+function editFirebaseReport(report,readOnly=false) {
+  const template=firebaseTemplates[report.type],saved=report.body?JSON.parse(report.body):{};
+  const fields={...saved,educador:saved.educador??''};
+  const details={...report,day:report.day||today(),course:report.course||course()};
+  const people=data.people.filter(p=>cdPeopleIds().has(p.id)||p.id===report.person_id).map(p=>({id:p.id,nom:p.nom+' '+p.cognoms}));
+  const groups=cdGroups().map(g=>({id:g.id,nom:g.name}));
+  let collectExtra=()=>({});
+  const originalSchema=report.schema_json?JSON.parse(report.schema_json):template;
+  const legacy=originalSchema.fields.filter(f=>f.key.startsWith('legacy__'));
+  const preserved=legacy.length?'<section class="fsect legacy-document-values"><div class="fsect-title">Dades originals abans de l’adaptació</div>'+legacy.map(f=>'<div class="print-field"><strong>'+esc(f.label)+'</strong>'+esc(saved[f.key]||'—')+'</div>').join('')+'</section>':'';
+  modal(template.label,firebaseForm(report.type,details,fields,people,groups)+preserved,readOnly?null:form=>{
+    const values={...saved,...collectExtra()};
+    for(const field of template.fields)if(Object.hasOwn(form,'field_'+field.key))values[field.key]=form['field_'+field.key];
+    return api(report.original_type?'reports/upgrade':'reports',{id:report.id,version:report.version,type:report.type,title:report.title||template.label,day:form.day,course:form.course,person_id:form.person_id||null,group_id:form.group_id||null,state:form.state||'draft',fields:values});
+  });
+  collectExtra=bindFirebaseForm($('fields').querySelector('.firebase-original'),report.type,fields,data,readOnly);
+  for(const input of $('fields').querySelectorAll('[name=day],[name=person_id],[name=group_id]'))input.required=true;
+  if(report.id)for(const input of $('fields').querySelectorAll('[name=person_id],[name=group_id]'))input.setAttribute('aria-readonly','true');
+  const presentation=reportPresentation(report.type);$('dialogTitle').innerHTML=`<span class="report-title-icon report-color-${presentation.key}">${centreIcons[presentation.icon]}</span>${!report.id&&!readOnly?'Nou Document — ':''}${esc(template.label)}`;
+  const cancel=document.createElement('button');cancel.type='button';cancel.className='btn btn-ghost';cancel.dataset.reportExtra='';cancel.textContent='Cancel·lar';cancel.addEventListener('click',()=>{if(!saving)$('dialog').close();});$('editorFooter').prepend(cancel);
+  if(readOnly){const print=document.createElement('button');print.type='button';print.className='btn btn-ghost';print.dataset.reportExtra='';print.textContent='Imprimir / guardar com a PDF';print.addEventListener('click',()=>{const copy=$('fields').cloneNode(true);const inputs=[...$('fields').querySelectorAll('input,select,textarea')];for(const [i,input]of [...copy.querySelectorAll('input,select,textarea')].entries()){const span=document.createElement('span');span.className='fb-print-value';span.textContent=inputs[i].tagName==='SELECT'?inputs[i].selectedOptions[0]?.textContent||'—':inputs[i].value||'—';input.replaceWith(span);}for(const button of copy.querySelectorAll('button'))button.remove();printDocument(template.label,copy.innerHTML);window.print();});$('editorFooter').append(print);}
+  else {$('submitEditor').textContent='Guardar esborrany';$('submitEditor').dataset.reportState='draft';$('submitEditor').classList.remove('btn-primary');$('submitEditor').classList.add('btn-draft');const final=document.createElement('button');final.type='submit';final.className='btn btn-primary';final.dataset.reportState='final';final.dataset.reportExtra='';final.textContent='Guardar definitiu';$('editorFooter').append(final);}
+}
+
 function editReport(report, readOnly=false) {
+  if(legacyReferenceTypes[report.type])return editFirebaseReport(adaptLegacyReport(report),readOnly);
+  if(firebaseTemplates[report.type])return editFirebaseReport(report,readOnly);
   const template = report.schema_json ? JSON.parse(report.schema_json) : templates[report.type]; const values = report.body ? JSON.parse(report.body) : {};
   const control = f => {
     const name='field_'+f.key, value=values[f.key]??'';

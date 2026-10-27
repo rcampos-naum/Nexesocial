@@ -1,3 +1,4 @@
+import { firebaseTemplates } from './firebase-adapter.mjs';
 // Initial field catalogue adapted from public/centre-dia-docs.html.
 // Layout and complete fidelity to the nine original files remain acceptance checks.
 const field = (key, label, type = 'text', options) => ({ key, label, type, options });
@@ -13,6 +14,7 @@ const surveyItems = ['Tiempo de repaso', 'Ayuda para hacer los deberes', 'Materi
 export const surveyLabels = ['Positiva', 'Neutra', 'Negativa', 'No ha participado / sin respuesta'];
 const plan = [field('mes', 'Mes'), field('rutina', 'Rutina setmanal', 'textarea'), field('activitats', 'Activitats: setmana, nom, desenvolupament, objectius i material', 'textarea'), ...rated(['Participació activa dels infants', 'Actitud del voluntariat', 'Adequació de les dinàmiques', 'Materials disponibles', 'Reflexió i expressió', 'Assoliment dels objectius', 'Motivació i interès', 'Cohesió del grup'], 'aval', ['1', '2', '3', '4', '5']), field('incidencies', 'Incidències', 'textarea'), field('positius', 'Aspectes positius', 'textarea'), field('millora', 'Propostes de millora', 'textarea'), notes];
 export const templates = {
+  ...firebaseTemplates,
   diary: { label: 'Diari individual', scope: 'person', source: 'DIARI 2025-26.xlsx', fields: [{ ...field('mes', 'Mes de seguiment', 'month'), requiredOnFinal: true }, ...identification, field('assist_raco', 'Assistència mensual al racó: sessions presents o amb retard', 'number'), field('assist_ludiques', 'Assistència mensual a activitats lúdiques: sessions presents o amb retard', 'number'), ...rated(['Organitza i planifica les tasques', 'Du l’agenda i material', 'Seguiment de les tasques', 'Autonomia en les tasques', 'Implicació a l’escola', 'Participa positivament', 'Se sent bé al grup', 'Vincles amb adults', 'Vincles amb iguals', 'Gestió de conflictes', 'Identifica i gestiona emocions', 'Puntualitat', 'Supervisió familiar adequada', 'Context familiar segur'], 'indicador', ratings), field('esport', 'Participa en esport o moviment', 'select', ['Sí', 'No']), field('berenar', 'Berenar saludable', 'select', ['Sí', 'No']), notes] },
   observation: { label: 'Diari d’observació', scope: 'person', source: 'Diario de observación.xlsx', fields: [field('observacio', 'Observació del dia', 'textarea')] },
   evaluation1: { label: '1a avaluació · desembre', scope: 'person', source: '1ºaval I 2º AVAL PLANTILLA 25-26 (DES I MARÇ).xlsx', fields: evaluation },

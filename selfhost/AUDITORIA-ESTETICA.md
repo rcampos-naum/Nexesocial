@@ -80,3 +80,23 @@ Se añade `web/login.css`, cargado después de los estilos originales, con todas
 Causa del pie: heredaba `left: var(--sidebar-width)` y el ancho reservado al menú de la hoja global. En el acceso se restablecen los desplazamientos, ancho 100 %, altura automática, separación de textos y posición estática. El contenedor del acceso crece hasta ocupar la pantalla y el pie queda al final sin tapar campos en ventanas bajas o móviles.
 
 48 pruebas superadas y revisión de sintaxis correcta. La hoja nueva se incluye en la comprobación de rutas estáticas. La revisión visual está pendiente: el navegador denegó acceso a la vista local http://127.0.0.1:4088 porque no se concedió autorización de acceso. No se intentó abrir por otra vía. Cambios guardados en la rama local `fix/acceso-moderno`, basada en fd5d661, para no incluir el diario anual todavía pendiente de revisión. No se publica ni se instala hasta completar la revisión visual indicada en AGENTS.md.
+
+## Formularios completos de Firebase — 27/10/2026 (pendiente de comprobación local)
+
+La revisión del código y de los siete formularios en la web autenticada confirma que la adaptación anterior no era equivalente: diario mensual simplificado, planificación sin filas estructuradas, evaluación grupal sin tabla individual y confusión entre evaluación integral y encuesta infantil.
+
+Se recuperan directamente los siete constructores de formulario de `https://nexesocial-bc6c4.web.app/centre-dia-docs.html`: Diari Individual, Observació Individual, Avaluació Individual, Avaluació General, Seguiment Grupal, Planificació Activitats y Avaluació Grupal. La referencia se descargó como código público y los siete formularios se abrieron sin introducir ni guardar datos. No se copia la autenticación ni Firestore.
+
+- `web/firebase-original.mjs`: constructores puros y SVG originales. Diario octubre–junio, tablas, textos, opciones y secciones originales.
+- `web/reference-forms.css`: 46 declaraciones inline originales convertidas a clases para conservar la política de seguridad del piloto; sin permitir scripts/estilos inline.
+- `web/firebase-adapter.mjs`: catálogo de campos derivado de los controles originales y serialización de valores mensuales/valoraciones.
+- `web/firebase-dom.mjs`: filas de actividades y evidencias, y valoraciones individuales de participantes guardadas con ID estable. Consulta usa el snapshot guardado, sin incorporar participantes nuevos al abrir informes antiguos.
+- `web/firebase-legacy.mjs`: presentación de documentos anteriores con el formulario de referencia y adaptación transaccional al guardar un borrador. Se preservan todos los valores anteriores, el esquema completo y su tipo de origen. Los valores sin correspondencia o fuera del rango de la referencia permanecen visibles en Dades originals abans de l’adaptació. No se altera un definitivo.
+- Se mantiene la encuesta infantil separada de Avaluació General. No son instrumentos equivalentes.
+- `scripts/sync-firebase-forms.mjs` y `firebase-forms-reference.json`: extracción reproducible y huellas. El generador rechaza constructores distintos del bloque previamente auditado antes de importarlo. No se ejecutan scripts de autenticación ni de Firebase.
+
+54 pruebas superadas: las siete estructuras completas de formulario coinciden con el constructor publicado, permitiendo solamente las clases de seguridad, nombres de controles y listeners locales; persistencia de cada control; valores cero; todos los meses; contenido escapado; filas estructuradas; participantes duplicados/no inscritos; datos antiguos conservados; actualización atómica; rechazos de versión antigua y bloqueo de definitivos. Se añade comprobación de todas las rutas nuevas.
+
+Límites pendientes: no se ha podido abrir la adaptación local en el navegador. El control de acceso rechaza http://127.0.0.1:4088 por un permiso guardado o política de acceso. No se intentó abrirla por otro navegador, puerto, aplicación ni mecanismo alternativo después del rechazo. La verificación de código/estructura y la inspección de la referencia no sustituyen la comparación visual de la adaptación ni las pruebas de los controles dinámicos en navegador. No se certifica igualdad visual total ni exportaciones idénticas. Los controles dinámicos se adaptan a almacenamiento local y los selectores contienen los registros locales; no se recuperan de Firebase datos personales.
+
+La rama local `fix/formularios-firebase` queda sin publicar ni instalar. Según `selfhost/AGENTS.md`, «Antes de publicar cambios en la interfaz, revisa las pantallas afectadas en navegador con datos ficticios, compara con la referencia y registra las diferencias o limitaciones». Queda pendiente habilitar la vista local para cerrar esa revisión.

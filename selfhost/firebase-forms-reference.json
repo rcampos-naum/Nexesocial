@@ -1,0 +1,15 @@
+{
+  "url": "https://nexesocial-bc6c4.web.app/centre-dia-docs.html",
+  "sourceSha256": "89866519b4e82858a2d0239d267960a13436f7f285dfbe4f925617bae7ca1c15",
+  "formBuildersSha256": "e0bf34d558f06039f4ea555a93bb658fd42da32a4deeae82e0c4ce83f31ed319",
+  "styles": 46,
+  "types": [
+    "diari_ind",
+    "observacio_ind",
+    "avaluacio_ind",
+    "avaluacio_general",
+    "seguiment_grup",
+    "planificacio_act",
+    "avaluacio_grup"
+  ]
+}

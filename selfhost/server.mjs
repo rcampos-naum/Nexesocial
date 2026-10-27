@@ -1,3 +1,4 @@
+import { adaptLegacyReport,legacyReferenceTypes } from './web/firebase-legacy.mjs';
 import http from 'node:http';
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync, readFileSync } from 'node:fs';
@@ -134,6 +135,53 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
     audit(user, 'person.create', id); return { id, number };
   }
   const attempts = new Map(); const dummyPassword = passwordHash(randomBytes(24).toString('hex'));
+  function saveReport(body,user,transaction=true) {
+        write(user); const individual = Object.keys(templates).filter(key=>templates[key].scope==='person'); const groupTypes = Object.keys(templates).filter(key=>templates[key].scope==='group');
+        requireValue([...individual, ...groupTypes].includes(body.type), 'Tipo de informe no válido');
+        const person = nullable('people', body.person_id); const group = nullable('groups_cd', body.group_id);
+        requireValue(individual.includes(body.type) ? person && !group : group && !person, 'Vincula el informe a su persona o grupo');
+        if (!body.id) { if (person) requireValue(isDayCentrePerson(person), 'La persona no está vinculada a un programa de Centro de Día'); else dayCentreGroup(group); }
+        requireValue(body.fields && typeof body.fields === 'object' && !Array.isArray(body.fields) && JSON.stringify(body.fields).length <= 250000, 'Contenido no válido');
+        const id = body.id ? foreign('reports', body.id) : randomUUID(); const previous = body.id ? get('SELECT * FROM reports WHERE id=?', id) : null;
+        const definition = previous?.schema_json ? JSON.parse(previous.schema_json) : templates[body.type];
+        requireValue(Object.keys(body.fields).every(key => definition.fields.some(field => field.key === key)), 'El informe contiene campos desconocidos');
+        for (const field of definition.fields) {
+          const value = body.fields[field.key] ?? '';
+          requireValue(typeof value === 'string' && value.length <= 20000, 'Campo de informe no válido');
+          if (value && field.type === 'select') requireValue(field.options.includes(value), 'Valor de evaluación no válido');
+          if (value && field.type === 'number') requireValue(/^\d+$/.test(value), 'Indica un número entero positivo');
+          if(value&&field.type==='date')date(value);
+          if(value&&field.type==='number')requireValue((field.min===undefined||Number(value)>=field.min)&&(field.max===undefined||Number(value)<=field.max),'Numero fuera del rango permitido');
+          if(value&&['activityRows','evidenceRows','participantEvaluations'].includes(field.type)) {
+            let rows;try { rows=JSON.parse(value); }catch { requireValue(false,'Contenido estructurado no valido'); }
+            requireValue(Array.isArray(rows)&&rows.length<=100,'Hasta 100 filas por documento');
+            const keys=field.type==='activityRows'?['data','activitat','objectiu','materials','avaluacio']:field.type==='evidenceRows'?['file','description']:['person_id','name','autonomia','social','participacio','actitud','notes'];
+            const seen=new Set();
+            for(const row of rows){requireValue(row&&typeof row==='object'&&!Array.isArray(row)&&Object.keys(row).every(k=>keys.includes(k))&&Object.values(row).every(v=>typeof v==='string'&&v.length<=2000),'Fila no valida');
+              if(field.type==='activityRows'&&row.data)date(row.data);
+              if(field.type==='participantEvaluations'){
+                requireValue(row.person_id&&!seen.has(row.person_id),'Participante duplicado o sin identificacion');seen.add(row.person_id);foreign('people',row.person_id);
+                const oldRows=previous?.body?JSON.parse(previous.body).parts_eval:null;
+                const historical=oldRows?JSON.parse(oldRows).some(p=>p.person_id===row.person_id):false;
+                requireValue(historical||get('SELECT 1 FROM enrollments WHERE person_id=? AND group_id=? AND active=1',row.person_id,group),'El participante no esta inscrito en el grupo');
+                for(const k of ['autonomia','social','participacio','actitud'])requireValue(['','molt_bona','bona','regular','malament'].includes(row[k]||''),'Valor de participante no valido');
+              }
+            }
+          }
+          if (value && field.type === 'month') requireValue(/^\d{4}-(0[1-9]|1[0-2])$/.test(value), 'Mes no válido');
+          if (body.state === 'final' && field.requiredOnFinal) requireValue(value.trim(), `Completa ${field.label} antes de cerrar el informe`);
+        }
+        requireValue(['draft', 'final'].includes(body.state), 'Estado no válido');
+        if (body.state === 'final') requireValue(Object.values(body.fields).some(value => value.trim()), 'Completa el contenido antes de cerrar el informe');
+        requireValue(!previous || previous.version === body.version, 'El informe cambió. Recarga antes de guardar', 409);
+        requireValue(!previous || previous.state !== 'final', 'El informe está cerrado. Crea otro para conservar el histórico', 409);
+        requireValue(!previous || (previous.type === body.type && previous.person_id === person && previous.group_id === group), 'No se puede cambiar la vinculación de un informe existente');
+        const version = (previous?.version || 0) + 1; const content = JSON.stringify(body.fields); const created = previous?.created_at || now();
+        const persist = () => {
+          run('INSERT INTO reports(id,type,person_id,group_id,day,course,title,body,state,version,created_by,created_at,updated_at,schema_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET day=excluded.day,course=excluded.course,title=excluded.title,body=excluded.body,state=excluded.state,version=excluded.version,updated_at=excluded.updated_at', id, body.type, person, group, date(body.day), string(body.course, 20, true), string(body.title, 200, true), content, body.state, version, previous?.created_by || user.id, created, now(), previous?.schema_json || JSON.stringify(definition));
+          run('INSERT INTO report_versions VALUES(?,?,?,?,?)', id, version, content, user.id, now()); audit(user, 'report.save', id);
+        }; if (transaction) atomic(persist); else persist(); return { id, version };
+  }
   async function jsonBody(req) {
     requireValue(req.headers['content-type']?.split(';')[0] === 'application/json', 'Se requiere JSON', 415);
     const buffers = []; let size = 0;
@@ -155,9 +203,9 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
         const approvedName = route.startsWith('/approved/') ? route.slice('/approved/'.length) : '';
         if (approved[approvedName]) { res.writeHead(200, { 'Content-Type': approved[approvedName] }); return res.end(readFileSync(resolve(root,'web/approved',approvedName))); }
         const assets = { '/assets/logo.png': 'NexeSocial-logo.png', '/assets/login-background.png': 'fondo-login.png' };
-        if (['/person-schema.mjs', '/totals.mjs'].includes(route)) { res.writeHead(200, { 'Content-Type': 'text/javascript' }); return res.end(readFileSync(resolve(root, 'web', route.slice(1)))); }
+        if (['/person-schema.mjs', '/totals.mjs', '/firebase-original.mjs', '/firebase-adapter.mjs', '/firebase-dom.mjs', '/firebase-legacy.mjs'].includes(route)) { res.writeHead(200, { 'Content-Type': 'text/javascript' }); return res.end(readFileSync(resolve(root, 'web', route.slice(1)))); }
         if (assets[route]) { res.writeHead(200, { 'Content-Type': 'image/png' }); return res.end(readFileSync(resolve(root, '../public/img', assets[route]))); }
-        const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/app.css': ['app.css', 'text/css'], '/login.css': ['login.css', 'text/css'], '/xlsx.js': ['xlsx.js', 'text/javascript'], '/templates.mjs': ['templates.mjs', 'text/javascript'] };
+        const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/app.css': ['app.css', 'text/css'], '/login.css': ['login.css', 'text/css'], '/reference-forms.css': ['reference-forms.css', 'text/css'], '/xlsx.js': ['xlsx.js', 'text/javascript'], '/templates.mjs': ['templates.mjs', 'text/javascript'] };
         if (route === '/import-persones-core.mjs') { res.writeHead(200, { 'Content-Type': 'text/javascript' }); return res.end(readFileSync(resolve(root, '../public/import-persones-core.mjs'))); }
         requireValue(files[route], 'No encontrado', 404); const [file, type] = files[route];
         res.writeHead(200, { 'Content-Type': `${type}; charset=utf-8` }); return res.end(readFileSync(resolve(root, 'web', file)));
@@ -294,35 +342,22 @@ export function createApplication({ dataDir, origin = 'http://127.0.0.1:4080', s
         return send(200, all("SELECT a.person_id,a.group_id,a.slot,a.status,count(*) total FROM attendance a JOIN groups_cd g ON g.id=a.group_id JOIN programs p ON p.id=g.program_id WHERE a.day BETWEEN ? AND ? AND p.kind='dayCentre' GROUP BY a.person_id,a.group_id,a.slot,a.status", start, end));
       }
       if (route === '/api/reports' && method === 'GET') { const id = foreign('reports', url.searchParams.get('id')); return send(200, get('SELECT * FROM reports WHERE id=?', id)); }
-      if (route === '/api/reports' && method === 'POST') {
-        write(user); const individual = ['diary', 'observation', 'evaluation1', 'evaluation2', 'evaluationFinal', 'generalEvaluation']; const groupTypes = ['groupFollowup', 'activityPlan', 'tribuPlan', 'groupEvaluation'];
-        requireValue([...individual, ...groupTypes].includes(body.type), 'Tipo de informe no válido');
-        const person = nullable('people', body.person_id); const group = nullable('groups_cd', body.group_id);
-        requireValue(individual.includes(body.type) ? person && !group : group && !person, 'Vincula el informe a su persona o grupo');
-        if (!body.id) { if (person) requireValue(isDayCentrePerson(person), 'La persona no está vinculada a un programa de Centro de Día'); else dayCentreGroup(group); }
-        requireValue(body.fields && typeof body.fields === 'object' && !Array.isArray(body.fields) && JSON.stringify(body.fields).length <= 100000, 'Contenido no válido');
-        const id = body.id ? foreign('reports', body.id) : randomUUID(); const previous = body.id ? get('SELECT * FROM reports WHERE id=?', id) : null;
-        const definition = previous?.schema_json ? JSON.parse(previous.schema_json) : templates[body.type];
-        requireValue(Object.keys(body.fields).every(key => definition.fields.some(field => field.key === key)), 'El informe contiene campos desconocidos');
-        for (const field of definition.fields) {
-          const value = body.fields[field.key] ?? '';
-          requireValue(typeof value === 'string' && value.length <= 20000, 'Campo de informe no válido');
-          if (value && field.type === 'select') requireValue(field.options.includes(value), 'Valor de evaluación no válido');
-          if (value && field.type === 'number') requireValue(/^\d+$/.test(value), 'Indica un número entero positivo');
-          if (value && field.type === 'month') requireValue(/^\d{4}-(0[1-9]|1[0-2])$/.test(value), 'Mes no válido');
-          if (body.state === 'final' && field.requiredOnFinal) requireValue(value.trim(), `Completa ${field.label} antes de cerrar el informe`);
-        }
-        requireValue(['draft', 'final'].includes(body.state), 'Estado no válido');
-        if (body.state === 'final') requireValue(Object.values(body.fields).some(value => value.trim()), 'Completa el contenido antes de cerrar el informe');
-        requireValue(!previous || previous.version === body.version, 'El informe cambió. Recarga antes de guardar', 409);
-        requireValue(!previous || previous.state !== 'final', 'El informe está cerrado. Crea otro para conservar el histórico', 409);
-        requireValue(!previous || (previous.type === body.type && previous.person_id === person && previous.group_id === group), 'No se puede cambiar la vinculación de un informe existente');
-        const version = (previous?.version || 0) + 1; const content = JSON.stringify(body.fields); const created = previous?.created_at || now();
-        atomic(() => {
-          run('INSERT INTO reports(id,type,person_id,group_id,day,course,title,body,state,version,created_by,created_at,updated_at,schema_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET day=excluded.day,course=excluded.course,title=excluded.title,body=excluded.body,state=excluded.state,version=excluded.version,updated_at=excluded.updated_at', id, body.type, person, group, date(body.day), string(body.course, 20, true), string(body.title, 200, true), content, body.state, version, previous?.created_by || user.id, created, now(), previous?.schema_json || JSON.stringify(definition));
-          run('INSERT INTO report_versions VALUES(?,?,?,?,?)', id, version, content, user.id, now()); audit(user, 'report.save', id);
-        }); return send(200, { id, version });
+      if(route==='/api/reports/upgrade'&&method==='POST') {
+        write(user);const id=foreign('reports',body.id);
+        const result=atomic(()=>{
+          const previous=get('SELECT * FROM reports WHERE id=?',id);
+          requireValue(previous.state==='draft'&&previous.version===body.version,'El documento ha cambiado o esta cerrado. Recarga antes de guardar',409);
+          requireValue(legacyReferenceTypes[previous.type],'Este documento ya tiene el formulario original',409);
+          const adapted=adaptLegacyReport(previous);requireValue(adapted.type===body.type,'Tipo de formulario no valido');
+          requireValue(body.fields&&typeof body.fields==='object'&&!Array.isArray(body.fields),'Contenido no valido');
+          const fields={...JSON.parse(adapted.body),...body.fields};
+          for(const [key,value] of Object.entries(JSON.parse(adapted.body)))if(key.startsWith('legacy__'))fields[key]=value;
+          run('UPDATE reports SET type=?,body=?,schema_json=? WHERE id=?',adapted.type,adapted.body,adapted.schema_json,id);
+          const saved=saveReport({...body,type:adapted.type,person_id:previous.person_id,group_id:previous.group_id,fields},user,false);
+          audit(user,'report.template.upgrade',id);return saved;
+        });return send(200,result);
       }
+      if (route === '/api/reports' && method === 'POST') return send(200,saveReport(body,user));
       if (route === '/api/import/review' && method === 'POST') { write(user); requireValue(Array.isArray(body.people) && body.people.length > 0 && body.people.length <= 1000, 'Entre 1 y 1.000 filas'); const people = body.people.map(readPerson); const result = classifyRows(people.map((person, i) => ({ person, rowNumber: i, status: 'new', messages: [] })), all('SELECT * FROM people')); return send(200, result.map(row => ({ index: row.rowNumber, status: row.status, messages: row.messages }))); }
       if (route === '/api/import' && method === 'POST') {
         write(user); requireValue(Array.isArray(body.people) && body.people.length > 0 && body.people.length <= 1000, 'Entre 1 y 1.000 filas');
