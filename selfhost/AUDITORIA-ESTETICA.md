@@ -104,3 +104,8 @@ La rama local `fix/formularios-firebase` queda sin publicar ni instalar. Según 
 ### Captura local aportada por el usuario
 
 Se recibe una captura del navegador local mostrando Nou Document — Diari Individual, las tablas de asistencia e indicadores mensuales de octubre–junio, las observaciones y el pie de guardado. Confirma la carga de los nuevos constructores y estilos en el navegador del usuario. El desbordamiento horizontal de la tabla de calificaciones está previsto también en el HTML de Firebase (`overflow-x:auto`, selectores de anchura fija); no se cambian dimensiones para ocultarlo. Se elimina únicamente el margen superior y el display:block que heredaban los controles mensuales de los estilos generales del piloto, restaurando su comportamiento inline nativo. La captura no verifica los otros seis formularios ni las acciones de sus controles dinámicos. Sigue pendiente completar la comparación visual local.
+
+## Publicación solicitada — 28/10/2026
+
+El usuario solicita publicar ya para comenzar a trabajar. Se publica la adaptación actual con su autorización expresa de avanzar, dejando constancia de que la captura local verifica solamente Diari Individual y sigue pendiente la revisión visual de los otros seis formularios y sus controles dinámicos. No se certifica equivalencia visual total. Las 54 pruebas vuelven a superar la comprobación el 28/10/2026. La publicación del código no convierte el piloto HTTP en una instalación de producción: quedan pendientes HTTPS y la verificación de la configuración y las copias de seguridad en el servidor de la entidad.
+
